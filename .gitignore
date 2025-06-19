@@ -1,0 +1,104 @@
+# Maven
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+pom.xml.versionsBackup
+pom.xml.releaseBackup
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing-
+.mvn/wrapper/maven-wrapper.jar
+
+# Build output
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+bin/
+out/
+
+# IDE specific files
+.idea/
+*.iws
+*.iml
+*.ipr
+.idea_modules/
+.settings/
+.vscode/
+*.code-workspace
+.project
+.classpath
+.factorypath
+.springBeans
+.sts4-cache
+.apt_generated
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+nbdist/
+/.nb-gradle/
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+*.h2.db
+*.h2.db.lock
+*.h2.trace
+*.h2.mv.db
+*.h2.mv.db.temp
+*.h2.temp.db
+
+# System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Application properties overrides
+application-*.properties
+!application-example.properties
+application-*.yml
+!application-example.yml
+
+# Test reports and logs
+**/test-output/
+**/test-results/
+**/surefire-reports/
+**/failsafe-reports/
+**/test-reports/
+**/testng-results.xml
+**/testng-failed.xml
+**/testng-single.xml
+
+# Dependency directories
+**/node_modules/
+**/bower_components/
+**/jspm_packages/
+
+# Local development
+.attach_pid*
+.history/
+.quarkus/
+.sonar/
+
+# Kubernetes
+k8s/
+!k8s/examples/
+
+# Docker
+.docker/
+!docker-compose*.yml
+!Dockerfile

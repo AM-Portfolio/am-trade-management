@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: am-trade-management
+  profiles:
+    active: dev
+    group:
+      dev:
+        - common
+        - dev
+      preprod:
+        - common
+        - preprod
+      prod:
+        - common
+        - prod
+
+# Actuator configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  info:
+    git:
+      mode: full
+    java:
+      enabled: true
+    build:
+      enabled: true
+
+# Logging configuration
+logging:
+  level:
+    root: INFO
+    am.trade: INFO
+    org.springframework.data.mongodb: INFO
+    org.springframework.web: INFO
+
+# Common application properties
+am:
+  trade:
+    api:
+      enabled: true
+    services:
+      enabled: true
+    dashboard:
+      enabled: true
+    common:
+      enabled: true
