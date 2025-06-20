@@ -6,7 +6,6 @@ import am.trade.models.enums.OrderSide;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,15 +16,16 @@ import java.util.stream.Collectors;
 /**
  * Mapper for converting between TradeModel (from Kafka events) and Trade entity
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {})
 public interface TradeEventMapper {
 
-    TradeEventMapper INSTANCE = Mappers.getMapper(TradeEventMapper.class);
+    // Remove static instance as we're using Spring component model
+    // TradeEventMapper INSTANCE = Mappers.getMapper(TradeEventMapper.class);
 
     /**
      * Convert a single TradeModel to Trade
      */
-    // id field is inherited from BaseDocument and will be handled by Spring Data MongoDB
+    // BaseDocument fields are handled by Spring Data MongoDB
     @Mapping(target = "tradeId", source = "basicInfo.tradeId")
     @Mapping(target = "orderId", source = "basicInfo.orderId")
     @Mapping(target = "symbol", source = "instrumentInfo.symbol")

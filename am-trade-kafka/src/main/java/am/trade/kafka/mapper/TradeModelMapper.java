@@ -8,7 +8,6 @@ import am.trade.models.enums.OrderSide;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -17,10 +16,11 @@ import java.util.stream.Collectors;
 /**
  * Mapper for converting between TradeDTO and TradeModel
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {})
 public interface TradeModelMapper {
 
-    TradeModelMapper INSTANCE = Mappers.getMapper(TradeModelMapper.class);
+    // Remove static instance as we're using Spring component model
+    // TradeModelMapper INSTANCE = Mappers.getMapper(TradeModelMapper.class);
 
     /**
      * Convert TradeDTO to TradeModel
@@ -48,7 +48,7 @@ public interface TradeModelMapper {
     /**
      * Convert TradeModel to TradeDTO
      */
-    // id field will be set by the service layer
+    // BaseDocument fields are handled by Spring Data MongoDB
     @Mapping(target = "tradeId", source = "basicInfo.tradeId")
     @Mapping(target = "orderId", source = "basicInfo.orderId")
     @Mapping(target = "symbol", source = "instrumentInfo.symbol")
