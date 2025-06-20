@@ -2,68 +2,155 @@ package am.trade.kafka.mapper;
 
 import am.trade.common.models.TradeModel;
 import am.trade.models.document.Trade;
+import am.trade.models.dto.TradeDTO;
 import am.trade.models.enums.OrderSide;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
+import am.trade.models.enums.OrderStatus;
+import am.trade.models.enums.OrderType;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
- * Mapper for converting between TradeModel (from Kafka events) and Trade entity
+ * Component for converting between TradeModel (from Kafka events) and Trade entity
  */
-@Mapper(componentModel = "spring", uses = {})
-public interface TradeEventMapper {
-
-    // Remove static instance as we're using Spring component model
-    // TradeEventMapper INSTANCE = Mappers.getMapper(TradeEventMapper.class);
+@Component
+public class TradeEventMapper {
 
     /**
      * Convert a single TradeModel to Trade
      */
-    // BaseDocument fields are handled by Spring Data MongoDB
-    @Mapping(target = "tradeId", source = "basicInfo.tradeId")
-    @Mapping(target = "orderId", source = "basicInfo.orderId")
-    @Mapping(target = "symbol", source = "instrumentInfo.symbol")
-    @Mapping(target = "tradeDate", source = "basicInfo.tradeDate", qualifiedByName = "localDateToLocalDateTime")
-    @Mapping(target = "settlementDate", ignore = true) // Will be set by service layer if needed
-    @Mapping(target = "side", source = "basicInfo.tradeType", qualifiedByName = "mapTradeTypeToOrderSide")
-    @Mapping(target = "type", constant = "MARKET") // Default to MARKET type
-    @Mapping(target = "status", constant = "FILLED") // Default to FILLED status if coming from broker
-    @Mapping(target = "quantity", source = "executionInfo.quantity")
-    @Mapping(target = "price", source = "executionInfo.price")
-    @Mapping(target = "totalValue", expression = "java(calculateTotalValue(tradeModel))")
-    @Mapping(target = "executionVenue", source = "instrumentInfo.exchange")
-    @Mapping(target = "counterpartyId", constant = "BROKER") // Default value, can be overridden
-    @Mapping(target = "portfolioId", ignore = true) // Should be set by the service layer
-    @Mapping(target = "strategyId", ignore = true) // Should be set by the service layer
-    @Mapping(target = "traderId", ignore = true) // Should be set by the service layer
-    @Mapping(target = "commissionFee", source = "charges.brokerage")
-    @Mapping(target = "otherFees", source = "charges.totalTaxes")
-    @Mapping(target = "notes", expression = "java(createTradeNotes(tradeModel))")
-    // BaseDocument fields will be handled by Spring Data auditing
-    Trade toTrade(TradeModel tradeModel);
+    public Trade toTrade(TradeModel tradeModel) {
+        if (tradeModel == null) {
+            return null;
+        }
+
+        Trade trade = new Trade();
+        
+        // Map from nested properties
+        if (tradeModel.getBasicInfo() != null) {
+            trade.setTradeId(tradeModel.getBasicInfo().getTradeId());
+            trade.setOrderId(tradeModel.getBasicInfo().getOrderId());
+            trade.setTradeDate(localDateToLocalDateTime(tradeModel.getBasicInfo().getTradeDate()));
+            trade.setSide(mapTradeTypeToOrderSide(tradeModel.getBasicInfo().getTradeType()));
+        }
+        
+        if (tradeModel.getInstrumentInfo() != null) {
+            trade.setSymbol(tradeModel.getInstrumentInfo().getSymbol());
+            trade.setExecutionVenue(tradeModel.getInstrumentInfo().getExchange());
+        }
+        
+        if (tradeModel.getExecutionInfo() != null) {
+            trade.setQuantity(tradeModel.getExecutionInfo().getQuantity());
+            trade.setPrice(tradeModel.getExecutionInfo().getPrice());
+        }
+        
+        if (tradeModel.getCharges() != null) {
+            trade.setCommissionFee(tradeModel.getCharges().getBrokerage());
+            trade.setOtherFees(tradeModel.getCharges().getTotalTaxes());
+        }
+        
+        // Set default values
+        trade.setType(OrderType.MARKET);
+        trade.setStatus(OrderStatus.FILLED);
+        trade.setCounterpartyId("BROKER");
+        
+        // Set calculated values
+        trade.setTotalValue(calculateTotalValue(tradeModel));
+        trade.setNotes(createTradeNotes(tradeModel));
+        
+        return trade;
+    }
 
     /**
      * Convert a list of TradeModels to a list of Trades
      */
-    default List<Trade> toTrades(List<TradeModel> tradeModels) {
+    public List<Trade> toTrades(List<TradeModel> tradeModels) {
         if (tradeModels == null) {
             return null;
         }
-        return tradeModels.stream()
-                .map(this::toTrade)
-                .collect(Collectors.toList());
+        
+        List<Trade> trades = new ArrayList<>(tradeModels.size());
+        for (TradeModel tradeModel : tradeModels) {
+            trades.add(toTrade(tradeModel));
+        }
+        return trades;
+    }
+    
+    /**
+     * Convert a TradeModel directly to TradeDTO without going through Trade entity
+     */
+    public TradeDTO toTradeDTO(TradeModel tradeModel) {
+        if (tradeModel == null) {
+            return null;
+        }
+
+        TradeDTO.TradeDTOBuilder tradeDTOBuilder = TradeDTO.builder();
+        
+        // Generate random UUID for id
+        tradeDTOBuilder.id(UUID.randomUUID().toString());
+        
+        // Map from nested properties
+        if (tradeModel.getBasicInfo() != null) {
+            tradeDTOBuilder.tradeId(tradeModel.getBasicInfo().getTradeId());
+            tradeDTOBuilder.orderId(tradeModel.getBasicInfo().getOrderId());
+            tradeDTOBuilder.tradeDate(localDateToLocalDateTime(tradeModel.getBasicInfo().getTradeDate()));
+            tradeDTOBuilder.orderExecutionTime(mapLocalDateToLocalDateTime(tradeModel.getBasicInfo().getOrderExecutionTime()));
+            tradeDTOBuilder.side(mapTradeTypeToOrderSide(tradeModel.getBasicInfo().getTradeType()));
+        }
+        
+        if (tradeModel.getInstrumentInfo() != null) {
+            tradeDTOBuilder.symbol(tradeModel.getInstrumentInfo().getSymbol());
+            tradeDTOBuilder.executionVenue(tradeModel.getInstrumentInfo().getExchange());
+        }
+        
+        if (tradeModel.getExecutionInfo() != null) {
+            if (tradeModel.getExecutionInfo().getQuantity() != null) {
+                tradeDTOBuilder.quantity(tradeModel.getExecutionInfo().getQuantity());
+            }
+            tradeDTOBuilder.price(tradeModel.getExecutionInfo().getPrice());
+        }
+        
+        if (tradeModel.getCharges() != null) {
+            tradeDTOBuilder.commissionFee(tradeModel.getCharges().getBrokerage());
+            tradeDTOBuilder.otherFees(tradeModel.getCharges().getTotalTaxes());
+        }
+        
+        // Set default values
+        tradeDTOBuilder.type(OrderType.MARKET);
+        tradeDTOBuilder.status(OrderStatus.FILLED);
+        tradeDTOBuilder.counterpartyId("BROKER");
+        
+        // Set calculated values
+        tradeDTOBuilder.totalValue(calculateTotalValue(tradeModel));
+        tradeDTOBuilder.notes(createTradeNotes(tradeModel));
+        
+        return tradeDTOBuilder.build();
+    }
+    
+    /**
+     * Convert a list of TradeModels directly to a list of TradeDTOs
+     */
+    public List<TradeDTO> toTradeDTOs(List<TradeModel> tradeModels) {
+        if (tradeModels == null) {
+            return null;
+        }
+        
+        List<TradeDTO> tradeDTOs = new ArrayList<>(tradeModels.size());
+        for (TradeModel tradeModel : tradeModels) {
+            tradeDTOs.add(toTradeDTO(tradeModel));
+        }
+        return tradeDTOs;
     }
 
     /**
      * Helper method to calculate total trade value
      */
-    default BigDecimal calculateTotalValue(TradeModel tradeModel) {
+    public BigDecimal calculateTotalValue(TradeModel tradeModel) {
         if (tradeModel.getExecutionInfo() == null || 
             tradeModel.getExecutionInfo().getPrice() == null || 
             tradeModel.getExecutionInfo().getQuantity() == null) {
@@ -76,22 +163,27 @@ public interface TradeEventMapper {
     /**
      * Helper method to create trade notes
      */
-    default List<String> createTradeNotes(TradeModel tradeModel) {
+    public List<String> createTradeNotes(TradeModel tradeModel) {
         String note = String.format("Processed from %s trade", 
             tradeModel.getBasicInfo() != null ? tradeModel.getBasicInfo().getBrokerType() : "Unknown");
         return List.of(note);
     }
 
-    @Named("localDateToLocalDateTime")
-    default LocalDateTime localDateToLocalDateTime(LocalDate date) {
+    public LocalDateTime localDateToLocalDateTime(LocalDate date) {
         if (date == null) {
             return null;
         }
         return date.atStartOfDay();
     }
 
-    @Named("mapTradeTypeToOrderSide")
-    default OrderSide mapTradeTypeToOrderSide(am.trade.common.models.enums.TradeType tradeType) {
+    public LocalDateTime mapLocalDateToLocalDateTime(LocalDateTime date) {
+        if (date == null) {
+            return null;
+        }
+        return date;
+    }
+
+    public OrderSide mapTradeTypeToOrderSide(am.trade.common.models.enums.TradeType tradeType) {
         if (tradeType == null) {
             return OrderSide.BUY; // Default to BUY if not specified
         }

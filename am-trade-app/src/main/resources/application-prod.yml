@@ -1,0 +1,76 @@
+# Production environment configuration
+
+# MongoDB production configuration
+spring:
+  data:
+    mongodb:
+      uri: ${MONGO_URI}
+      database: trade_management_prod
+      ssl:
+        enabled: true
+        invalid-hostname-allowed: false
+  cache:
+    type: redis
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD}
+    ssl: true
+
+# Logging configuration for production
+logging:
+  level:
+    root: WARN
+    am.trade: INFO
+    org.springframework.data.mongodb: WARN
+    org.springframework.web: WARN
+  file:
+    name: /var/log/am-trade/application-prod.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+
+# Production server configuration
+server:
+  port: 8080
+  tomcat:
+    max-threads: 400
+    max-connections: 20000
+    accept-count: 200
+    connection-timeout: 3000
+  compression:
+    enabled: true
+    min-response-size: 1024
+    mime-types: application/json,application/xml,text/html,text/plain
+
+# Actuator configuration for production
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Production-specific application settings
+am:
+  trade:
+    services:
+      retry:
+        max-attempts: 3
+        backoff-multiplier: 2.0
+      circuit-breaker:
+        failure-threshold: 40  # More strict in production
+        reset-timeout-seconds: 60
+    dashboard:
+      metrics:
+        collection-interval-seconds: 120  # Less frequent in production to reduce load
+        retention-days: 365  # Longer retention in production

@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Import;
 import am.trade.api.config.ApiAutoConfiguration;
 import am.trade.dashboard.config.DashboardAutoConfiguration;
 import am.trade.kafka.config.KafkaAutoConfiguration;
-import am.trade.models.config.MongoConfig;
+import am.trade.services.config.MongoConfig;
 import am.trade.services.config.TradeServicesAutoConfiguration;
 
 /**

@@ -8,32 +8,26 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
+import am.trade.common.models.TradeModel;
 import am.trade.kafka.mapper.TradeEventMapper;
-import am.trade.kafka.mapper.TradeModelMapper;
 import am.trade.kafka.model.TradeUpdateEvent;
-import am.trade.models.document.Trade;
 import am.trade.models.dto.TradeDTO;
-import am.trade.models.mapper.TradeMapper;
 import am.trade.services.service.TradeService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.List;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "app.kafka.portfolio.consumer.enabled", havingValue = "true", matchIfMissing = false)
+//@ConditionalOnProperty(name = "am.trade.kafka.trade.consumer.enabled", havingValue = "true", matchIfMissing = false)
 public class TradeConsumerService {
 
     private final ObjectMapper objectMapper;
-    private final TradeMapper tradeMapper;
     private final TradeService tradeService;
     private final TradeEventMapper tradeEventMapper;
-    private final TradeModelMapper tradeModelMapper;
 
-    @KafkaListener(topics = "${app.kafka.portfolio.topic}", 
-                  groupId = "${app.kafka.portfolio.consumer.id}",
+    @KafkaListener(topics = "${am.trade.kafka.trade.topic}", 
+                  groupId = "${am.trade.kafka.trade.consumer-group-id}",
                   containerFactory = "kafkaListenerContainerFactory")
     public void consume(String message, Acknowledgment acknowledgment) {
         try {
@@ -58,13 +52,13 @@ public class TradeConsumerService {
         log.info("Processing trade update event with {} trades", event.getTrades().size());
         
         // Convert TradeModel list to Trade entities
-        List<Trade> trades = tradeEventMapper.toTrades(event.getTrades());
-        log.debug("Converted {} trade models to trade entities", trades.size());
+        //List<Trade> trades = tradeEventMapper.toTrades(event.getTrades());
+        log.debug("Converted {} trade models to trade entities", event.getTrades().size());
         
         // Process each trade
-        for (Trade trade : trades) {
+        for (TradeModel trade : event.getTrades()) {
             // Convert Trade entity to TradeDTO
-            TradeDTO tradeDTO = tradeMapper.toDto(trade);
+            TradeDTO tradeDTO = tradeEventMapper.toTradeDTO(trade);
             
             // Set additional metadata from the event
             tradeDTO.setCreatedBy(event.getUserId());
@@ -74,6 +68,6 @@ public class TradeConsumerService {
             tradeService.createTrade(tradeDTO);
         }
         
-        log.info("Successfully processed {} trades", trades.size());
+        log.info("Successfully processed {} trades", event.getTrades().size());
     }   
 }

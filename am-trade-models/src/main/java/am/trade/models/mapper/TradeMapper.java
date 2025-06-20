@@ -56,6 +56,7 @@ public class TradeMapper {
         }
         
         return Trade.builder()
+                .id(tradeDTO.getId())
                 .tradeId(tradeDTO.getTradeId())
                 .orderId(tradeDTO.getOrderId())
                 .symbol(tradeDTO.getSymbol())

@@ -1,4 +1,4 @@
-package am.trade.models.repository;
+package am.trade.services.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;

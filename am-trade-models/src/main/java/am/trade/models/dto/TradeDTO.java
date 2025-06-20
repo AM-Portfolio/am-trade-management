@@ -26,11 +26,12 @@ public class TradeDTO {
     private String orderId;
     private String symbol;
     private LocalDateTime tradeDate;
+    private LocalDateTime orderExecutionTime;
     private LocalDateTime settlementDate;
     private OrderSide side;
     private OrderType type;
     private OrderStatus status;
-    private BigDecimal quantity;
+    private Integer quantity;
     private BigDecimal price;
     private BigDecimal totalValue;
     private String executionVenue;

@@ -16,10 +16,7 @@ import lombok.Data;
  * Base document class for all MongoDB documents
  */
 @Data
-public abstract class BaseDocument {
-    
-    @Id
-    private String id;
+public class BaseDocument {
     
     @CreatedDate
     @Field("created_date")

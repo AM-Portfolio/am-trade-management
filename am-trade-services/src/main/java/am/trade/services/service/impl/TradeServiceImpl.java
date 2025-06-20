@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,8 +14,7 @@ import am.trade.models.document.Trade;
 import am.trade.models.dto.TradeDTO;
 import am.trade.models.enums.OrderStatus;
 import am.trade.models.mapper.TradeMapper;
-import am.trade.models.repository.TradeRepository;
-
+import am.trade.services.repository.TradeRepository;
 import am.trade.services.service.TradeService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -35,9 +33,9 @@ public class TradeServiceImpl implements TradeService {
     private final TradeMapper tradeMapper;
     
     @Override
-    @Transactional
-    @CircuitBreaker(name = "tradeService")
-    @Retry(name = "tradeService")
+    //@Transactional
+    //@CircuitBreaker(name = "tradeService")
+    //@Retry(name = "tradeService")
     public TradeDTO createTrade(TradeDTO tradeDTO) {
         log.info("Creating new trade for symbol: {}", tradeDTO.getSymbol());
         Trade trade = tradeMapper.toEntity(tradeDTO);
