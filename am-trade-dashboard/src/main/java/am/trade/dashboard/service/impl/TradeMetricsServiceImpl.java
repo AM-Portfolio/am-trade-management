@@ -21,9 +21,8 @@ import org.springframework.stereotype.Service;
 
 import am.trade.dashboard.model.TradeMetrics;
 import am.trade.dashboard.service.TradeMetricsService;
-import am.trade.models.document.Trade;
 import am.trade.models.repository.TradeRepository;
-import am.trade.services.dto.TradeDTO;
+import am.trade.models.dto.TradeDTO;
 import am.trade.services.service.TradeService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;

@@ -8,7 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import am.trade.models.enums.OrderStatus;
-import am.trade.services.dto.TradeDTO;
+import am.trade.models.dto.TradeDTO;
 
 /**
  * Service interface for trade operations

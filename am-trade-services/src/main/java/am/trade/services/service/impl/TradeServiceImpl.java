@@ -12,10 +12,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import am.trade.models.document.Trade;
+import am.trade.models.dto.TradeDTO;
 import am.trade.models.enums.OrderStatus;
+import am.trade.models.mapper.TradeMapper;
 import am.trade.models.repository.TradeRepository;
-import am.trade.services.dto.TradeDTO;
-import am.trade.services.mapper.TradeMapper;
+
 import am.trade.services.service.TradeService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;

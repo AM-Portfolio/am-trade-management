@@ -8,9 +8,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 
 import am.trade.models.config.MongoConfig;
-import am.trade.services.mapper.TradeMapper;
-import am.trade.services.service.TradeService;
-import am.trade.services.service.impl.TradeServiceImpl;
+import am.trade.models.mapper.TradeMapper;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.retry.RetryConfig;
 
