@@ -178,41 +178,53 @@ public class TradeServiceImpl implements TradeService {
                 continue;
             }
             
-            // Get the first trade to determine if it's a LONG or SHORT position
-            TradeModel firstTrade = sortedTrades.get(0);
-            TradePositionType tradePositionType = determineTradeType(firstTrade);
-
             // Extract portfolio ID
             String portfolioId = extractPortfolioId(sortedTrades);
             
-            // Process the trades to build entry and exit information
-            TradeDetails.EntryExitInfo entryInfo = calculateEntryInfo(sortedTrades, tradePositionType);
-            TradeDetails.EntryExitInfo exitInfo = calculateExitInfo(sortedTrades, tradePositionType);
+            // Identify separate trade cycles (buy-sell cycles) within the same symbol
+            List<List<TradeModel>> tradeCycles = identifyTradeCycles(sortedTrades);
             
-            // Calculate trade metrics
-            TradeDetails.TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
-            
-            // Determine trade status
-            TradeStatus status = determineTradeStatus(entryInfo, exitInfo, metrics);
-            
-            // Build the complete trade model
-            TradeDetails tradeDetails = TradeDetails.builder()
-                    .tradeId(UUID.randomUUID().toString()) // Generate a unique ID for the trade
-                    .portfolioId(portfolioId)
-                    .symbol(symbol)
-                    .tradePositionType(tradePositionType)
-                    .status(status)
-                    .entryInfo(entryInfo)
-                    .exitInfo(exitInfo)
-                    .metrics(metrics)
-                    .tradeExecutions(sortedTrades)
-                    .build();
+            // Process each trade cycle separately
+            for (List<TradeModel> tradeCycle : tradeCycles) {
+                if (tradeCycle.isEmpty()) {
+                    continue;
+                }
                 
-            result.add(tradeDetails);
+                // Get the first trade to determine if it's a LONG or SHORT position
+                TradeModel firstTrade = tradeCycle.get(0);
+                TradePositionType tradePositionType = determineTradeType(firstTrade);
+                
+                // Process the trades to build entry and exit information
+                TradeDetails.EntryExitInfo entryInfo = calculateEntryInfo(tradeCycle, tradePositionType);
+                TradeDetails.EntryExitInfo exitInfo = calculateExitInfo(tradeCycle, tradePositionType);
+                
+                // Calculate trade metrics
+                TradeDetails.TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
+                
+                // Determine trade status
+                TradeStatus status = determineTradeStatus(entryInfo, exitInfo, metrics);
+                
+                // Build the complete trade model
+                TradeDetails tradeDetails = TradeDetails.builder()
+                        .tradeId(UUID.randomUUID().toString()) // Generate a unique ID for the trade
+                        .portfolioId(portfolioId)
+                        .symbol(symbol)
+                        .tradePositionType(tradePositionType)
+                        .status(status)
+                        .entryInfo(entryInfo)
+                        .exitInfo(exitInfo)
+                        .metrics(metrics)
+                        .tradeExecutions(tradeCycle)
+                        .build();
+                
+                result.add(tradeDetails);
+            }
         }
         
         return result;
     }
+
+
 
     @Override
     public TradeDetails getCurrentPosition(String symbol, String portfolioId) {
@@ -457,6 +469,56 @@ public class TradeServiceImpl implements TradeService {
     /**
      * Determine the trade status based on entry/exit info and metrics
      */
+    /**
+     * Identifies separate trade cycles (buy-sell cycles) within the same symbol.
+     * For example, if you buy 50, sell 50, then buy 10, sell 10, this should be treated as two separate trades.
+     */
+    private List<List<TradeModel>> identifyTradeCycles(List<TradeModel> sortedTrades) {
+        List<List<TradeModel>> tradeCycles = new ArrayList<>();
+        if (sortedTrades.isEmpty()) {
+            return tradeCycles;
+        }
+        
+        // Determine if the overall position is LONG or SHORT based on the first trade
+        TradeModel firstTrade = sortedTrades.get(0);
+        TradePositionType positionType = determineTradeType(firstTrade);
+        
+        // Track the current position size
+        int currentPosition = 0;
+        List<TradeModel> currentCycle = new ArrayList<>();
+        
+        for (TradeModel trade : sortedTrades) {
+            TradeType tradeType = trade.getBasicInfo().getTradeType();
+            int quantity = trade.getExecutionInfo().getQuantity() != null ? trade.getExecutionInfo().getQuantity() : 0;
+            
+            // Add the trade to the current cycle
+            currentCycle.add(trade);
+            
+            // Update position size based on trade type
+            if ((positionType == TradePositionType.LONG && tradeType == TradeType.BUY) ||
+                (positionType == TradePositionType.SHORT && tradeType == TradeType.SELL)) {
+                // Increasing position
+                currentPosition += quantity;
+            } else {
+                // Decreasing position
+                currentPosition -= quantity;
+            }
+            
+            // If position is completely closed (back to zero), end the current cycle
+            if (currentPosition == 0 && !currentCycle.isEmpty()) {
+                tradeCycles.add(new ArrayList<>(currentCycle));
+                currentCycle.clear();
+            }
+        }
+        
+        // If there's an open position left, add it as the final cycle
+        if (!currentCycle.isEmpty()) {
+            tradeCycles.add(currentCycle);
+        }
+        
+        return tradeCycles;
+    }
+    
     private TradeStatus determineTradeStatus(
         TradeDetails.EntryExitInfo entryInfo,
         TradeDetails.EntryExitInfo exitInfo,
