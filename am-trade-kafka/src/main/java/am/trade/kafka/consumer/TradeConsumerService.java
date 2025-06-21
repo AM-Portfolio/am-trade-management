@@ -3,7 +3,6 @@ package am.trade.kafka.consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
@@ -11,8 +10,11 @@ import org.springframework.stereotype.Service;
 import am.trade.common.models.TradeModel;
 import am.trade.kafka.mapper.TradeEventMapper;
 import am.trade.kafka.model.TradeUpdateEvent;
+import am.trade.kafka.service.metrics.TradeService;
 import am.trade.models.dto.TradeDTO;
-import am.trade.services.service.TradeService;
+
+import am.trade.common.models.PortfolioModel;
+import am.trade.common.models.TradeDetails;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -54,20 +56,21 @@ public class TradeConsumerService {
         // Convert TradeModel list to Trade entities
         //List<Trade> trades = tradeEventMapper.toTrades(event.getTrades());
         log.debug("Converted {} trade models to trade entities", event.getTrades().size());
+
+        PortfolioModel portfolioModel = tradeService.processTradeModelsAndGetPortfolio(event.getTrades());
         
-        // Process each trade
-        for (TradeModel trade : event.getTrades()) {
-            // Convert Trade entity to TradeDTO
-            TradeDTO tradeDTO = tradeEventMapper.toTradeDTO(trade);
+        // // Process each trade
+        // for (TradeModel trade : event.getTrades()) {
+        //     // Convert Trade entity to TradeDTO
+        //     TradeDTO tradeDTO = tradeEventMapper.toTradeDTO(trade);
             
-            // Set additional metadata from the event
-            tradeDTO.setCreatedBy(event.getUserId());
+        //     // Set additional metadata from the event
+        //     tradeDTO.setCreatedBy(event.getUserId());
             
-            // Create the trade in the system
-            log.info("Creating trade with ID: {}", tradeDTO.getTradeId());
-            tradeService.createTrade(tradeDTO);
-        }
+        //     // Create the trade in the system
+        //     log.info("Creating trade with ID: {}", tradeDTO.getTradeId());
+        // }
         
-        log.info("Successfully processed {} trades", event.getTrades().size());
+        log.info("Successfully processed {} trades", portfolioModel.getTrades().size());
     }   
 }
