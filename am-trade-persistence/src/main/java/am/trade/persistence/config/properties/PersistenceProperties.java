@@ -1,4 +1,4 @@
-package am.trade.services.config.properties;
+package am.trade.persistence.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

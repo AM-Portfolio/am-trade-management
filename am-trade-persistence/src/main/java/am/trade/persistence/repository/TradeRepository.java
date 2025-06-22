@@ -1,4 +1,4 @@
-package am.trade.services.repository;
+package am.trade.persistence.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;

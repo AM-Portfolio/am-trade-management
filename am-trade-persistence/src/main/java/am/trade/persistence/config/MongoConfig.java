@@ -1,4 +1,4 @@
-package am.trade.services.config;
+package am.trade.persistence.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,12 +9,12 @@ import org.springframework.lang.NonNull;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import am.trade.services.config.properties.PersistenceProperties;
+import am.trade.persistence.config.properties.PersistenceProperties;
 
 import lombok.RequiredArgsConstructor;
 
 @Configuration
-@EnableMongoRepositories(basePackages = "am.trade.services.repository")
+@EnableMongoRepositories(basePackages = "am.trade.persistence.repository")
 @RequiredArgsConstructor
 public class MongoConfig extends AbstractMongoClientConfiguration {
 

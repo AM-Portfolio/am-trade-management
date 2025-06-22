@@ -33,6 +33,13 @@
             <artifactId>am-trade-models</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- Persistence Module -->
+        <dependency>
+            <groupId>am.trade</groupId>
+            <artifactId>am-trade-persistence</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         
         <!-- Services Module -->
         <dependency>

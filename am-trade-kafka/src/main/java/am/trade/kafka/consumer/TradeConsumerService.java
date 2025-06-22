@@ -7,14 +7,11 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
-import am.trade.common.models.TradeModel;
 import am.trade.kafka.mapper.TradeEventMapper;
 import am.trade.kafka.model.TradeUpdateEvent;
 import am.trade.kafka.service.metrics.TradeService;
-import am.trade.models.dto.TradeDTO;
-
+import am.trade.persistence.service.PortfolioPersistenceService;
 import am.trade.common.models.PortfolioModel;
-import am.trade.common.models.TradeDetails;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -26,6 +23,7 @@ public class TradeConsumerService {
 
     private final ObjectMapper objectMapper;
     private final TradeService tradeService;
+    private final PortfolioPersistenceService portfolioPersistenceService;
     private final TradeEventMapper tradeEventMapper;
 
     @KafkaListener(topics = "${am.trade.kafka.trade.topic}", 
@@ -58,7 +56,8 @@ public class TradeConsumerService {
         log.debug("Converted {} trade models to trade entities", event.getTrades().size());
 
         PortfolioModel portfolioModel = tradeService.processTradeModelsAndGetPortfolio(event.getTrades());
-        
+        portfolioPersistenceService.savePortfolio(portfolioModel);
+        log.info("Successfully saved portfolio with ID: {}", portfolioModel.getPortfolioId());
         // // Process each trade
         // for (TradeModel trade : event.getTrades()) {
         //     // Convert Trade entity to TradeDTO
