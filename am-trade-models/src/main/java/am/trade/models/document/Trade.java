@@ -2,7 +2,9 @@ package am.trade.models.document;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -29,6 +31,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class Trade extends BaseDocument {
+
+    @Id
+    private String id;
     
     @Indexed
     @Field("trade_id")
@@ -53,7 +58,7 @@ public class Trade extends BaseDocument {
     
     private OrderStatus status;
     
-    private BigDecimal quantity;
+    private Integer quantity;
     
     private BigDecimal price;
     
@@ -81,5 +86,5 @@ public class Trade extends BaseDocument {
     @Field("other_fees")
     private BigDecimal otherFees;
     
-    private String notes;
+    private List<String> notes;
 }

@@ -1,7 +1,8 @@
-package am.trade.services.dto;
+package am.trade.models.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import am.trade.models.enums.OrderSide;
 import am.trade.models.enums.OrderStatus;
@@ -25,11 +26,12 @@ public class TradeDTO {
     private String orderId;
     private String symbol;
     private LocalDateTime tradeDate;
+    private LocalDateTime orderExecutionTime;
     private LocalDateTime settlementDate;
     private OrderSide side;
     private OrderType type;
     private OrderStatus status;
-    private BigDecimal quantity;
+    private Integer quantity;
     private BigDecimal price;
     private BigDecimal totalValue;
     private String executionVenue;
@@ -39,7 +41,7 @@ public class TradeDTO {
     private String traderId;
     private BigDecimal commissionFee;
     private BigDecimal otherFees;
-    private String notes;
+    private List<String> notes;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
     private String createdBy;

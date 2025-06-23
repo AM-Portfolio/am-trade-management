@@ -1,0 +1,60 @@
+# Pre-production environment configuration
+
+# MongoDB pre-production configuration
+spring:
+  data:
+    mongodb:
+      host: ${MONGO_HOST:mongodb-preprod}
+      port: ${MONGO_PORT:27017}
+      database: trade_management_preprod
+      username: ${MONGO_USERNAME}
+      password: ${MONGO_PASSWORD}
+      authentication-database: admin
+      ssl:
+        enabled: true
+
+# Logging configuration for pre-production
+logging:
+  level:
+    root: INFO
+    am.trade: INFO
+    org.springframework.data.mongodb: INFO
+    org.springframework.web: INFO
+  file:
+    name: /var/log/am-trade/application-preprod.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Pre-production server configuration
+server:
+  port: 8085
+  tomcat:
+    max-threads: 200
+    max-connections: 10000
+    accept-count: 100
+    connection-timeout: 5000
+
+# Actuator configuration for pre-production
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Pre-production-specific application settings
+am:
+  trade:
+    services:
+      retry:
+        max-attempts: 3
+        backoff-multiplier: 1.5
+      circuit-breaker:
+        failure-threshold: 50
+        reset-timeout-seconds: 30
+    dashboard:
+      metrics:
+        collection-interval-seconds: 60
+        retention-days: 90

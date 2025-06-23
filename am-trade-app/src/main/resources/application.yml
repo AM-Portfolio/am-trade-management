@@ -7,12 +7,15 @@ spring:
       dev:
         - common
         - dev
+        - kafka
       preprod:
         - common
         - preprod
+        - kafka
       prod:
         - common
         - prod
+        - kafka
 
 # Actuator configuration
 management:

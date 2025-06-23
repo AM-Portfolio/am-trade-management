@@ -1,9 +1,9 @@
-package am.trade.services.mapper;
+package am.trade.models.mapper;
 
 import org.springframework.stereotype.Component;
 
 import am.trade.models.document.Trade;
-import am.trade.services.dto.TradeDTO;
+import am.trade.models.dto.TradeDTO;
 
 /**
  * Mapper for converting between Trade entity and TradeDTO
@@ -56,6 +56,7 @@ public class TradeMapper {
         }
         
         return Trade.builder()
+                .id(tradeDTO.getId())
                 .tradeId(tradeDTO.getTradeId())
                 .orderId(tradeDTO.getOrderId())
                 .symbol(tradeDTO.getSymbol())

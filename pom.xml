@@ -39,6 +39,7 @@
 		<module>am-trade-api</module>
 		<module>am-trade-app</module>
 		<module>am-trade-kafka</module>
+		<module>am-trade-persistence</module>
 	</modules>
 
 	<dependencyManagement>

@@ -1,0 +1,69 @@
+# Common configuration shared across all environments
+
+# MongoDB common configuration
+spring:
+  data:
+    mongodb:
+      auto-index-creation: true
+      uuid-representation: standard
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
+
+# Resilience4j common configuration
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        waitDurationInOpenState: 5000
+        failureRateThreshold: 50
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 500
+        retryExceptions:
+          - org.springframework.dao.DataAccessException
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+
+# Swagger/OpenAPI configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+  packages-to-scan: am.trade.api.controller
+
+# Server configuration
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/plain
+    min-response-size: 2048
+
+# Application specific common settings
+am:
+  trade:
+    common:
+      date-format: yyyy-MM-dd'T'HH:mm:ss.SSS
+    services:
+      retry:
+        max-attempts: 3
+        backoff-multiplier: 1.5
+      circuit-breaker:
+        failure-threshold: 50
+        reset-timeout-seconds: 30
+    dashboard:
+      metrics:
+        collection-interval-seconds: 60
+        retention-days: 30

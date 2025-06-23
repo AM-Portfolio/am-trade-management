@@ -1,0 +1,54 @@
+# Development environment configuration
+
+# MongoDB development configuration
+# spring:
+#   data:
+#     mongodb:
+#       host: localhost
+#       port: 27017
+#       database: trade_management_dev
+#       username: ${MONGO_USERNAME:admin}
+#       password: ${MONGO_PASSWORD:password}
+#       authentication-database: admin
+
+app:
+  persistence:
+    mongodb:
+      uri: mongodb://admin:password@localhost:27017/portfolio?authSource=admin&retryWrites=false
+      database: portfolio
+# Logging configuration for development
+logging:
+  level:
+    root: INFO
+    am.trade: DEBUG
+    org.springframework.data.mongodb: DEBUG
+    org.springframework.web: DEBUG
+
+# Development server configuration
+server:
+  port: 8086
+
+# Actuator configuration for development
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# Development-specific application settings
+am:
+  trade:
+    services:
+      retry:
+        max-attempts: 5  # More retries in development for testing
+        backoff-multiplier: 1.0
+      circuit-breaker:
+        failure-threshold: 70  # More tolerant in development
+        reset-timeout-seconds: 10
+    dashboard:
+      metrics:
+        collection-interval-seconds: 30  # More frequent in development
+        retention-days: 7

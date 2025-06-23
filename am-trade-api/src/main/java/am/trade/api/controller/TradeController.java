@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import am.trade.services.dto.TradeDTO;
+import am.trade.models.dto.TradeDTO;
 import am.trade.services.service.TradeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -177,4 +177,7 @@ public class TradeController {
         List<TradeDTO> trades = tradeService.findByTraderId(traderId);
         return ResponseEntity.ok(trades);
     }
+
+
+    
 }

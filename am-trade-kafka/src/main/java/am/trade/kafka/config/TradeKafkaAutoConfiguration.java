@@ -16,7 +16,7 @@ import am.trade.kafka.producer.KafkaProducerService;
 @AutoConfiguration(after = KafkaAutoConfiguration.class)
 @ConditionalOnClass(KafkaTemplate.class)
 @EnableConfigurationProperties(KafkaProperties.class)
-@Import({KafkaConfig.class})
+@Import({KafkaConfig.class, TradeServiceConfig.class})
 public class TradeKafkaAutoConfiguration {
 
     @Bean
