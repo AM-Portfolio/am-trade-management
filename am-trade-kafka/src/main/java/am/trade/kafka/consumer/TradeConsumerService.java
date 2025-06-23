@@ -7,7 +7,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
-import am.trade.kafka.mapper.TradeEventMapper;
 import am.trade.kafka.model.TradeUpdateEvent;
 import am.trade.kafka.service.metrics.TradeService;
 import am.trade.persistence.service.PortfolioPersistenceService;
@@ -24,7 +23,6 @@ public class TradeConsumerService {
     private final ObjectMapper objectMapper;
     private final TradeService tradeService;
     private final PortfolioPersistenceService portfolioPersistenceService;
-    private final TradeEventMapper tradeEventMapper;
 
     @KafkaListener(topics = "${am.trade.kafka.trade.topic}", 
                   groupId = "${am.trade.kafka.trade.consumer-group-id}",

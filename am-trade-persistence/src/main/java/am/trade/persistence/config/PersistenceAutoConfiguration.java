@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import am.trade.persistence.mapper.PortfolioMapper;
+import am.trade.persistence.mapper.TradeDetailsMapper;
 import am.trade.persistence.repository.PortfolioRepository;
 import am.trade.persistence.service.PortfolioPersistenceService;
 
@@ -45,7 +46,8 @@ public class PersistenceAutoConfiguration {
     @ConditionalOnProperty(name = "am.trade.persistence.portfolio.enabled", havingValue = "true", matchIfMissing = true)
     public PortfolioPersistenceService portfolioPersistenceService(
             PortfolioRepository portfolioRepository,
-            PortfolioMapper portfolioMapper) {
-        return new PortfolioPersistenceService(portfolioRepository, portfolioMapper);
+            PortfolioMapper portfolioMapper,
+            TradeDetailsMapper tradeDetailsMapper) {
+        return new PortfolioPersistenceService(portfolioRepository, portfolioMapper, tradeDetailsMapper);
     }
 }

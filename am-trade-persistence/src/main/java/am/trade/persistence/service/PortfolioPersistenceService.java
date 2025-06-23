@@ -14,6 +14,7 @@ import am.trade.common.models.TradeDetails;
 import am.trade.persistence.entity.PortfolioEntity;
 import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.mapper.PortfolioMapper;
+import am.trade.persistence.mapper.TradeDetailsMapper;
 import am.trade.persistence.repository.PortfolioRepository;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,11 +28,13 @@ public class PortfolioPersistenceService {
 
     private final PortfolioRepository portfolioRepository;
     private final PortfolioMapper portfolioMapper;
+    private final TradeDetailsMapper tradeDetailsMapper;
 
     @Autowired
-    public PortfolioPersistenceService(PortfolioRepository portfolioRepository, PortfolioMapper portfolioMapper) {
+    public PortfolioPersistenceService(PortfolioRepository portfolioRepository, PortfolioMapper portfolioMapper, TradeDetailsMapper tradeDetailsMapper) {
         this.portfolioRepository = portfolioRepository;
         this.portfolioMapper = portfolioMapper;
+        this.tradeDetailsMapper = tradeDetailsMapper;
     }
 
     /**
@@ -142,7 +145,7 @@ public class PortfolioPersistenceService {
             
             // Convert trade details to entities
             List<TradeDetailsEntity> tradeEntities = tradeDetails.stream()
-                    .map(portfolioMapper::toTradeEntity)
+                    .map(tradeDetailsMapper::toTradeEntity)
                     .collect(Collectors.toList());
             
             // Update trades

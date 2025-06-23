@@ -37,57 +37,5 @@ public class PortfolioModel {
     
     // Asset allocation
     private List<AssetAllocation> assetAllocations;
-    
-    /**
-     * Model representing portfolio-level metrics
-     */
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PortfolioMetrics {
-        // Trade counts
-        private int totalTrades;
-        private int winningTrades;
-        private int losingTrades;
-        private int breakEvenTrades;
-        private int openPositions;
-        
-        // Performance metrics
-        private BigDecimal winRate;
-        private BigDecimal lossRate;
-        private BigDecimal profitFactor;
-        private BigDecimal expectancy;
-        
-        // Value metrics
-        private BigDecimal totalValue;
-        private BigDecimal totalProfit;
-        private BigDecimal totalLoss;
-        private BigDecimal netProfitLoss;
-        private BigDecimal netProfitLossPercentage;
-        
-        // Risk metrics
-        private BigDecimal maxDrawdown;
-        private BigDecimal maxDrawdownPercentage;
-        private BigDecimal sharpeRatio;
-        private BigDecimal sortinoRatio;
-        
-        // Time-based metrics
-        private Map<String, BigDecimal> monthlyReturns;
-        private Map<String, BigDecimal> weeklyReturns;
-    }
-    
-    /**
-     * Model representing asset allocation in the portfolio
-     */
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AssetAllocation {
-        private String assetClass;
-        private BigDecimal currentPercentage;
-        private BigDecimal targetPercentage;
-        private BigDecimal variance;
-    }
+
 }

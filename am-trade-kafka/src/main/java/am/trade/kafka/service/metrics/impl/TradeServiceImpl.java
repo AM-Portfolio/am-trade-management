@@ -1,12 +1,16 @@
 package am.trade.kafka.service.metrics.impl;
 
+import am.trade.common.models.EntryExitInfo;
+import am.trade.common.models.PortfolioMetrics;
 import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.TradeDetails;
+import am.trade.common.models.TradeMetrics;
 import am.trade.common.models.TradeModel;
 import am.trade.common.models.enums.TradePositionType;
 import am.trade.common.models.enums.TradeStatus;
 import am.trade.common.models.enums.TradeType;
 import am.trade.kafka.service.metrics.TradeService;
+import am.trade.persistence.service.TradeDetailsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -25,9 +29,16 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TradeServiceImpl implements TradeService {
 
+    private final TradeDetailsService tradeDetailsService;
+    
+    public TradeServiceImpl(TradeDetailsService tradeDetailsService) {
+        this.tradeDetailsService = tradeDetailsService;
+    }
+
     private static final int DECIMAL_SCALE = 4;
     private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
 
+    
     @Override
     public PortfolioModel processTradeModelsAndGetPortfolio(List<TradeModel> trades) {
         if (trades == null || trades.isEmpty()) {
@@ -37,11 +48,16 @@ public class TradeServiceImpl implements TradeService {
         // Process trades into trade details
         List<TradeDetails> tradeDetails = processTradeModels(trades);
         
+        // Save all trade details to the database
+        log.info("Saving {} processed trade details to database", tradeDetails.size());
+        tradeDetails = tradeDetailsService.saveAllTradeDetails(tradeDetails);
+        log.info("Successfully saved {} trade details records", tradeDetails.size());
+        
         // Extract portfolio ID from the first trade
         String portfolioId = extractPortfolioId(trades);
         
         // Calculate portfolio-level metrics
-        PortfolioModel.PortfolioMetrics portfolioMetrics = calculatePortfolioMetrics(tradeDetails);
+        PortfolioMetrics portfolioMetrics = calculatePortfolioMetrics(tradeDetails);
         
         // Build the portfolio model
         return PortfolioModel.builder()
@@ -59,7 +75,7 @@ public class TradeServiceImpl implements TradeService {
     /**
      * Calculate portfolio-level metrics from trade details
      */
-    private PortfolioModel.PortfolioMetrics calculatePortfolioMetrics(List<TradeDetails> tradeDetails) {
+    private PortfolioMetrics calculatePortfolioMetrics(List<TradeDetails> tradeDetails) {
         // Initialize counters and accumulators
         int totalTrades = tradeDetails.size();
         int winningTrades = 0;
@@ -135,7 +151,7 @@ public class TradeServiceImpl implements TradeService {
                 : BigDecimal.ZERO;
         
         // Build and return portfolio metrics
-        return PortfolioModel.PortfolioMetrics.builder()
+        return PortfolioMetrics.builder()
                 .totalTrades(totalTrades)
                 .winningTrades(winningTrades)
                 .losingTrades(losingTrades)
@@ -195,11 +211,11 @@ public class TradeServiceImpl implements TradeService {
                 TradePositionType tradePositionType = determineTradeType(firstTrade);
                 
                 // Process the trades to build entry and exit information
-                TradeDetails.EntryExitInfo entryInfo = calculateEntryInfo(tradeCycle, tradePositionType);
-                TradeDetails.EntryExitInfo exitInfo = calculateExitInfo(tradeCycle, tradePositionType);
+                EntryExitInfo entryInfo = calculateEntryInfo(tradeCycle, tradePositionType);
+                EntryExitInfo exitInfo = calculateExitInfo(tradeCycle, tradePositionType);
                 
                 // Calculate trade metrics
-                TradeDetails.TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
+                TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
                 
                 // Determine trade status
                 TradeStatus status = determineTradeStatus(entryInfo, exitInfo, metrics);
@@ -272,7 +288,7 @@ public class TradeServiceImpl implements TradeService {
     /**
      * Calculate entry information based on the trade type and trades
      */
-    private TradeDetails.EntryExitInfo calculateEntryInfo(List<TradeModel> trades, TradePositionType tradePositionType) {
+    private EntryExitInfo calculateEntryInfo(List<TradeModel> trades, TradePositionType tradePositionType) {
         List<TradeModel> entryTrades = new ArrayList<>();
         
         // For LONG positions, entry trades are BUY orders
@@ -319,7 +335,7 @@ public class TradeServiceImpl implements TradeService {
                 ? weightedPriceSum.divide(totalQuantity, DECIMAL_SCALE, ROUNDING_MODE)
                 : BigDecimal.ZERO;
         
-        return TradeDetails.EntryExitInfo.builder()
+        return EntryExitInfo.builder()
                 .timestamp(firstEntryTime)
                 .price(averageEntryPrice)
                 .quantity(totalQuantity.intValue())
@@ -331,7 +347,7 @@ public class TradeServiceImpl implements TradeService {
     /**
      * Calculate exit information based on the trade type and trades
      */
-    private TradeDetails.EntryExitInfo calculateExitInfo(List<TradeModel> trades, TradePositionType tradePositionType) {
+    private EntryExitInfo calculateExitInfo(List<TradeModel> trades, TradePositionType tradePositionType) {
         List<TradeModel> exitTrades = new ArrayList<>();
         
         // For LONG positions, exit trades are SELL orders
@@ -378,7 +394,7 @@ public class TradeServiceImpl implements TradeService {
                 ? weightedPriceSum.divide(totalQuantity, DECIMAL_SCALE, ROUNDING_MODE)
                 : BigDecimal.ZERO;
         
-        return TradeDetails.EntryExitInfo.builder()
+        return EntryExitInfo.builder()
                 .timestamp(lastExitTime)
                 .price(averageExitPrice)
                 .quantity(totalQuantity.intValue())
@@ -390,14 +406,14 @@ public class TradeServiceImpl implements TradeService {
     /**
      * Calculate trade metrics based on entry and exit information
      */
-    private TradeDetails.TradeMetrics calculateTradeMetrics(
-        TradeDetails.EntryExitInfo entryInfo, 
-        TradeDetails.EntryExitInfo exitInfo,
+    private TradeMetrics calculateTradeMetrics(
+        EntryExitInfo entryInfo, 
+        EntryExitInfo exitInfo,
             TradePositionType tradePositionType) {
         
         // If position is still open (no exit info), return basic metrics
         if (exitInfo == null) {
-            return TradeDetails.TradeMetrics.builder()
+            return TradeMetrics.builder()
                     .profitLoss(BigDecimal.ZERO)
                     .profitLossPercentage(BigDecimal.ZERO)
                     .returnOnEquity(BigDecimal.ZERO)
@@ -453,7 +469,7 @@ public class TradeServiceImpl implements TradeService {
                 ? rewardAmount.divide(riskAmount, DECIMAL_SCALE, ROUNDING_MODE)
                 : BigDecimal.ONE;
         
-        return TradeDetails.TradeMetrics.builder()
+        return TradeMetrics.builder()
                 .profitLoss(profitLoss)
                 .profitLossPercentage(profitLossPercentage)
                 .returnOnEquity(returnOnEquity)
@@ -520,9 +536,9 @@ public class TradeServiceImpl implements TradeService {
     }
     
     private TradeStatus determineTradeStatus(
-        TradeDetails.EntryExitInfo entryInfo,
-        TradeDetails.EntryExitInfo exitInfo,
-        TradeDetails.TradeMetrics metrics) {
+        EntryExitInfo entryInfo,
+        EntryExitInfo exitInfo,
+        TradeMetrics metrics) {
         
         // If no exit info, position is still open
         if (exitInfo == null) {

@@ -1,0 +1,153 @@
+package am.trade.persistence.service.impl;
+
+import am.trade.common.models.TradeDetails;
+import am.trade.common.models.enums.TradeStatus;
+import am.trade.persistence.entity.TradeDetailsEntity;
+import am.trade.persistence.mapper.TradeDetailsMapper;
+import am.trade.persistence.repository.TradeDetailsRepository;
+import am.trade.persistence.service.TradeDetailsService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+/**
+ * Implementation of TradeDetailsService that converts repository entities to domain models
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class TradeDetailsServiceImpl implements TradeDetailsService {
+
+    private final TradeDetailsRepository tradeDetailsRepository;
+    private final TradeDetailsMapper tradeDetailsMapper;
+    
+    @Override
+    public Optional<TradeDetails> findModelById(String id) {
+        log.debug("Finding trade details by ID: {}", id);
+        return tradeDetailsRepository.findById(id)
+                .map(tradeDetailsMapper::toTradeDetails);
+    }
+    
+    @Override
+    public Optional<TradeDetails> findModelByTradeId(String tradeId) {
+        log.debug("Finding trade details by trade ID: {}", tradeId);
+        return tradeDetailsRepository.findByTradeId(tradeId)
+                .map(tradeDetailsMapper::toTradeDetails);
+    }
+    
+    @Override
+    public List<TradeDetails> findModelsBySymbol(String symbol) {
+        log.debug("Finding trade details by symbol: {}", symbol);
+        return tradeDetailsRepository.findBySymbol(symbol).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<TradeDetails> findModelsByEntryDateBetween(LocalDateTime startDate, LocalDateTime endDate) {
+        log.debug("Finding trade details by entry date between {} and {}", startDate, endDate);
+        return tradeDetailsRepository.findByEntryDateBetween(startDate, endDate).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public Page<TradeDetails> findModelsByPortfolioId(String portfolioId, Pageable pageable) {
+        log.debug("Finding trade details by portfolio ID: {} with pagination", portfolioId);
+        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findByPortfolioId(portfolioId, pageable);
+        List<TradeDetails> models = entityPage.getContent().stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
+    }
+    
+    @Override
+    public List<TradeDetails> findModelsByExitDateBetween(LocalDateTime startDate, LocalDateTime endDate) {
+        log.debug("Finding trade details by exit date between {} and {}", startDate, endDate);
+        return tradeDetailsRepository.findByExitDateBetween(startDate, endDate).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<TradeDetails> findModelsByStatus(TradeStatus status) {
+        log.debug("Finding trade details by status: {}", status);
+        // Convert TradeStatus to OrderStatus if needed, or handle the mapping appropriately
+        // This depends on how your enums are structured
+        return tradeDetailsRepository.findByStatus(status).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<TradeDetails> findModelsByPortfolioId(String portfolioId) {
+        log.debug("Finding trade details by portfolio ID: {}", portfolioId);
+        return tradeDetailsRepository.findByPortfolioId(portfolioId).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<TradeDetails> findModelsBySymbolAndEntryDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate) {
+        log.debug("Finding trade details by symbol: {} and entry date between {} and {}", symbol, startDate, endDate);
+        return tradeDetailsRepository.findBySymbolAndEntryDateBetween(symbol, startDate, endDate).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<TradeDetails> findModelsBySymbolAndExitDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate) {
+        log.debug("Finding trade details by symbol: {} and exit date between {} and {}", symbol, startDate, endDate);
+        return tradeDetailsRepository.findBySymbolAndExitDateBetween(symbol, startDate, endDate).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<TradeDetails> findModelsBySymbol(String symbol, Pageable pageable) {
+        log.debug("Finding trade details by symbol: {} with pagination", symbol);
+        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findBySymbol(symbol, pageable);
+        List<TradeDetails> models = entityPage.getContent().stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
+    }
+
+    @Override
+    public Page<TradeDetails> findModelsByStatus(TradeStatus status, Pageable pageable) {
+        log.debug("Finding trade details by status: {} with pagination", status);
+        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findByStatus(status, pageable);
+        List<TradeDetails> models = entityPage.getContent().stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
+    }
+    
+    @Override
+    public TradeDetails saveTradeDetails(TradeDetails tradeDetails) {
+        log.debug("Saving trade details with trade ID: {}", tradeDetails.getTradeId());
+        TradeDetailsEntity entity = tradeDetailsMapper.toTradeEntity(tradeDetails);
+        TradeDetailsEntity savedEntity = tradeDetailsRepository.save(entity);
+        return tradeDetailsMapper.toTradeDetails(savedEntity);
+    }
+    
+    @Override
+    public List<TradeDetails> saveAllTradeDetails(List<TradeDetails> tradeDetailsList) {
+        log.debug("Saving {} trade details records", tradeDetailsList.size());
+        List<TradeDetailsEntity> entities = tradeDetailsList.stream()
+                .map(tradeDetailsMapper::toTradeEntity)
+                .collect(Collectors.toList());
+        List<TradeDetailsEntity> savedEntities = tradeDetailsRepository.saveAll(entities);
+        return savedEntities.stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+}

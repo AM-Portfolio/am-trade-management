@@ -8,6 +8,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import am.trade.common.models.AssetAllocation;
+import am.trade.common.models.PortfolioMetrics;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -51,54 +53,4 @@ public class PortfolioEntity {
     
     // Asset allocation
     private List<AssetAllocation> assetAllocations;
-    
-    /**
-     * Embedded document for portfolio metrics
-     */
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PortfolioMetrics {
-        // Trade counts
-        private int totalTrades;
-        private int winningTrades;
-        private int losingTrades;
-        private int breakEvenTrades;
-        private int openPositions;
-        
-        // Profit/loss metrics
-        private BigDecimal totalProfitLoss;
-        private BigDecimal totalProfitLossPercentage;
-        private BigDecimal winRate;
-        private BigDecimal lossRate;
-        private BigDecimal averageWin;
-        private BigDecimal averageLoss;
-        private BigDecimal largestWin;
-        private BigDecimal largestLoss;
-        
-        // Risk metrics
-        private BigDecimal maxDrawdown;
-        private BigDecimal maxDrawdownPercentage;
-        private BigDecimal sharpeRatio;
-        private BigDecimal sortinoRatio;
-        private BigDecimal calmarRatio;
-    }
-    
-    /**
-     * Embedded document for asset allocation
-     */
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AssetAllocation {
-        private String assetClass;
-        private String sector;
-        private String industry;
-        private BigDecimal allocation;
-        private BigDecimal currentValue;
-        private BigDecimal profitLoss;
-        private BigDecimal profitLossPercentage;
-    }
 }
