@@ -40,21 +40,18 @@ public class TradeServiceImpl implements TradeService {
 
     
     @Override
-    public PortfolioModel processTradeModelsAndGetPortfolio(List<TradeModel> trades) {
+    public PortfolioModel processTradeModelsAndGetPortfolio(List<TradeModel> trades, String portfolioId) {
         if (trades == null || trades.isEmpty()) {
             return null;
         }
         
         // Process trades into trade details
-        List<TradeDetails> tradeDetails = processTradeModels(trades);
+        List<TradeDetails> tradeDetails = processTradeModels(trades, portfolioId);
         
         // Save all trade details to the database
         log.info("Saving {} processed trade details to database", tradeDetails.size());
         tradeDetails = tradeDetailsService.saveAllTradeDetails(tradeDetails);
         log.info("Successfully saved {} trade details records", tradeDetails.size());
-        
-        // Extract portfolio ID from the first trade
-        String portfolioId = extractPortfolioId(trades);
         
         // Calculate portfolio-level metrics
         PortfolioMetrics portfolioMetrics = calculatePortfolioMetrics(tradeDetails);
@@ -170,7 +167,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
     @Override
-    public List<TradeDetails> processTradeModels(List<TradeModel> trades) {
+    public List<TradeDetails> processTradeModels(List<TradeModel> trades, String portfolioId) {
         if (trades == null || trades.isEmpty()) {
             return new ArrayList<>();
         }
@@ -193,9 +190,6 @@ public class TradeServiceImpl implements TradeService {
             if (sortedTrades.isEmpty()) {
                 continue;
             }
-            
-            // Extract portfolio ID
-            String portfolioId = extractPortfolioId(sortedTrades);
             
             // Identify separate trade cycles (buy-sell cycles) within the same symbol
             List<List<TradeModel>> tradeCycles = identifyTradeCycles(sortedTrades);
@@ -265,15 +259,6 @@ public class TradeServiceImpl implements TradeService {
         } else {
             return TradePositionType.SHORT;
         }
-    }
-    
-    /**
-     * Extract the portfolio ID from the trades
-     */
-    private String extractPortfolioId(List<TradeModel> trades) {
-        // For simplicity, we'll use the portfolio ID from the first trade
-        // In a real implementation, you might want to validate that all trades have the same portfolio ID
-        return trades.get(0).getBasicInfo().getTradeId().split("-")[0]; // Assuming portfolio ID is part of trade ID
     }
     
     /**

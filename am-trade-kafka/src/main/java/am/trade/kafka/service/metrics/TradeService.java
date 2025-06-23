@@ -19,7 +19,7 @@ public interface TradeService {
      * @param trades List of trades to process
      * @return List of complete trades with WIN, LOSS, or OPEN status
      */
-    List<TradeDetails> processTradeModels(List<TradeModel> trades);
+    List<TradeDetails> processTradeModels(List<TradeModel> trades, String portfolioId);
     
     /**
      * Get the current status of an open position
@@ -37,5 +37,5 @@ public interface TradeService {
      * @param trades List of trades to process
      * @return Complete portfolio model with trades and metrics
      */
-    PortfolioModel processTradeModelsAndGetPortfolio(List<TradeModel> trades);
+    PortfolioModel processTradeModelsAndGetPortfolio(List<TradeModel> trades, String portfolioId);
 }

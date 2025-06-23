@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 public class TradeUpdateEvent {
     private UUID id;
     private String userId;
+    private String portfolioId;
     private BrokerType brokerType;
     private LocalDateTime timestamp;
     private FNOTradeType tradeType; // FNO or EQUITY

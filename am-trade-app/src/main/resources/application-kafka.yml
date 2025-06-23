@@ -18,7 +18,8 @@ am:
   trade:
     kafka:
       trade:
-        consumer.enabled: true
+        consumer:
+          enabled: true
         topic: am-trade
         consumer-group-id: am-trade-group
       retries: 3

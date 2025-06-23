@@ -177,4 +177,7 @@ public class TradeController {
         List<TradeDTO> trades = tradeService.findByTraderId(traderId);
         return ResponseEntity.ok(trades);
     }
+
+
+    
 }

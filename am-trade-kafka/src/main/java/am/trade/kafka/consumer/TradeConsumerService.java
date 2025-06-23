@@ -3,6 +3,9 @@ package am.trade.kafka.consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.UUID;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
@@ -17,7 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-//@ConditionalOnProperty(name = "am.trade.kafka.trade.consumer.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(name = "am.trade.kafka.trade.consumer.enabled", havingValue = "true", matchIfMissing = false)
 public class TradeConsumerService {
 
     private final ObjectMapper objectMapper;
@@ -53,7 +56,9 @@ public class TradeConsumerService {
         //List<Trade> trades = tradeEventMapper.toTrades(event.getTrades());
         log.debug("Converted {} trade models to trade entities", event.getTrades().size());
 
-        PortfolioModel portfolioModel = tradeService.processTradeModelsAndGetPortfolio(event.getTrades());
+        String portfolioId = UUID.randomUUID().toString();
+
+        PortfolioModel portfolioModel = tradeService.processTradeModelsAndGetPortfolio(event.getTrades(), portfolioId);
         portfolioPersistenceService.savePortfolio(portfolioModel);
         log.info("Successfully saved portfolio with ID: {}", portfolioModel.getPortfolioId());
         // // Process each trade
