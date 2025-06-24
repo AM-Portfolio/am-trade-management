@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import am.trade.common.models.EntryExitInfo;
+import am.trade.common.models.InstrumentInfo;
 import am.trade.common.models.TradeMetrics;
 import am.trade.common.models.TradeModel;
 import am.trade.common.models.enums.TradePositionType;
@@ -33,6 +34,8 @@ public class TradeDetailsEntity {
     
     @Indexed
     private String portfolioId;
+
+    private InstrumentInfo instrumentInfo;
     
     @Indexed
     private String symbol;

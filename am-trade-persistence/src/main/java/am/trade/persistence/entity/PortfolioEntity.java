@@ -51,6 +51,12 @@ public class PortfolioEntity {
     // List of trades in this portfolio
     private List<TradeDetailsEntity> trades;
     
+    // List of winning trades in this portfolio
+    private List<TradeDetailsEntity> winningTrades;
+    
+    // List of losing trades in this portfolio
+    private List<TradeDetailsEntity> losingTrades;
+    
     // Asset allocation
     private List<AssetAllocation> assetAllocations;
 }

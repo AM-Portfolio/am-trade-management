@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ConditionalOnProperty(name = "am.trade.kafka.trade.consumer.enabled", havingValue = "true", matchIfMissing = false)
 public class TradeConsumerService {
 
+    
     private final ObjectMapper objectMapper;
     private final TradeService tradeService;
     private final PortfolioPersistenceService portfolioPersistenceService;
@@ -56,7 +57,7 @@ public class TradeConsumerService {
         //List<Trade> trades = tradeEventMapper.toTrades(event.getTrades());
         log.debug("Converted {} trade models to trade entities", event.getTrades().size());
 
-        String portfolioId = UUID.randomUUID().toString();
+        String portfolioId = event.getId().toString();
 
         PortfolioModel portfolioModel = tradeService.processTradeModelsAndGetPortfolio(event.getTrades(), portfolioId);
         portfolioPersistenceService.savePortfolio(portfolioModel);

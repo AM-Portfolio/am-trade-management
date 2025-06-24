@@ -70,6 +70,22 @@ public class PortfolioMapper {
                     .collect(Collectors.toList());
         }
         
+        // Map winning trades if present
+        List<TradeDetailsEntity> winningTrades = null;
+        if (model.getWinningTrades() != null) {
+            winningTrades = model.getWinningTrades().stream()
+                    .map(tradeDetailsMapper::toTradeEntity)
+                    .collect(Collectors.toList());
+        }
+        
+        // Map losing trades if present
+        List<TradeDetailsEntity> losingTrades = null;
+        if (model.getLosingTrades() != null) {
+            losingTrades = model.getLosingTrades().stream()
+                    .map(tradeDetailsMapper::toTradeEntity)
+                    .collect(Collectors.toList());
+        }
+        
         return PortfolioEntity.builder()
                 .portfolioId(model.getPortfolioId())
                 .name(model.getName())
@@ -83,6 +99,8 @@ public class PortfolioMapper {
                 .lastUpdatedDate(model.getLastUpdatedDate())
                 .metrics(metricsEntity)
                 .trades(tradeEntities)
+                .winningTrades(winningTrades)
+                .losingTrades(losingTrades)
                 .assetAllocations(assetAllocations)
                 .build();
     }
@@ -101,6 +119,22 @@ public class PortfolioMapper {
         List<TradeDetails> tradeDetails = null;
         if (entity.getTrades() != null) {
             tradeDetails = entity.getTrades().stream()
+                    .map(tradeDetailsMapper::toTradeDetails)
+                    .collect(Collectors.toList());
+        }
+        
+        // Map winning trades if present
+        List<TradeDetails> winningTrades = null;
+        if (entity.getWinningTrades() != null) {
+            winningTrades = entity.getWinningTrades().stream()
+                    .map(tradeDetailsMapper::toTradeDetails)
+                    .collect(Collectors.toList());
+        }
+        
+        // Map losing trades if present
+        List<TradeDetails> losingTrades = null;
+        if (entity.getLosingTrades() != null) {
+            losingTrades = entity.getLosingTrades().stream()
                     .map(tradeDetailsMapper::toTradeDetails)
                     .collect(Collectors.toList());
         }

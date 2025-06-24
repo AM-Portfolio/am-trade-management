@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 
 import am.trade.common.models.enums.BrokerType;
 import am.trade.common.models.enums.TradeType;
-import am.trade.common.models.enums.FNOTradeType;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,41 +38,6 @@ public class TradeModel {
         private LocalDateTime orderExecutionTime;
         private BrokerType brokerType;
         private TradeType tradeType;
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class InstrumentInfo {
-        private String symbol;
-        private String isin;
-        private String exchange;
-        private String segment;
-        private String series;
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ExecutionInfo {
-        private String auction;
-        private Integer quantity;
-        private BigDecimal price;
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class FnOInfo {
-        private FNOTradeType instrumentType; // FUTIDX, OPTIDX, FUTEQ, OPTEQ
-        private LocalDate expiryDate;
-        private BigDecimal strikePrice;
-        private String optionType; // CE, PE, null for futures
-        private BigDecimal lotSize;
-        private BigDecimal premiumValue;
     }
 
     @Data

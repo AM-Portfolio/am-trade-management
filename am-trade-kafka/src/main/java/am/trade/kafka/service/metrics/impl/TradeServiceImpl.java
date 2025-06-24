@@ -1,6 +1,7 @@
 package am.trade.kafka.service.metrics.impl;
 
 import am.trade.common.models.EntryExitInfo;
+import am.trade.common.models.InstrumentInfo;
 import am.trade.common.models.PortfolioMetrics;
 import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.TradeDetails;
@@ -37,6 +38,26 @@ public class TradeServiceImpl implements TradeService {
 
     private static final int DECIMAL_SCALE = 4;
     private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
+    
+    /**
+     * Converts InstrumentInfo from TradeModel to standalone InstrumentInfo class
+     * 
+     * @param modelInstrumentInfo The instrument info from TradeModel
+     * @return Converted InstrumentInfo object
+     */
+    private am.trade.common.models.InstrumentInfo convertToInstrumentInfo(am.trade.common.models.InstrumentInfo modelInstrumentInfo) {
+        if (modelInstrumentInfo == null) {
+            return null;
+        }
+        
+        return am.trade.common.models.InstrumentInfo.builder()
+                .symbol(modelInstrumentInfo.getSymbol())
+                .isin(modelInstrumentInfo.getIsin())
+                .exchange(modelInstrumentInfo.getExchange())
+                .segment(modelInstrumentInfo.getSegment())
+                .series(modelInstrumentInfo.getSeries())
+                .build();
+    }
 
     
     @Override
@@ -56,6 +77,10 @@ public class TradeServiceImpl implements TradeService {
         // Calculate portfolio-level metrics
         PortfolioMetrics portfolioMetrics = calculatePortfolioMetrics(tradeDetails);
         
+        // Sort trades by profit/loss for easy access to best and worst performers
+        List<TradeDetails> winningTrades = sortWinningTrades(tradeDetails);
+        List<TradeDetails> losingTrades = sortLosingTrades(tradeDetails);
+        
         // Build the portfolio model
         return PortfolioModel.builder()
                 .portfolioId(portfolioId)
@@ -65,6 +90,8 @@ public class TradeServiceImpl implements TradeService {
                 .createdDate(LocalDateTime.now())
                 .lastUpdatedDate(LocalDateTime.now())
                 .trades(tradeDetails)
+                .winningTrades(winningTrades)
+                .losingTrades(losingTrades)
                 .metrics(portfolioMetrics)
                 .build();
     }
@@ -219,6 +246,7 @@ public class TradeServiceImpl implements TradeService {
                         .tradeId(UUID.randomUUID().toString()) // Generate a unique ID for the trade
                         .portfolioId(portfolioId)
                         .symbol(symbol)
+                        .instrumentInfo(convertToInstrumentInfo(firstTrade.getInstrumentInfo()))
                         .tradePositionType(tradePositionType)
                         .status(status)
                         .entryInfo(entryInfo)
@@ -242,6 +270,43 @@ public class TradeServiceImpl implements TradeService {
         // For now, we'll return null as a placeholder
         log.info("Getting current position for symbol {} in portfolio {}", symbol, portfolioId);
         return null;
+    }
+    
+    /**
+     * Sorts winning trades by profit in descending order (highest profit first)
+     * 
+     * @param trades List of all trades
+     * @return List of winning trades sorted by profit (highest to lowest)
+     */
+    private List<TradeDetails> sortWinningTrades(List<TradeDetails> trades) {
+        if (trades == null || trades.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        return trades.stream()
+                .filter(trade -> trade.getStatus() == TradeStatus.WIN)
+                .filter(trade -> trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null)
+                .sorted((t1, t2) -> t2.getMetrics().getProfitLoss().compareTo(t1.getMetrics().getProfitLoss()))
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Sorts losing trades by loss amount in descending order (highest loss first)
+     * Loss amounts are typically negative, so we sort by the absolute value
+     * 
+     * @param trades List of all trades
+     * @return List of losing trades sorted by loss amount (highest to lowest)
+     */
+    private List<TradeDetails> sortLosingTrades(List<TradeDetails> trades) {
+        if (trades == null || trades.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        return trades.stream()
+                .filter(trade -> trade.getStatus() == TradeStatus.LOSS)
+                .filter(trade -> trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null)
+                .sorted((t1, t2) -> t1.getMetrics().getProfitLoss().compareTo(t2.getMetrics().getProfitLoss()))
+                .collect(Collectors.toList());
     }
     
     /**

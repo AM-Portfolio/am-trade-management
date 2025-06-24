@@ -20,6 +20,7 @@ import java.util.List;
 public class TradeDetails {
     private String tradeId;
     private String portfolioId;
+    private InstrumentInfo instrumentInfo;
     private String symbol;
     private String strategy;
     
