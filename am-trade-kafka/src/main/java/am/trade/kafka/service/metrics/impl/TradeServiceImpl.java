@@ -1,7 +1,6 @@
 package am.trade.kafka.service.metrics.impl;
 
 import am.trade.common.models.EntryExitInfo;
-import am.trade.common.models.InstrumentInfo;
 import am.trade.common.models.PortfolioMetrics;
 import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.TradeDetails;
@@ -234,6 +233,14 @@ public class TradeServiceImpl implements TradeService {
                 // Process the trades to build entry and exit information
                 EntryExitInfo entryInfo = calculateEntryInfo(tradeCycle, tradePositionType);
                 EntryExitInfo exitInfo = calculateExitInfo(tradeCycle, tradePositionType);
+                
+                // For SHORT positions, swap entry and exit info since the first trade is a SELL (entry) and last trade is a BUY (exit)
+                // which is the reverse of LONG positions
+                if (tradePositionType == TradePositionType.SHORT) {
+                    EntryExitInfo temp = entryInfo;
+                    entryInfo = exitInfo;
+                    exitInfo = temp;
+                }
                 
                 // Calculate trade metrics
                 TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
