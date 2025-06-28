@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -43,4 +44,15 @@ public class TradeDetails {
     // Trade notes and tags
     private String notes;
     private List<String> tags;
+
+
+    public LocalDate getTradeDate() {
+        return entryInfo.getTimestamp().toLocalDate();
+    }
+
+    public LocalDate getTradeEndDate() {
+        return exitInfo.getTimestamp().toLocalDate();
+    }
 }
+
+

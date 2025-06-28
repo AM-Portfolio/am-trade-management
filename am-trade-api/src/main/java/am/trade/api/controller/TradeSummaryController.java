@@ -116,4 +116,6 @@ public class TradeSummaryController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    
 }

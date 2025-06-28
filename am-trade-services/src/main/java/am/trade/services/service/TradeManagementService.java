@@ -82,4 +82,31 @@ public interface TradeManagementService {
      * @return Summary statistics for the specified portfolio and date range
      */
     TradeSummary getTradeSummary(String portfolioId, LocalDate startDate, LocalDate endDate);
+    
+    /**
+     * Get all trades for a specific portfolio
+     * 
+     * @param portfolioId The portfolio ID
+     * @return List of all trade details for the specified portfolio
+     */
+    List<TradeDetails> getAllTradesByTradePortfolioId(String portfolioId);    
+    /**
+     * Get trades for a specific portfolio within a date range
+     * If startDate and endDate are null, returns all trades for the portfolio
+     * 
+     * @param portfolioId The portfolio ID
+     * @param startDate The start date (inclusive), can be null for all trades
+     * @param endDate The end date (inclusive), can be null for all trades
+     * @return List of trade details for the specified portfolio and date range
+     */
+    List<TradeDetails> getTradesByDateRange(String portfolioId, LocalDate startDate, LocalDate endDate);
+    
+    /**
+     * Get trades for a specific portfolio filtered by symbols
+     * 
+     * @param portfolioId The portfolio ID
+     * @param symbols List of symbols to filter by
+     * @return List of trade details for the specified portfolio and symbols
+     */
+    List<TradeDetails> getTradesBySymbols(String portfolioId, List<String> symbols);
 }

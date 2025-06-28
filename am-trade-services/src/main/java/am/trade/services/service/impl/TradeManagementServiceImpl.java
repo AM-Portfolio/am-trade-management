@@ -117,7 +117,55 @@ public class TradeManagementServiceImpl implements TradeManagementService {
     public Page<TradeDetails> getTradeDetailsByPortfolio(String portfolioId, Pageable pageable) {
         return tradeDetailsService.findModelsByPortfolioId(portfolioId, pageable);
     }
+    
+    @Override
+    public List<TradeDetails> getAllTradesByTradePortfolioId(String portfolioId) {
+        return tradeDetailsService.findModelsByPortfolioId(portfolioId);
+    }
+    
+    @Override
+    public List<TradeDetails> getTradesByDateRange(String portfolioId, LocalDate startDate, LocalDate endDate) {
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay().minusNanos(1);
+        
+        List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+        
+        return allTrades.stream()
+            .filter(trade -> {
+                LocalDateTime tradeDate = trade.getEntryInfo() != null ? 
+                    trade.getEntryInfo().getTimestamp() : null;
+                
+                return tradeDate != null && 
+                    !tradeDate.isBefore(startDateTime) && 
+                    !tradeDate.isAfter(endDateTime);
+            })
+            .collect(Collectors.toList());
+    }
 
+    @Override
+    public List<TradeDetails> getTradesBySymbols(String portfolioId, List<String> symbols) {
+        log.info("Fetching trades for portfolio: {} filtered by symbols: {}", portfolioId, symbols);
+        
+        if (portfolioId == null || portfolioId.isEmpty()) {
+            throw new IllegalArgumentException("Portfolio ID cannot be null or empty");
+        }
+        
+        if (symbols == null || symbols.isEmpty()) {
+            // If no symbols provided, return all trades for the portfolio
+            return getAllTradesByTradePortfolioId(portfolioId);
+        }
+        
+        // Get all trades for the portfolio
+        List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+        
+        // Filter by symbols (case-insensitive)
+        return allTrades.stream()
+                .filter(trade -> trade.getSymbol() != null && 
+                        symbols.stream()
+                                .anyMatch(symbol -> trade.getSymbol().equalsIgnoreCase(symbol)))
+                .collect(Collectors.toList());
+    }
+    
     @Override
     public TradeSummary getTradeSummary(String portfolioId, LocalDate startDate, LocalDate endDate) {
         // Get all trades for the portfolio in the date range
