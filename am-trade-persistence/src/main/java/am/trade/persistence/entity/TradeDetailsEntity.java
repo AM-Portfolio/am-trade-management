@@ -52,4 +52,15 @@ public class TradeDetailsEntity {
     
     // List of trade executions that make up this trade
     private List<TradeModel> tradeExecutions;
+    
+    // User identification
+    @Indexed
+    private String userId;
+    
+    // Trade analysis images (stored as Base64 strings or URLs to image storage)
+    private List<String> tradeAnalysisImages;
+    
+    // Trade notes and tags
+    private String notes;
+    private List<String> tags;
 }

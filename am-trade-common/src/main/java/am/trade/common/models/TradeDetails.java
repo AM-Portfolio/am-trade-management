@@ -44,6 +44,12 @@ public class TradeDetails {
     // Trade notes and tags
     private String notes;
     private List<String> tags;
+    
+    // User identification
+    private String userId;
+    
+    // Trade analysis images (stored as Base64 strings or URLs to image storage)
+    private List<String> tradeAnalysisImages;
 
 
     public LocalDate getTradeDate() {

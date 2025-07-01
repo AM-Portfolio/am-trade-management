@@ -31,6 +31,10 @@ public class TradeDetailsMapper {
                 .exitInfo(model.getExitInfo())
                 .metrics(model.getMetrics())
                 .tradeExecutions(model.getTradeExecutions())
+                .userId(model.getUserId())
+                .tradeAnalysisImages(model.getTradeAnalysisImages())
+                .notes(model.getNotes())
+                .tags(model.getTags())
                 .build();
     }
     
@@ -55,6 +59,10 @@ public class TradeDetailsMapper {
                 .exitInfo(entity.getExitInfo())
                 .metrics(entity.getMetrics())
                 .tradeExecutions(entity.getTradeExecutions())
+                .userId(entity.getUserId())
+                .tradeAnalysisImages(entity.getTradeAnalysisImages())
+                .notes(entity.getNotes())
+                .tags(entity.getTags())
                 .build();
     }
 }
