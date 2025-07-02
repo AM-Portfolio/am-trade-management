@@ -6,8 +6,6 @@ import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.mapper.TradeDetailsMapper;
 import am.trade.persistence.repository.TradeDetailsRepository;
 import am.trade.services.service.TradeDetailsService;
-import am.trade.services.service.TradeProcessingService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -17,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -25,13 +22,18 @@ import java.util.stream.Collectors;
  * Implementation of TradeDetailsService that converts repository entities to domain models
  */
 @Service
-@RequiredArgsConstructor
+// Constructor injection is used instead of @RequiredArgsConstructor
 @Slf4j
 public class TradeDetailsServiceImpl implements TradeDetailsService {
 
     private final TradeDetailsRepository tradeDetailsRepository;
     private final TradeDetailsMapper tradeDetailsMapper;
-    private final TradeProcessingService tradeProcessingService;
+    
+    public TradeDetailsServiceImpl(TradeDetailsRepository tradeDetailsRepository, 
+                                  TradeDetailsMapper tradeDetailsMapper) {
+        this.tradeDetailsRepository = tradeDetailsRepository;
+        this.tradeDetailsMapper = tradeDetailsMapper;
+    }
     
     @Override
     public Optional<TradeDetails> findModelById(String id) {
