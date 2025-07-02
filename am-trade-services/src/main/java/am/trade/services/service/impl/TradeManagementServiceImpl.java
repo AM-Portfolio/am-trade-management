@@ -1,6 +1,7 @@
 package am.trade.services.service.impl;
 
 import am.trade.common.models.TradeDetails;
+import am.trade.common.models.enums.TradeStatus;
 import am.trade.persistence.service.TradeDetailsService;
 import am.trade.services.model.TradeSummary;
 import am.trade.services.service.TradeManagementService;
@@ -8,6 +9,7 @@ import am.trade.services.service.TradeManagementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -164,6 +166,84 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                         symbols.stream()
                                 .anyMatch(symbol -> trade.getSymbol().equalsIgnoreCase(symbol)))
                 .collect(Collectors.toList());
+    }
+    
+    @Override
+    public Page<TradeDetails> getTradesByFilters(
+            List<String> portfolioIds,
+            List<String> symbols,
+            List<TradeStatus> statuses,
+            LocalDate startDate,
+            LocalDate endDate,
+            List<String> strategies,
+            Pageable pageable) {
+        
+        log.info("Fetching trades with filters - portfolioIds: {}, symbols: {}, statuses: {}, startDate: {}, endDate: {}, strategies: {}", 
+                portfolioIds, symbols, statuses, startDate, endDate, strategies);
+        
+        // Collect all trades from the specified portfolios
+        List<TradeDetails> allTrades;
+        
+        if (portfolioIds == null || portfolioIds.isEmpty()) {
+            // If no portfolio IDs provided, get all trades from all portfolios
+            // This would require a method to get all trades, which might not be efficient
+            // Consider implementing a repository method for this or limiting the scope
+            throw new IllegalArgumentException("At least one portfolio ID must be provided");
+        } else {
+            // Get trades from all specified portfolios
+            allTrades = portfolioIds.stream()
+                    .flatMap(portfolioId -> tradeDetailsService.findModelsByPortfolioId(portfolioId).stream())
+                    .collect(Collectors.toList());
+        }
+        
+        // Apply filters
+        List<TradeDetails> filteredTrades = allTrades.stream()
+                // Filter by symbols if provided
+                .filter(trade -> symbols == null || symbols.isEmpty() || 
+                        (trade.getSymbol() != null && 
+                         symbols.stream().anyMatch(symbol -> trade.getSymbol().equalsIgnoreCase(symbol))))
+                
+                // Filter by statuses if provided
+                .filter(trade -> statuses == null || statuses.isEmpty() ||
+                        (trade.getStatus() != null && statuses.contains(trade.getStatus())))
+                
+                // Filter by strategies if provided
+                .filter(trade -> strategies == null || strategies.isEmpty() ||
+                        (trade.getStrategy() != null && 
+                         strategies.stream().anyMatch(strategy -> trade.getStrategy().equalsIgnoreCase(strategy))))
+                
+                // Filter by date range if provided
+                .filter(trade -> {
+                    // If no date range provided, include all trades
+                    if (startDate == null && endDate == null) {
+                        return true;
+                    }
+                    
+                    LocalDate tradeDate = trade.getTradeDate();
+                    if (tradeDate == null) {
+                        return false; // Skip trades without a date
+                    }
+                    
+                    // Check if the trade date is within the specified range
+                    boolean afterStartDate = startDate == null || !tradeDate.isBefore(startDate);
+                    boolean beforeEndDate = endDate == null || !tradeDate.isAfter(endDate);
+                    
+                    return afterStartDate && beforeEndDate;
+                })
+                .collect(Collectors.toList());
+        
+        // Apply pagination
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), filteredTrades.size());
+        
+        // Handle case where start might be beyond the list size
+        if (start > filteredTrades.size()) {
+            return new PageImpl<>(List.of(), pageable, filteredTrades.size());
+        }
+        
+        List<TradeDetails> pagedTrades = filteredTrades.subList(start, end);
+        
+        return new PageImpl<>(pagedTrades, pageable, filteredTrades.size());
     }
     
     @Override

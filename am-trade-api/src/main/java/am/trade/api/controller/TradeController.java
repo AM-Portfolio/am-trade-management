@@ -1,9 +1,13 @@
 package am.trade.api.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -17,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import am.trade.common.models.TradeDetails;
+import am.trade.common.models.enums.TradeStatus;
 import am.trade.persistence.service.TradeDetailsService;
 import am.trade.services.service.TradeManagementService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -159,6 +164,40 @@ public class TradeController {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             log.error("Error updating trade", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @Operation(summary = "Filter trades by multiple criteria")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Trades found successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid filter parameters"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/filter")
+    public ResponseEntity<Page<TradeDetails>> getTradesByFilters(
+            @Parameter(description = "Portfolio IDs to filter by") @RequestParam(required = false) List<String> portfolioIds,
+            @Parameter(description = "Symbols to filter by") @RequestParam(required = false) List<String> symbols,
+            @Parameter(description = "Trade statuses to filter by") @RequestParam(required = false) List<TradeStatus> statuses,
+            @Parameter(description = "Start date for filtering trades (format: yyyy-MM-dd)") 
+                @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @Parameter(description = "End date for filtering trades (format: yyyy-MM-dd)") 
+                @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @Parameter(description = "Strategies to filter by") @RequestParam(required = false) List<String> strategies,
+            Pageable pageable) {
+        
+        log.info("Filtering trades with criteria - portfolioIds: {}, symbols: {}, statuses: {}, startDate: {}, endDate: {}, strategies: {}", 
+                portfolioIds, symbols, statuses, startDate, endDate, strategies);
+        
+        try {
+            Page<TradeDetails> filteredTrades = tradeManagementService.getTradesByFilters(
+                    portfolioIds, symbols, statuses, startDate, endDate, strategies, pageable);
+            return ResponseEntity.ok(filteredTrades);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid filter parameters: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error filtering trades", e);
             return ResponseEntity.internalServerError().build();
         }
     }

@@ -1,6 +1,7 @@
 package am.trade.services.service;
 
 import am.trade.common.models.TradeDetails;
+import am.trade.common.models.enums.TradeStatus;
 import am.trade.services.model.TradeSummary;
 
 import org.springframework.data.domain.Page;
@@ -109,4 +110,25 @@ public interface TradeManagementService {
      * @return List of trade details for the specified portfolio and symbols
      */
     List<TradeDetails> getTradesBySymbols(String portfolioId, List<String> symbols);
+    
+    /**
+     * Get trades based on multiple filter criteria
+     * 
+     * @param portfolioIds List of portfolio IDs to filter by (optional)
+     * @param symbols List of symbols to filter by (optional)
+     * @param statuses List of trade statuses to filter by (optional)
+     * @param startDate Start date for filtering trades (optional)
+     * @param endDate End date for filtering trades (optional)
+     * @param strategies List of strategies to filter by (optional)
+     * @param pageable Pagination information (optional)
+     * @return Page of trade details matching the filter criteria
+     */
+    Page<TradeDetails> getTradesByFilters(
+            List<String> portfolioIds,
+            List<String> symbols,
+            List<TradeStatus> statuses,
+            LocalDate startDate,
+            LocalDate endDate,
+            List<String> strategies,
+            Pageable pageable);
 }
