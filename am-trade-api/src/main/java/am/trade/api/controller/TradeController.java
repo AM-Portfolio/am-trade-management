@@ -86,8 +86,8 @@ public class TradeController {
         
         try {
             // Handle trade analysis images if present
-            if (tradeDetails.getTradeAnalysisImages() != null && !tradeDetails.getTradeAnalysisImages().isEmpty()) {
-                log.info("Trade analysis images provided for trade: {} images", tradeDetails.getTradeAnalysisImages().size());
+            if (tradeDetails.getAttachments() != null && !tradeDetails.getAttachments().isEmpty()) {
+                log.info("Trade analysis images provided for trade: {} images", tradeDetails.getAttachments().size());
                 // You might want to validate the image format/size here
                 // or process the images (resize, compress, etc.) before saving
             }
@@ -139,16 +139,16 @@ public class TradeController {
             }
             
             // Handle trade analysis images if present
-            if (tradeDetails.getTradeAnalysisImages() != null && !tradeDetails.getTradeAnalysisImages().isEmpty()) {
+            if (tradeDetails.getAttachments() != null && !tradeDetails.getAttachments().isEmpty()) {
                 log.info("Updated trade analysis images provided for trade {}: {} images", 
-                        tradeId, tradeDetails.getTradeAnalysisImages().size());
+                        tradeId, tradeDetails.getAttachments().size());
                 // You might want to validate the image format/size here
                 // or process the images (resize, compress, etc.) before saving
-            } else if (existingTrade.get().getTradeAnalysisImages() != null && !existingTrade.get().getTradeAnalysisImages().isEmpty()) {
+            } else if (existingTrade.get().getAttachments() != null && !existingTrade.get().getAttachments().isEmpty()) {
                 // Preserve existing images if not provided in update
-                tradeDetails.setTradeAnalysisImages(existingTrade.get().getTradeAnalysisImages());
-                log.info("Preserving existing {} trade analysis images for trade {}", 
-                        existingTrade.get().getTradeAnalysisImages().size(), tradeId);
+                tradeDetails.setAttachments(existingTrade.get().getAttachments());
+                log.info("Preserving existing {} attachments for trade {}", 
+                        existingTrade.get().getAttachments().size(), tradeId);
             }
             
             // Update the trade
@@ -187,11 +187,11 @@ public class TradeController {
         try {
             // Log information about trade analysis images in the batch
             long tradesWithImages = tradeDetailsList.stream()
-                    .filter(trade -> trade.getTradeAnalysisImages() != null && !trade.getTradeAnalysisImages().isEmpty())
+                    .filter(trade -> trade.getAttachments() != null && !trade.getAttachments().isEmpty())
                     .count();
             
             if (tradesWithImages > 0) {
-                log.info("{} out of {} trades in batch contain trade analysis images", tradesWithImages, tradeDetailsList.size());
+                log.info("{} out of {} trades in batch contain attachments", tradesWithImages, tradeDetailsList.size());
             }
             
             List<TradeDetails> savedTrades = tradeDetailsService.saveAllTradeDetails(tradeDetailsList);

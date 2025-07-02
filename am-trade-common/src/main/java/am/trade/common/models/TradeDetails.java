@@ -49,7 +49,7 @@ public class TradeDetails {
     private String userId;
     
     // Trade analysis images (stored as Base64 strings or URLs to image storage)
-    private List<String> tradeAnalysisImages;
+    private List<Attachment> attachments;
 
 
     public LocalDate getTradeDate() {
@@ -57,7 +57,7 @@ public class TradeDetails {
     }
 
     public LocalDate getTradeEndDate() {
-        return exitInfo.getTimestamp().toLocalDate();
+        return exitInfo != null ? exitInfo.getTimestamp().toLocalDate() : null;
     }
 }
 

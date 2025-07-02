@@ -32,7 +32,7 @@ public class TradeDetailsMapper {
                 .metrics(model.getMetrics())
                 .tradeExecutions(model.getTradeExecutions())
                 .userId(model.getUserId())
-                .tradeAnalysisImages(model.getTradeAnalysisImages())
+                .attachments(model.getAttachments())
                 .notes(model.getNotes())
                 .tags(model.getTags())
                 .build();
@@ -60,7 +60,7 @@ public class TradeDetailsMapper {
                 .metrics(entity.getMetrics())
                 .tradeExecutions(entity.getTradeExecutions())
                 .userId(entity.getUserId())
-                .tradeAnalysisImages(entity.getTradeAnalysisImages())
+                .attachments(entity.getAttachments())
                 .notes(entity.getNotes())
                 .tags(entity.getTags())
                 .build();

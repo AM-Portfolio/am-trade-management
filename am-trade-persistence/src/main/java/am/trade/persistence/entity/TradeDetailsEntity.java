@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import am.trade.common.models.Attachment;
 import am.trade.common.models.EntryExitInfo;
 import am.trade.common.models.InstrumentInfo;
 import am.trade.common.models.TradeMetrics;
@@ -58,7 +59,7 @@ public class TradeDetailsEntity {
     private String userId;
     
     // Trade analysis images (stored as Base64 strings or URLs to image storage)
-    private List<String> tradeAnalysisImages;
+    private List<Attachment> attachments;
     
     // Trade notes and tags
     private String notes;
