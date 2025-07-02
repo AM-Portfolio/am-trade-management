@@ -1,4 +1,4 @@
-package am.trade.persistence.service;
+package am.trade.services.service;
 
 import java.util.List;
 import java.util.Optional;
@@ -144,9 +144,9 @@ public class PortfolioPersistenceService {
             PortfolioEntity portfolio = portfolioOpt.get();
             
             // Convert trade details to entities
-            List<TradeDetailsEntity> tradeEntities = tradeDetails.stream()
-                    .map(tradeDetailsMapper::toTradeEntity)
-                    .collect(Collectors.toList());
+            List<String> tradeEntities = tradeDetails.stream()
+            .map(TradeDetails::getTradeId)
+            .collect(Collectors.toList());
             
             // Update trades
             portfolio.setTrades(tradeEntities);

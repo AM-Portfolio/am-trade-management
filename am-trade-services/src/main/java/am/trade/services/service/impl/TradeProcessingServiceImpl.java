@@ -1,4 +1,4 @@
-package am.trade.kafka.service.metrics.impl;
+package am.trade.services.service.impl;
 
 import am.trade.common.models.EntryExitInfo;
 import am.trade.common.models.PortfolioMetrics;
@@ -9,8 +9,9 @@ import am.trade.common.models.TradeModel;
 import am.trade.common.models.enums.TradePositionType;
 import am.trade.common.models.enums.TradeStatus;
 import am.trade.common.models.enums.TradeType;
-import am.trade.kafka.service.metrics.TradeService;
-import am.trade.persistence.service.TradeDetailsService;
+import am.trade.services.service.PortfolioPersistenceService;
+import am.trade.services.service.TradeDetailsService;
+import am.trade.services.service.TradeProcessingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -18,21 +19,31 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Implementation of TradeService that processes trade executions into complete trades
+ * Implementation of TradeProcessingService that processes trade executions into complete trades
  * with proper handling of long/short positions, average pricing, and square-offs
  */
-@Service("kafkaTradeService")
+@Service
 @Slf4j
-public class TradeServiceImpl implements TradeService {
+public class TradeProcessingServiceImpl implements TradeProcessingService {
 
     private final TradeDetailsService tradeDetailsService;
+    private final PortfolioPersistenceService portfolioPersistenceService;
     
-    public TradeServiceImpl(TradeDetailsService tradeDetailsService) {
+    public TradeProcessingServiceImpl(TradeDetailsService tradeDetailsService, PortfolioPersistenceService portfolioPersistenceService) {
         this.tradeDetailsService = tradeDetailsService;
+        this.portfolioPersistenceService = portfolioPersistenceService;
     }
 
     private static final int DECIMAL_SCALE = 4;
@@ -58,49 +69,88 @@ public class TradeServiceImpl implements TradeService {
                 .build();
     }
 
-    
     @Override
-    public PortfolioModel processTradeModelsAndGetPortfolio(List<TradeModel> trades, String portfolioId) {
-        if (trades == null || trades.isEmpty()) {
-            return null;
+    public void processTradeDetails(List<String> tradeIds, String portfolioId) {
+        if (tradeIds == null || tradeIds.isEmpty()) {
+            return;
         }
         
-        // Process trades into trade details
-        List<TradeDetails> tradeDetails = processTradeModels(trades, portfolioId);
+        // Check if portfolio already exists
+        Optional<PortfolioModel> existingPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId);
         
-        // Save all trade details to the database
-        log.info("Saving {} processed trade details to database", tradeDetails.size());
-        tradeDetails = tradeDetailsService.saveAllTradeDetails(tradeDetails);
-        log.info("Successfully saved {} trade details records", tradeDetails.size());
+        Set<String> uniqueTradeIds = new HashSet<>();
         
+        if (existingPortfolio.isPresent()) {
+            // Combine existing trades with new ones
+            List<String> existingTrades = existingPortfolio.get().getTradeIds();
+            if (existingTrades != null && !existingTrades.isEmpty()) {
+                log.info("Combining {} existing trades with {} new trades for portfolio {}", 
+                        existingTrades.size(), tradeIds.size(), portfolioId);
+                
+                // Add all existing trades to the set to ensure uniqueness
+                uniqueTradeIds.addAll(existingTrades);
+            }
+        }
+        
+        // Add all new trades to the set (duplicates will be automatically eliminated)
+        uniqueTradeIds.addAll(tradeIds);
+        
+        log.info("After removing duplicates: {} unique trades for portfolio {}", 
+                uniqueTradeIds.size(), portfolioId);
+                
+        // Convert back to list for further processing
+        List<String> allTradeIds = new ArrayList<>(uniqueTradeIds);
+        
+        processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId);
+    }
+
+    private PortfolioModel processTradeDetailsAndGetPortfolio(List<String> tradeIds, String portfolioId) {
+
         // Calculate portfolio-level metrics
-        PortfolioMetrics portfolioMetrics = calculatePortfolioMetrics(tradeDetails);
+        PortfolioMetrics portfolioMetrics = calculatePortfolioMetrics(tradeIds);
         
-        // Sort trades by profit/loss for easy access to best and worst performers
-        List<TradeDetails> winningTrades = sortWinningTrades(tradeDetails);
-        List<TradeDetails> losingTrades = sortLosingTrades(tradeDetails);
+        // Check if portfolio already exists
+        Optional<PortfolioModel> existingPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId);
         
-        // Build the portfolio model
-        return PortfolioModel.builder()
+        PortfolioModel portfolioModel;
+        
+        if (existingPortfolio.isPresent()) {
+            // Update existing portfolio
+            log.info("Updating existing portfolio with ID: {}", portfolioId);
+            portfolioModel = existingPortfolio.get();
+            
+            // Update metrics and trades
+            portfolioModel.setMetrics(portfolioMetrics);
+            portfolioModel.setTradeIds(tradeIds);
+            portfolioModel.setLastUpdatedDate(LocalDateTime.now());
+        } else {
+            // Create new portfolio
+            log.info("Creating new portfolio with ID: {}", portfolioId);
+            portfolioModel = PortfolioModel.builder()
                 .portfolioId(portfolioId)
                 .name("Portfolio " + portfolioId) // Default name, can be updated later
                 .description("Auto-generated portfolio from trades")
                 .active(true)
                 .createdDate(LocalDateTime.now())
                 .lastUpdatedDate(LocalDateTime.now())
-                .trades(tradeDetails)
-                .winningTrades(winningTrades)
-                .losingTrades(losingTrades)
+                .tradeIds(tradeIds)
                 .metrics(portfolioMetrics)
                 .build();
+        }
+        
+        // Save the portfolio model to the database
+        portfolioModel = portfolioPersistenceService.savePortfolio(portfolioModel);
+
+        return portfolioModel;
     }
     
     /**
      * Calculate portfolio-level metrics from trade details
      */
-    private PortfolioMetrics calculatePortfolioMetrics(List<TradeDetails> tradeDetails) {
+    private PortfolioMetrics calculatePortfolioMetrics(List<String> tradeIds) {
+        List<TradeDetails> tradeDetails = tradeDetailsService.findModelsByTradeIds(tradeIds);
         // Initialize counters and accumulators
-        int totalTrades = tradeDetails.size();
+        int totalTrades = tradeIds.size();
         int winningTrades = 0;
         int losingTrades = 0;
         int breakEvenTrades = 0;
@@ -193,7 +243,8 @@ public class TradeServiceImpl implements TradeService {
     }
 
     @Override
-    public List<TradeDetails> processTradeModels(List<TradeModel> trades, String portfolioId) {
+    public List<TradeDetails> 
+    processTradeModels(List<TradeModel> trades, String portfolioId) {
         if (trades == null || trades.isEmpty()) {
             return new ArrayList<>();
         }

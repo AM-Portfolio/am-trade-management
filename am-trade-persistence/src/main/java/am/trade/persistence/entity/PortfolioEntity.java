@@ -49,13 +49,13 @@ public class PortfolioEntity {
     private PortfolioMetrics metrics;
     
     // List of trades in this portfolio
-    private List<TradeDetailsEntity> trades;
+    private List<String> trades;
     
     // List of winning trades in this portfolio
-    private List<TradeDetailsEntity> winningTrades;
+    private List<String> winningTrades;
     
     // List of losing trades in this portfolio
-    private List<TradeDetailsEntity> losingTrades;
+    private List<String> losingTrades;
     
     // Asset allocation
     private List<AssetAllocation> assetAllocations;

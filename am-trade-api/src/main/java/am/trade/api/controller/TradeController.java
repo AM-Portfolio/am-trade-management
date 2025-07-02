@@ -2,8 +2,6 @@ package am.trade.api.controller;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,8 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.enums.TradeStatus;
-import am.trade.persistence.service.TradeDetailsService;
-import am.trade.services.service.TradeManagementService;
+import am.trade.api.service.TradeApiService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -40,8 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Validated
 public class TradeController {
     
-    private final TradeManagementService tradeManagementService;
-    private final TradeDetailsService tradeDetailsService;
+    private final TradeApiService tradeApiService;
     
     @Operation(summary = "Get trade details by portfolio ID and symbols")
     @ApiResponses(value = {
@@ -57,7 +53,7 @@ public class TradeController {
         log.info("Fetching trade details for portfolio: {} with symbols: {}", portfolioId, symbols);
         
         try {
-            List<TradeDetails> tradeDetails = tradeManagementService.getTradesBySymbols(portfolioId, symbols);
+            List<TradeDetails> tradeDetails = tradeApiService.getTradeDetailsByPortfolioAndSymbols(portfolioId, symbols);
             return ResponseEntity.ok(tradeDetails);
         } catch (IllegalArgumentException e) {
             log.error("Invalid request parameters: {}", e.getMessage());
@@ -78,26 +74,11 @@ public class TradeController {
     public ResponseEntity<TradeDetails> addTrade(
             @Parameter(description = "Trade details to add") @RequestBody @Validated TradeDetails tradeDetails) {
         
-        log.info("Adding new trade for portfolio: {} and symbol: {} by user: {}", 
-                tradeDetails.getPortfolioId(), tradeDetails.getSymbol(), tradeDetails.getUserId());
-        
-        // Validate required fields
-        if (tradeDetails.getUserId() == null || tradeDetails.getUserId().isEmpty()) {
-            log.error("User ID is required");
-            return ResponseEntity.badRequest().build();
-        }
-
-        tradeDetails.setTradeId(UUID.randomUUID().toString());
+        log.info("Adding new trade for portfolio: {} and symbol: {}", 
+                tradeDetails.getPortfolioId(), tradeDetails.getSymbol());
         
         try {
-            // Handle trade analysis images if present
-            if (tradeDetails.getAttachments() != null && !tradeDetails.getAttachments().isEmpty()) {
-                log.info("Trade analysis images provided for trade: {} images", tradeDetails.getAttachments().size());
-                // You might want to validate the image format/size here
-                // or process the images (resize, compress, etc.) before saving
-            }
-            
-            TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
+            TradeDetails savedTrade = tradeApiService.addTrade(tradeDetails);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedTrade);
         } catch (IllegalArgumentException e) {
             log.error("Invalid trade data: {}", e.getMessage());
@@ -120,8 +101,7 @@ public class TradeController {
             @Parameter(description = "Trade ID") @PathVariable String tradeId,
             @Parameter(description = "Updated trade details") @RequestBody @Validated TradeDetails tradeDetails) {
         
-        log.info("Updating trade with ID: {} for portfolio: {} by user: {}", 
-                tradeId, tradeDetails.getPortfolioId(), tradeDetails.getUserId());
+        log.info("Updating trade with ID: {}", tradeId);
         
         // Ensure the trade ID in the path matches the trade ID in the request body
         if (!tradeId.equals(tradeDetails.getTradeId())) {
@@ -136,28 +116,7 @@ public class TradeController {
         }
         
         try {
-            // Check if the trade exists
-            Optional<TradeDetails> existingTrade = tradeDetailsService.findModelByTradeId(tradeId);
-            if (existingTrade.isEmpty()) {
-                log.error("Trade with ID {} not found", tradeId);
-                return ResponseEntity.notFound().build();
-            }
-            
-            // Handle trade analysis images if present
-            if (tradeDetails.getAttachments() != null && !tradeDetails.getAttachments().isEmpty()) {
-                log.info("Updated trade analysis images provided for trade {}: {} images", 
-                        tradeId, tradeDetails.getAttachments().size());
-                // You might want to validate the image format/size here
-                // or process the images (resize, compress, etc.) before saving
-            } else if (existingTrade.get().getAttachments() != null && !existingTrade.get().getAttachments().isEmpty()) {
-                // Preserve existing images if not provided in update
-                tradeDetails.setAttachments(existingTrade.get().getAttachments());
-                log.info("Preserving existing {} attachments for trade {}", 
-                        existingTrade.get().getAttachments().size(), tradeId);
-            }
-            
-            // Update the trade
-            TradeDetails updatedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
+            TradeDetails updatedTrade = tradeApiService.updateTrade(tradeId, tradeDetails);
             return ResponseEntity.ok(updatedTrade);
         } catch (IllegalArgumentException e) {
             log.error("Invalid trade data: {}", e.getMessage());
@@ -190,7 +149,7 @@ public class TradeController {
                 portfolioIds, symbols, statuses, startDate, endDate, strategies);
         
         try {
-            Page<TradeDetails> filteredTrades = tradeManagementService.getTradesByFilters(
+            Page<TradeDetails> filteredTrades = tradeApiService.getTradesByFilters(
                     portfolioIds, symbols, statuses, startDate, endDate, strategies, pageable);
             return ResponseEntity.ok(filteredTrades);
         } catch (IllegalArgumentException e) {
@@ -214,32 +173,38 @@ public class TradeController {
         
         log.info("Processing batch of {} trades", tradeDetailsList.size());
         
-        // Validate required fields for all trades in batch
-        boolean hasInvalidData = tradeDetailsList.stream()
-                .anyMatch(trade -> trade.getUserId() == null || trade.getUserId().isEmpty());
-        
-        if (hasInvalidData) {
-            log.error("User ID is required for all trades in batch");
-            return ResponseEntity.badRequest().build();
-        }
-        
         try {
-            // Log information about trade analysis images in the batch
-            long tradesWithImages = tradeDetailsList.stream()
-                    .filter(trade -> trade.getAttachments() != null && !trade.getAttachments().isEmpty())
-                    .count();
-            
-            if (tradesWithImages > 0) {
-                log.info("{} out of {} trades in batch contain attachments", tradesWithImages, tradeDetailsList.size());
-            }
-            
-            List<TradeDetails> savedTrades = tradeDetailsService.saveAllTradeDetails(tradeDetailsList);
+            List<TradeDetails> savedTrades = tradeApiService.addOrUpdateTrades(tradeDetailsList);
             return ResponseEntity.ok(savedTrades);
         } catch (IllegalArgumentException e) {
             log.error("Invalid trade data in batch: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             log.error("Error processing trade batch", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @Operation(summary = "Get trade details by trade IDs")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Trade details retrieved successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/details/by-ids")
+    public ResponseEntity<List<TradeDetails>> getTradeDetailsByTradeIds(
+            @Parameter(description = "List of trade IDs to fetch") @RequestBody List<String> tradeIds) {
+        
+        log.info("Fetching trade details for {} trade IDs", tradeIds.size());
+        
+        try {
+            List<TradeDetails> tradeDetails = tradeApiService.getTradeDetailsByTradeIds(tradeIds);
+            return ResponseEntity.ok(tradeDetails);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid request: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error fetching trade details by IDs", e);
             return ResponseEntity.internalServerError().build();
         }
     }

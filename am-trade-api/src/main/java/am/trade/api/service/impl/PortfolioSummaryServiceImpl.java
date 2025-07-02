@@ -5,7 +5,7 @@ import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.AssetAllocation;
 import am.trade.common.models.TradeDetails;
 import am.trade.services.service.PortfolioService;
-
+import am.trade.services.service.TradeDetailsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
 
     private final PortfolioService portfolioService;
+    private final TradeDetailsService tradeDetailsService;
 
     @Override
     public PortfolioModel getPortfolioSummary(String portfolioId) {
@@ -90,13 +91,17 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             log.warn("Portfolio not found with ID: {}", portfolioId);
             throw new IllegalArgumentException("Portfolio not found with ID: " + portfolioId);
         }
+
+        List<String> portfolioTradeIds = portfolio.get().getTradeIds();
+
+        List<TradeDetails> trades = tradeDetailsService.findModelsByTradeIds(portfolioTradeIds);
         
         // Calculate daily performance based on trade data
         // This is a simplified version - actual implementation would depend on specific performance calculation logic
         Map<LocalDate, Double> performance = new HashMap<>();
         
         // Get trades in the date range
-        List<TradeDetails> relevantTrades = portfolio.get().getTrades().stream()
+        List<TradeDetails> relevantTrades = trades.stream()
             .filter(trade -> {
                 LocalDate tradeDate = trade.getTradeDate();
                 return !tradeDate.isBefore(startDate) && !tradeDate.isAfter(endDate);

@@ -2,8 +2,8 @@ package am.trade.services.service.impl;
 
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.enums.TradeStatus;
-import am.trade.persistence.service.TradeDetailsService;
 import am.trade.services.model.TradeSummary;
+import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeManagementService;
 
 import lombok.RequiredArgsConstructor;

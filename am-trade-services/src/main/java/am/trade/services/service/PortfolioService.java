@@ -144,9 +144,9 @@ public class PortfolioService {
             PortfolioEntity portfolio = portfolioOpt.get();
             
             // Convert trade details to entities
-            List<TradeDetailsEntity> tradeEntities = tradeDetails.stream()
-                    .map(tradeDetailsMapper::toTradeEntity)
-                    .collect(Collectors.toList());
+            List<String> tradeEntities = tradeDetails.stream()
+            .map(TradeDetails::getTradeId)
+            .collect(Collectors.toList());
             
             // Update trades
             portfolio.setTrades(tradeEntities);

@@ -1,4 +1,4 @@
-package am.trade.persistence.service;
+package am.trade.services.service;
 
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.enums.TradeStatus;
@@ -52,4 +52,11 @@ public interface TradeDetailsService {
      * @return The list of saved trade details models with any generated IDs
      */
     List<TradeDetails> saveAllTradeDetails(List<TradeDetails> tradeDetailsList);
+    
+    /**
+     * Find trade details by multiple trade IDs in a single database call
+     * @param tradeIds List of trade IDs to search for
+     * @return List of trade details matching the provided IDs
+     */
+    List<TradeDetails> findModelsByTradeIds(List<String> tradeIds);
 }

@@ -1,11 +1,12 @@
-package am.trade.persistence.service.impl;
+package am.trade.services.service.impl;
 
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.enums.TradeStatus;
 import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.mapper.TradeDetailsMapper;
 import am.trade.persistence.repository.TradeDetailsRepository;
-import am.trade.persistence.service.TradeDetailsService;
+import am.trade.services.service.TradeDetailsService;
+import am.trade.services.service.TradeProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -14,7 +15,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -28,6 +31,7 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
 
     private final TradeDetailsRepository tradeDetailsRepository;
     private final TradeDetailsMapper tradeDetailsMapper;
+    private final TradeProcessingService tradeProcessingService;
     
     @Override
     public Optional<TradeDetails> findModelById(String id) {
@@ -133,10 +137,7 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     
     @Override
     public TradeDetails saveTradeDetails(TradeDetails tradeDetails) {
-        log.debug("Saving trade details with trade ID: {}", tradeDetails.getTradeId());
-        TradeDetailsEntity entity = tradeDetailsMapper.toTradeEntity(tradeDetails);
-        TradeDetailsEntity savedEntity = tradeDetailsRepository.save(entity);
-        return tradeDetailsMapper.toTradeDetails(savedEntity);
+        return tradeDetailsMapper.toTradeDetails(tradeDetailsRepository.save(tradeDetailsMapper.toTradeEntity(tradeDetails)));
     }
     
     @Override
@@ -146,8 +147,30 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
                 .map(tradeDetailsMapper::toTradeEntity)
                 .collect(Collectors.toList());
         List<TradeDetailsEntity> savedEntities = tradeDetailsRepository.saveAll(entities);
+        
         return savedEntities.stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<TradeDetails> findModelsByTradeIds(List<String> tradeIds) {
+        if (tradeIds == null || tradeIds.isEmpty()) {
+            log.warn("Empty trade IDs list provided to findModelsByTradeIds");
+            return Collections.emptyList();
+        }
+        
+        log.debug("Finding trade details for {} trade IDs in a single database call", tradeIds.size());
+        
+        // Make a single database call to fetch all trades by their IDs
+        List<TradeDetailsEntity> entities = tradeDetailsRepository.findByTradeIdIn(tradeIds);
+        
+        // Map entities to domain models
+        List<TradeDetails> tradeDetails = entities.stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+        
+        log.info("Found {} trades out of {} requested IDs", tradeDetails.size(), tradeIds.size());
+        return tradeDetails;
     }
 }
