@@ -29,7 +29,7 @@ public interface TradeProcessingService {
      * @param portfolioId The portfolio ID
      * @return List of complete trades with WIN, LOSS, or OPEN status
      */
-    void processTradeDetails(List<String> tradeIds, String portfolioId);
+    void processTradeDetails(List<String> tradeIds, String portfolioId, String userId);
     
     /**
      * Get the current status of an open position

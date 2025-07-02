@@ -2,6 +2,7 @@ package am.trade.api.controller;
 
 import am.trade.api.service.PortfolioSummaryService;
 import am.trade.common.models.PortfolioModel;
+import am.trade.common.models.PortfolioSummaryDTO;
 import am.trade.common.models.AssetAllocation;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -134,6 +135,30 @@ public class PortfolioSummaryController {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             log.error("Error comparing portfolios", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @Operation(summary = "Get portfolio summaries by owner ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Portfolio summaries retrieved successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid owner ID"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/by-owner/{ownerId}")
+    public ResponseEntity<List<PortfolioSummaryDTO>> getPortfolioSummariesByOwnerId(
+            @Parameter(description = "Owner ID") 
+            @PathVariable String ownerId) {
+        
+        try {
+            log.info("Fetching portfolio summaries for ownerId: {}", ownerId);
+            List<PortfolioSummaryDTO> portfolioSummaries = portfolioSummaryService.getPortfolioSummariesByOwnerId(ownerId);
+            return ResponseEntity.ok(portfolioSummaries);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid owner ID: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error fetching portfolio summaries", e);
             return ResponseEntity.internalServerError().build();
         }
     }

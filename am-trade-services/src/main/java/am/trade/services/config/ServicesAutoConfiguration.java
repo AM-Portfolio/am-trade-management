@@ -4,17 +4,19 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
 
 import am.trade.services.service.TradeDetailsService;
-import am.trade.services.service.TradeProcessingService;
 import am.trade.services.service.impl.TradeDetailsServiceImpl;
 import am.trade.persistence.repository.TradeDetailsRepository;
 import am.trade.persistence.mapper.TradeDetailsMapper;
+import am.trade.persistence.config.PersistenceAutoConfiguration;
 
 /**
  * Auto-configuration for the services module
  */
 @AutoConfiguration
+@Import(PersistenceAutoConfiguration.class)
 @ComponentScan(basePackages = {"am.trade.services.service", "am.trade.services.service.impl"})
 public class ServicesAutoConfiguration {
     
@@ -29,8 +31,7 @@ public class ServicesAutoConfiguration {
     @ConditionalOnMissingBean
     public TradeDetailsService tradeDetailsService(
             TradeDetailsRepository tradeDetailsRepository,
-            TradeDetailsMapper tradeDetailsMapper,
-            TradeProcessingService tradeProcessingService) {
-        return new TradeDetailsServiceImpl(tradeDetailsRepository, tradeDetailsMapper, tradeProcessingService);
+            TradeDetailsMapper tradeDetailsMapper) {
+        return new TradeDetailsServiceImpl(tradeDetailsRepository, tradeDetailsMapper);
     }
 }

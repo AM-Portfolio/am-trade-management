@@ -1,6 +1,7 @@
 package am.trade.api.service;
 
 import am.trade.common.models.PortfolioModel;
+import am.trade.common.models.PortfolioSummaryDTO;
 import am.trade.common.models.AssetAllocation;
 
 import java.time.LocalDate;
@@ -45,4 +46,12 @@ public interface PortfolioSummaryService {
      * @return a map of portfolio ID to portfolio model
      */
     Map<String, PortfolioModel> comparePortfolios(List<String> portfolioIds);
+    
+    /**
+     * Get a list of portfolio summaries (ID and name only) for a specific owner
+     * 
+     * @param ownerId the ID of the portfolio owner
+     * @return a list of portfolio summary DTOs containing ID and name
+     */
+    List<PortfolioSummaryDTO> getPortfolioSummariesByOwnerId(String ownerId);
 }

@@ -63,7 +63,7 @@ public class TradeConsumerService {
 
         List<TradeDetails> tradeDetails = tradeProcessingService.processTradeModels(event.getTrades(), portfolioId);
         tradeDetailsService.saveAllTradeDetails(tradeDetails);
-        tradeProcessingService.processTradeDetails(tradeDetails.stream().map(TradeDetails::getTradeId).collect(Collectors.toList()), portfolioId);
+        tradeProcessingService.processTradeDetails(tradeDetails.stream().map(TradeDetails::getTradeId).collect(Collectors.toList()), portfolioId, event.getUserId());
     
         log.info("Successfully processed trades for portfolioId: {}", portfolioId);
     }   

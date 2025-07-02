@@ -61,7 +61,7 @@ public class TradeApiServiceImpl implements TradeApiService {
             // You might want to validate the image format/size here
             // or process the images (resize, compress, etc.) before saving
         }
-        tradeProcessingService.processTradeDetails(List.of(tradeDetails.getTradeId()), tradeDetails.getPortfolioId());
+        tradeProcessingService.processTradeDetails(List.of(tradeDetails.getTradeId()), tradeDetails.getPortfolioId(), tradeDetails.getUserId());
         return tradeDetailsService.saveTradeDetails(tradeDetails);
     }
     
@@ -106,7 +106,7 @@ public class TradeApiServiceImpl implements TradeApiService {
             log.info("Preserving existing {} attachments for trade {}", 
                     originalTrade.getAttachments().size(), tradeId);
         }
-        tradeProcessingService.processTradeDetails(List.of(tradeDetails.getTradeId()), tradeDetails.getPortfolioId());
+        tradeProcessingService.processTradeDetails(List.of(tradeDetails.getTradeId()), tradeDetails.getPortfolioId(), tradeDetails.getUserId());
         return tradeDetailsService.saveTradeDetails(tradeDetails);
     }
     

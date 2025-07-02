@@ -70,7 +70,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
     }
 
     @Override
-    public void processTradeDetails(List<String> tradeIds, String portfolioId) {
+    public void processTradeDetails(List<String> tradeIds, String portfolioId, String userId) {
         if (tradeIds == null || tradeIds.isEmpty()) {
             return;
         }
@@ -101,10 +101,10 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         // Convert back to list for further processing
         List<String> allTradeIds = new ArrayList<>(uniqueTradeIds);
         
-        processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId);
+        processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId, userId);
     }
 
-    private PortfolioModel processTradeDetailsAndGetPortfolio(List<String> tradeIds, String portfolioId) {
+    private PortfolioModel processTradeDetailsAndGetPortfolio(List<String> tradeIds, String portfolioId, String userId) {
 
         // Calculate portfolio-level metrics
         PortfolioMetrics portfolioMetrics = calculatePortfolioMetrics(tradeIds);
@@ -128,7 +128,8 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             log.info("Creating new portfolio with ID: {}", portfolioId);
             portfolioModel = PortfolioModel.builder()
                 .portfolioId(portfolioId)
-                .name("Portfolio " + portfolioId) // Default name, can be updated later
+                .ownerId(userId)
+                .name(portfolioId)
                 .description("Auto-generated portfolio from trades")
                 .active(true)
                 .createdDate(LocalDateTime.now())

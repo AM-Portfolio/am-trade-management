@@ -2,6 +2,7 @@ package am.trade.api.service.impl;
 
 import am.trade.api.service.PortfolioSummaryService;
 import am.trade.common.models.PortfolioModel;
+import am.trade.common.models.PortfolioSummaryDTO;
 import am.trade.common.models.AssetAllocation;
 import am.trade.common.models.TradeDetails;
 import am.trade.services.service.PortfolioService;
@@ -157,5 +158,22 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         }
         
         return portfolioMap;
+    }
+    
+    @Override
+    public List<PortfolioSummaryDTO> getPortfolioSummariesByOwnerId(String ownerId) {
+        log.debug("Getting portfolio summaries for ownerId: {}", ownerId);
+        
+        if (ownerId == null || ownerId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Owner ID cannot be null or empty");
+        }
+        
+        // Get all portfolios for the owner
+        List<PortfolioModel> portfolios = portfolioService.findByOwnerId(ownerId);
+        
+        // Map to summary DTOs containing only ID and name
+        return portfolios.stream()
+            .map(portfolio -> new PortfolioSummaryDTO(portfolio.getPortfolioId(), portfolio.getName()))
+            .collect(Collectors.toList());
     }
 }
