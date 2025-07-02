@@ -59,12 +59,10 @@ public class TradeConsumerService {
         //List<Trade> trades = tradeEventMapper.toTrades(event.getTrades());
         log.debug("Converted {} trade models to trade entities", event.getTrades().size());
 
-        String portfolioId = event.getId().toString();
-
-        List<TradeDetails> tradeDetails = tradeProcessingService.processTradeModels(event.getTrades(), portfolioId);
+        List<TradeDetails> tradeDetails = tradeProcessingService.processTradeModels(event.getTrades(), event.getPortfolioId());
         tradeDetailsService.saveAllTradeDetails(tradeDetails);
-        tradeProcessingService.processTradeDetails(tradeDetails.stream().map(TradeDetails::getTradeId).collect(Collectors.toList()), portfolioId, event.getUserId());
+        tradeProcessingService.processTradeDetails(tradeDetails.stream().map(TradeDetails::getTradeId).collect(Collectors.toList()), event.getPortfolioId(), event.getUserId());
     
-        log.info("Successfully processed trades for portfolioId: {}", portfolioId);
+        log.info("Successfully processed trades for portfolioId: {}", event.getPortfolioId());
     }   
 }
