@@ -68,7 +68,7 @@ public class TradeApiServiceImpl implements TradeApiService {
         if (tradeDetails.getAttachments() != null && !tradeDetails.getAttachments().isEmpty()) {
             log.info("Trade analysis images provided for trade: {} images", tradeDetails.getAttachments().size());
             // Validate attachments
-            tradeValidator.validateAttachments(tradeDetails.getAttachments());
+            // tradeValidator.validateAttachments(tradeDetails.getAttachments());
         }
         tradeProcessingService.processTradeDetails(List.of(tradeDetails.getTradeId()), tradeDetails.getPortfolioId(), tradeDetails.getUserId());
         return tradeDetailsService.saveTradeDetails(tradeDetails);

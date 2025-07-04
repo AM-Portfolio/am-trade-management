@@ -158,8 +158,8 @@ public class TradeValidator {
         // Validate optional fields (returns false if any validation fails)
         boolean psychologyValid = validatePsychologyData(tradeDetails.getPsychologyData());
         boolean reasoningValid = validateEntryReasoning(tradeDetails.getEntryReasoning());
-        boolean attachmentsValid = validateAttachments(tradeDetails.getAttachments());
+        //boolean attachmentsValid = validateAttachments(tradeDetails.getAttachments());
         
-        return psychologyValid && reasoningValid && attachmentsValid;
+        return psychologyValid && reasoningValid ;//&& attachmentsValid;
     }
 }
