@@ -35,6 +35,8 @@ public class TradeDetailsMapper {
                 .attachments(model.getAttachments())
                 .notes(model.getNotes())
                 .tags(model.getTags())
+                .psychologyData(model.getPsychologyData())
+                .entryReasoning(model.getEntryReasoning())
                 .build();
     }
     
@@ -63,6 +65,8 @@ public class TradeDetailsMapper {
                 .attachments(entity.getAttachments())
                 .notes(entity.getNotes())
                 .tags(entity.getTags())
+                .psychologyData(entity.getPsychologyData())
+                .entryReasoning(entity.getEntryReasoning())
                 .build();
     }
 }

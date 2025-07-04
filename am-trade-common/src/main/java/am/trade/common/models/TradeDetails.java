@@ -50,6 +50,12 @@ public class TradeDetails {
     
     // Trade analysis images (stored as Base64 strings or URLs to image storage)
     private List<Attachment> attachments;
+    
+    // Trade psychology and behavior data
+    private TradePsychologyData psychologyData;
+    
+    // Trade entry reasoning (technical and fundamental analysis)
+    private TradeEntryReasoning entryReasoning;
 
 
     public LocalDate getTradeDate() {
