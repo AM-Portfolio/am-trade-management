@@ -59,4 +59,13 @@ public interface TradeDetailsService {
      * @return List of trade details matching the provided IDs
      */
     List<TradeDetails> findModelsByTradeIds(List<String> tradeIds);
+    
+    /**
+     * Find trade details by portfolio IDs and entry timestamp between given dates
+     * @param portfolioIds List of portfolio IDs to search for
+     * @param startDate Start date for entry timestamp range
+     * @param endDate End date for entry timestamp range
+     * @return List of trade details matching the criteria
+     */
+    List<TradeDetails> findByPortfolioIdInAndEntryInfoTimestampBetween(List<String> portfolioIds, LocalDateTime startDate, LocalDateTime endDate);
 }

@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import am.trade.api.service.TradeApiService;
+import am.trade.api.validation.TradeValidator;
 import am.trade.common.models.Attachment;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.enums.TradeStatus;
@@ -32,6 +33,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     private final TradeManagementService tradeManagementService;
     private final TradeProcessingService tradeProcessingService;
     private final TradeDetailsService tradeDetailsService;
+    private final TradeValidator tradeValidator;
     
     @Override
     public List<TradeDetails> getTradeDetailsByPortfolioAndSymbols(String portfolioId, List<String> symbols) {
@@ -44,22 +46,29 @@ public class TradeApiServiceImpl implements TradeApiService {
         log.info("Service: Adding new trade for portfolio: {} and symbol: {} by user: {}", 
                 tradeDetails.getPortfolioId(), tradeDetails.getSymbol(), tradeDetails.getUserId());
         
-        // Validate required fields
-        if (tradeDetails.getUserId() == null || tradeDetails.getUserId().isEmpty()) {
-            log.error("User ID is required");
-            throw new IllegalArgumentException("User ID is required");
-        }
+        // Validate required fields and other trade data
+        tradeValidator.validateTrade(tradeDetails);
 
         // Generate a new trade ID if not provided
         if (tradeDetails.getTradeId() == null || tradeDetails.getTradeId().isEmpty()) {
             tradeDetails.setTradeId(UUID.randomUUID().toString());
         }
         
+        // Log if psychology data is present
+        if (tradeDetails.getPsychologyData() != null) {
+            log.info("Trade psychology data provided for trade");
+        }
+        
+        // Log if entry reasoning is present
+        if (tradeDetails.getEntryReasoning() != null) {
+            log.info("Trade entry reasoning provided for trade");
+        }
+        
         // Handle trade analysis images if present
         if (tradeDetails.getAttachments() != null && !tradeDetails.getAttachments().isEmpty()) {
             log.info("Trade analysis images provided for trade: {} images", tradeDetails.getAttachments().size());
-            // You might want to validate the image format/size here
-            // or process the images (resize, compress, etc.) before saving
+            // Validate attachments
+            tradeValidator.validateAttachments(tradeDetails.getAttachments());
         }
         tradeProcessingService.processTradeDetails(List.of(tradeDetails.getTradeId()), tradeDetails.getPortfolioId(), tradeDetails.getUserId());
         return tradeDetailsService.saveTradeDetails(tradeDetails);
@@ -86,6 +95,28 @@ public class TradeApiServiceImpl implements TradeApiService {
         // If portfolio ID is not provided, use the original one
         if (tradeDetails.getPortfolioId() == null || tradeDetails.getPortfolioId().isEmpty()) {
             tradeDetails.setPortfolioId(originalTrade.getPortfolioId());
+        }
+        
+        // Handle trade psychology data if present
+        if (tradeDetails.getPsychologyData() != null) {
+            log.info("Updated trade psychology data provided for trade {}", tradeId);
+            // Validate psychology data
+            tradeValidator.validatePsychologyData(tradeDetails.getPsychologyData());
+        } else if (originalTrade.getPsychologyData() != null) {
+            // Preserve existing psychology data if not provided in update
+            tradeDetails.setPsychologyData(originalTrade.getPsychologyData());
+            log.info("Preserving existing psychology data for trade {}", tradeId);
+        }
+        
+        // Handle trade entry reasoning if present
+        if (tradeDetails.getEntryReasoning() != null) {
+            log.info("Updated trade entry reasoning provided for trade {}", tradeId);
+            // Validate entry reasoning
+            tradeValidator.validateEntryReasoning(tradeDetails.getEntryReasoning());
+        } else if (originalTrade.getEntryReasoning() != null) {
+            // Preserve existing entry reasoning if not provided in update
+            tradeDetails.setEntryReasoning(originalTrade.getEntryReasoning());
+            log.info("Preserving existing entry reasoning for trade {}", tradeId);
         }
         
         // Handle trade analysis images if present
@@ -131,14 +162,12 @@ public class TradeApiServiceImpl implements TradeApiService {
     public List<TradeDetails> addOrUpdateTrades(List<TradeDetails> tradeDetailsList) {
         log.info("Service: Processing batch of {} trades", tradeDetailsList.size());
         
-        // Validate required fields for all trades in batch
-        boolean hasInvalidData = tradeDetailsList.stream()
-                .anyMatch(trade -> trade.getUserId() == null || trade.getUserId().isEmpty());
-        
-        if (hasInvalidData) {
-            log.error("User ID is required for all trades in batch");
-            throw new IllegalArgumentException("User ID is required for all trades in batch");
+        // Validate all trades in batch
+        for (TradeDetails trade : tradeDetailsList) {
+            tradeValidator.validateTrade(trade);
         }
+        
+        log.info("All trades in batch passed validation");
         
         // Generate trade IDs for new trades
         tradeDetailsList.forEach(trade -> {

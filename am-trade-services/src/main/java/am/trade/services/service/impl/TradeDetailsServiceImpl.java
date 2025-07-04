@@ -13,7 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -157,22 +156,41 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     
     @Override
     public List<TradeDetails> findModelsByTradeIds(List<String> tradeIds) {
-        if (tradeIds == null || tradeIds.isEmpty()) {
-            log.warn("Empty trade IDs list provided to findModelsByTradeIds");
-            return Collections.emptyList();
-        }
-        
-        log.debug("Finding trade details for {} trade IDs in a single database call", tradeIds.size());
-        
-        // Make a single database call to fetch all trades by their IDs
+        log.debug("Finding trade details by trade IDs: {}", tradeIds);
         List<TradeDetailsEntity> entities = tradeDetailsRepository.findByTradeIdIn(tradeIds);
-        
-        // Map entities to domain models
         List<TradeDetails> tradeDetails = entities.stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
-        
         log.info("Found {} trades out of {} requested IDs", tradeDetails.size(), tradeIds.size());
+        return tradeDetails;
+    }
+    
+    @Override
+    public List<TradeDetails> findByPortfolioIdInAndEntryInfoTimestampBetween(List<String> portfolioIds, LocalDateTime startDate, LocalDateTime endDate) {
+        log.debug("Finding trade details by portfolio IDs: {} and entry date between {} and {}", portfolioIds, startDate, endDate);
+        
+        // Use existing repository methods to implement this functionality
+        List<TradeDetailsEntity> entities = tradeDetailsRepository.findByPortfolioIdIn(portfolioIds);
+        
+        // Filter by entry date in memory since we don't have a direct repository method
+        List<TradeDetailsEntity> filteredEntities = entities.stream()
+                .filter(entity -> {
+                    // Access timestamp through entryInfo
+                    if (entity.getEntryInfo() == null) {
+                        return false;
+                    }
+                    LocalDateTime entryDate = entity.getEntryInfo().getTimestamp();
+                    return entryDate != null && 
+                           (entryDate.isEqual(startDate) || entryDate.isAfter(startDate)) && 
+                           (entryDate.isEqual(endDate) || entryDate.isBefore(endDate));
+                })
+                .collect(Collectors.toList());
+        
+        List<TradeDetails> tradeDetails = filteredEntities.stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+                
+        log.info("Found {} trades matching portfolio IDs and date range criteria", tradeDetails.size());
         return tradeDetails;
     }
 }
