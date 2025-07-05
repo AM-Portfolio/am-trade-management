@@ -35,7 +35,7 @@
 		<module>am-trade-common</module>
 		<module>am-trade-models</module>
 		<module>am-trade-services</module>
-		<!-- <module>am-trade-dashboard</module> -->
+		<module>am-trade-dashboard</module>
 		<module>am-trade-api</module>
 		<module>am-trade-app</module>
 		<module>am-trade-kafka</module>

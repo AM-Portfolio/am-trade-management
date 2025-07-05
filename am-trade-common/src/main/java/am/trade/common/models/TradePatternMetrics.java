@@ -77,4 +77,8 @@ public class TradePatternMetrics {
     private BigDecimal exitDecisionQuality; // Quality of exit decisions
     private BigDecimal overallDecisionQuality; // Overall decision quality
     private BigDecimal decisionConsistency; // Consistency in decision making
+    
+    // Strength and weakness metrics
+    private BigDecimal adaptabilityScore; // Strength: Measures how well a trader adapts to changing market conditions
+    private BigDecimal overconfidenceIndex; // Weakness: Measures potential overconfidence in trading decisions
 }

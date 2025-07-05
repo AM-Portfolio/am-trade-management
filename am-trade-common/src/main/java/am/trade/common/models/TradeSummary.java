@@ -50,6 +50,7 @@ public class TradeSummary {
     private TradeTimingMetrics timingMetrics;
     private Map<String, StrategyPerformanceMetrics> strategyMetrics; // Key is strategy name
     private TradePatternMetrics patternMetrics; // Trade pattern and psychology metrics
+    private TradingFeedback tradingFeedback; // Personalized feedback based on psychology and behavior patterns
     
     // Legacy performance statistics (maintained for backward compatibility)
     private BigDecimal totalProfitLoss;

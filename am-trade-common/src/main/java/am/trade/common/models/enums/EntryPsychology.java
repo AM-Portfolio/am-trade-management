@@ -19,6 +19,7 @@ public class EntryPsychology {
     public static final EntryPsychology FOLLOWING_THE_PLAN = new EntryPsychology("FOLLOWING_THE_PLAN", "Disciplined entry according to trading plan");
     public static final EntryPsychology INTUITION = new EntryPsychology("INTUITION", "Gut feeling or market intuition");
     public static final EntryPsychology PEER_PRESSURE = new EntryPsychology("PEER_PRESSURE", "Influenced by others' opinions or actions");
+    public static final EntryPsychology DISCIPLINED = new EntryPsychology("DISCIPLINED", "Disciplined entry according to trading plan");
     
     private static final Map<String, EntryPsychology> VALUES = new HashMap<>();
     

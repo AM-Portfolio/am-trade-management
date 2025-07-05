@@ -1,4 +1,4 @@
-package am.trade.services.service.metrics;
+package am.trade.dashboard.service.metrics;
 
 import am.trade.common.models.RiskMetrics;
 import am.trade.common.models.TradeDetails;

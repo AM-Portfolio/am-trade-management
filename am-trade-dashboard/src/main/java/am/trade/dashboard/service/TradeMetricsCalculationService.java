@@ -1,12 +1,12 @@
-package am.trade.services.service.impl;
+package am.trade.dashboard.service;
 
 import am.trade.common.models.*;
 import am.trade.common.models.enums.EntryPsychology;
+import am.trade.dashboard.service.metrics.*;
 // Removed unused import
 import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.mapper.TradeDetailsMapper;
 import am.trade.persistence.repository.TradeDetailsRepository;
-import am.trade.services.service.metrics.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +34,7 @@ public class TradeMetricsCalculationService {
     private final TradeDistributionMetricsService distributionMetricsService;
     private final TradeTimingMetricsService timingMetricsService;
     private final TradePatternMetricsService patternMetricsService;
+    private final TradingFeedbackService tradingFeedbackService;
     
     private static final int SCALE = 4;
     private static final RoundingMode ROUNDING_MODE = HALF_UP;
@@ -44,7 +45,8 @@ public class TradeMetricsCalculationService {
                                          RiskMetricsService riskMetricsService,
                                          TradeDistributionMetricsService distributionMetricsService,
                                          TradeTimingMetricsService timingMetricsService,
-                                         TradePatternMetricsService patternMetricsService) {
+                                         TradePatternMetricsService patternMetricsService,
+                                         TradingFeedbackService tradingFeedbackService) {
         this.tradeDetailsRepository = tradeDetailsRepository;
         this.tradeDetailsMapper = tradeDetailsMapper;
         this.performanceMetricsService = performanceMetricsService;
@@ -52,6 +54,7 @@ public class TradeMetricsCalculationService {
         this.distributionMetricsService = distributionMetricsService;
         this.timingMetricsService = timingMetricsService;
         this.patternMetricsService = patternMetricsService;
+        this.tradingFeedbackService = tradingFeedbackService;
     }
     
     /**
@@ -80,6 +83,9 @@ public class TradeMetricsCalculationService {
         summary.setDistributionMetrics(distributionMetricsService.calculateMetrics(trades));
         summary.setTimingMetrics(timingMetricsService.calculateMetrics(trades));
         summary.setPatternMetrics(patternMetricsService.calculateMetrics(trades));
+        
+        // Generate personalized trading feedback based on trade details
+        summary.setTradingFeedback(tradingFeedbackService.generateFeedback(trades));
         
         // Set legacy metrics for backward compatibility
         setLegacyMetrics(summary, trades);
@@ -149,6 +155,7 @@ public class TradeMetricsCalculationService {
         summary.setDistributionMetrics(new TradeDistributionMetrics());
         summary.setTimingMetrics(new TradeTimingMetrics());
         summary.setPatternMetrics(new TradePatternMetrics());
+        summary.setTradingFeedback(new TradingFeedback());
         
         return summary;
     }

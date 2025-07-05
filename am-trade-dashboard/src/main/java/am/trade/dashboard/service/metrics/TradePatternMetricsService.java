@@ -1,4 +1,4 @@
-package am.trade.services.service.metrics;
+package am.trade.dashboard.service.metrics;
 
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.TradePatternMetrics;
@@ -257,6 +257,13 @@ public class TradePatternMetricsService {
         // metrics.setDisciplineScore(disciplineScore);
         //metrics.setImpulsivityScore(impulsivityScore);
         
+        // Calculate and set new strength and weakness metrics
+        BigDecimal adaptabilityScore = calculateAdaptabilityScore(trades, tradesByPattern);
+        BigDecimal overconfidenceIndex = calculateOverconfidenceIndex(trades, groupingResult);
+        
+        metrics.setAdaptabilityScore(adaptabilityScore);
+        metrics.setOverconfidenceIndex(overconfidenceIndex);
+        
         return metrics;
     }
     
@@ -509,6 +516,183 @@ public class TradePatternMetricsService {
         }
         
         return expectancy;
+    }
+    
+    /**
+     * Calculate adaptability score - a strength metric that measures how well a trader adapts to changing market conditions
+     * Higher score indicates better adaptation to market changes
+     * 
+     * @param trades List of all trades
+     * @param tradesByPattern Map of trades grouped by behavior pattern
+     * @return Adaptability score from 0-100
+     */
+    private BigDecimal calculateAdaptabilityScore(List<TradeDetails> trades, Map<TradeBehaviorPattern, List<TradeDetails>> tradesByPattern) {
+        if (trades == null || trades.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
+        // Sort trades chronologically
+        List<TradeDetails> sortedTrades = new ArrayList<>(trades);
+        sortedTrades.sort(Comparator.comparing(t -> t.getEntryInfo().getTimestamp()));
+        
+        // Factors that contribute to adaptability:
+        // 1. Variety of successful patterns used (pattern diversity)
+        // 2. Improvement in win rate over time
+        // 3. Appropriate changes in strategy during different market conditions
+        // 4. Consistency in profitable trades across different market conditions
+        
+        // Calculate pattern diversity score (more successful patterns = higher adaptability)
+        int successfulPatternCount = 0;
+        for (Map.Entry<TradeBehaviorPattern, List<TradeDetails>> entry : tradesByPattern.entrySet()) {
+            List<TradeDetails> patternTrades = entry.getValue();
+            
+            // Count pattern as successful if it has more wins than losses
+            long winCount = patternTrades.stream()
+                .filter(t -> t.getMetrics() != null && t.getMetrics().getProfitLoss() != null)
+                .filter(t -> t.getMetrics().getProfitLoss().compareTo(BigDecimal.ZERO) > 0)
+                .count();
+                
+            if (winCount > patternTrades.size() / 2) {
+                successfulPatternCount++;
+            }
+        }
+        
+        // Calculate pattern diversity score (0-40 points)
+        BigDecimal patternDiversityScore = BigDecimal.valueOf(Math.min(40, successfulPatternCount * 10));
+        
+        // Calculate win rate improvement over time (0-30 points)
+        BigDecimal winRateImprovementScore = BigDecimal.ZERO;
+        if (sortedTrades.size() >= 10) {
+            // Divide trades into first half and second half
+            int midpoint = sortedTrades.size() / 2;
+            List<TradeDetails> firstHalf = sortedTrades.subList(0, midpoint);
+            List<TradeDetails> secondHalf = sortedTrades.subList(midpoint, sortedTrades.size());
+            
+            // Calculate win rates for each half
+            double firstHalfWins = firstHalf.stream()
+                .filter(t -> t.getMetrics() != null && t.getMetrics().getProfitLoss() != null)
+                .filter(t -> t.getMetrics().getProfitLoss().compareTo(BigDecimal.ZERO) > 0)
+                .count();
+            double secondHalfWins = secondHalf.stream()
+                .filter(t -> t.getMetrics() != null && t.getMetrics().getProfitLoss() != null)
+                .filter(t -> t.getMetrics().getProfitLoss().compareTo(BigDecimal.ZERO) > 0)
+                .count();
+                
+            double firstHalfWinRate = firstHalfWins / firstHalf.size();
+            double secondHalfWinRate = secondHalfWins / secondHalf.size();
+            
+            // Calculate improvement
+            double improvement = secondHalfWinRate - firstHalfWinRate;
+            
+            // Score based on improvement (max 30 points)
+            if (improvement > 0) {
+                winRateImprovementScore = BigDecimal.valueOf(Math.min(30, improvement * 100));
+            }
+        }
+        
+        // Calculate consistency across market conditions (0-30 points)
+        // This is a simplified approach - in a real system, you would analyze market conditions
+        BigDecimal consistencyScore = BigDecimal.valueOf(30);
+        
+        // Calculate final adaptability score (0-100)
+        BigDecimal adaptabilityScore = patternDiversityScore
+            .add(winRateImprovementScore)
+            .add(consistencyScore);
+            
+        // Cap at 100
+        return adaptabilityScore.min(BigDecimal.valueOf(100)).setScale(2, ROUNDING_MODE);
+    }
+    
+    /**
+     * Calculate overconfidence index - a weakness metric that measures potential overconfidence in trading decisions
+     * Higher score indicates higher risk of overconfidence
+     * 
+     * @param trades List of all trades
+     * @param groupingResult Result of grouping trades by factors
+     * @return Overconfidence index from 0-100
+     */
+    private BigDecimal calculateOverconfidenceIndex(List<TradeDetails> trades, TradeGroupingResult groupingResult) {
+        if (trades == null || trades.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
+        // Factors that contribute to overconfidence:
+        // 1. Frequency of OVERCONFIDENCE entry psychology
+        // 2. Pattern of increasing position sizes after winning streaks
+        // 3. Decreasing win rate with increasing position size
+        // 4. Ignoring stop losses (if that data is available)
+        // 5. High percentage of impulsive trades
+        
+        // Calculate overconfidence entry frequency (0-25 points)
+        BigDecimal overconfidenceEntryScore = BigDecimal.ZERO;
+        Map<EntryPsychology, List<TradeDetails>> tradesByEntryPsychology = groupingResult.getTradesByEntryPsychology();
+        List<TradeDetails> overconfidentTrades = tradesByEntryPsychology.getOrDefault(EntryPsychology.OVERCONFIDENCE, new ArrayList<>());
+        
+        if (!overconfidentTrades.isEmpty()) {
+            double overconfidencePercentage = (double) overconfidentTrades.size() / trades.size() * 100;
+            overconfidenceEntryScore = BigDecimal.valueOf(Math.min(25, overconfidencePercentage));
+        }
+        
+        // Calculate position sizing pattern score (0-25 points)
+        BigDecimal positionSizingScore = BigDecimal.ZERO;
+        // Sort trades chronologically
+        List<TradeDetails> sortedTrades = new ArrayList<>(trades);
+        sortedTrades.sort(Comparator.comparing(t -> t.getEntryInfo().getTimestamp()));
+        
+        // Look for increasing position sizes after wins
+        int increasingAfterWinCount = 0;
+        boolean lastTradeWasWin = false;
+        BigDecimal lastPositionSize = null;
+        
+        for (TradeDetails trade : sortedTrades) {
+            // Skip trades without necessary data
+            if (trade.getMetrics() == null || trade.getMetrics().getProfitLoss() == null ||
+                trade.getEntryInfo() == null || trade.getEntryInfo().getPrice() == null ||
+                trade.getEntryInfo().getQuantity() == null) {
+                continue;
+            }
+            
+            // Calculate current position size
+            BigDecimal currentPositionSize = trade.getEntryInfo().getPrice()
+                .multiply(BigDecimal.valueOf(trade.getEntryInfo().getQuantity().doubleValue()));
+            
+            // Check if position size increased after a win
+            if (lastTradeWasWin && lastPositionSize != null && 
+                currentPositionSize.compareTo(lastPositionSize) > 0) {
+                increasingAfterWinCount++;
+            }
+            
+            // Update for next iteration
+            lastTradeWasWin = trade.getMetrics().getProfitLoss().compareTo(BigDecimal.ZERO) > 0;
+            lastPositionSize = currentPositionSize;
+        }
+        
+        if (sortedTrades.size() > 1) {
+            double increasingPercentage = (double) increasingAfterWinCount / (sortedTrades.size() - 1) * 100;
+            positionSizingScore = BigDecimal.valueOf(Math.min(25, increasingPercentage));
+        }
+        
+        // Calculate impulsive trade score (0-25 points)
+        BigDecimal impulsiveTradeScore = BigDecimal.ZERO;
+        int impulsiveTradeCount = groupingResult.getImpulsiveTradeCount();
+        
+        if (trades.size() > 0) {
+            double impulsivePercentage = (double) impulsiveTradeCount / trades.size() * 100;
+            impulsiveTradeScore = BigDecimal.valueOf(Math.min(25, impulsivePercentage));
+        }
+        
+        // Calculate stop loss adherence score (0-25 points)
+        // This is a placeholder - in a real system, you would analyze stop loss adherence
+        BigDecimal stopLossScore = BigDecimal.valueOf(15); // Default moderate score
+        
+        // Calculate final overconfidence index (0-100)
+        BigDecimal overconfidenceIndex = overconfidenceEntryScore
+            .add(positionSizingScore)
+            .add(impulsiveTradeScore)
+            .add(stopLossScore);
+            
+        // Cap at 100
+        return overconfidenceIndex.min(BigDecimal.valueOf(100)).setScale(2, ROUNDING_MODE);
     }
     
     /**
