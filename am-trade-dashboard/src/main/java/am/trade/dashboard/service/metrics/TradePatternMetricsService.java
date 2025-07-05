@@ -31,6 +31,8 @@ public class TradePatternMetricsService {
      * Calculate pattern metrics from a list of trades
      */
     public TradePatternMetrics calculateMetrics(List<TradeDetails> trades) {
+        String processId = UUID.randomUUID().toString();
+        log.info("[{}] Starting pattern metrics calculation for {} trades", processId, trades.size());
         if (trades == null || trades.isEmpty()) {
             return new TradePatternMetrics();
         }
@@ -238,6 +240,16 @@ public class TradePatternMetricsService {
         metrics.setMostProfitablePatterns(mostProfitablePatterns);
         metrics.setLeastProfitablePatterns(leastProfitablePatterns);
         
+        // Set emotional control metrics
+        metrics.setFearBasedExitPercentage(fearBasedExitPercentage);
+        metrics.setGreedBasedEntryPercentage(greedBasedEntryPercentage);
+        metrics.setImpulsivityScore(impulsivityScore);
+        metrics.setMostProfitableExitPsychology(mostProfitableExitPsychology);
+        metrics.setLeastProfitableExitPsychology(leastProfitableExitPsychology);
+        
+        log.debug("[{}] Set emotional control metrics: fearBasedExitPercentage={}, greedBasedEntryPercentage={}, impulsivityScore={}", 
+                processId, fearBasedExitPercentage, greedBasedEntryPercentage, impulsivityScore);
+        
         // Set entry psychology metrics
         metrics.setEntryPsychologyFrequency(entryPsychologyFrequency);
         metrics.setEntryPsychologyProfitLoss(entryPsychologyProfitLoss);
@@ -264,6 +276,7 @@ public class TradePatternMetricsService {
         metrics.setAdaptabilityScore(adaptabilityScore);
         metrics.setOverconfidenceIndex(overconfidenceIndex);
         
+        log.info("[{}] Completed pattern metrics calculation successfully", processId);
         return metrics;
     }
     

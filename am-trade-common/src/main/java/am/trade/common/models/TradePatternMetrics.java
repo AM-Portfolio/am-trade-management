@@ -49,8 +49,9 @@ public class TradePatternMetrics {
     private BigDecimal fearBasedExitPercentage; // Percentage of exits driven by fear
     private BigDecimal greedBasedEntryPercentage; // Percentage of entries driven by greed
     private BigDecimal disciplineScore; // Score based on following rules and exit plans
+    private BigDecimal impulsivityScore; // Ability to recover from losses
     
-    // Pattern consistency metrics
+    // Pattern consistency metrics   
     private BigDecimal patternConsistencyScore; // How consistently patterns are executed
     private Map<TradeBehaviorPattern, BigDecimal> patternExecutionQuality; // Quality score by pattern
     private BigDecimal patternDeviationRate; // Rate of deviating from established patterns

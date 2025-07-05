@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -37,7 +38,11 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
      */
     @Override
     public Optional<TradeSummaryBasic> findBasicById(String id) {
-        return serviceLayerTradeSummaryService.findBasicById(id);
+        String processId = UUID.randomUUID().toString();
+        log.debug("[{}] Finding basic trade summary with ID: {}", processId, id);
+        Optional<TradeSummaryBasic> result = serviceLayerTradeSummaryService.findBasicById(id);
+        log.debug("[{}] Basic trade summary found: {}", processId, result.isPresent());
+        return result;
     }
     
     /**
@@ -48,7 +53,11 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
      */
     @Override
     public Optional<TradeSummaryDetailed> findDetailedById(String id) {
-        return serviceLayerTradeSummaryService.findDetailedById(id);
+        String processId = UUID.randomUUID().toString();
+        log.debug("[{}] Finding detailed trade summary with ID: {}", processId, id);
+        Optional<TradeSummaryDetailed> result = serviceLayerTradeSummaryService.findDetailedById(id);
+        log.debug("[{}] Detailed trade summary found: {}", processId, result.isPresent());
+        return result;
     }
     
     /**
@@ -59,7 +68,11 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
      */
     @Override
     public Optional<TradeSummaryDetailed> findDetailedByBasicId(String basicId) {
-        return serviceLayerTradeSummaryService.findDetailedByBasicId(basicId);
+        String processId = UUID.randomUUID().toString();
+        log.debug("[{}] Finding detailed trade summary by basic ID: {}", processId, basicId);
+        Optional<TradeSummaryDetailed> result = serviceLayerTradeSummaryService.findDetailedByBasicId(basicId);
+        log.debug("[{}] Detailed trade summary found for basic ID: {}", processId, result.isPresent());
+        return result;
     }
     
     /**
@@ -70,7 +83,11 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
      */
     @Override
     public List<TradeSummaryBasic> findAllActiveBasicByOwnerId(String ownerId) {
-        return serviceLayerTradeSummaryService.findAllActiveBasicByOwnerId(ownerId);
+        String processId = UUID.randomUUID().toString();
+        log.debug("[{}] Finding all active basic trade summaries for owner: {}", processId, ownerId);
+        List<TradeSummaryBasic> results = serviceLayerTradeSummaryService.findAllActiveBasicByOwnerId(ownerId);
+        log.debug("[{}] Found {} active basic trade summaries for owner: {}", processId, results.size(), ownerId);
+        return results;
     }
     
     /**
@@ -81,7 +98,11 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
      */
     @Override
     public TradeSummary saveTradeSummary(TradeSummary tradeSummary) {
-        return serviceLayerTradeSummaryService.saveTradeSummary(tradeSummary);
+        String processId = UUID.randomUUID().toString();
+        log.info("[{}] Saving trade summary with ID: {}", processId, tradeSummary.getId());
+        TradeSummary result = serviceLayerTradeSummaryService.saveTradeSummary(tradeSummary);
+        log.info("[{}] Successfully saved trade summary with ID: {}", processId, result.getId());
+        return result;
     }
     
     /**
@@ -92,7 +113,11 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
      */
     @Override
     public TradeSummary updateTradeSummary(TradeSummary tradeSummary) {
-        return serviceLayerTradeSummaryService.updateTradeSummary(tradeSummary);
+        String processId = UUID.randomUUID().toString();
+        log.info("[{}] Updating trade summary with ID: {}", processId, tradeSummary.getId());
+        TradeSummary result = serviceLayerTradeSummaryService.updateTradeSummary(tradeSummary);
+        log.info("[{}] Successfully updated trade summary with ID: {}", processId, result.getId());
+        return result;
     }
     
     /**
@@ -102,7 +127,10 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
      */
     @Override
     public void deleteTradeSummary(String id) {
+        String processId = UUID.randomUUID().toString();
+        log.info("[{}] Deleting trade summary with ID: {}", processId, id);
         serviceLayerTradeSummaryService.deleteTradeSummary(id);
+        log.info("[{}] Successfully deleted trade summary with ID: {}", processId, id);
     }
 
     @Override
@@ -114,14 +142,19 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
             Integer month,
             Integer quarter,
             String portfolioId) {
-        
+        String processId = UUID.randomUUID().toString();
+        log.info("[{}] Getting trade details by time period: {}, portfolioId: {}", processId, periodType, portfolioId);
+        Map<String, List<TradeDetails>> result = null;
         // Validate and process based on period type
         switch (periodType.toUpperCase()) {
             case "DAY":
                 if (startDate == null) {
                     throw new IllegalArgumentException("Start date is required for DAY period type");
                 }
-                return tradeManagementService.getTradeDetailsByDay(startDate, portfolioId);
+                log.debug("[{}] Fetching trade details for day: {}", processId, startDate);
+                result = tradeManagementService.getTradeDetailsByDay(startDate, portfolioId);
+                log.debug("[{}] Found {} day entries for date: {}", processId, result.size(), startDate);
+                return result;
                 
             case "MONTH":
                 if (year == null || month == null) {
@@ -130,7 +163,10 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
                 if (month < 1 || month > 12) {
                     throw new IllegalArgumentException("Month must be between 1 and 12");
                 }
-                return tradeManagementService.getTradeDetailsByMonth(year, month, portfolioId);
+                log.debug("[{}] Fetching trade details for month: {}/{}", processId, year, month);
+                result = tradeManagementService.getTradeDetailsByMonth(year, month, portfolioId);
+                log.debug("[{}] Found {} day entries for month: {}/{}", processId, result.size(), year, month);
+                return result;
                 
             case "QUARTER":
                 if (year == null || quarter == null) {
@@ -139,13 +175,19 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
                 if (quarter < 1 || quarter > 4) {
                     throw new IllegalArgumentException("Quarter must be between 1 and 4");
                 }
-                return tradeManagementService.getTradeDetailsByQuarter(year, quarter, portfolioId);
+                log.debug("[{}] Fetching trade details for quarter: {} Q{}", processId, year, quarter);
+                result = tradeManagementService.getTradeDetailsByQuarter(year, quarter, portfolioId);
+                log.debug("[{}] Found {} day entries for quarter: {} Q{}", processId, result.size(), year, quarter);
+                return result;
                 
             case "FINANCIAL_YEAR":
                 if (year == null) {
                     throw new IllegalArgumentException("Year is required for FINANCIAL_YEAR period type");
                 }
-                return tradeManagementService.getTradeDetailsByFinancialYear(year, portfolioId);
+                log.debug("[{}] Fetching trade details for financial year: {}", processId, year);
+                result = tradeManagementService.getTradeDetailsByFinancialYear(year, portfolioId);
+                log.debug("[{}] Found {} day entries for financial year: {}", processId, result.size(), year);
+                return result;
                 
             case "CUSTOM":
                 if (startDate == null || endDate == null) {
@@ -154,9 +196,13 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
                 if (startDate.isAfter(endDate)) {
                     throw new IllegalArgumentException("Start date cannot be after end date");
                 }
-                return tradeManagementService.getTradeDetailsByDateRange(startDate, endDate, portfolioId);
+                log.debug("[{}] Fetching trade details for date range: {} to {}", processId, startDate, endDate);
+                result = tradeManagementService.getTradeDetailsByDateRange(startDate, endDate, portfolioId);
+                log.debug("[{}] Found {} day entries for date range: {} to {}", processId, result.size(), startDate, endDate);
+                return result;
                 
             default:
+                log.error("[{}] Invalid period type: {}", processId, periodType);
                 throw new IllegalArgumentException("Invalid period type: " + periodType);
         }
     }

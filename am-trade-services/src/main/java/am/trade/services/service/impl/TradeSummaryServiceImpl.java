@@ -22,7 +22,7 @@ import am.trade.services.service.TradeSummaryService;
  * Implementation of the TradeSummaryService interface
  * Handles storage and retrieval of TradeSummaryBasic and TradeSummaryDetailed documents in MongoDB
  */
-@Service
+@Service("tradeSummaryBasicDetailedService")
 public class TradeSummaryServiceImpl implements TradeSummaryService {
 
     private final TradeSummaryBasicRepository basicRepository;
