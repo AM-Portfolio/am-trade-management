@@ -43,12 +43,7 @@
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.3.0</version>
         </dependency>
-        <!-- Dashboard module dependency -->
-        <dependency>
-            <groupId>am.trade</groupId>
-            <artifactId>am-trade-dashboard</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+        <!-- Dashboard module dependency is already included above -->
     </dependencies>
     
     <build>

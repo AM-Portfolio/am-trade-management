@@ -2,8 +2,11 @@ package am.trade.api.service.impl;
 
 import am.trade.api.service.TradeSummaryService;
 import am.trade.common.models.TradeDetails;
-import am.trade.services.model.TradeSummary;
-import am.trade.services.service.TradeManagementService;
+import am.trade.common.models.TradeSummary;
+import am.trade.common.models.TradeSummaryBasic;
+import am.trade.common.models.TradeSummaryDetailed;
+import am.trade.api.service.TradeManagementService;
+// Using fully qualified name for service layer TradeSummaryService to avoid collision
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -23,6 +27,83 @@ import java.util.stream.Collectors;
 public class TradeSummaryServiceImpl implements TradeSummaryService {
 
     private final TradeManagementService tradeManagementService;
+    private final am.trade.services.service.TradeSummaryService serviceLayerTradeSummaryService;
+
+    /**
+     * Find a basic trade summary by ID
+     * 
+     * @param id The ID of the basic trade summary
+     * @return Optional containing the basic trade summary if found, empty otherwise
+     */
+    @Override
+    public Optional<TradeSummaryBasic> findBasicById(String id) {
+        return serviceLayerTradeSummaryService.findBasicById(id);
+    }
+    
+    /**
+     * Find a detailed trade summary by ID
+     * 
+     * @param id The ID of the detailed trade summary
+     * @return Optional containing the detailed trade summary if found, empty otherwise
+     */
+    @Override
+    public Optional<TradeSummaryDetailed> findDetailedById(String id) {
+        return serviceLayerTradeSummaryService.findDetailedById(id);
+    }
+    
+    /**
+     * Find a detailed trade summary by basic summary ID
+     * 
+     * @param basicId The ID of the basic trade summary
+     * @return Optional containing the detailed trade summary if found, empty otherwise
+     */
+    @Override
+    public Optional<TradeSummaryDetailed> findDetailedByBasicId(String basicId) {
+        return serviceLayerTradeSummaryService.findDetailedByBasicId(basicId);
+    }
+    
+    /**
+     * Find all active basic trade summaries for an owner
+     * 
+     * @param ownerId The owner ID
+     * @return List of active basic trade summaries
+     */
+    @Override
+    public List<TradeSummaryBasic> findAllActiveBasicByOwnerId(String ownerId) {
+        return serviceLayerTradeSummaryService.findAllActiveBasicByOwnerId(ownerId);
+    }
+    
+    /**
+     * Save a composite trade summary
+     * 
+     * @param tradeSummary The composite trade summary to save
+     * @return The saved composite trade summary
+     */
+    @Override
+    public TradeSummary saveTradeSummary(TradeSummary tradeSummary) {
+        return serviceLayerTradeSummaryService.saveTradeSummary(tradeSummary);
+    }
+    
+    /**
+     * Update a composite trade summary
+     * 
+     * @param tradeSummary The composite trade summary to update
+     * @return The updated composite trade summary
+     */
+    @Override
+    public TradeSummary updateTradeSummary(TradeSummary tradeSummary) {
+        return serviceLayerTradeSummaryService.updateTradeSummary(tradeSummary);
+    }
+    
+    /**
+     * Delete a trade summary and its associated detailed metrics
+     * 
+     * @param id The ID of the basic trade summary to delete
+     */
+    @Override
+    public void deleteTradeSummary(String id) {
+        serviceLayerTradeSummaryService.deleteTradeSummary(id);
+    }
 
     @Override
     public Map<String, List<TradeDetails>> getTradeDetailsByTimePeriod(
@@ -78,44 +159,5 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
             default:
                 throw new IllegalArgumentException("Invalid period type: " + periodType);
         }
-    }
-
-    @Override
-    public TradeSummary getTradeSummary(String portfolioId, LocalDate startDate, LocalDate endDate) {
-        if (portfolioId == null || portfolioId.isEmpty()) {
-            throw new IllegalArgumentException("Portfolio ID is required");
-        }
-        
-        if (startDate == null || endDate == null) {
-            throw new IllegalArgumentException("Start date and end date are required");
-        }
-        
-        if (startDate.isAfter(endDate)) {
-            throw new IllegalArgumentException("Start date cannot be after end date");
-        }
-        
-        return tradeManagementService.getTradeSummary(portfolioId, startDate, endDate);
-    }
-
-    @Override
-    public Map<LocalDate, TradeSummary> getDailyTradeSummaries(String portfolioId, int year, int month) {
-        if (portfolioId == null || portfolioId.isEmpty()) {
-            throw new IllegalArgumentException("Portfolio ID is required");
-        }
-        
-        if (month < 1 || month > 12) {
-            throw new IllegalArgumentException("Month must be between 1 and 12");
-        }
-        
-        // Calculate start and end dates for the month
-        LocalDate startDate = LocalDate.of(year, month, 1);
-        LocalDate endDate = startDate.plusMonths(1).minusDays(1);
-        
-        // Generate daily summaries
-        return startDate.datesUntil(endDate.plusDays(1))
-            .collect(Collectors.toMap(
-                date -> date,
-                date -> tradeManagementService.getTradeSummary(portfolioId, date, date)
-            ));
     }
 }

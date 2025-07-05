@@ -1,16 +1,74 @@
 package am.trade.api.service;
 
 import am.trade.common.models.TradeDetails;
-import am.trade.services.model.TradeSummary;
+import am.trade.common.models.TradeSummary;
+import am.trade.common.models.TradeSummaryBasic;
+import am.trade.common.models.TradeSummaryDetailed;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Service interface for trade summary operations in the API layer
  */
 public interface TradeSummaryService {
+    
+    /**
+     * Find a basic trade summary by ID
+     * 
+     * @param id The ID of the basic trade summary
+     * @return Optional containing the basic trade summary if found, empty otherwise
+     */
+    Optional<TradeSummaryBasic> findBasicById(String id);
+    
+    /**
+     * Find a detailed trade summary by ID
+     * 
+     * @param id The ID of the detailed trade summary
+     * @return Optional containing the detailed trade summary if found, empty otherwise
+     */
+    Optional<TradeSummaryDetailed> findDetailedById(String id);
+    
+    /**
+     * Find a detailed trade summary by basic summary ID
+     * 
+     * @param basicId The ID of the basic trade summary
+     * @return Optional containing the detailed trade summary if found, empty otherwise
+     */
+    Optional<TradeSummaryDetailed> findDetailedByBasicId(String basicId);
+    
+    /**
+     * Find all active basic trade summaries for an owner
+     * 
+     * @param ownerId The owner ID
+     * @return List of active basic trade summaries
+     */
+    List<TradeSummaryBasic> findAllActiveBasicByOwnerId(String ownerId);
+    
+    /**
+     * Save a composite trade summary
+     * 
+     * @param tradeSummary The composite trade summary to save
+     * @return The saved composite trade summary
+     */
+    TradeSummary saveTradeSummary(TradeSummary tradeSummary);
+    
+    /**
+     * Update a composite trade summary
+     * 
+     * @param tradeSummary The composite trade summary to update
+     * @return The updated composite trade summary
+     */
+    TradeSummary updateTradeSummary(TradeSummary tradeSummary);
+    
+    /**
+     * Delete a trade summary and its associated detailed metrics
+     * 
+     * @param id The ID of the basic trade summary to delete
+     */
+    void deleteTradeSummary(String id);
     
     /**
      * Get trade details based on time period type and parameters
@@ -32,24 +90,4 @@ public interface TradeSummaryService {
             Integer month,
             Integer quarter,
             String portfolioId);
-    
-    /**
-     * Get trade summary for a specific portfolio and date range
-     * 
-     * @param portfolioId The portfolio ID
-     * @param startDate The start date (inclusive)
-     * @param endDate The end date (inclusive)
-     * @return Summary statistics for the specified portfolio and date range
-     */
-    TradeSummary getTradeSummary(String portfolioId, LocalDate startDate, LocalDate endDate);
-    
-    /**
-     * Get daily trade summaries for a specific portfolio and month
-     * 
-     * @param portfolioId The portfolio ID
-     * @param year The year
-     * @param month The month (1-12)
-     * @return Map of dates to their trade summaries for the specified month
-     */
-    Map<LocalDate, TradeSummary> getDailyTradeSummaries(String portfolioId, int year, int month);
 }

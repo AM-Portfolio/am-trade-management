@@ -1,4 +1,4 @@
-package am.trade.services.service.impl;
+package am.trade.api.service.impl;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -17,8 +17,8 @@ import org.springframework.stereotype.Service;
 import am.trade.common.models.ProfitLossHeatmapData;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.enums.TradeStatus;
-import am.trade.services.service.ProfitLossHeatmapService;
-import am.trade.services.service.TradeManagementService;
+import am.trade.api.service.ProfitLossHeatmapService;
+import am.trade.api.service.TradeManagementService;
 import lombok.extern.slf4j.Slf4j;
 
 @Service

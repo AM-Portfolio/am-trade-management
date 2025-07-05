@@ -1,8 +1,8 @@
-package am.trade.services.service;
+package am.trade.api.service;
 
 import am.trade.common.models.TradeDetails;
+import am.trade.common.models.TradeSummary;
 import am.trade.common.models.enums.TradeStatus;
-import am.trade.services.model.TradeSummary;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -74,17 +74,7 @@ public interface TradeManagementService {
      */
     Page<TradeDetails> getTradeDetailsByPortfolio(String portfolioId, Pageable pageable);
     
-    /**
-     * Get trade summary statistics for a specific portfolio and date range
-     * 
-     * @param portfolioId The portfolio ID
-     * @param startDate The start date (inclusive)
-     * @param endDate The end date (inclusive)
-     * @return Summary statistics for the specified portfolio and date range
-     */
-    TradeSummary getTradeSummary(String portfolioId, LocalDate startDate, LocalDate endDate);
-    
-    /**
+    /** 
      * Get all trades for a specific portfolio
      * 
      * @param portfolioId The portfolio ID

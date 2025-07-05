@@ -12,12 +12,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import am.trade.api.service.TradeApiService;
+import am.trade.api.service.TradeManagementService;
 import am.trade.api.validation.TradeValidator;
 import am.trade.common.models.Attachment;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.enums.TradeStatus;
 import am.trade.services.service.TradeDetailsService;
-import am.trade.services.service.TradeManagementService;
 import am.trade.services.service.TradeProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

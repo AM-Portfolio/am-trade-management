@@ -2,7 +2,11 @@ package am.trade.api.controller;
 
 import am.trade.api.service.TradeSummaryService;
 import am.trade.common.models.TradeDetails;
-import am.trade.services.model.TradeSummary;
+import am.trade.common.models.TradeSummary;
+import am.trade.common.models.TradeSummaryBasic;
+import am.trade.common.models.TradeSummaryDetailed;
+import am.trade.dashboard.service.TradeMetricsCalculationService;
+import am.trade.dashboard.service.MetricsCalculationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * REST controller for trade summary operations
@@ -32,6 +37,8 @@ import java.util.Map;
 public class TradeSummaryController {
 
     private final TradeSummaryService tradeSummaryService;
+    private final TradeMetricsCalculationService tradeMetricsCalculationService;
+    private final MetricsCalculationService metricsCalculationService;
 
     @Operation(summary = "Get trade details by time period")
     @ApiResponses(value = {
@@ -67,55 +74,183 @@ public class TradeSummaryController {
         }
     }
 
-    @Operation(summary = "Get trade summary for a specific portfolio and date range")
+    @Operation(summary = "Get basic trade summary by ID")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Trade summary retrieved successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid date range or missing portfolio ID"),
+        @ApiResponse(responseCode = "200", description = "Basic trade summary retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Trade summary not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @GetMapping("/summary")
-    public ResponseEntity<TradeSummary> getTradeSummary(
-            @Parameter(description = "Portfolio ID") 
-            @RequestParam String portfolioId,
-            @Parameter(description = "Start date in ISO format (YYYY-MM-DD)") 
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @Parameter(description = "End date in ISO format (YYYY-MM-DD)") 
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+    @GetMapping("/basic/{id}")
+    public ResponseEntity<TradeSummaryBasic> getBasicTradeSummary(
+            @Parameter(description = "Trade summary ID") 
+            @PathVariable String id) {
         
         try {
-            log.info("Fetching trade summary for portfolio: {} from {} to {}", portfolioId, startDate, endDate);
-            TradeSummary tradeSummary = tradeSummaryService.getTradeSummary(portfolioId, startDate, endDate);
-            return ResponseEntity.ok(tradeSummary);
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid request parameters: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            log.info("Fetching basic trade summary with ID: {}", id);
+            return tradeSummaryService.findBasicById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            log.error("Error fetching basic trade summary: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
     
-    @Operation(summary = "Get daily trade summary for a specific portfolio and month")
+    @Operation(summary = "Get detailed trade metrics by basic summary ID")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Daily trade summaries retrieved successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid month value or missing portfolio ID"),
+        @ApiResponse(responseCode = "200", description = "Detailed trade metrics retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Detailed metrics not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @GetMapping("/daily-summary")
-    public ResponseEntity<Map<LocalDate, TradeSummary>> getDailyTradeSummaries(
-            @Parameter(description = "Portfolio ID") 
-            @RequestParam String portfolioId,
-            @Parameter(description = "Year") 
-            @RequestParam int year,
-            @Parameter(description = "Month (1-12)") 
-            @RequestParam int month) {
+    @GetMapping("/detailed/by-basic-id/{basicId}")
+    public ResponseEntity<TradeSummaryDetailed> getDetailedTradeSummaryByBasicId(
+            @Parameter(description = "Basic trade summary ID") 
+            @PathVariable String basicId) {
         
         try {
-            log.info("Fetching daily trade summaries for portfolio: {} for {}-{}", portfolioId, year, month);
-            Map<LocalDate, TradeSummary> dailySummaries = tradeSummaryService.getDailyTradeSummaries(portfolioId, year, month);
-            return ResponseEntity.ok(dailySummaries);
+            log.info("Fetching detailed trade metrics for basic summary ID: {}", basicId);
+            return tradeSummaryService.findDetailedByBasicId(basicId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            log.error("Error fetching detailed trade metrics: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @Operation(summary = "Get detailed trade metrics by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Detailed trade metrics retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Detailed metrics not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/detailed/{id}")
+    public ResponseEntity<TradeSummaryDetailed> getDetailedTradeSummary(
+            @Parameter(description = "Detailed trade metrics ID") 
+            @PathVariable String id) {
+        
+        try {
+            log.info("Fetching detailed trade metrics with ID: {}", id);
+            return tradeSummaryService.findDetailedById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            log.error("Error fetching detailed trade metrics: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @Operation(summary = "Get composite trade summary with cached metrics")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Composite trade summary retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Trade summary not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/composite/{id}")
+    public ResponseEntity<TradeSummary> getCompositeTradeSummary(
+            @Parameter(description = "Basic trade summary ID") 
+            @PathVariable String id,
+            @Parameter(description = "Force recalculation of metrics") 
+            @RequestParam(required = false, defaultValue = "false") boolean forceRecalculate) {
+        
+        try {
+            log.info("Fetching composite trade summary with ID: {}, forceRecalculate: {}", id, forceRecalculate);
+            
+            if (forceRecalculate) {
+                // Get the basic summary
+                Optional<TradeSummaryBasic> basicOpt = tradeSummaryService.findBasicById(id);
+                if (basicOpt.isPresent()) {
+                    // Force recalculation of metrics
+                    TradeSummaryDetailed detailed = metricsCalculationService.calculateDetailedMetrics(basicOpt.get());
+                    TradeSummary composite = TradeSummary.fromBasicAndDetailed(basicOpt.get(), detailed);
+                    return ResponseEntity.ok(composite);
+                } else {
+                    return ResponseEntity.notFound().build();
+                }
+            } else {
+                // Use cached metrics if available
+                TradeSummary tradeSummary = metricsCalculationService.getTradeSummaryWithMetrics(id);
+                if (tradeSummary != null) {
+                    return ResponseEntity.ok(tradeSummary);
+                } else {
+                    return ResponseEntity.notFound().build();
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error fetching composite trade summary: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @Operation(summary = "Get all active basic trade summaries for an owner")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Trade summaries retrieved successfully"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/basic/by-owner/{ownerId}")
+    public ResponseEntity<List<TradeSummaryBasic>> getActiveBasicTradeSummariesByOwner(
+            @Parameter(description = "Owner ID") 
+            @PathVariable String ownerId) {
+        
+        try {
+            log.info("Fetching active basic trade summaries for owner: {}", ownerId);
+            List<TradeSummaryBasic> summaries = tradeSummaryService.findAllActiveBasicByOwnerId(ownerId);
+            return ResponseEntity.ok(summaries);
+        } catch (Exception e) {
+            log.error("Error fetching basic trade summaries: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @Operation(summary = "Save or update a composite trade summary")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Trade summary saved successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid trade summary data"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/composite")
+    public ResponseEntity<TradeSummary> saveCompositeTradeSummary(
+            @RequestBody TradeSummary tradeSummary) {
+        
+        try {
+            log.info("Saving composite trade summary: {}", tradeSummary.getId());
+            TradeSummary saved = tradeSummary.getId() == null ? 
+                tradeSummaryService.saveTradeSummary(tradeSummary) : 
+                tradeSummaryService.updateTradeSummary(tradeSummary);
+            return ResponseEntity.ok(saved);
         } catch (IllegalArgumentException e) {
-            log.error("Invalid request parameters: {}", e.getMessage());
+            log.error("Invalid trade summary data: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error saving trade summary: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @Operation(summary = "Delete a trade summary and its associated detailed metrics")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Trade summary deleted successfully"),
+        @ApiResponse(responseCode = "404", description = "Trade summary not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTradeSummary(
+            @Parameter(description = "Trade summary ID") 
+            @PathVariable String id) {
+        
+        try {
+            log.info("Deleting trade summary with ID: {}", id);
+            if (tradeSummaryService.findBasicById(id).isPresent()) {
+                tradeSummaryService.deleteTradeSummary(id);
+                return ResponseEntity.noContent().build();
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("Error deleting trade summary: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 
-    
+
 }

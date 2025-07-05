@@ -1,7 +1,6 @@
 package am.trade.dashboard.service;
 
 import am.trade.common.models.*;
-import am.trade.common.models.enums.EntryPsychology;
 import am.trade.dashboard.service.metrics.*;
 // Removed unused import
 import am.trade.persistence.entity.TradeDetailsEntity;
@@ -12,8 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 

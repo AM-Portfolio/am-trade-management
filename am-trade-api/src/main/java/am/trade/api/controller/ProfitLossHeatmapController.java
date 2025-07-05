@@ -1,7 +1,7 @@
 package am.trade.api.controller;
 
 import am.trade.common.models.ProfitLossHeatmapData;
-import am.trade.services.service.ProfitLossHeatmapService;
+import am.trade.api.service.ProfitLossHeatmapService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

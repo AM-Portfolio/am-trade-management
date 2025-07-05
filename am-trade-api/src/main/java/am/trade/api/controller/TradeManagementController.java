@@ -1,8 +1,8 @@
-package am.trade.services.controller;
+package am.trade.api.controller;
 
 import am.trade.common.models.TradeDetails;
-import am.trade.services.model.TradeSummary;
-import am.trade.services.service.TradeManagementService;
+
+import am.trade.api.service.TradeManagementService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -114,23 +114,5 @@ public class TradeManagementController {
         log.info("Fetching paginated trade details for portfolio: {}", portfolioId);
         Page<TradeDetails> tradeDetails = tradeManagementService.getTradeDetailsByPortfolio(portfolioId, pageable);
         return ResponseEntity.ok(tradeDetails);
-    }
-
-    /**
-     * Get trade summary for a specific portfolio and date range
-     */
-    @GetMapping("/summary")
-    public ResponseEntity<TradeSummary> getTradeSummary(
-            @RequestParam String portfolioId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        
-        if (startDate.isAfter(endDate)) {
-            return ResponseEntity.badRequest().build();
-        }
-        
-        log.info("Fetching trade summary for portfolio: {} from {} to {}", portfolioId, startDate, endDate);
-        TradeSummary tradeSummary = tradeManagementService.getTradeSummary(portfolioId, startDate, endDate);
-        return ResponseEntity.ok(tradeSummary);
     }
 }
