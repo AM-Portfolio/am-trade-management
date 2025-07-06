@@ -4,8 +4,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+
+import am.trade.exceptions.TradeFieldValidationException;
+import am.trade.exceptions.model.ErrorDetail;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,6 +47,11 @@ public class TradeApiServiceImpl implements TradeApiService {
     
     @Override
     public TradeDetails addTrade(TradeDetails tradeDetails) {
+        if (tradeDetails == null) {
+            log.error("Cannot add null trade");
+            return null;
+        }
+        
         log.info("Service: Adding new trade for portfolio: {} and symbol: {} by user: {}", 
                 tradeDetails.getPortfolioId(), tradeDetails.getSymbol(), tradeDetails.getUserId());
         
@@ -54,6 +63,25 @@ public class TradeApiServiceImpl implements TradeApiService {
             tradeDetails.setTradeId(UUID.randomUUID().toString());
         }
         
+        logTradeComponents(tradeDetails);
+        
+        // Save trade details and process for portfolio aggregation
+        TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
+        if (savedTrade != null) {
+            tradeProcessingService.processTradeDetails(
+                List.of(savedTrade.getTradeId()), 
+                savedTrade.getPortfolioId(), 
+                savedTrade.getUserId());
+        }
+        
+        return savedTrade;
+    }
+    
+    /**
+     * Log information about trade components for debugging
+     * @param tradeDetails The trade details to log information about
+     */
+    private void logTradeComponents(TradeDetails tradeDetails) {
         // Log if psychology data is present
         if (tradeDetails.getPsychologyData() != null) {
             log.info("Trade psychology data provided for trade");
@@ -64,81 +92,191 @@ public class TradeApiServiceImpl implements TradeApiService {
             log.info("Trade entry reasoning provided for trade");
         }
         
-        // Handle trade analysis images if present
+        // Log if attachments are present
         if (tradeDetails.getAttachments() != null && !tradeDetails.getAttachments().isEmpty()) {
             log.info("Trade analysis images provided for trade: {} images", tradeDetails.getAttachments().size());
-            // Validate attachments
+            // Validate attachments if needed
             // tradeValidator.validateAttachments(tradeDetails.getAttachments());
         }
-        tradeProcessingService.processTradeDetails(List.of(tradeDetails.getTradeId()), tradeDetails.getPortfolioId(), tradeDetails.getUserId());
-        return tradeDetailsService.saveTradeDetails(tradeDetails);
     }
     
     @Override
     public TradeDetails updateTrade(String tradeId, TradeDetails tradeDetails) {
+        if (tradeId == null || tradeId.isEmpty() || tradeDetails == null) {
+            log.error("Cannot update trade: invalid trade ID or trade details");
+            throw new IllegalArgumentException("Invalid trade ID or trade details");
+        }
+        
         log.info("Service: Updating trade with ID: {}", tradeId);
         
         // Validate that the trade exists
-        Optional<TradeDetails> existingTrade = tradeDetailsService.findModelByTradeId(tradeDetails.getTradeId());
-        if (existingTrade.isEmpty()) {
-            log.error("Trade with ID {} not found", tradeDetails.getTradeId());
-            throw new IllegalArgumentException("Trade not found with ID: " + tradeDetails.getTradeId());
+        Optional<TradeDetails> existingTradeOpt = tradeDetailsService.findModelByTradeId(tradeId);
+        if (existingTradeOpt.isEmpty()) {
+            log.error("Trade with ID {} not found", tradeId);
+            throw new IllegalArgumentException("Trade not found with ID: " + tradeId);
         }
+        
+        // Get the original trade
+        TradeDetails originalTrade = existingTradeOpt.get();
+        
+        // Validate non-editable fields
+        validateNonEditableFields(originalTrade, tradeDetails);
         
         // Ensure the trade ID in the path matches the one in the body
-        tradeDetails.setTradeId(tradeDetails.getTradeId());
+        tradeDetails.setTradeId(tradeId);
         
-        // Preserve the original user ID and portfolio ID
-        TradeDetails originalTrade = existingTrade.get();
-        tradeDetails.setUserId(originalTrade.getUserId());
+        // Preserve non-editable fields from the original trade
+        preserveNonEditableFields(originalTrade, tradeDetails);
         
-        // If portfolio ID is not provided, use the original one
-        if (tradeDetails.getPortfolioId() == null || tradeDetails.getPortfolioId().isEmpty()) {
-            tradeDetails.setPortfolioId(originalTrade.getPortfolioId());
+        // Handle attachments merging
+        handleAttachmentsMerging(tradeId, tradeDetails, originalTrade);
+        
+        // Log trade components for debugging
+        logTradeComponents(tradeDetails);
+        
+        // Save and process trade
+        TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
+        if (savedTrade != null) {
+            tradeProcessingService.processTradeDetails(
+                List.of(savedTrade.getTradeId()), 
+                savedTrade.getPortfolioId(), 
+                savedTrade.getUserId());
         }
         
-        // Handle trade psychology data if present
-        if (tradeDetails.getPsychologyData() != null) {
-            log.info("Updated trade psychology data provided for trade {}", tradeId);
-            // Validate psychology data
-            tradeValidator.validatePsychologyData(tradeDetails.getPsychologyData());
-        } else if (originalTrade.getPsychologyData() != null) {
-            // Preserve existing psychology data if not provided in update
-            tradeDetails.setPsychologyData(originalTrade.getPsychologyData());
-            log.info("Preserving existing psychology data for trade {}", tradeId);
+        return savedTrade;
+    }
+    
+    /**
+     * Validates that non-editable fields haven't been changed in the update request
+     * @param originalTrade The original trade details
+     * @param updatedTrade The updated trade details
+     * @throws TradeFieldValidationException with HTTP 400 Bad Request if non-editable fields are modified
+     */
+    private void validateNonEditableFields(TradeDetails originalTrade, TradeDetails updatedTrade) {
+        // Create a validation exception builder to collect all validation errors
+        TradeFieldValidationException.TradeFieldValidationExceptionBuilder exceptionBuilder = 
+                TradeFieldValidationException.fieldBuilder("Trade update contains modifications to non-editable fields");
+        
+        boolean hasErrors = false;
+        
+        // Check symbol - non-editable
+        if (updatedTrade.getSymbol() != null && !updatedTrade.getSymbol().equals(originalTrade.getSymbol())) {
+            exceptionBuilder.addFieldError("symbol", "Symbol cannot be modified");
+            hasErrors = true;
         }
         
-        // Handle trade entry reasoning if present
-        if (tradeDetails.getEntryReasoning() != null) {
-            log.info("Updated trade entry reasoning provided for trade {}", tradeId);
-            // Validate entry reasoning
-            tradeValidator.validateEntryReasoning(tradeDetails.getEntryReasoning());
-        } else if (originalTrade.getEntryReasoning() != null) {
-            // Preserve existing entry reasoning if not provided in update
-            tradeDetails.setEntryReasoning(originalTrade.getEntryReasoning());
-            log.info("Preserving existing entry reasoning for trade {}", tradeId);
+        // Check portfolio ID - non-editable
+        if (updatedTrade.getPortfolioId() != null && !updatedTrade.getPortfolioId().isEmpty() 
+                && !updatedTrade.getPortfolioId().equals(originalTrade.getPortfolioId())) {
+            exceptionBuilder.addFieldError("portfolioId", "Portfolio ID cannot be modified");
+            hasErrors = true;
         }
         
-        // Handle trade analysis images if present
-        if (tradeDetails.getAttachments() != null && !tradeDetails.getAttachments().isEmpty()) {
-            log.info("Updated trade analysis images provided: {} images", tradeDetails.getAttachments().size());
-            // Create a new list with both existing and new attachments
+        // Check user ID - non-editable
+        if (updatedTrade.getUserId() != null && !updatedTrade.getUserId().equals(originalTrade.getUserId())) {
+            exceptionBuilder.addFieldError("userId", "User ID cannot be modified");
+            hasErrors = true;
+        }
+        
+        // Check trade position type - non-editable
+        if (updatedTrade.getTradePositionType() != null && !updatedTrade.getTradePositionType().equals(originalTrade.getTradePositionType())) {
+            exceptionBuilder.addFieldError("tradePositionType", "Trade position type (long/short) cannot be modified");
+            hasErrors = true;
+        }
+        
+        // Check entry info - non-editable core fields
+        if (updatedTrade.getEntryInfo() != null && originalTrade.getEntryInfo() != null) {
+            // Check if price was modified
+            if (updatedTrade.getEntryInfo().getPrice() != null && 
+                    !Objects.equals(updatedTrade.getEntryInfo().getPrice(), originalTrade.getEntryInfo().getPrice())) {
+                exceptionBuilder.addFieldError("entryInfo.price", "Entry price cannot be modified");
+                hasErrors = true;
+            }
+            
+            // Check if quantity was modified
+            if (updatedTrade.getEntryInfo().getQuantity() != null && 
+                    !Objects.equals(updatedTrade.getEntryInfo().getQuantity(), originalTrade.getEntryInfo().getQuantity())) {
+                exceptionBuilder.addFieldError("entryInfo.quantity", "Position quantity cannot be modified");
+                hasErrors = true;
+            }
+        }
+        
+        // Check instrument info - non-editable
+        if (updatedTrade.getInstrumentInfo() != null && originalTrade.getInstrumentInfo() != null &&
+                !Objects.equals(updatedTrade.getInstrumentInfo(), originalTrade.getInstrumentInfo())) {
+            exceptionBuilder.addFieldError("instrumentInfo", "Instrument information cannot be modified");
+            hasErrors = true;
+        }
+        
+        // If any non-editable fields were modified, throw the validation exception with all errors
+        if (hasErrors) {
+            log.warn("Attempt to modify non-editable fields for trade {}", originalTrade.getTradeId());
+            throw exceptionBuilder.build();
+        }
+    }
+    
+    /**
+     * Preserves non-editable fields from the original trade in the updated trade
+     * @param originalTrade The original trade details
+     * @param updatedTrade The updated trade details
+     */
+    private void preserveNonEditableFields(TradeDetails originalTrade, TradeDetails updatedTrade) {
+        // Preserve user ID
+        updatedTrade.setUserId(originalTrade.getUserId());
+        
+        // Preserve portfolio ID
+        updatedTrade.setPortfolioId(originalTrade.getPortfolioId());
+        
+        // Preserve symbol
+        updatedTrade.setSymbol(originalTrade.getSymbol());
+        
+        // Preserve trade position type (long/short)
+        updatedTrade.setTradePositionType(originalTrade.getTradePositionType());
+        
+        // Preserve instrument info
+        updatedTrade.setInstrumentInfo(originalTrade.getInstrumentInfo());
+        
+        // Preserve entry info core details (price, size)
+        if (originalTrade.getEntryInfo() != null) {
+            if (updatedTrade.getEntryInfo() == null) {
+                updatedTrade.setEntryInfo(originalTrade.getEntryInfo());
+            } else {
+                updatedTrade.getEntryInfo().setPrice(originalTrade.getEntryInfo().getPrice());
+                updatedTrade.getEntryInfo().setQuantity(originalTrade.getEntryInfo().getQuantity());
+            }
+        }
+        
+        // Preserve trade executions list
+        updatedTrade.setTradeExecutions(originalTrade.getTradeExecutions());
+    }
+    
+    /**
+     * Handle merging of attachments between original and updated trade
+     * @param tradeId The ID of the trade being updated
+     * @param updatedTrade The updated trade details
+     * @param originalTrade The original trade details
+     */
+    private void handleAttachmentsMerging(String tradeId, TradeDetails updatedTrade, TradeDetails originalTrade) {
+        // Handle trade analysis images if present in update
+        if (updatedTrade.getAttachments() != null && !updatedTrade.getAttachments().isEmpty()) {
+            log.info("New trade analysis images provided for trade update: {} images", updatedTrade.getAttachments().size());
+            
+            // If original trade had images, merge them with new ones
             if (originalTrade.getAttachments() != null && !originalTrade.getAttachments().isEmpty()) {
+                // Create a new list with both existing and new attachments
                 List<Attachment> mergedAttachments = new ArrayList<>(originalTrade.getAttachments());
-                mergedAttachments.addAll(tradeDetails.getAttachments());
-                tradeDetails.setAttachments(mergedAttachments);
+                mergedAttachments.addAll(updatedTrade.getAttachments());
+                updatedTrade.setAttachments(mergedAttachments);
                 log.info("Merged {} existing and {} new attachments for trade {}", 
-                        originalTrade.getAttachments().size(), tradeDetails.getAttachments().size(), tradeId);
+                        originalTrade.getAttachments().size(), updatedTrade.getAttachments().size(), tradeId);
             }
             // Otherwise keep the new attachments as is
         } else if (originalTrade.getAttachments() != null && !originalTrade.getAttachments().isEmpty()) {
             // Preserve existing images if not provided in update
-            tradeDetails.setAttachments(new ArrayList<>(originalTrade.getAttachments()));
+            updatedTrade.setAttachments(new ArrayList<>(originalTrade.getAttachments()));
             log.info("Preserving existing {} attachments for trade {}", 
                     originalTrade.getAttachments().size(), tradeId);
         }
-        tradeProcessingService.processTradeDetails(List.of(tradeDetails.getTradeId()), tradeDetails.getPortfolioId(), tradeDetails.getUserId());
-        return tradeDetailsService.saveTradeDetails(tradeDetails);
     }
     
     @Override
@@ -160,32 +298,76 @@ public class TradeApiServiceImpl implements TradeApiService {
     
     @Override
     public List<TradeDetails> addOrUpdateTrades(List<TradeDetails> tradeDetailsList) {
-        log.info("Service: Processing batch of {} trades", tradeDetailsList.size());
-        
-        // Validate all trades in batch
-        for (TradeDetails trade : tradeDetailsList) {
-            tradeValidator.validateTrade(trade);
+        if (tradeDetailsList == null || tradeDetailsList.isEmpty()) {
+            log.warn("Empty or null trade details list provided");
+            return Collections.emptyList();
         }
         
-        log.info("All trades in batch passed validation");
+        log.info("Service: Processing batch of {} trades", tradeDetailsList.size());
         
-        // Generate trade IDs for new trades
-        tradeDetailsList.forEach(trade -> {
+        try {
+            // Validate all trades in batch
+            validateTradesBatch(tradeDetailsList);
+            
+            // Generate trade IDs for new trades and prepare trades for saving
+            prepareTradesForSaving(tradeDetailsList);
+            
+            // Log batch statistics
+            logBatchStatistics(tradeDetailsList);
+            
+            // Save all trades in a single operation
+            return tradeDetailsService.saveAllTradeDetails(tradeDetailsList);
+        } catch (Exception e) {
+            log.error("Error processing batch of trades: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Validates all trades in a batch
+     * @param trades List of trades to validate
+     */
+    private void validateTradesBatch(List<TradeDetails> trades) {
+        for (TradeDetails trade : trades) {
+            tradeValidator.validateTrade(trade);
+        }
+        log.info("All trades in batch passed validation");
+    }
+    
+    /**
+     * Prepares trades for saving by generating IDs for new trades
+     * @param trades List of trades to prepare
+     */
+    private void prepareTradesForSaving(List<TradeDetails> trades) {
+        trades.forEach(trade -> {
             if (trade.getTradeId() == null || trade.getTradeId().isEmpty()) {
                 trade.setTradeId(UUID.randomUUID().toString());
             }
         });
-        
+    }
+    
+    /**
+     * Logs statistics about the batch of trades
+     * @param trades List of trades to analyze
+     */
+    private void logBatchStatistics(List<TradeDetails> trades) {
         // Log information about trade analysis images in the batch
-        long tradesWithImages = tradeDetailsList.stream()
+        long tradesWithImages = trades.stream()
                 .filter(trade -> trade.getAttachments() != null && !trade.getAttachments().isEmpty())
                 .count();
         
         if (tradesWithImages > 0) {
-            log.info("{} out of {} trades in batch contain attachments", tradesWithImages, tradeDetailsList.size());
+            log.info("{} out of {} trades in batch contain attachments", tradesWithImages, trades.size());
         }
         
-        return tradeDetailsService.saveAllTradeDetails(tradeDetailsList);
+        // Log information about psychology data
+        long tradesWithPsychology = trades.stream()
+                .filter(trade -> trade.getPsychologyData() != null)
+                .count();
+        
+        if (tradesWithPsychology > 0) {
+            log.info("{} out of {} trades in batch contain psychology data", tradesWithPsychology, trades.size());
+        }
     }
     
     @Override
@@ -197,10 +379,24 @@ public class TradeApiServiceImpl implements TradeApiService {
         
         log.info("Service: Fetching trade details for {} trade IDs in a single database call", tradeIds.size());
         
-        // Use the new efficient method that makes a single database call
-        List<TradeDetails> tradeDetails = tradeDetailsService.findModelsByTradeIds(tradeIds);
-        
-        log.info("Found {} trades out of {} requested IDs", tradeDetails.size(), tradeIds.size());
-        return tradeDetails;
+        try {
+            // Use the efficient method that makes a single database call
+            List<TradeDetails> tradeDetails = tradeDetailsService.findModelsByTradeIds(tradeIds);
+            
+            // Log success metrics
+            int foundCount = tradeDetails.size();
+            int requestedCount = tradeIds.size();
+            
+            if (foundCount < requestedCount) {
+                log.warn("Only found {} trades out of {} requested IDs", foundCount, requestedCount);
+            } else {
+                log.info("Successfully retrieved all {} requested trade details", requestedCount);
+            }
+            
+            return tradeDetails;
+        } catch (Exception e) {
+            log.error("Error retrieving trade details for {} IDs: {}", tradeIds.size(), e.getMessage(), e);
+            throw e;
+        }
     }
 }

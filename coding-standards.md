@@ -320,6 +320,61 @@ public List<TradeModel> getAllTradesWithDetails() {
 - **Pagination**: Support pagination for operations returning large datasets
 - **Bulk Operations**: Support bulk operations for efficiency
 
+## Exception Handling Standards
+
+### Global Exception Handling
+- **Use Global Exception Handler**: Let the global exception handler manage all exceptions and format error responses
+- **Avoid Try-Catch Blocks**: Do not use try-catch blocks in controllers, services, or other components; instead, let exceptions propagate to the global handler
+- **Exception Propagation**: Allow exceptions to bubble up naturally through the call stack to be handled centrally
+- **Custom Exception Types**: Create specific exception types for different error scenarios
+- **Exception Hierarchy**: Maintain a clear exception hierarchy with base exception types
+- **Meaningful Error Messages**: Include clear, user-friendly error messages in exceptions
+- **Include Error Details**: Provide detailed error information for debugging purposes
+- **Consistent Error Format**: Use a consistent error response format across all API endpoints
+
+### Exception Handling Example
+
+```java
+// Controller without try-catch
+@PutMapping("/details/{tradeId}")
+public ResponseEntity<TradeDetails> updateTrade(
+        @PathVariable String tradeId,
+        @RequestBody @Validated TradeDetails tradeDetails) {
+    
+    log.info("Updating trade with ID: {}", tradeId);
+    
+    // Basic validation - could be moved to a validator class
+    if (!tradeId.equals(tradeDetails.getTradeId())) {
+        log.error("Trade ID mismatch: {} vs {}", tradeId, tradeDetails.getTradeId());
+        throw new IllegalArgumentException("Trade ID in path does not match ID in request body");
+    }
+    
+    // Let service throw exceptions that will be handled by global exception handler
+    TradeDetails updatedTrade = tradeApiService.updateTrade(tradeId, tradeDetails);
+    return ResponseEntity.ok(updatedTrade);
+}
+```
+
+```java
+// Global exception handler
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(TradeFieldValidationException.class)
+    public ResponseEntity<ErrorResponse> handleTradeFieldValidationException(
+            TradeFieldValidationException ex, WebRequest request) {
+        
+        ErrorResponse errorResponse = createErrorResponse(
+                HttpStatus.BAD_REQUEST, ex.getMessage(), ex, request);
+        
+        // Add validation error details
+        ex.getErrors().forEach(errorResponse::addError);
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+}
+```
+
 ### Service Layer Example
 
 ```java
