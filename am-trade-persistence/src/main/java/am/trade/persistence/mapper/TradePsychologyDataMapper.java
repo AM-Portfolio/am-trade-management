@@ -52,8 +52,26 @@ public class TradePsychologyDataMapper {
             List<String> behaviorPatternCodes = new ArrayList<>();
             List<PsychologyFactorEntity> customBehaviorPatterns = new ArrayList<>();
             
-            for (TradeBehaviorPattern pattern : model.getBehaviorPatterns()) {
-                processBehaviorPattern(pattern, behaviorPatternCodes, customBehaviorPatterns);
+            // Handle potential mixed type list (due to deserialization issues)
+            for (Object patternObj : model.getBehaviorPatterns()) {
+                if (patternObj instanceof TradeBehaviorPattern) {
+                    // Normal case - process TradeBehaviorPattern object
+                    processBehaviorPattern((TradeBehaviorPattern) patternObj, behaviorPatternCodes, customBehaviorPatterns);
+                } else if (patternObj instanceof String) {
+                    // Handle String case - create TradeBehaviorPattern from code
+                    String code = (String) patternObj;
+                    TradeBehaviorPattern pattern = TradeBehaviorPattern.fromCode(code);
+                    processBehaviorPattern(pattern, behaviorPatternCodes, customBehaviorPatterns);
+                } else if (patternObj != null) {
+                    // Try to handle other object types by converting to string
+                    try {
+                        String code = patternObj.toString();
+                        TradeBehaviorPattern pattern = TradeBehaviorPattern.fromCode(code);
+                        processBehaviorPattern(pattern, behaviorPatternCodes, customBehaviorPatterns);
+                    } catch (Exception e) {
+                        logger.log(Level.WARNING, "Could not process behavior pattern: " + patternObj, e);
+                    }
+                }
             }
             
             entity.setBehaviorPatterns(behaviorPatternCodes);
@@ -96,11 +114,30 @@ public class TradePsychologyDataMapper {
             List<String> entryFactorCodes = new ArrayList<>();
             List<PsychologyFactorEntity> customEntryFactors = new ArrayList<>();
             
-            for (EntryPsychology factor : model.getEntryPsychologyFactors()) {
-                processEntryPsychologyFactor(factor, entryFactorCodes, customEntryFactors);
+            // Handle potential mixed type list (due to deserialization issues)
+            for (Object factorObj : model.getEntryPsychologyFactors()) {
+                if (factorObj instanceof EntryPsychology) {
+                    // Normal case - process EntryPsychology object
+                    processEntryPsychologyFactor((EntryPsychology) factorObj, entryFactorCodes, customEntryFactors);
+                } else if (factorObj instanceof String) {
+                    // Handle String case - create EntryPsychology from code
+                    String code = (String) factorObj;
+                    EntryPsychology factor = EntryPsychology.fromCode(code);
+                    processEntryPsychologyFactor(factor, entryFactorCodes, customEntryFactors);
+                } else if (factorObj != null) {
+                    // Try to handle other object types by converting to string
+                    try {
+                        String code = factorObj.toString();
+                        EntryPsychology factor = EntryPsychology.fromCode(code);
+                        processEntryPsychologyFactor(factor, entryFactorCodes, customEntryFactors);
+                    } catch (Exception e) {
+                        logger.log(Level.WARNING, "Could not process entry psychology factor: " + factorObj, e);
+                    }
+                }
             }
             
             entity.setEntryPsychologyFactors(entryFactorCodes);
+            
             entity.setCustomEntryFactors(customEntryFactors);
         } else {
             entity.setEntryPsychologyFactors(Collections.emptyList());
@@ -139,8 +176,26 @@ public class TradePsychologyDataMapper {
             List<String> exitFactorCodes = new ArrayList<>();
             List<PsychologyFactorEntity> customExitFactors = new ArrayList<>();
             
-            for (ExitPsychology factor : model.getExitPsychologyFactors()) {
-                processExitPsychologyFactor(factor, exitFactorCodes, customExitFactors);
+            // Handle potential mixed type list (due to deserialization issues)
+            for (Object factorObj : model.getExitPsychologyFactors()) {
+                if (factorObj instanceof ExitPsychology) {
+                    // Normal case - process ExitPsychology object
+                    processExitPsychologyFactor((ExitPsychology) factorObj, exitFactorCodes, customExitFactors);
+                } else if (factorObj instanceof String) {
+                    // Handle String case - create ExitPsychology from code
+                    String code = (String) factorObj;
+                    ExitPsychology factor = ExitPsychology.fromCode(code);
+                    processExitPsychologyFactor(factor, exitFactorCodes, customExitFactors);
+                } else if (factorObj != null) {
+                    // Try to handle other object types by converting to string
+                    try {
+                        String code = factorObj.toString();
+                        ExitPsychology factor = ExitPsychology.fromCode(code);
+                        processExitPsychologyFactor(factor, exitFactorCodes, customExitFactors);
+                    } catch (Exception e) {
+                        logger.log(Level.WARNING, "Could not process exit psychology factor: " + factorObj, e);
+                    }
+                }
             }
             
             entity.setExitPsychologyFactors(exitFactorCodes);

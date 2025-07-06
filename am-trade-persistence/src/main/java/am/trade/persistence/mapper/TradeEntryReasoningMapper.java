@@ -62,11 +62,34 @@ public class TradeEntryReasoningMapper {
     private void processTechnicalReasons(TradeEntryReasoning model, TradeEntryReasoningEntity entity) {
         if (model.getTechnicalReasons() != null) {
             List<String> technicalReasonCodes = new ArrayList<>();
-            for (TechnicalEntryReason reason : model.getTechnicalReasons()) {
-                if (reason != null) {
-                    technicalReasonCodes.add(reason.getCode());
+            
+            // Handle potential mixed type list (due to deserialization issues)
+            for (Object reasonObj : model.getTechnicalReasons()) {
+                if (reasonObj instanceof TechnicalEntryReason) {
+                    // Normal case - process TechnicalEntryReason object
+                    TechnicalEntryReason reason = (TechnicalEntryReason) reasonObj;
+                    if (reason != null) {
+                        technicalReasonCodes.add(reason.getCode());
+                    }
+                } else if (reasonObj instanceof String) {
+                    // Handle String case directly
+                    String code = (String) reasonObj;
+                    if (code != null && !code.isEmpty()) {
+                        technicalReasonCodes.add(code);
+                    }
+                } else if (reasonObj != null) {
+                    // Try to handle other object types by converting to string
+                    try {
+                        String code = reasonObj.toString();
+                        if (code != null && !code.isEmpty()) {
+                            technicalReasonCodes.add(code);
+                        }
+                    } catch (Exception e) {
+                        logger.log(Level.WARNING, "Could not process technical reason: " + reasonObj, e);
+                    }
                 }
             }
+            
             entity.setTechnicalReasons(technicalReasonCodes);
         } else {
             entity.setTechnicalReasons(Collections.emptyList());
@@ -81,9 +104,31 @@ public class TradeEntryReasoningMapper {
     private void processFundamentalReasons(TradeEntryReasoning model, TradeEntryReasoningEntity entity) {
         if (model.getFundamentalReasons() != null) {
             List<String> fundamentalReasonCodes = new ArrayList<>();
-            for (FundamentalEntryReason reason : model.getFundamentalReasons()) {
-                processFundamentalReason(reason, fundamentalReasonCodes);
+            
+            // Handle potential mixed type list (due to deserialization issues)
+            for (Object reasonObj : model.getFundamentalReasons()) {
+                if (reasonObj instanceof FundamentalEntryReason) {
+                    // Normal case - process FundamentalEntryReason object
+                    processFundamentalReason((FundamentalEntryReason) reasonObj, fundamentalReasonCodes);
+                } else if (reasonObj instanceof String) {
+                    // Handle String case directly
+                    String code = (String) reasonObj;
+                    if (code != null && !code.isEmpty()) {
+                        fundamentalReasonCodes.add(code);
+                    }
+                } else if (reasonObj != null) {
+                    // Try to handle other object types by converting to string
+                    try {
+                        String code = reasonObj.toString();
+                        if (code != null && !code.isEmpty()) {
+                            fundamentalReasonCodes.add(code);
+                        }
+                    } catch (Exception e) {
+                        logger.log(Level.WARNING, "Could not process fundamental reason: " + reasonObj, e);
+                    }
+                }
             }
+            
             entity.setFundamentalReasons(fundamentalReasonCodes);
         } else {
             entity.setFundamentalReasons(Collections.emptyList());
