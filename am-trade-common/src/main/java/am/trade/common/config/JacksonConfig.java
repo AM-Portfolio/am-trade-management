@@ -1,6 +1,7 @@
 package am.trade.common.config;
 
 import am.trade.common.jackson.TradeJacksonModule;
+import am.trade.common.jackson.TradeManagementJacksonModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,8 +20,9 @@ public class JacksonConfig {
     public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
         ObjectMapper objectMapper = builder.createXmlMapper(false).build();
         
-        // Register our custom module
+        // Register our custom modules
         objectMapper.registerModule(new TradeJacksonModule());
+        objectMapper.registerModule(new TradeManagementJacksonModule());
         
         return objectMapper;
     }

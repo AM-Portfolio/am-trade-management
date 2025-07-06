@@ -29,65 +29,95 @@ public class TradeEntryReasoningMapper {
      */
     public TradeEntryReasoningEntity toEntity(TradeEntryReasoning model) {
         if (model == null) {
-            return null;
+            return new TradeEntryReasoningEntity();
         }
 
-        try {
-            TradeEntryReasoningEntity entity = new TradeEntryReasoningEntity();
-            
-            // Set basic fields
-            entity.setPrimaryReason(model.getPrimaryReason());
-            entity.setReasoningSummary(model.getReasoningSummary());
-            entity.setReasoningNotes(model.getReasoningSummary()); // Set reasoningNotes to match reasoningSummary
-            entity.setConfidenceLevel(model.getConfidenceLevel());
-            
-            // Handle technical reasons with null check and error handling
-            if (model.getTechnicalReasons() != null) {
-                List<String> technicalReasonCodes = new ArrayList<>();
-                for (TechnicalEntryReason reason : model.getTechnicalReasons()) {
-                    try {
-                        if (reason != null) {
-                            technicalReasonCodes.add(reason.getCode());
-                        }
-                    } catch (Exception e) {
-                        logger.log(Level.WARNING, "Error processing technical reason: " + e.getMessage());
-                    }
+        TradeEntryReasoningEntity entity = new TradeEntryReasoningEntity();
+        
+        setBasicEntityFields(model, entity);
+        processTechnicalReasons(model, entity);
+        processFundamentalReasons(model, entity);
+        processIndicators(model, entity);
+        
+        return entity;
+    }
+    
+    /**
+     * Set basic fields from model to entity
+     * @param model Source model
+     * @param entity Target entity
+     */
+    private void setBasicEntityFields(TradeEntryReasoning model, TradeEntryReasoningEntity entity) {
+        entity.setPrimaryReason(model.getPrimaryReason());
+        entity.setReasoningSummary(model.getReasoningSummary());
+        entity.setReasoningNotes(model.getReasoningSummary()); // Set reasoningNotes to match reasoningSummary
+        entity.setConfidenceLevel(model.getConfidenceLevel());
+    }
+    
+    /**
+     * Process technical reasons from model to entity
+     * @param model Source model
+     * @param entity Target entity
+     */
+    private void processTechnicalReasons(TradeEntryReasoning model, TradeEntryReasoningEntity entity) {
+        if (model.getTechnicalReasons() != null) {
+            List<String> technicalReasonCodes = new ArrayList<>();
+            for (TechnicalEntryReason reason : model.getTechnicalReasons()) {
+                if (reason != null) {
+                    technicalReasonCodes.add(reason.getCode());
                 }
-                entity.setTechnicalReasons(technicalReasonCodes);
-            } else {
-                entity.setTechnicalReasons(Collections.emptyList());
             }
-            
-            // Handle fundamental reasons with null check and error handling
-            if (model.getFundamentalReasons() != null) {
-                List<String> fundamentalReasonCodes = new ArrayList<>();
-                for (FundamentalEntryReason reason : model.getFundamentalReasons()) {
-                    try {
-                        if (reason != null) {
-                            fundamentalReasonCodes.add(reason.getCode());
-                        }
-                    } catch (Exception e) {
-                        logger.log(Level.WARNING, "Error processing fundamental reason: " + e.getMessage());
-                    }
-                }
-                entity.setFundamentalReasons(fundamentalReasonCodes);
-            } else {
-                entity.setFundamentalReasons(Collections.emptyList());
-            }
-            
-            // Handle supporting indicators with null check
-            entity.setSupportingIndicators(model.getSupportingIndicators() != null ? 
-                    model.getSupportingIndicators() : Collections.emptyList());
-            
-            // Handle conflicting indicators with null check
-            entity.setConflictingIndicators(model.getConflictingIndicators() != null ? 
-                    model.getConflictingIndicators() : Collections.emptyList());
-            
-            return entity;
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to convert TradeEntryReasoning model to entity: " + e.getMessage(), e);
-            return new TradeEntryReasoningEntity(); // Return empty entity instead of null
+            entity.setTechnicalReasons(technicalReasonCodes);
+        } else {
+            entity.setTechnicalReasons(Collections.emptyList());
         }
+    }
+    
+    /**
+     * Process fundamental reasons from model to entity
+     * @param model Source model
+     * @param entity Target entity
+     */
+    private void processFundamentalReasons(TradeEntryReasoning model, TradeEntryReasoningEntity entity) {
+        if (model.getFundamentalReasons() != null) {
+            List<String> fundamentalReasonCodes = new ArrayList<>();
+            for (FundamentalEntryReason reason : model.getFundamentalReasons()) {
+                processFundamentalReason(reason, fundamentalReasonCodes);
+            }
+            entity.setFundamentalReasons(fundamentalReasonCodes);
+        } else {
+            entity.setFundamentalReasons(Collections.emptyList());
+        }
+    }
+    
+    /**
+     * Process a single fundamental reason
+     * @param reason The reason to process
+     * @param codes List to add the code to
+     */
+    private void processFundamentalReason(FundamentalEntryReason reason, List<String> codes) {
+        try {
+            if (reason != null) {
+                codes.add(reason.getCode());
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error processing fundamental reason: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Process indicators from model to entity
+     * @param model Source model
+     * @param entity Target entity
+     */
+    private void processIndicators(TradeEntryReasoning model, TradeEntryReasoningEntity entity) {
+        // Handle supporting indicators with null check
+        entity.setSupportingIndicators(model.getSupportingIndicators() != null ? 
+                model.getSupportingIndicators() : Collections.emptyList());
+        
+        // Handle conflicting indicators with null check
+        entity.setConflictingIndicators(model.getConflictingIndicators() != null ? 
+                model.getConflictingIndicators() : Collections.emptyList());
     }
 
     /**
@@ -97,69 +127,142 @@ public class TradeEntryReasoningMapper {
      */
     public TradeEntryReasoning toModel(TradeEntryReasoningEntity entity) {
         if (entity == null) {
-            return null;
+            return new TradeEntryReasoning();
         }
 
-        try {
-            TradeEntryReasoning model = new TradeEntryReasoning();
-            
-            // Set basic fields
-            model.setReasoningSummary(entity.getReasoningSummary());
-            model.setPrimaryReason(entity.getPrimaryReason());
-            model.setConfidenceLevel(entity.getConfidenceLevel());
-            
-            // Handle technical reasons with null check and error handling
-            if (entity.getTechnicalReasons() != null) {
-                List<TechnicalEntryReason> technicalReasons = new ArrayList<>();
-                for (String code : entity.getTechnicalReasons()) {
-                    try {
-                        if (code != null) {
-                            TechnicalEntryReason reason = TechnicalEntryReason.fromCode(code);
-                            if (reason != null) {
-                                technicalReasons.add(reason);
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.log(Level.WARNING, "Error processing technical reason code: " + code + ", " + e.getMessage());
-                    }
-                }
-                model.setTechnicalReasons(technicalReasons);
-            } else {
-                model.setTechnicalReasons(new ArrayList<>());
-            }
-            
-            // Handle fundamental reasons with null check and error handling
-            if (entity.getFundamentalReasons() != null) {
-                List<FundamentalEntryReason> fundamentalReasons = new ArrayList<>();
-                for (String code : entity.getFundamentalReasons()) {
-                    try {
-                        if (code != null) {
-                            FundamentalEntryReason reason = FundamentalEntryReason.fromCode(code);
-                            if (reason != null) {
-                                fundamentalReasons.add(reason);
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.log(Level.WARNING, "Error processing fundamental reason code: " + code + ", " + e.getMessage());
-                    }
-                }
-                model.setFundamentalReasons(fundamentalReasons);
-            } else {
-                model.setFundamentalReasons(new ArrayList<>());
-            }
-            
-            // Handle supporting indicators with null check
-            model.setSupportingIndicators(entity.getSupportingIndicators() != null ? 
-                    entity.getSupportingIndicators() : new ArrayList<>());
-            
-            // Handle conflicting indicators with null check
-            model.setConflictingIndicators(entity.getConflictingIndicators() != null ? 
-                    entity.getConflictingIndicators() : new ArrayList<>());
-            
-            return model;
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to convert TradeEntryReasoningEntity to model: " + e.getMessage(), e);
-            return new TradeEntryReasoning(); // Return empty model instead of null
+        TradeEntryReasoning model = new TradeEntryReasoning();
+        
+        setBasicModelFields(entity, model);
+        model.setTechnicalReasons(processTechnicalReasonCodes(entity));
+        model.setFundamentalReasons(processFundamentalReasonCodes(entity));
+        processModelIndicators(entity, model);
+        
+        return model;
+    }
+    
+    /**
+     * Set basic fields from entity to model
+     * @param entity Source entity
+     * @param model Target model
+     */
+    private void setBasicModelFields(TradeEntryReasoningEntity entity, TradeEntryReasoning model) {
+        model.setReasoningSummary(entity.getReasoningSummary());
+        model.setPrimaryReason(entity.getPrimaryReason());
+        model.setConfidenceLevel(entity.getConfidenceLevel());
+    }
+    
+    /**
+     * Process technical reason codes from entity
+     * @param entity Source entity
+     * @return List of technical entry reasons
+     */
+    private List<TechnicalEntryReason> processTechnicalReasonCodes(TradeEntryReasoningEntity entity) {
+        List<TechnicalEntryReason> technicalReasons = new ArrayList<>();
+        if (entity.getTechnicalReasons() == null) {
+            return technicalReasons;
         }
+        
+        List<?> rawReasons = entity.getTechnicalReasons();
+        for (Object codeObj : rawReasons) {
+            if (codeObj instanceof String) {
+                processTechnicalReasonCode((String) codeObj, technicalReasons);
+            } else if (codeObj != null) {
+                // Try to convert non-string objects to string
+                try {
+                    processTechnicalReasonCode(codeObj.toString(), technicalReasons);
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, "Could not process non-string technical reason: " + codeObj);
+                }
+            }
+        }
+        
+        return technicalReasons;
+    }
+    
+    /**
+     * Process a single technical reason code
+     * @param code The code to process
+     * @param reasons List to add the reason to
+     */
+    private void processTechnicalReasonCode(String code, List<TechnicalEntryReason> reasons) {
+        try {
+            if (code != null) {
+                TechnicalEntryReason reason = TechnicalEntryReason.fromCode(code);
+                if (reason != null) {
+                    reasons.add(reason);
+                } else {
+                    // Create a custom reason if it doesn't exist
+                    reason = TechnicalEntryReason.fromCode(code, code);
+                    reasons.add(reason);
+                }
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error processing technical reason code: " + code + ", " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Process fundamental reason codes from entity
+     * @param entity Source entity
+     * @return List of fundamental entry reasons
+     */
+    private List<FundamentalEntryReason> processFundamentalReasonCodes(TradeEntryReasoningEntity entity) {
+        List<FundamentalEntryReason> fundamentalReasons = new ArrayList<>();
+        if (entity.getFundamentalReasons() == null) {
+            return fundamentalReasons;
+        }
+        
+        List<?> rawReasons = entity.getFundamentalReasons();
+        for (Object codeObj : rawReasons) {
+            if (codeObj instanceof String) {
+                processFundamentalReasonCode((String) codeObj, fundamentalReasons);
+            } else if (codeObj != null) {
+                // Try to convert non-string objects to string
+                try {
+                    processFundamentalReasonCode(codeObj.toString(), fundamentalReasons);
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, "Could not process non-string fundamental reason: " + codeObj);
+                }
+            }
+        }
+        
+        return fundamentalReasons;
+    }
+    
+    /**
+     * Process a single fundamental reason code
+     * @param code The code to process
+     * @param reasons List to add the reason to
+     */
+    private void processFundamentalReasonCode(String code, List<FundamentalEntryReason> reasons) {
+        try {
+            if (code != null) {
+                FundamentalEntryReason reason = FundamentalEntryReason.fromCode(code);
+                if (reason != null) {
+                    reasons.add(reason);
+                } else {
+                    // Create a custom reason if it doesn't exist
+                    reason = FundamentalEntryReason.fromCode(code, code);
+                    reasons.add(reason);
+                }
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error processing fundamental reason code: " + code + ", " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Process indicators from entity to model
+     * @param entity Source entity
+     * @param model Target model
+     */
+    private void processModelIndicators(TradeEntryReasoningEntity entity, TradeEntryReasoning model) {
+        // Handle supporting indicators with null check
+        model.setSupportingIndicators(entity.getSupportingIndicators() != null ? 
+                entity.getSupportingIndicators() : new ArrayList<>());
+        
+        // Handle conflicting indicators with null check
+        model.setConflictingIndicators(entity.getConflictingIndicators() != null ? 
+                entity.getConflictingIndicators() : new ArrayList<>());
     }
 }

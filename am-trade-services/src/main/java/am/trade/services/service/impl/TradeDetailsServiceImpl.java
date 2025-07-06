@@ -140,7 +140,7 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     public TradeDetails saveTradeDetails(TradeDetails tradeDetails) {
         log.debug("Saving trade details: {}", tradeDetails);
         TradeDetailsEntity entity = tradeDetailsMapper.toTradeEntity(tradeDetails);
-        return tradeDetailsMapper.toTradeDetails(tradeDetailsRepository.save(entity));
+         return tradeDetailsMapper.toTradeDetails(tradeDetailsRepository.save(entity));
     }
     
     @Override

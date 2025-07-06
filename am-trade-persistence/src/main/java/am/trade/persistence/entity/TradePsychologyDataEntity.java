@@ -26,6 +26,10 @@ public class TradePsychologyDataEntity {
     @Builder.Default
     private List<String> exitPsychologyFactors = new ArrayList<>();
     
+    // Behavior patterns stored as string codes
+    @Builder.Default
+    private List<String> behaviorPatterns = new ArrayList<>();
+    
     // Additional psychology notes
     private String psychologyNotes;
     
@@ -36,4 +40,8 @@ public class TradePsychologyDataEntity {
     // Custom exit psychology descriptions (code -> description mapping)
     @Builder.Default
     private List<PsychologyFactorEntity> customExitFactors = new ArrayList<>();
+    
+    // Custom behavior pattern descriptions (code -> description mapping)
+    @Builder.Default
+    private List<PsychologyFactorEntity> customBehaviorPatterns = new ArrayList<>();
 }
