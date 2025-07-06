@@ -9,6 +9,8 @@ import am.trade.common.models.enums.TradeBehaviorPattern;
 import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.mapper.TradeDetailsMapper;
 import am.trade.persistence.repository.TradeDetailsRepository;
+import am.trade.services.service.TradeDetailsService;
+
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,11 +25,11 @@ import java.util.Optional;
 @Service
 public class TradeAnalysisService {
 
-    private final TradeDetailsRepository tradeDetailsRepository;
+    private final TradeDetailsService tradeDetailsService;
     private final TradeDetailsMapper tradeDetailsMapper;
 
-    public TradeAnalysisService(TradeDetailsRepository tradeDetailsRepository, TradeDetailsMapper tradeDetailsMapper) {
-        this.tradeDetailsRepository = tradeDetailsRepository;
+    public TradeAnalysisService(TradeDetailsService tradeDetailsService, TradeDetailsMapper tradeDetailsMapper) {
+        this.tradeDetailsService = tradeDetailsService;
         this.tradeDetailsMapper = tradeDetailsMapper;
     }
 
@@ -40,15 +42,15 @@ public class TradeAnalysisService {
      * @return The updated trade details
      */
     public TradeDetails addTradeAnalysis(String tradeId, TradePsychologyData psychologyData, TradeEntryReasoning entryReasoning) {
-        Optional<TradeDetailsEntity> tradeEntityOpt = tradeDetailsRepository.findById(tradeId);
+        Optional<TradeDetails> tradeDetailsOpt = tradeDetailsService.findModelByTradeId(tradeId);
         
-        if (tradeEntityOpt.isPresent()) {
-            TradeDetailsEntity tradeEntity = tradeEntityOpt.get();
-            tradeEntity.setPsychologyData(psychologyData);
-            tradeEntity.setEntryReasoning(entryReasoning);
+        if (tradeDetailsOpt.isPresent()) {
+            TradeDetails tradeDetails = tradeDetailsOpt.get();
+            tradeDetails.setPsychologyData(psychologyData);
+            tradeDetails.setEntryReasoning(entryReasoning);
             
-            TradeDetailsEntity savedEntity = tradeDetailsRepository.save(tradeEntity);
-            return tradeDetailsMapper.toTradeDetails(savedEntity);
+            TradeDetails savedTradeDetails = tradeDetailsService.saveTradeDetails(tradeDetails);
+            return savedTradeDetails;
         }
         
         throw new RuntimeException("Trade not found with ID: " + tradeId);
@@ -131,10 +133,10 @@ public class TradeAnalysisService {
      * @return A map of behavior patterns and their frequency
      */
     public Map<TradeBehaviorPattern, Integer> analyzeBehaviorPatterns(List<String> portfolioIds) {
-        List<TradeDetailsEntity> portfolioTrades = tradeDetailsRepository.findByPortfolioIdIn(portfolioIds);
+        List<TradeDetails> portfolioTrades = tradeDetailsService.findByPortfolioIdIn(portfolioIds);
         Map<TradeBehaviorPattern, Integer> patternFrequency = new HashMap<>();
         
-        for (TradeDetailsEntity trade : portfolioTrades) {
+        for (TradeDetails trade : portfolioTrades) {
             if (trade.getPsychologyData() != null && trade.getPsychologyData().getBehaviorPatterns() != null) {
                 for (TradeBehaviorPattern pattern : trade.getPsychologyData().getBehaviorPatterns()) {
                     patternFrequency.put(pattern, patternFrequency.getOrDefault(pattern, 0) + 1);
@@ -155,10 +157,10 @@ public class TradeAnalysisService {
      */
     public List<TradeDetails> findTradesByEntryReason(List<String> portfolioIds, TechnicalEntryReason technicalReason, 
                                                      FundamentalEntryReason fundamentalReason) {
-        List<TradeDetailsEntity> portfolioTrades = tradeDetailsRepository.findByPortfolioIdIn(portfolioIds);
+        List<TradeDetails> portfolioTrades = tradeDetailsService.findByPortfolioIdIn(portfolioIds);
         List<TradeDetails> matchingTrades = new ArrayList<>();
         
-        for (TradeDetailsEntity trade : portfolioTrades) {
+        for (TradeDetails trade : portfolioTrades) {
             if (trade.getEntryReasoning() != null) {
                 boolean matches = false;
                 
@@ -171,7 +173,7 @@ public class TradeAnalysisService {
                 }
                 
                 if (matches) {
-                    matchingTrades.add(tradeDetailsMapper.toTradeDetails(trade));
+                    matchingTrades.add(trade);
                 }
             }
         }

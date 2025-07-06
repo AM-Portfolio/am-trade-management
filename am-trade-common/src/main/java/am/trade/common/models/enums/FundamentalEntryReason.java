@@ -19,7 +19,7 @@ public class FundamentalEntryReason {
     public static final FundamentalEntryReason DIVIDEND_INCREASE = new FundamentalEntryReason("DIVIDEND_INCREASE", "Company increased dividend payment");
     public static final FundamentalEntryReason ANALYST_UPGRADE = new FundamentalEntryReason("ANALYST_UPGRADE", "Positive change in analyst recommendation");
     public static final FundamentalEntryReason SECTOR_ROTATION = new FundamentalEntryReason("SECTOR_ROTATION", "Capital flowing into this market sector");
-    public static final FundamentalEntryReason NEW_PRODUCT = new FundamentalEntryReason("NEW_PRODUCT", "Company launched significant new product");
+    public static final FundamentalEntryReason PRODUCT_LAUNCH = new FundamentalEntryReason("PRODUCT_LAUNCH", "Company launched significant new product");
     public static final FundamentalEntryReason MERGER_ACQUISITION = new FundamentalEntryReason("MERGER_ACQUISITION", "Merger, acquisition or takeover activity");
     public static final FundamentalEntryReason ECONOMIC_DATA = new FundamentalEntryReason("ECONOMIC_DATA", "Favorable economic indicators");
     public static final FundamentalEntryReason POLICY_CHANGE = new FundamentalEntryReason("POLICY_CHANGE", "Beneficial regulatory or policy changes");
@@ -30,7 +30,7 @@ public class FundamentalEntryReason {
     static {
         Arrays.asList(
             EARNINGS_BEAT, EARNINGS_MISS, REVENUE_GROWTH, VALUATION,
-            DIVIDEND_INCREASE, ANALYST_UPGRADE, SECTOR_ROTATION, NEW_PRODUCT,
+            DIVIDEND_INCREASE, ANALYST_UPGRADE, SECTOR_ROTATION, PRODUCT_LAUNCH,
             MERGER_ACQUISITION, ECONOMIC_DATA, POLICY_CHANGE, MANAGEMENT_CHANGE
         ).forEach(value -> VALUES.put(value.getCode(), value));
     }

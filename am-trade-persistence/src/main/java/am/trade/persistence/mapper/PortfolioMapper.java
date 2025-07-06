@@ -10,13 +10,16 @@ import am.trade.common.models.PortfolioMetrics;
 import am.trade.common.models.PortfolioModel;
 import am.trade.persistence.entity.PortfolioEntity;
 
+import lombok.RequiredArgsConstructor;
+
 /**
  * Mapper class for converting between domain models and persistence entities
  */
 @Component
+@RequiredArgsConstructor
 public class PortfolioMapper {
 
-    TradeDetailsMapper tradeDetailsMapper = new TradeDetailsMapper();
+    private final TradeDetailsMapper tradeDetailsMapper;
 
     /**
      * Convert a PortfolioModel to a PortfolioEntity

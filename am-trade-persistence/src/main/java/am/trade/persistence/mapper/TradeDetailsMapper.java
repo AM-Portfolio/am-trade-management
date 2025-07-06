@@ -4,11 +4,20 @@ import am.trade.common.models.TradeDetails;
 import am.trade.persistence.entity.TradeDetailsEntity;
 import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
+import java.util.UUID;
+
 /**
  * Mapper class for converting between TradeDetailsEntity and TradeDetails domain model
  */
 @Component
+@RequiredArgsConstructor
 public class TradeDetailsMapper {
+    
+    private static final String PROCESS_ID = UUID.randomUUID().toString();
+    
+    private final TradePsychologyDataMapper psychologyDataMapper;
+    private final TradeEntryReasoningMapper entryReasoningMapper;
      
     /**
      * Convert a TradeDetails to a TradeDetailsEntity
@@ -35,11 +44,16 @@ public class TradeDetailsMapper {
                 .attachments(model.getAttachments())
                 .notes(model.getNotes())
                 .tags(model.getTags())
-                .psychologyData(model.getPsychologyData())
-                .entryReasoning(model.getEntryReasoning())
+                .psychologyData(psychologyDataMapper.toEntity(model.getPsychologyData()))
+                .entryReasoning(entryReasoningMapper.toEntity(model.getEntryReasoning()))
                 .build();
     }
     
+    /**
+     * Convert a TradeDetailsEntity to a TradeDetails
+     * @param entity The persistence entity to convert
+     * @return The corresponding domain model
+     */
     /**
      * Convert a TradeDetailsEntity to a TradeDetails
      * @param entity The persistence entity to convert
@@ -65,8 +79,8 @@ public class TradeDetailsMapper {
                 .attachments(entity.getAttachments())
                 .notes(entity.getNotes())
                 .tags(entity.getTags())
-                .psychologyData(entity.getPsychologyData())
-                .entryReasoning(entity.getEntryReasoning())
+                .psychologyData(psychologyDataMapper.toModel(entity.getPsychologyData()))
+                .entryReasoning(entryReasoningMapper.toModel(entity.getEntryReasoning()))
                 .build();
     }
 }

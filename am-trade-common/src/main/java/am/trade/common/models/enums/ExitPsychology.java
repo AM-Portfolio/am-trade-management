@@ -83,6 +83,22 @@ public class ExitPsychology {
     public static ExitPsychology[] values() {
         return VALUES.values().toArray(new ExitPsychology[0]);
     }
+
+    public static boolean isStandardCode(String code) {
+        if (code == null) {
+            return false;
+        }
+        return Arrays.asList(
+            FEAR.getCode(), 
+            GREED.getCode(), 
+            DISCIPLINE.getCode(), 
+            PANIC.getCode(), 
+            REGRET_AVOIDANCE.getCode(), 
+            SUNK_COST_FALLACY.getCode(), 
+            TAKING_PROFITS.getCode(),
+            CUTTING_LOSSES.getCode()
+        ).contains(code);
+    }
     
     @Override
     public String toString() {

@@ -84,6 +84,28 @@ public class EntryPsychology {
         return VALUES.values().toArray(new EntryPsychology[0]);
     }
     
+    /**
+     * Check if a code is one of the standard predefined codes
+     * 
+     * @param code The code to check
+     * @return true if it's a standard code, false otherwise
+     */
+    public static boolean isStandardCode(String code) {
+        if (code == null) {
+            return false;
+        }
+        return Arrays.asList(
+            FEAR_OF_MISSING_OUT.getCode(), 
+            OVERCONFIDENCE.getCode(), 
+            REVENGE_TRADING.getCode(), 
+            ANALYSIS_PARALYSIS.getCode(), 
+            FOLLOWING_THE_PLAN.getCode(), 
+            INTUITION.getCode(), 
+            PEER_PRESSURE.getCode(),
+            DISCIPLINED.getCode()
+        ).contains(code);
+    }
+    
     @Override
     public String toString() {
         return code;

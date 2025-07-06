@@ -30,6 +30,7 @@ public interface TradeDetailsService {
     List<TradeDetails> findModelsByStatus(TradeStatus status);
     
     List<TradeDetails> findModelsByPortfolioId(String portfolioId);
+    List<TradeDetails> findByPortfolioIdIn(List<String> portfolioIds);
     
     List<TradeDetails> findModelsBySymbolAndEntryDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate);
     

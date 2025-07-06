@@ -7,6 +7,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 import am.trade.persistence.mapper.PortfolioMapper;
+import am.trade.persistence.mapper.TradeDetailsMapper;
+import am.trade.persistence.mapper.TradeEntryReasoningMapper;
+import am.trade.persistence.mapper.TradePsychologyDataMapper;
 
 /**
  * Auto-configuration class for the persistence module
@@ -27,6 +30,6 @@ public class PersistenceAutoConfiguration {
     @Bean
     @ConditionalOnProperty(name = "am.trade.persistence.portfolio.enabled", havingValue = "true", matchIfMissing = true)
     public PortfolioMapper portfolioMapper() {
-        return new PortfolioMapper();
+        return new PortfolioMapper(new TradeDetailsMapper(new TradePsychologyDataMapper(), new TradeEntryReasoningMapper()));
     }
 }

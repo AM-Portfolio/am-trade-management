@@ -138,7 +138,9 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     
     @Override
     public TradeDetails saveTradeDetails(TradeDetails tradeDetails) {
-        return tradeDetailsMapper.toTradeDetails(tradeDetailsRepository.save(tradeDetailsMapper.toTradeEntity(tradeDetails)));
+        log.debug("Saving trade details: {}", tradeDetails);
+        TradeDetailsEntity entity = tradeDetailsMapper.toTradeEntity(tradeDetails);
+        return tradeDetailsMapper.toTradeDetails(tradeDetailsRepository.save(entity));
     }
     
     @Override
@@ -192,5 +194,13 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
                 
         log.info("Found {} trades matching portfolio IDs and date range criteria", tradeDetails.size());
         return tradeDetails;
+    }
+
+    @Override
+    public List<TradeDetails> findByPortfolioIdIn(List<String> portfolioIds) {
+        log.debug("Finding trade details by portfolio IDs: {}", portfolioIds);
+        return tradeDetailsRepository.findByPortfolioIdIn(portfolioIds).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
     }
 }

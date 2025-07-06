@@ -10,10 +10,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import am.trade.common.models.Attachment;
 import am.trade.common.models.EntryExitInfo;
 import am.trade.common.models.InstrumentInfo;
-import am.trade.common.models.TradeEntryReasoning;
 import am.trade.common.models.TradeMetrics;
 import am.trade.common.models.TradeModel;
-import am.trade.common.models.TradePsychologyData;
 import am.trade.common.models.enums.TradePositionType;
 import am.trade.common.models.enums.TradeStatus;
 
@@ -33,6 +31,7 @@ import lombok.NoArgsConstructor;
 @Document(collection = "trade_details")
 public class TradeDetailsEntity {
     
+    @Indexed
     private String tradeId;
     
     @Indexed
@@ -67,9 +66,9 @@ public class TradeDetailsEntity {
     private String notes;
     private List<String> tags;
     
-    // Trade psychology and behavior data
-    private TradePsychologyData psychologyData;
+    // Trade psychology and behavior data (stored as entity for MongoDB compatibility)
+    private TradePsychologyDataEntity psychologyData;
     
-    // Trade entry reasoning (technical and fundamental analysis)
-    private TradeEntryReasoning entryReasoning;
+    // Trade entry reasoning (technical and fundamental analysis) (stored as entity for MongoDB compatibility)
+    private TradeEntryReasoningEntity entryReasoning;
 }
