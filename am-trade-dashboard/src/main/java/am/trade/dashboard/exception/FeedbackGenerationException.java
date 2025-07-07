@@ -1,4 +1,4 @@
-package am.trade.dashboard.service.metrics.feedback;
+package am.trade.dashboard.exception;
 
 /**
  * Exception thrown when there is an error generating trading feedback
