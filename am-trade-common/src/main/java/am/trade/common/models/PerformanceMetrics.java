@@ -35,6 +35,9 @@ public class PerformanceMetrics {
     private BigDecimal largestWinningTrade;
     private BigDecimal largestLosingTrade;
     private BigDecimal winLossRatio; // Average win / Average loss
+    private BigDecimal returnStandardDeviation; // Standard deviation of returns
+    private BigDecimal profitConsistency; // Percentage of profitable periods
+    private BigDecimal maxDrawdown; // Maximum drawdown from peak equity
     
     // Streak information
     private int longestWinningStreak;
@@ -49,6 +52,13 @@ public class PerformanceMetrics {
     // Efficiency metrics
     private BigDecimal returnOnCapital; // Profit / Capital used
     private BigDecimal returnPerUnit; // Return per unit of risk
+    
+    // Trade frequency metrics
+    private BigDecimal tradesPerDay;
+    private BigDecimal tradesPerWeek;
+    private BigDecimal tradesPerMonth;
+    private Integer tradingDays;
+    private BigDecimal averageVolumePerTrade;
     
     // Timestamp information
     private LocalDateTime lastWinningTradeDate;
