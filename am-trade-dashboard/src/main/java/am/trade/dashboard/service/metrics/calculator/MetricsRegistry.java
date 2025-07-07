@@ -6,6 +6,7 @@ import am.trade.dashboard.service.metrics.calculator.impl.AverageTradeCalculator
 import am.trade.dashboard.service.metrics.calculator.impl.BestWorstDayCalculator;
 import am.trade.dashboard.service.metrics.calculator.impl.ConsistencyMetricsCalculator;
 import am.trade.dashboard.service.metrics.calculator.impl.LargestTradeCalculator;
+import am.trade.dashboard.service.metrics.calculator.impl.TradeFrequencyCalculator;
 import am.trade.dashboard.service.metrics.calculator.impl.TimeBasedReturnCalculator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

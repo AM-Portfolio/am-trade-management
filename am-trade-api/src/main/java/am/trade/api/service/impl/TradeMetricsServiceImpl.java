@@ -29,16 +29,15 @@ import java.util.stream.Collectors;
 public class TradeMetricsServiceImpl implements TradeMetricsService {
 
     private final TradeDetailsService tradeDetailsService;
-    private final TradeDetailsMapper tradeDetailsMapper;
     private final PerformanceMetricsService performanceMetricsService;
     private final RiskMetricsService riskMetricsService;
     private final TradeDistributionMetricsService distributionMetricsService;
     private final TradeTimingMetricsService timingMetricsService;
     private final TradePatternMetricsService patternMetricsService;
-    private final TradeMetricsCalculationService metricsCalculationService;
 
     private static final List<String> AVAILABLE_METRIC_TYPES = Arrays.asList(
-            "PERFORMANCE", "RISK", "DISTRIBUTION", "TIMING", "PATTERN", "STRATEGY");
+        "PERFORMANCE", "RISK", "DISTRIBUTION", "TIMING", "PATTERN", "STRATEGY", 
+        "FREQUENCY", "CONSISTENCY", "PSYCHOLOGY", "FEEDBACK");
 
     @Override
     public MetricsResponse getMetrics(MetricsFilterRequest filterRequest) {
@@ -316,24 +315,57 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
         
         // Calculate requested metrics
         Set<String> metricTypes = filterRequest.getMetricTypes();
-        if (metricTypes.isEmpty() || metricTypes.contains("PERFORMANCE")) {
+        
+        // If no metric types specified, only include performance metrics by default
+        if (metricTypes.isEmpty()) {
+            response.setPerformanceMetrics(performanceMetricsService.calculateMetrics(trades));
+            return response;
+        }
+        
+        // Otherwise, only calculate metrics that were explicitly requested
+        if (metricTypes.contains("PERFORMANCE")) {
             response.setPerformanceMetrics(performanceMetricsService.calculateMetrics(trades));
         }
         
-        if (metricTypes.isEmpty() || metricTypes.contains("RISK")) {
+        if (metricTypes.contains("RISK")) {
             response.setRiskMetrics(riskMetricsService.calculateMetrics(trades));
         }
         
-        if (metricTypes.isEmpty() || metricTypes.contains("DISTRIBUTION")) {
+        if (metricTypes.contains("DISTRIBUTION")) {
             response.setDistributionMetrics(distributionMetricsService.calculateMetrics(trades));
         }
         
-        if (metricTypes.isEmpty() || metricTypes.contains("TIMING")) {
+        if (metricTypes.contains("TIMING")) {
             response.setTimingMetrics(timingMetricsService.calculateMetrics(trades));
         }
         
-        if (metricTypes.isEmpty() || metricTypes.contains("PATTERN")) {
+        if (metricTypes.contains("PATTERN")) {
             response.setPatternMetrics(patternMetricsService.calculateMetrics(trades));
+        }
+        
+        if (metricTypes.contains("STRATEGY")) {
+            // Assuming there's a method to calculate strategy metrics
+            // response.setStrategyMetrics(strategyMetricsService.calculateMetrics(trades));
+        }
+        
+        if (metricTypes.contains("FREQUENCY")) {
+            // Add implementation when frequency metrics service is available
+            // response.setFrequencyMetrics(frequencyMetricsService.calculateMetrics(trades));
+        }
+        
+        if (metricTypes.contains("CONSISTENCY")) {
+            // Add implementation when consistency metrics service is available
+            // response.setConsistencyMetrics(consistencyMetricsService.calculateMetrics(trades));
+        }
+        
+        if (metricTypes.contains("PSYCHOLOGY")) {
+            // Add implementation when psychology metrics service is available
+            // response.setPsychologyMetrics(psychologyMetricsService.calculateMetrics(trades));
+        }
+        
+        if (metricTypes.contains("FEEDBACK")) {
+            // Add implementation when feedback service is available
+            // response.setTradingFeedback(tradingFeedbackService.generateFeedback(trades));
         }
         
         // Handle grouping if requested

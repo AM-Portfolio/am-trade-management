@@ -6,6 +6,9 @@ import java.time.LocalDateTime;
 
 import am.trade.common.models.enums.BrokerType;
 import am.trade.common.models.enums.TradeType;
+import am.trade.common.util.TradeModelDeserializer;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonDeserialize(using = TradeModelDeserializer.class)
 public class TradeModel {
     private BasicInfo basicInfo;
     private InstrumentInfo instrumentInfo;

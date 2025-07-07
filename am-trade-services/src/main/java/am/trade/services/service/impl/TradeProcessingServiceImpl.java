@@ -244,8 +244,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
     }
 
     @Override
-    public List<TradeDetails> 
-    processTradeModels(List<TradeModel> trades, String portfolioId) {
+    public List<TradeDetails> processTradeModels(List<TradeModel> trades, String portfolioId) {
         if (trades == null || trades.isEmpty()) {
             return new ArrayList<>();
         }
