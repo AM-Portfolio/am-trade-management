@@ -51,6 +51,28 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
     
     Page<TradeDetailsEntity> findByStatus(TradeStatus status, Pageable pageable);
     
+    /**
+     * Find all trade details belonging to any of the provided portfolio IDs
+     * 
+     * @param portfolioIds List of portfolio IDs to search for
+     * @return List of trade details belonging to any of the specified portfolios
+     */
+    @Query("{'portfolioId': {$in: ?0}}")
+    List<TradeDetailsEntity> findByPortfolioIdIn(List<String> portfolioIds);
+    
+    /**
+     * Find all trade details belonging to any of the provided portfolio IDs with pagination
+     * 
+     * @param portfolioIds List of portfolio IDs to search for
+     * @param pageable Pagination information
+     * @return Page of trade details belonging to any of the specified portfolios
+     */
+    @Query("{'portfolioId': {$in: ?0}}")
+    Page<TradeDetailsEntity> findByPortfolioIdIn(List<String> portfolioIds, Pageable pageable);
+    
     @Query("{'portfolio_id': ?0, 'trade_date': {$gte: ?1, $lte: ?2}}")
     Page<TradeDetailsEntity> findByPortfolioIdAndTradeDateBetween(String portfolioId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+    
+    @Query("{'tradeId': {$in: ?0}}")
+    List<TradeDetailsEntity> findByTradeIdIn(List<String> tradeIds);
 }

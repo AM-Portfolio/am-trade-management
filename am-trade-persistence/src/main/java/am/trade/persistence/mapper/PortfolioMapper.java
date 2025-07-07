@@ -1,27 +1,25 @@
 package am.trade.persistence.mapper;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
 import am.trade.common.models.AssetAllocation;
-import am.trade.common.models.EntryExitInfo;
 import am.trade.common.models.PortfolioMetrics;
 import am.trade.common.models.PortfolioModel;
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeMetrics;
 import am.trade.persistence.entity.PortfolioEntity;
-import am.trade.persistence.entity.TradeDetailsEntity;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * Mapper class for converting between domain models and persistence entities
  */
 @Component
+@RequiredArgsConstructor
 public class PortfolioMapper {
 
-    TradeDetailsMapper tradeDetailsMapper = new TradeDetailsMapper();
+    private final TradeDetailsMapper tradeDetailsMapper;
 
     /**
      * Convert a PortfolioModel to a PortfolioEntity
@@ -34,11 +32,10 @@ public class PortfolioMapper {
         }
         
         
-        // Map trades if present
-        List<TradeDetailsEntity> tradeEntities = null;
-        if (model.getTrades() != null) {
-            tradeEntities = model.getTrades().stream()
-                    .map(tradeDetailsMapper::toTradeEntity)
+        // Map trades if present    
+        List<String> tradeEntities = null;
+        if (model.getTradeIds() != null) {
+            tradeEntities = model.getTradeIds().stream()
                     .collect(Collectors.toList());
         }
         
@@ -70,6 +67,20 @@ public class PortfolioMapper {
                     .collect(Collectors.toList());
         }
         
+        // Map winning trades if present
+        List<String> winningTradeIds = null;
+        if (model.getWinningTradeIds() != null) {
+            winningTradeIds = model.getWinningTradeIds().stream()
+                    .collect(Collectors.toList());
+        }
+        
+        // Map losing trades if present
+        List<String> losingTradeIds = null;
+        if (model.getLosingTradeIds() != null) {
+            losingTradeIds = model.getLosingTradeIds().stream()
+                    .collect(Collectors.toList());
+        }
+        
         return PortfolioEntity.builder()
                 .portfolioId(model.getPortfolioId())
                 .name(model.getName())
@@ -83,6 +94,8 @@ public class PortfolioMapper {
                 .lastUpdatedDate(model.getLastUpdatedDate())
                 .metrics(metricsEntity)
                 .trades(tradeEntities)
+                .winningTrades(winningTradeIds)
+                .losingTrades(losingTradeIds)
                 .assetAllocations(assetAllocations)
                 .build();
     }
@@ -98,10 +111,23 @@ public class PortfolioMapper {
         }
         
         // Map trades if present
-        List<TradeDetails> tradeDetails = null;
+        List<String> tradeIds = null;
         if (entity.getTrades() != null) {
-            tradeDetails = entity.getTrades().stream()
-                    .map(tradeDetailsMapper::toTradeDetails)
+            tradeIds = entity.getTrades().stream()
+                    .collect(Collectors.toList());
+        }
+        
+        // Map winning trades if present
+        List<String> winningTradeIds = null;
+        if (entity.getWinningTrades() != null) {
+            winningTradeIds = entity.getWinningTrades().stream()
+                    .collect(Collectors.toList());
+        }
+        
+        // Map losing trades if present
+        List<String> losingTradeIds = null;
+        if (entity.getLosingTrades() != null) {
+            losingTradeIds = entity.getLosingTrades().stream()
                     .collect(Collectors.toList());
         }
         
@@ -125,7 +151,9 @@ public class PortfolioMapper {
                 .createdDate(entity.getCreatedDate())
                 .lastUpdatedDate(entity.getLastUpdatedDate())
                 .metrics(entity.getMetrics())
-                .trades(tradeDetails)
+                .tradeIds(tradeIds)
+                .winningTradeIds(winningTradeIds)
+                .losingTradeIds(losingTradeIds)
                 .assetAllocations(assetAllocations)
                 .build();
     }

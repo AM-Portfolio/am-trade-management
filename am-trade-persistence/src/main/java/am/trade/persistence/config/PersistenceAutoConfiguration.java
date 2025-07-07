@@ -5,14 +5,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-
 import am.trade.persistence.mapper.PortfolioMapper;
 import am.trade.persistence.mapper.TradeDetailsMapper;
-import am.trade.persistence.repository.PortfolioRepository;
-import am.trade.persistence.service.PortfolioPersistenceService;
+import am.trade.persistence.mapper.TradeEntryReasoningMapper;
+import am.trade.persistence.mapper.TradePsychologyDataMapper;
 
 /**
  * Auto-configuration class for the persistence module
@@ -33,21 +30,6 @@ public class PersistenceAutoConfiguration {
     @Bean
     @ConditionalOnProperty(name = "am.trade.persistence.portfolio.enabled", havingValue = "true", matchIfMissing = true)
     public PortfolioMapper portfolioMapper() {
-        return new PortfolioMapper();
-    }
-
-    /**
-     * Creates the PortfolioPersistenceService bean if not already defined
-     * @param portfolioRepository The portfolio repository
-     * @param portfolioMapper The portfolio mapper
-     * @return PortfolioPersistenceService instance
-     */
-    @Bean
-    @ConditionalOnProperty(name = "am.trade.persistence.portfolio.enabled", havingValue = "true", matchIfMissing = true)
-    public PortfolioPersistenceService portfolioPersistenceService(
-            PortfolioRepository portfolioRepository,
-            PortfolioMapper portfolioMapper,
-            TradeDetailsMapper tradeDetailsMapper) {
-        return new PortfolioPersistenceService(portfolioRepository, portfolioMapper, tradeDetailsMapper);
+        return new PortfolioMapper(new TradeDetailsMapper(new TradePsychologyDataMapper(), new TradeEntryReasoningMapper()));
     }
 }

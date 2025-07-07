@@ -4,10 +4,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import am.trade.common.models.Attachment;
 import am.trade.common.models.EntryExitInfo;
+import am.trade.common.models.InstrumentInfo;
 import am.trade.common.models.TradeMetrics;
 import am.trade.common.models.TradeModel;
 import am.trade.common.models.enums.TradePositionType;
@@ -29,10 +32,13 @@ import lombok.NoArgsConstructor;
 @Document(collection = "trade_details")
 public class TradeDetailsEntity {
     
+    @Id
     private String tradeId;
     
     @Indexed
     private String portfolioId;
+
+    private InstrumentInfo instrumentInfo;
     
     @Indexed
     private String symbol;
@@ -49,4 +55,24 @@ public class TradeDetailsEntity {
     
     // List of trade executions that make up this trade
     private List<TradeModel> tradeExecutions;
+    
+    // User identification
+    @Indexed
+    private String userId;
+    
+    // Trade analysis images (stored as Base64 strings or URLs to image storage)
+    private List<Attachment> attachments;
+    
+    // Trade notes and tags
+    private String notes;
+    private List<String> tags;
+    
+    // Trade psychology and behavior data (stored as entity for MongoDB compatibility)
+    private TradePsychologyDataEntity psychologyData;
+    
+    // Trade entry reasoning (technical and fundamental analysis) (stored as entity for MongoDB compatibility)
+    private TradeEntryExistReasoningEntity entryReasoning;
+
+    // Trade exit reasoning (technical and fundamental analysis) (stored as entity for MongoDB compatibility)
+    private TradeEntryExistReasoningEntity exitReasoning;
 }

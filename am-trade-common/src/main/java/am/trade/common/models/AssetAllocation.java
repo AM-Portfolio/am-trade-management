@@ -1,5 +1,6 @@
 package am.trade.common.models;
 
+import am.trade.common.models.enums.AssetClass;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +16,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AssetAllocation {
-    private String assetClass;
+    private AssetClass assetClass;
     private BigDecimal currentPercentage;
     private BigDecimal targetPercentage;
     private BigDecimal variance;

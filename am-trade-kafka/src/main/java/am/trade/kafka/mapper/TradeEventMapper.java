@@ -41,7 +41,10 @@ public class TradeEventMapper {
         
         if (tradeModel.getInstrumentInfo() != null) {
             trade.setSymbol(tradeModel.getInstrumentInfo().getSymbol());
-            trade.setExecutionVenue(tradeModel.getInstrumentInfo().getExchange());
+            // Convert Exchange enum to String if present
+            if (tradeModel.getInstrumentInfo().getExchange() != null) {
+                trade.setExecutionVenue(tradeModel.getInstrumentInfo().getExchange().name());
+            }
         }
         
         if (tradeModel.getExecutionInfo() != null) {
@@ -105,7 +108,10 @@ public class TradeEventMapper {
         
         if (tradeModel.getInstrumentInfo() != null) {
             tradeDTOBuilder.symbol(tradeModel.getInstrumentInfo().getSymbol());
-            tradeDTOBuilder.executionVenue(tradeModel.getInstrumentInfo().getExchange());
+            // Convert Exchange enum to String if present
+            if (tradeModel.getInstrumentInfo().getExchange() != null) {
+                tradeDTOBuilder.executionVenue(tradeModel.getInstrumentInfo().getExchange().name());
+            }
         }
         
         if (tradeModel.getExecutionInfo() != null) {

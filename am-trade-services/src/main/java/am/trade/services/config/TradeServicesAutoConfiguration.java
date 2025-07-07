@@ -15,6 +15,7 @@ import io.github.resilience4j.retry.RetryConfig;
  * Auto-configuration for trade services
  */
 @AutoConfiguration
+@Import(ServicesAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "am.trade.services", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ComponentScan(basePackages = "am.trade.services")
 public class TradeServicesAutoConfiguration {

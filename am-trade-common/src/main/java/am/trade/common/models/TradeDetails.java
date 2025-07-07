@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -20,6 +21,7 @@ import java.util.List;
 public class TradeDetails {
     private String tradeId;
     private String portfolioId;
+    private InstrumentInfo instrumentInfo;
     private String symbol;
     private String strategy;
     
@@ -42,4 +44,29 @@ public class TradeDetails {
     // Trade notes and tags
     private String notes;
     private List<String> tags;
+    
+    // User identification
+    private String userId;
+    
+    // Trade analysis images (stored as Base64 strings or URLs to image storage)
+    private List<Attachment> attachments;
+    
+    // Trade psychology and behavior data
+    private TradePsychologyData psychologyData;
+    
+    // Trade entry reasoning (technical and fundamental analysis)
+    private TradeEntryExistReasoning entryReasoning;
+
+    // Trade exit reasoning (technical and fundamental analysis)
+    private TradeEntryExistReasoning exitReasoning;
+
+    public LocalDate getTradeDate() {
+        return entryInfo.getTimestamp().toLocalDate();
+    }
+
+    public LocalDate getTradeEndDate() {
+        return exitInfo != null ? exitInfo.getTimestamp().toLocalDate() : null;
+    }
 }
+
+

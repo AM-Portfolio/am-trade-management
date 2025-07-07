@@ -3,7 +3,9 @@ package am.trade.kafka.consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -11,9 +13,9 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
 import am.trade.kafka.model.TradeUpdateEvent;
-import am.trade.kafka.service.metrics.TradeService;
-import am.trade.persistence.service.PortfolioPersistenceService;
-import am.trade.common.models.PortfolioModel;
+import am.trade.services.service.TradeDetailsService;
+import am.trade.services.service.TradeProcessingService;
+import am.trade.common.models.TradeDetails;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -23,9 +25,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ConditionalOnProperty(name = "am.trade.kafka.trade.consumer.enabled", havingValue = "true", matchIfMissing = false)
 public class TradeConsumerService {
 
+    
     private final ObjectMapper objectMapper;
-    private final TradeService tradeService;
-    private final PortfolioPersistenceService portfolioPersistenceService;
+    private final TradeProcessingService tradeProcessingService;
+    private final TradeDetailsService tradeDetailsService;
 
     @KafkaListener(topics = "${am.trade.kafka.trade.topic}", 
                   groupId = "${am.trade.kafka.trade.consumer-group-id}",
@@ -56,23 +59,10 @@ public class TradeConsumerService {
         //List<Trade> trades = tradeEventMapper.toTrades(event.getTrades());
         log.debug("Converted {} trade models to trade entities", event.getTrades().size());
 
-        String portfolioId = UUID.randomUUID().toString();
-
-        PortfolioModel portfolioModel = tradeService.processTradeModelsAndGetPortfolio(event.getTrades(), portfolioId);
-        portfolioPersistenceService.savePortfolio(portfolioModel);
-        log.info("Successfully saved portfolio with ID: {}", portfolioModel.getPortfolioId());
-        // // Process each trade
-        // for (TradeModel trade : event.getTrades()) {
-        //     // Convert Trade entity to TradeDTO
-        //     TradeDTO tradeDTO = tradeEventMapper.toTradeDTO(trade);
-            
-        //     // Set additional metadata from the event
-        //     tradeDTO.setCreatedBy(event.getUserId());
-            
-        //     // Create the trade in the system
-        //     log.info("Creating trade with ID: {}", tradeDTO.getTradeId());
-        // }
-        
-        log.info("Successfully processed {} trades", portfolioModel.getTrades().size());
+        List<TradeDetails> tradeDetails = tradeProcessingService.processTradeModels(event.getTrades(), event.getPortfolioId());
+        tradeDetailsService.saveAllTradeDetails(tradeDetails);
+        tradeProcessingService.processTradeDetails(tradeDetails.stream().map(TradeDetails::getTradeId).collect(Collectors.toList()), event.getPortfolioId(), event.getUserId());
+    
+        log.info("Successfully processed trades for portfolioId: {}", event.getPortfolioId());
     }   
 }

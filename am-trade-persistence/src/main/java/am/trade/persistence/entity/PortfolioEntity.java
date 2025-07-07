@@ -27,9 +27,6 @@ import lombok.NoArgsConstructor;
 public class PortfolioEntity {
     
     @Id
-    private String id;
-    
-    @Indexed(unique = true)
     private String portfolioId;
     
     private String name;
@@ -49,7 +46,13 @@ public class PortfolioEntity {
     private PortfolioMetrics metrics;
     
     // List of trades in this portfolio
-    private List<TradeDetailsEntity> trades;
+    private List<String> trades;
+    
+    // List of winning trades in this portfolio
+    private List<String> winningTrades;
+    
+    // List of losing trades in this portfolio
+    private List<String> losingTrades;
     
     // Asset allocation
     private List<AssetAllocation> assetAllocations;

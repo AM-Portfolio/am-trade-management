@@ -32,8 +32,12 @@ public class PortfolioModel {
     // Portfolio metrics
     private PortfolioMetrics metrics;
     
-    // List of trades in this portfolio
-    private List<TradeDetails> trades;
+    // List of all trades in this portfolio
+    private List<String> tradeIds;
+    
+    // Sorted lists of winning and losing trades
+    private List<String> winningTradeIds;  // Sorted by profit (highest profit first)
+    private List<String> losingTradeIds;   // Sorted by loss (highest loss first)
     
     // Asset allocation
     private List<AssetAllocation> assetAllocations;

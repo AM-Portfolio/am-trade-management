@@ -40,6 +40,7 @@
 		<module>am-trade-app</module>
 		<module>am-trade-kafka</module>
 		<module>am-trade-persistence</module>
+		<module>am-trade-exceptions</module>
 	</modules>
 
 	<dependencyManagement>
