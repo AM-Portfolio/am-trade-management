@@ -2,6 +2,10 @@ package am.trade.dashboard.service.metrics.feedback;
 
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.TradingFeedback;
+import am.trade.dashboard.model.feeback.DecisionAnalysis;
+import am.trade.dashboard.model.feeback.PatternAnalysis;
+import am.trade.dashboard.model.feeback.PsychologyAnalysis;
+import am.trade.dashboard.model.feeback.RiskManagementAnalysis;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
