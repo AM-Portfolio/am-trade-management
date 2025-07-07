@@ -46,6 +46,7 @@ public class TradeDetailsMapper {
                 .tags(model.getTags())
                 .psychologyData(psychologyDataMapper.toEntity(model.getPsychologyData()))
                 .entryReasoning(entryReasoningMapper.toEntity(model.getEntryReasoning()))
+                .exitReasoning(entryReasoningMapper.toEntity(model.getExitReasoning()))
                 .build();
     }
     
@@ -81,6 +82,7 @@ public class TradeDetailsMapper {
                 .tags(entity.getTags())
                 .psychologyData(psychologyDataMapper.toModel(entity.getPsychologyData()))
                 .entryReasoning(entryReasoningMapper.toModel(entity.getEntryReasoning()))
+                .exitReasoning(entryReasoningMapper.toModel(entity.getExitReasoning()))
                 .build();
     }
 }

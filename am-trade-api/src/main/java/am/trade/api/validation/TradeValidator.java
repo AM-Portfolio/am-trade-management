@@ -2,7 +2,7 @@ package am.trade.api.validation;
 
 import am.trade.common.models.Attachment;
 import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeEntryReasoning;
+import am.trade.common.models.TradeEntryExistReasoning;
 import am.trade.common.models.TradePsychologyData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -79,7 +79,7 @@ public class TradeValidator {
      * @param entryReasoning The entry reasoning to validate
      * @return true if valid, false otherwise
      */
-    public boolean validateEntryReasoning(TradeEntryReasoning entryReasoning) {
+    public boolean validateEntryReasoning(TradeEntryExistReasoning entryReasoning) {
         if (entryReasoning == null) {
             return true; // Entry reasoning is optional
         }

@@ -55,8 +55,10 @@ public class TradeDetails {
     private TradePsychologyData psychologyData;
     
     // Trade entry reasoning (technical and fundamental analysis)
-    private TradeEntryReasoning entryReasoning;
+    private TradeEntryExistReasoning entryReasoning;
 
+    // Trade exit reasoning (technical and fundamental analysis)
+    private TradeEntryExistReasoning exitReasoning;
 
     public LocalDate getTradeDate() {
         return entryInfo.getTimestamp().toLocalDate();

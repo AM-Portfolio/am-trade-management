@@ -47,6 +47,22 @@ public class FundamentalEntryReason {
     }
     
     /**
+     * Get the code for this reason
+     * @return The code
+     */
+    public String getCode() {
+        return code;
+    }
+    
+    /**
+     * Get the description for this reason
+     * @return The description
+     */
+    public String getDescription() {
+        return description;
+    }
+    
+    /**
      * Factory method to get an existing fundamental entry reason by code or create a new custom one
      * 
      * @param code The code for the fundamental entry reason

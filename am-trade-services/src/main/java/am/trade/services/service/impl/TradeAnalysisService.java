@@ -1,7 +1,7 @@
 package am.trade.services.service.impl;
 
 import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeEntryReasoning;
+import am.trade.common.models.TradeEntryExistReasoning;
 import am.trade.common.models.TradePsychologyData;
 import am.trade.common.models.enums.FundamentalEntryReason;
 import am.trade.common.models.enums.TechnicalEntryReason;
@@ -41,7 +41,7 @@ public class TradeAnalysisService {
      * @param entryReasoning The entry reasoning to add
      * @return The updated trade details
      */
-    public TradeDetails addTradeAnalysis(String tradeId, TradePsychologyData psychologyData, TradeEntryReasoning entryReasoning) {
+    public TradeDetails addTradeAnalysis(String tradeId, TradePsychologyData psychologyData, TradeEntryExistReasoning entryReasoning) {
         Optional<TradeDetails> tradeDetailsOpt = tradeDetailsService.findModelByTradeId(tradeId);
         
         if (tradeDetailsOpt.isPresent()) {
@@ -93,8 +93,8 @@ public class TradeAnalysisService {
      * 
      * @return A sample entry reasoning object
      */
-    public TradeEntryReasoning createSampleEntryReasoning() {
-        TradeEntryReasoning reasoning = new TradeEntryReasoning();
+    public TradeEntryExistReasoning createSampleEntryReasoning() {
+        TradeEntryExistReasoning reasoning = new TradeEntryExistReasoning();
         
         // Add technical reasons
         reasoning.addTechnicalReason("RESISTANCE_BREAKOUT", null);

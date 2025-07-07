@@ -1,9 +1,9 @@
 package am.trade.persistence.mapper;
 
-import am.trade.common.models.TradeEntryReasoning;
+import am.trade.common.models.TradeEntryExistReasoning;
 import am.trade.common.models.enums.FundamentalEntryReason;
 import am.trade.common.models.enums.TechnicalEntryReason;
-import am.trade.persistence.entity.TradeEntryReasoningEntity;
+import am.trade.persistence.entity.TradeEntryExistReasoningEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -27,12 +27,12 @@ public class TradeEntryReasoningMapper {
      * @param model The TradeEntryReasoning model
      * @return The TradeEntryReasoningEntity
      */
-    public TradeEntryReasoningEntity toEntity(TradeEntryReasoning model) {
+    public TradeEntryExistReasoningEntity toEntity(TradeEntryExistReasoning model) {
         if (model == null) {
-            return new TradeEntryReasoningEntity();
+            return new TradeEntryExistReasoningEntity();
         }
 
-        TradeEntryReasoningEntity entity = new TradeEntryReasoningEntity();
+        TradeEntryExistReasoningEntity entity = new TradeEntryExistReasoningEntity();
         
         setBasicEntityFields(model, entity);
         processTechnicalReasons(model, entity);
@@ -47,7 +47,7 @@ public class TradeEntryReasoningMapper {
      * @param model Source model
      * @param entity Target entity
      */
-    private void setBasicEntityFields(TradeEntryReasoning model, TradeEntryReasoningEntity entity) {
+    private void setBasicEntityFields(TradeEntryExistReasoning model, TradeEntryExistReasoningEntity entity) {
         entity.setPrimaryReason(model.getPrimaryReason());
         entity.setReasoningSummary(model.getReasoningSummary());
         entity.setReasoningNotes(model.getReasoningSummary()); // Set reasoningNotes to match reasoningSummary
@@ -59,7 +59,7 @@ public class TradeEntryReasoningMapper {
      * @param model Source model
      * @param entity Target entity
      */
-    private void processTechnicalReasons(TradeEntryReasoning model, TradeEntryReasoningEntity entity) {
+    private void processTechnicalReasons(TradeEntryExistReasoning model, TradeEntryExistReasoningEntity entity) {
         if (model.getTechnicalReasons() != null) {
             List<String> technicalReasonCodes = new ArrayList<>();
             
@@ -101,7 +101,7 @@ public class TradeEntryReasoningMapper {
      * @param model Source model
      * @param entity Target entity
      */
-    private void processFundamentalReasons(TradeEntryReasoning model, TradeEntryReasoningEntity entity) {
+    private void processFundamentalReasons(TradeEntryExistReasoning model, TradeEntryExistReasoningEntity entity) {
         if (model.getFundamentalReasons() != null) {
             List<String> fundamentalReasonCodes = new ArrayList<>();
             
@@ -155,7 +155,7 @@ public class TradeEntryReasoningMapper {
      * @param model Source model
      * @param entity Target entity
      */
-    private void processIndicators(TradeEntryReasoning model, TradeEntryReasoningEntity entity) {
+    private void processIndicators(TradeEntryExistReasoning model, TradeEntryExistReasoningEntity entity) {
         // Handle supporting indicators with null check
         entity.setSupportingIndicators(model.getSupportingIndicators() != null ? 
                 model.getSupportingIndicators() : Collections.emptyList());
@@ -170,12 +170,12 @@ public class TradeEntryReasoningMapper {
      * @param entity The TradeEntryReasoningEntity
      * @return The TradeEntryReasoning model
      */
-    public TradeEntryReasoning toModel(TradeEntryReasoningEntity entity) {
+    public TradeEntryExistReasoning toModel(TradeEntryExistReasoningEntity entity) {
         if (entity == null) {
-            return new TradeEntryReasoning();
+            return new TradeEntryExistReasoning();
         }
 
-        TradeEntryReasoning model = new TradeEntryReasoning();
+        TradeEntryExistReasoning model = new TradeEntryExistReasoning();
         
         setBasicModelFields(entity, model);
         model.setTechnicalReasons(processTechnicalReasonCodes(entity));
@@ -190,7 +190,7 @@ public class TradeEntryReasoningMapper {
      * @param entity Source entity
      * @param model Target model
      */
-    private void setBasicModelFields(TradeEntryReasoningEntity entity, TradeEntryReasoning model) {
+    private void setBasicModelFields(TradeEntryExistReasoningEntity entity, TradeEntryExistReasoning model) {
         model.setReasoningSummary(entity.getReasoningSummary());
         model.setPrimaryReason(entity.getPrimaryReason());
         model.setConfidenceLevel(entity.getConfidenceLevel());
@@ -201,7 +201,7 @@ public class TradeEntryReasoningMapper {
      * @param entity Source entity
      * @return List of technical entry reasons
      */
-    private List<TechnicalEntryReason> processTechnicalReasonCodes(TradeEntryReasoningEntity entity) {
+    private List<TechnicalEntryReason> processTechnicalReasonCodes(TradeEntryExistReasoningEntity entity) {
         List<TechnicalEntryReason> technicalReasons = new ArrayList<>();
         if (entity.getTechnicalReasons() == null) {
             return technicalReasons;
@@ -251,7 +251,7 @@ public class TradeEntryReasoningMapper {
      * @param entity Source entity
      * @return List of fundamental entry reasons
      */
-    private List<FundamentalEntryReason> processFundamentalReasonCodes(TradeEntryReasoningEntity entity) {
+    private List<FundamentalEntryReason> processFundamentalReasonCodes(TradeEntryExistReasoningEntity entity) {
         List<FundamentalEntryReason> fundamentalReasons = new ArrayList<>();
         if (entity.getFundamentalReasons() == null) {
             return fundamentalReasons;
@@ -301,7 +301,7 @@ public class TradeEntryReasoningMapper {
      * @param entity Source entity
      * @param model Target model
      */
-    private void processModelIndicators(TradeEntryReasoningEntity entity, TradeEntryReasoning model) {
+    private void processModelIndicators(TradeEntryExistReasoningEntity entity, TradeEntryExistReasoning model) {
         // Handle supporting indicators with null check
         model.setSupportingIndicators(entity.getSupportingIndicators() != null ? 
                 entity.getSupportingIndicators() : new ArrayList<>());

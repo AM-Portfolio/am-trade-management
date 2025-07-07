@@ -16,7 +16,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TradeEntryReasoningEntity {
+public class TradeEntryExistReasoningEntity {
     
     // Technical analysis factors stored as strings
     private List<String> technicalReasons;

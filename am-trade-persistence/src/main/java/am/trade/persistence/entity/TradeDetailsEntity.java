@@ -71,5 +71,8 @@ public class TradeDetailsEntity {
     private TradePsychologyDataEntity psychologyData;
     
     // Trade entry reasoning (technical and fundamental analysis) (stored as entity for MongoDB compatibility)
-    private TradeEntryReasoningEntity entryReasoning;
+    private TradeEntryExistReasoningEntity entryReasoning;
+
+    // Trade exit reasoning (technical and fundamental analysis) (stored as entity for MongoDB compatibility)
+    private TradeEntryExistReasoningEntity exitReasoning;
 }

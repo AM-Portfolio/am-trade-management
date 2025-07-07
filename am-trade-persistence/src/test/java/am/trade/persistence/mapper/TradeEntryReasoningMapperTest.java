@@ -1,9 +1,9 @@
 package am.trade.persistence.mapper;
 
 import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeEntryReasoning;
+import am.trade.common.models.TradeEntryExistReasoning;
 import am.trade.common.util.JsonConverter;
-import am.trade.persistence.entity.TradeEntryReasoningEntity;
+import am.trade.persistence.entity.TradeEntryExistReasoningEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +28,7 @@ class TradeEntryReasoningMapperTest {
     @Test
     void testToEntityWithValidModel() {
         // Convert to entity
-        TradeEntryReasoningEntity entity = mapper.toEntity(tradeDetails.getEntryReasoning());
+        TradeEntryExistReasoningEntity entity = mapper.toEntity(tradeDetails.getEntryReasoning());
         
         // Verify conversion
         assertNotNull(entity);
@@ -48,7 +48,7 @@ class TradeEntryReasoningMapperTest {
     @Test
     void testToModelWithValidEntity() {
         // Create an entity with valid data
-        TradeEntryReasoningEntity entity = new TradeEntryReasoningEntity();
+        TradeEntryExistReasoningEntity entity = new TradeEntryExistReasoningEntity();
         entity.setTechnicalReasons(Arrays.asList("SUPPORT_BOUNCE", "MOVING_AVERAGE_CROSSOVER"));
         entity.setFundamentalReasons(Arrays.asList("ANALYST_UPGRADE", "EARNINGS_BEAT"));
         entity.setPrimaryReason("TECHNICAL");
@@ -58,7 +58,7 @@ class TradeEntryReasoningMapperTest {
         entity.setConflictingIndicators(Collections.singletonList("Market uncertainty"));
         
         // Convert to model
-        TradeEntryReasoning model = mapper.toModel(entity);
+        TradeEntryExistReasoning model = mapper.toModel(entity);
         
         // Verify conversion
         assertNotNull(model);
@@ -106,12 +106,12 @@ class TradeEntryReasoningMapperTest {
     @Test
     void testHandleCustomEnumCodes() {
         // Create entity with custom codes
-        TradeEntryReasoningEntity entity = new TradeEntryReasoningEntity();
+        TradeEntryExistReasoningEntity entity = new TradeEntryExistReasoningEntity();
         entity.setTechnicalReasons(Arrays.asList("SUPPORT_BOUNCE", "CUSTOM_TECH_REASON"));
         entity.setFundamentalReasons(Arrays.asList("ANALYST_UPGRADE", "CUSTOM_FUND_REASON"));
         
         // Convert to model
-        TradeEntryReasoning model = mapper.toModel(entity);
+        TradeEntryExistReasoning model = mapper.toModel(entity);
         
         // Verify standard enums are converted correctly
         assertTrue(model.getTechnicalReasons().stream()
@@ -129,7 +129,7 @@ class TradeEntryReasoningMapperTest {
     @Test
     void testHandleNonStringObjectInList() {
         // Create entity with a mix of String and Object values (simulating MongoDB behavior)
-        TradeEntryReasoningEntity entity = new TradeEntryReasoningEntity();
+        TradeEntryExistReasoningEntity entity = new TradeEntryExistReasoningEntity();
         
         // Use raw Lists to bypass type checking
         List<Object> technicalReasons = Arrays.asList("SUPPORT_BOUNCE", 123, new Object());
@@ -137,11 +137,11 @@ class TradeEntryReasoningMapperTest {
         
         // Set these lists using reflection to bypass type safety
         try {
-            java.lang.reflect.Field techField = TradeEntryReasoningEntity.class.getDeclaredField("technicalReasons");
+            java.lang.reflect.Field techField = TradeEntryExistReasoningEntity.class.getDeclaredField("technicalReasons");
             techField.setAccessible(true);
             techField.set(entity, technicalReasons);
             
-            java.lang.reflect.Field fundField = TradeEntryReasoningEntity.class.getDeclaredField("fundamentalReasons");
+            java.lang.reflect.Field fundField = TradeEntryExistReasoningEntity.class.getDeclaredField("fundamentalReasons");
             fundField.setAccessible(true);
             fundField.set(entity, fundamentalReasons);
         } catch (Exception e) {
@@ -149,7 +149,7 @@ class TradeEntryReasoningMapperTest {
         }
         
         // Convert to model - should not throw exceptions
-        TradeEntryReasoning model = mapper.toModel(entity);
+        TradeEntryExistReasoning model = mapper.toModel(entity);
         
         // Verify valid values were converted
         assertTrue(model.getTechnicalReasons().stream()
