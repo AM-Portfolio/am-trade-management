@@ -15,6 +15,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * Model class representing a complete trade within a portfolio
@@ -24,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TradeDetails {
     private String tradeId;
     private String portfolioId;

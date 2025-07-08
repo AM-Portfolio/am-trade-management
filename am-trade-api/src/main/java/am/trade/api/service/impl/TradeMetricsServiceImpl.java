@@ -438,6 +438,11 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
         
         response.setTotalTradesCount(trades.size());
         
+        // Include trade details in the response if requested
+        if (filterRequest.getIncludeTradeDetails() != null && filterRequest.getIncludeTradeDetails()) {
+            response.setTradeDetails(trades);
+        }
+        
         // Initialize metadata
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("generatedAt", LocalDateTime.now());

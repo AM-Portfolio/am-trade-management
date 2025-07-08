@@ -45,8 +45,12 @@ public class MetricsFilterRequest {
     @Schema(description = "Profit/loss filter criteria")
     private ProfitLossFilter profitLossFilters;
     
-    @Schema(description = "Group results by specific dimensions (e.g., STRATEGY, INSTRUMENT, TAG, DIRECTION)")
-    private Set<String> groupBy;
+    @Schema(description = "Group metrics by specific dimensions (e.g., STRATEGY, SYMBOL, DAY_OF_WEEK)")
+    private List<String> groupBy;
+    
+    @Schema(description = "Flag to include trade details in the response", defaultValue = "false")
+    @Builder.Default
+    private Boolean includeTradeDetails = false;
     
     @Schema(description = "Additional custom filters as key-value pairs")
     private Map<String, Object> customFilters;
