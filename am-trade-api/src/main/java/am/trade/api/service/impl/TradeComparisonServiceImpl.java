@@ -30,7 +30,6 @@ public class TradeComparisonServiceImpl implements TradeComparisonService {
 
     private final TradeDetailsService tradeDetailsService;
     private final PerformanceMetricsService performanceMetricsService;
-    private final TradeComparisonRepository tradeComparisonRepository;
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_DATE;
     private static final List<String> DEFAULT_METRICS = Arrays.asList(
@@ -202,7 +201,7 @@ public class TradeComparisonServiceImpl implements TradeComparisonService {
             } else {
                 // If no portfolio IDs provided, fetch all trades for the user in this period
                 // This would require a custom repository method that we'll assume exists
-                trades = tradeComparisonRepository.findByUserIdAndEntryDateBetween(
+                trades = tradeDetailsService.findByUserIdAndEntryInfoTimestampBetween(
                         request.getUserId(), startDateTime, endDateTime);
             }
             
@@ -245,7 +244,7 @@ public class TradeComparisonServiceImpl implements TradeComparisonService {
         
         for (String strategy : request.getStrategies()) {
             // Fetch trades for this strategy
-            List<TradeDetails> trades = tradeComparisonRepository.findByUserIdAndStrategyAndDateRange(
+            List<TradeDetails> trades = tradeDetailsService.findByUserIdAndStrategyAndDateRange(
                     request.getUserId(), strategy, startDateTime, endDateTime);
             
             // Create dimension
@@ -290,10 +289,10 @@ public class TradeComparisonServiceImpl implements TradeComparisonService {
             List<TradeDetails> trades;
             
             if (startDateTime != null && endDateTime != null) {
-                trades = tradeComparisonRepository.findByUserIdAndSymbolAndDateRange(
+                trades = tradeDetailsService.findByUserIdAndSymbolAndDateRange(
                         request.getUserId(), instrument, startDateTime, endDateTime);
             } else {
-                trades = tradeComparisonRepository.findByUserIdAndSymbol(request.getUserId(), instrument);
+                trades = tradeDetailsService.findByUserIdAndSymbol(request.getUserId(), instrument);
             }
             
             // Create dimension
