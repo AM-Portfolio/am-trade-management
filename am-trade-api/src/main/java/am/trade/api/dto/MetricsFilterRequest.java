@@ -30,6 +30,10 @@ public class MetricsFilterRequest {
     @Valid
     private DateRangeFilter dateRange;
     
+    @Schema(description = "Predefined time period for quick date range selection (e.g., TODAY, LAST_7_DAYS, LAST_MONTH, LAST_YEAR)")
+    @Builder.Default
+    private TimePeriodFilter timePeriod = null;
+    
     @Schema(description = "Types of metrics to include in the response (e.g., PERFORMANCE, RISK, DISTRIBUTION, TIMING, PATTERN)")
     private Set<String> metricTypes;
     

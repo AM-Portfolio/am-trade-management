@@ -47,6 +47,7 @@ public class TradeDetails {
     private TradeMetrics metrics;
     
     // Associated trade executions
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<TradeModel> tradeExecutions;
     
     // Trade notes and tags
@@ -60,12 +61,15 @@ public class TradeDetails {
     private List<Attachment> attachments;
     
     // Trade psychology and behavior data
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private TradePsychologyData psychologyData;
     
     // Trade entry reasoning (technical and fundamental analysis)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private TradeEntryExistReasoning entryReasoning;
 
     // Trade exit reasoning (technical and fundamental analysis)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private TradeEntryExistReasoning exitReasoning;
 
     public LocalDate getTradeDate() {

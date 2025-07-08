@@ -5,6 +5,7 @@ import am.trade.api.dto.InstrumentFilterCriteria;
 import am.trade.api.dto.MetricsFilterRequest;
 import am.trade.api.dto.MetricsResponse;
 import am.trade.api.dto.ProfitLossFilter;
+import am.trade.api.dto.TimePeriodFilter;
 import am.trade.api.dto.TradeCharacteristicsFilter;
 import am.trade.api.service.TradeMetricsService;
 import am.trade.common.models.*;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -45,15 +47,24 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
     public MetricsResponse getMetrics(MetricsFilterRequest filterRequest) {
         validateFilterRequest(filterRequest);
         
-        // Set default date range if not provided
+        // Set date range based on timePeriod or dateRange
         LocalDateTime startDateTime;
         LocalDateTime endDateTime;
         
-        if (filterRequest.getDateRange() != null) {
+        // If timePeriod is provided, it takes precedence over dateRange
+        if (filterRequest.getTimePeriod() != null) {
+            // Calculate date range based on time period
+            DateRangeFilter calculatedDateRange = calculateDateRangeFromTimePeriod(filterRequest.getTimePeriod());
+            startDateTime = calculatedDateRange.getStartDate().atStartOfDay();
+            endDateTime = calculatedDateRange.getEndDate().atTime(LocalTime.MAX);
+            
+            // Update the dateRange in the request to match the calculated period
+            filterRequest.setDateRange(calculatedDateRange);
+        } else if (filterRequest.getDateRange() != null) {
             startDateTime = filterRequest.getDateRange().getStartDate().atStartOfDay();
             endDateTime = filterRequest.getDateRange().getEndDate().atTime(LocalTime.MAX);
         } else {
-            // Default to last 30 days if no date range provided
+            // Default to last 30 days if no date range or time period provided
             LocalDate today = LocalDate.now();
             startDateTime = today.minusDays(30).atStartOfDay();
             endDateTime = today.atTime(LocalTime.MAX);
@@ -172,6 +183,114 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
     }
 
     // Helper methods
+    
+    /**
+     * Calculate date range based on predefined time period
+     * 
+     * @param timePeriod The time period to calculate date range for
+     * @return DateRangeFilter with calculated start and end dates
+     */
+    private DateRangeFilter calculateDateRangeFromTimePeriod(TimePeriodFilter timePeriod) {
+        LocalDate today = LocalDate.now();
+        LocalDate startDate;
+        LocalDate endDate = today; // Default end date is today for most periods
+        
+        switch (timePeriod) {
+            case TODAY:
+                startDate = today;
+                break;
+                
+            case YESTERDAY:
+                startDate = today.minusDays(1);
+                endDate = today.minusDays(1);
+                break;
+                
+            case LAST_7_DAYS:
+                startDate = today.minusDays(6); // 6 days back + today = 7 days
+                break;
+                
+            case LAST_14_DAYS:
+                startDate = today.minusDays(13); // 13 days back + today = 14 days
+                break;
+                
+            case LAST_30_DAYS:
+                startDate = today.minusDays(29); // 29 days back + today = 30 days
+                break;
+                
+            case THIS_WEEK:
+                startDate = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                break;
+                
+            case LAST_WEEK:
+                startDate = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(1);
+                endDate = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusDays(1);
+                break;
+                
+            case THIS_MONTH:
+                startDate = today.withDayOfMonth(1);
+                break;
+                
+            case LAST_MONTH:
+                startDate = today.minusMonths(1).withDayOfMonth(1);
+                endDate = today.withDayOfMonth(1).minusDays(1);
+                break;
+                
+            case THIS_QUARTER:
+                startDate = today.withDayOfMonth(1).withMonth((today.getMonthValue() - 1) / 3 * 3 + 1);
+                break;
+                
+            case LAST_QUARTER:
+                LocalDate firstDayOfQuarter = today.withDayOfMonth(1).withMonth((today.getMonthValue() - 1) / 3 * 3 + 1);
+                startDate = firstDayOfQuarter.minusMonths(3);
+                endDate = firstDayOfQuarter.minusDays(1);
+                break;
+                
+            case THIS_YEAR:
+                startDate = today.withDayOfYear(1);
+                break;
+                
+            case LAST_YEAR:
+                startDate = today.minusYears(1).withDayOfYear(1);
+                endDate = today.withDayOfYear(1).minusDays(1);
+                break;
+                
+            case LAST_3_MONTHS:
+                startDate = today.minusMonths(3);
+                break;
+                
+            case LAST_6_MONTHS:
+                startDate = today.minusMonths(6);
+                break;
+                
+            case LAST_12_MONTHS:
+                startDate = today.minusYears(1);
+                break;
+                
+            case LAST_2_YEARS:
+                startDate = today.minusYears(2);
+                break;
+                
+            case LAST_3_YEARS:
+                startDate = today.minusYears(3);
+                break;
+                
+            case LAST_5_YEARS:
+                startDate = today.minusYears(5);
+                break;
+                
+            case CUSTOM:
+            default:
+                // For CUSTOM, we expect dateRange to be provided separately
+                // Default to last 30 days if no specific period is recognized
+                startDate = today.minusDays(29);
+                break;
+        }
+        
+        DateRangeFilter dateRange = new DateRangeFilter();
+        dateRange.setStartDate(startDate);
+        dateRange.setEndDate(endDate);
+        return dateRange;
+    }
     
     private void validateFilterRequest(MetricsFilterRequest filterRequest) {
         if (filterRequest == null) {
