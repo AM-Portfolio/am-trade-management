@@ -65,6 +65,7 @@ public class TradeMetricsController {
         return ResponseEntity.ok(tradeMetricsService.getAvailableMetricTypes());
     }
 
+
     @Operation(summary = "Get metrics comparison between two time periods")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Metrics comparison retrieved successfully"),
