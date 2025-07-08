@@ -74,6 +74,11 @@ public class TradeDetails {
         return exitInfo != null ? exitInfo.getTimestamp().toLocalDate() : null;
     }
     
+
+    @JsonIgnore
+    public String getSymbol() {
+        return instrumentInfo.getSymbol();
+    }
     /**
      * Calculate profit/loss based on position type (LONG or SHORT)
      * For LONG positions: exitPrice - entryPrice
