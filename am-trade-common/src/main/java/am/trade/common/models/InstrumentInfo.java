@@ -49,7 +49,18 @@ public class InstrumentInfo {
     
     // Regular expressions for parsing different symbol formats
     private static final Pattern FUTURES_PATTERN = Pattern.compile("([A-Z]+)(\\d{2})([A-Z]{3})FUT");
-    private static final Pattern OPTIONS_PATTERN = Pattern.compile("([A-Z]+)(\\d{2})(\\d{2})(\\d{2})(\\d+)([CP]E)");
+    
+    // Pattern for options with full date format: BANKNIFTY2091722500CE
+    private static final Pattern OPTIONS_PATTERN_FULL = Pattern.compile("([A-Z]+)(\\d{2})(\\d{2})(\\d{2})(\\d+)([CP]E)");
+    
+    // Pattern for options with month format: HEROMOTOCO20SEP2950CE
+    private static final Pattern OPTIONS_PATTERN_MONTH = Pattern.compile("([A-Z]+)(\\d{2})([A-Z]{3})(\\d+)([CP]E)");
+    
+    // Pattern for options with month-day format: BANKNIFTY20O01 (Oct 1) 21000CE
+    private static final Pattern OPTIONS_PATTERN_MONTH_DAY = Pattern.compile("([A-Z]+)(\\d{2})([A-Z])(\\d{2})(\\d+)([CP]E)");
+    
+    // Pattern for options with month-week format: BANKNIFTY20N19 (Nov Week 19) 29100CE
+    private static final Pattern OPTIONS_PATTERN_MONTH_WEEK = Pattern.compile("([A-Z]+)(\\d{2})([A-Z])(\\d{2})(\\d+)([CP]E)");
     
     /**
      * Factory method to create an InstrumentInfo from a raw symbol string
@@ -71,10 +82,28 @@ public class InstrumentInfo {
             return parseFuturesSymbol(rawSymbol, futuresMatcher, info);
         }
         
-        // Check if it's an options contract
-        Matcher optionsMatcher = OPTIONS_PATTERN.matcher(rawSymbol);
-        if (optionsMatcher.matches()) {
-            return parseOptionsSymbol(rawSymbol, optionsMatcher, info);
+        // Check if it's an options contract with full date format (BANKNIFTY2091722500CE)
+        Matcher optionsFullMatcher = OPTIONS_PATTERN_FULL.matcher(rawSymbol);
+        if (optionsFullMatcher.matches()) {
+            return parseOptionsFullDateSymbol(rawSymbol, optionsFullMatcher, info);
+        }
+        
+        // Check if it's an options contract with month format (HEROMOTOCO20SEP2950CE)
+        Matcher optionsMonthMatcher = OPTIONS_PATTERN_MONTH.matcher(rawSymbol);
+        if (optionsMonthMatcher.matches()) {
+            return parseOptionsMonthSymbol(rawSymbol, optionsMonthMatcher, info);
+        }
+        
+        // Check if it's an options contract with month-day format (BANKNIFTY20O0121000CE)
+        Matcher optionsMonthDayMatcher = OPTIONS_PATTERN_MONTH_DAY.matcher(rawSymbol);
+        if (optionsMonthDayMatcher.matches()) {
+            return parseOptionsMonthDaySymbol(rawSymbol, optionsMonthDayMatcher, info);
+        }
+        
+        // Check if it's an options contract with month-week format (BANKNIFTY20N1929100CE)
+        Matcher optionsMonthWeekMatcher = OPTIONS_PATTERN_MONTH_WEEK.matcher(rawSymbol);
+        if (optionsMonthWeekMatcher.matches()) {
+            return parseOptionsMonthWeekSymbol(rawSymbol, optionsMonthWeekMatcher, info);
         }
         
         // If it's neither futures nor options, treat as equity or index
@@ -122,9 +151,9 @@ public class InstrumentInfo {
     }
     
     /**
-     * Parse an options symbol like "BANKNIFTY2091722500CE"
+     * Parse an options symbol with full date format like "BANKNIFTY2091722500CE"
      */
-    private static InstrumentInfo parseOptionsSymbol(String rawSymbol, Matcher matcher, InstrumentInfo info) {
+    private static InstrumentInfo parseOptionsFullDateSymbol(String rawSymbol, Matcher matcher, InstrumentInfo info) {
         String baseSymbol = matcher.group(1);
         String yearStr = matcher.group(2);
         String monthStr = matcher.group(3);
@@ -132,6 +161,55 @@ public class InstrumentInfo {
         String strikePriceStr = matcher.group(5);
         String optionTypeStr = matcher.group(6);
         
+        // Setup common option fields
+        setupOptionFields(info, baseSymbol, strikePriceStr, optionTypeStr);
+        
+        // Parse expiry date with full date format
+        try {
+            int year = 2000 + Integer.parseInt(yearStr); // Assuming 2-digit year
+            int month = Integer.parseInt(monthStr);
+            int day = Integer.parseInt(dayStr);
+            LocalDate expiryDate = LocalDate.of(year, month, day);
+            info.getDerivativeInfo().setExpiryDate(expiryDate);
+        } catch (Exception e) {
+            // If date parsing fails, leave it null
+        }
+        
+        return info;
+    }
+    
+    /**
+     * Parse an options symbol with month format like "HEROMOTOCO20SEP2950CE"
+     */
+    private static InstrumentInfo parseOptionsMonthSymbol(String rawSymbol, Matcher matcher, InstrumentInfo info) {
+        String baseSymbol = matcher.group(1);
+        String yearStr = matcher.group(2);
+        String monthStr = matcher.group(3);
+        String strikePriceStr = matcher.group(4);
+        String optionTypeStr = matcher.group(5);
+        
+        // Setup common option fields
+        setupOptionFields(info, baseSymbol, strikePriceStr, optionTypeStr);
+        
+        // Parse expiry date with month format
+        try {
+            int year = 2000 + Integer.parseInt(yearStr); // Assuming 2-digit year
+            Month month = parseMonth(monthStr);
+            // Set to last Thursday of the month (common for options)
+            LocalDate expiryDate = getLastThursdayOfMonth(year, month);
+            info.getDerivativeInfo().setExpiryDate(expiryDate);
+        } catch (Exception e) {
+            // If date parsing fails, leave it null
+        }
+        
+        return info;
+    }
+    
+    /**
+     * Setup common fields for option instruments
+     */
+    private static void setupOptionFields(InstrumentInfo info, String baseSymbol, 
+                                         String strikePriceStr, String optionTypeStr) {
         info.setSymbol(baseSymbol);
         
         // Check if the base symbol is an index
@@ -158,18 +236,72 @@ public class InstrumentInfo {
             // If strike price parsing fails, leave it null
         }
         
-        // Parse expiry date
+        info.setDerivativeInfo(derivativeInfo);
+    }
+    
+    /**
+     * Parse an options symbol with month-day format like "BANKNIFTY20O0121000CE" (Oct 1)
+     */
+    private static InstrumentInfo parseOptionsMonthDaySymbol(String rawSymbol, Matcher matcher, InstrumentInfo info) {
+        String baseSymbol = matcher.group(1);
+        String yearStr = matcher.group(2);
+        String monthCode = matcher.group(3);
+        String dayStr = matcher.group(4);
+        String strikePriceStr = matcher.group(5);
+        String optionTypeStr = matcher.group(6);
+        
+        // Setup common option fields
+        setupOptionFields(info, baseSymbol, strikePriceStr, optionTypeStr);
+        
+        // Parse expiry date with month code and day
         try {
             int year = 2000 + Integer.parseInt(yearStr); // Assuming 2-digit year
-            int month = Integer.parseInt(monthStr);
+            Month month = parseMonthCode(monthCode);
             int day = Integer.parseInt(dayStr);
             LocalDate expiryDate = LocalDate.of(year, month, day);
-            derivativeInfo.setExpiryDate(expiryDate);
+            info.getDerivativeInfo().setExpiryDate(expiryDate);
         } catch (Exception e) {
             // If date parsing fails, leave it null
         }
         
-        info.setDerivativeInfo(derivativeInfo);
+        return info;
+    }
+    
+    /**
+     * Parse an options symbol with month-week format like "BANKNIFTY20N1929100CE" (Nov Week 19)
+     */
+    private static InstrumentInfo parseOptionsMonthWeekSymbol(String rawSymbol, Matcher matcher, InstrumentInfo info) {
+        String baseSymbol = matcher.group(1);
+        String yearStr = matcher.group(2);
+        String monthCode = matcher.group(3);
+        String weekStr = matcher.group(4);
+        String strikePriceStr = matcher.group(5);
+        String optionTypeStr = matcher.group(6);
+        
+        // Setup common option fields
+        setupOptionFields(info, baseSymbol, strikePriceStr, optionTypeStr);
+        
+        // Parse expiry date with month code and week number
+        try {
+            int year = 2000 + Integer.parseInt(yearStr); // Assuming 2-digit year
+            Month month = parseMonthCode(monthCode);
+            
+            // For week-based expiry, we'll use the Thursday of that week
+            // This is an approximation - in real systems you might need more precise logic
+            int weekNum = Integer.parseInt(weekStr);
+            LocalDate firstDayOfMonth = LocalDate.of(year, month, 1);
+            LocalDate expiryDate = firstDayOfMonth.plusDays((weekNum - 1) * 7);
+            
+            // Find the Thursday of that week
+            while (expiryDate.getDayOfWeek().getValue() != 4) { // 4 is Thursday
+                expiryDate = expiryDate.plusDays(1);
+            }
+            
+            info.getDerivativeInfo().setExpiryDate(expiryDate);
+        } catch (Exception e) {
+            // If date parsing fails, leave it null
+        }
+        
         return info;
     }
     
@@ -209,6 +341,31 @@ public class InstrumentInfo {
             case "NOV": return Month.NOVEMBER;
             case "DEC": return Month.DECEMBER;
             default: throw new IllegalArgumentException("Invalid month: " + monthStr);
+        }
+    }
+    
+    /**
+     * Parse month code (single letter) to Month enum
+     * F - Jan, G - Feb, H - Mar, J - Apr, K - May, M - Jun, 
+     * N - Jul, Q - Aug, U - Sep, V/O - Oct, X/W - Nov, Z - Dec
+     */
+    private static Month parseMonthCode(String monthCode) {
+        switch (monthCode.toUpperCase()) {
+            case "F": return Month.JANUARY;
+            case "G": return Month.FEBRUARY;
+            case "H": return Month.MARCH;
+            case "J": return Month.APRIL;
+            case "K": return Month.MAY;
+            case "M": return Month.JUNE;
+            case "N": return Month.JULY;
+            case "Q": return Month.AUGUST;
+            case "U": return Month.SEPTEMBER;
+            case "V": return Month.OCTOBER;
+            case "O": return Month.OCTOBER; // Alternative code sometimes used
+            case "X": return Month.NOVEMBER;
+            case "W": return Month.NOVEMBER; // Alternative code sometimes used
+            case "Z": return Month.DECEMBER;
+            default: throw new IllegalArgumentException("Invalid month code: " + monthCode);
         }
     }
     
