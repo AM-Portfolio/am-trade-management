@@ -60,6 +60,8 @@ public class TradeEntryExistReasoning {
     
     // Exit quality assessment (1-10)
     private Integer exitQualityScore;
+
+    private String streategy;
     
     /**
      * Add a technical reason for entering the trade

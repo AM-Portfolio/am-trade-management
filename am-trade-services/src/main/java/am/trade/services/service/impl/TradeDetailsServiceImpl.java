@@ -310,7 +310,7 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
                     if (entity.getEntryReasoning() == null) {
                         return false;
                     }
-                    return strategy.equals(entity.getEntryReasoning().getStrategy());
+                    return strategy.equals(entity.getEntryReasoning().getStreategy());
                 })
                 .filter(entity -> {
                     // If no date range specified, include all trades

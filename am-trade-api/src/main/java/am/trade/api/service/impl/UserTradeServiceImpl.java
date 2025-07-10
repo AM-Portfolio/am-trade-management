@@ -1,7 +1,6 @@
 package am.trade.api.service.impl;
 
-import am.trade.api.dto.MetricsFilterRequest;
-import am.trade.api.dto.MetricsResponse;
+import am.trade.api.dto.*;
 import am.trade.api.service.FavoriteFilterService;
 import am.trade.api.service.TradeMetricsService;
 import am.trade.api.service.UserTradeService;
@@ -33,13 +32,13 @@ public class UserTradeServiceImpl implements UserTradeService {
         log.info("Getting metrics with favorite filter: {} for user: {}", filterId, userId);
         
         // Get the favorite filter
-        FavoriteFilter favoriteFilter = favoriteFilterService.getFilterById(userId, filterId);
+        FavoriteFilterResponse favoriteFilter = favoriteFilterService.getFilterById(userId, filterId);
         MetricsFilterRequest filterRequest;
         
         if (favoriteFilter == null) {
             log.info("Favorite filter not found, checking for user's default filter");
             // Try to get user's default filter
-            FavoriteFilter defaultFilter = favoriteFilterService.getDefaultFilter(userId);
+            FavoriteFilterResponse defaultFilter = favoriteFilterService.getDefaultFilter(userId);
             
             if (defaultFilter != null) {
                 log.info("Using user's default filter");
@@ -84,12 +83,12 @@ public class UserTradeServiceImpl implements UserTradeService {
                     LocalDate.parse(dateRange.get("endDate").toString()) : null;
                     
             if (startDate != null || endDate != null) {
-                builder.dateRange(new MetricsFilterRequest.DateRangeFilter(startDate, endDate));
+                builder.dateRange(new DateRangeFilter(startDate, endDate));
             }
         }
         
         if (filterConfig.getTimePeriod() != null) {
-            builder.timePeriod(MetricsFilterRequest.TimePeriodFilter.valueOf(
+            builder.timePeriod(TimePeriodFilter.valueOf(
                     filterConfig.getTimePeriod().toString()));
         }
         
@@ -107,22 +106,21 @@ public class UserTradeServiceImpl implements UserTradeService {
         
         if (filterConfig.getInstrumentFilters() != null) {
             // Convert instrument filters from Map to InstrumentFilterCriteria
-            // This is a simplified example - actual implementation would depend on structure
-            MetricsFilterRequest.InstrumentFilterCriteria instrumentFilters = 
+            InstrumentFilterCriteria instrumentFilters = 
                     convertInstrumentFilters(filterConfig.getInstrumentFilters());
             builder.instrumentFilters(instrumentFilters);
         }
         
         if (filterConfig.getTradeCharacteristics() != null) {
             // Convert trade characteristics from Map to TradeCharacteristicsFilter
-            MetricsFilterRequest.TradeCharacteristicsFilter tradeCharacteristics = 
+            TradeCharacteristicsFilter tradeCharacteristics = 
                     convertTradeCharacteristics(filterConfig.getTradeCharacteristics());
             builder.tradeCharacteristics(tradeCharacteristics);
         }
         
         if (filterConfig.getProfitLossFilters() != null) {
             // Convert profit/loss filters from Map to ProfitLossFilter
-            MetricsFilterRequest.ProfitLossFilter profitLossFilters = 
+            ProfitLossFilter profitLossFilters = 
                     convertProfitLossFilters(filterConfig.getProfitLossFilters());
             builder.profitLossFilters(profitLossFilters);
         }
@@ -131,34 +129,184 @@ public class UserTradeServiceImpl implements UserTradeService {
             builder.groupBy(filterConfig.getGroupBy());
         }
         
-        if (filterConfig.getIncludeTradeDetails() != null) {
-            builder.includeTradeDetails(filterConfig.getIncludeTradeDetails());
-        }
-        
-        if (filterConfig.getCustomFilters() != null) {
-            builder.customFilters(filterConfig.getCustomFilters());
-        }
-        
         return builder.build();
     }
     
     // Helper methods for converting complex nested objects
     
-    private MetricsFilterRequest.InstrumentFilterCriteria convertInstrumentFilters(Map<String, Object> instrumentFilters) {
-        // Implement conversion logic based on the structure of InstrumentFilterCriteria
-        // This is a placeholder implementation
-        return new MetricsFilterRequest.InstrumentFilterCriteria();
+    private InstrumentFilterCriteria convertInstrumentFilters(Map<String, Object> instrumentFilters) {
+        if (instrumentFilters == null || instrumentFilters.isEmpty()) {
+            return null;
+        }
+        
+        InstrumentFilterCriteria.InstrumentFilterCriteriaBuilder builder = InstrumentFilterCriteria.builder();
+        
+        if (instrumentFilters.containsKey("marketSegments")) {
+            Object segments = instrumentFilters.get("marketSegments");
+            if (segments instanceof List<?>) {
+                Set<String> marketSegments = new HashSet<>();
+                ((List<?>) segments).forEach(item -> {
+                    if (item instanceof String) {
+                        marketSegments.add((String) item);
+                    }
+                });
+                builder.marketSegments(marketSegments);
+            }
+        }
+        
+        if (instrumentFilters.containsKey("baseSymbols")) {
+            Object symbols = instrumentFilters.get("baseSymbols");
+            if (symbols instanceof List<?>) {
+                Set<String> baseSymbols = new HashSet<>();
+                ((List<?>) symbols).forEach(item -> {
+                    if (item instanceof String) {
+                        baseSymbols.add((String) item);
+                    }
+                });
+                builder.baseSymbols(baseSymbols);
+            }
+        }
+        
+        if (instrumentFilters.containsKey("indexTypes")) {
+            Object types = instrumentFilters.get("indexTypes");
+            if (types instanceof List<?>) {
+                Set<String> indexTypes = new HashSet<>();
+                ((List<?>) types).forEach(item -> {
+                    if (item instanceof String) {
+                        indexTypes.add((String) item);
+                    }
+                });
+                builder.indexTypes(indexTypes);
+            }
+        }
+        
+        if (instrumentFilters.containsKey("derivativeTypes")) {
+            Object types = instrumentFilters.get("derivativeTypes");
+            if (types instanceof List<?>) {
+                Set<String> derivativeTypes = new HashSet<>();
+                ((List<?>) types).forEach(item -> {
+                    if (item instanceof String) {
+                        derivativeTypes.add((String) item);
+                    }
+                });
+                builder.derivativeTypes(derivativeTypes);
+            }
+        }
+        
+        return builder.build();
     }
     
-    private MetricsFilterRequest.TradeCharacteristicsFilter convertTradeCharacteristics(Map<String, Object> tradeCharacteristics) {
-        // Implement conversion logic based on the structure of TradeCharacteristicsFilter
-        // This is a placeholder implementation
-        return new MetricsFilterRequest.TradeCharacteristicsFilter();
+    private TradeCharacteristicsFilter convertTradeCharacteristics(Map<String, Object> tradeCharacteristics) {
+        if (tradeCharacteristics == null || tradeCharacteristics.isEmpty()) {
+            return null;
+        }
+        
+        TradeCharacteristicsFilter.TradeCharacteristicsFilterBuilder builder = TradeCharacteristicsFilter.builder();
+        
+        if (tradeCharacteristics.containsKey("strategies")) {
+            Object strategies = tradeCharacteristics.get("strategies");
+            if (strategies instanceof List<?>) {
+                Set<String> strategiesSet = new HashSet<>();
+                ((List<?>) strategies).forEach(item -> {
+                    if (item instanceof String) {
+                        strategiesSet.add((String) item);
+                    }
+                });
+                builder.strategies(strategiesSet);
+            }
+        }
+        
+        if (tradeCharacteristics.containsKey("tags")) {
+            Object tags = tradeCharacteristics.get("tags");
+            if (tags instanceof List<?>) {
+                Set<String> tagsSet = new HashSet<>();
+                ((List<?>) tags).forEach(item -> {
+                    if (item instanceof String) {
+                        tagsSet.add((String) item);
+                    }
+                });
+                builder.tags(tagsSet);
+            }
+        }
+        
+        if (tradeCharacteristics.containsKey("directions")) {
+            Object directions = tradeCharacteristics.get("directions");
+            if (directions instanceof List<?>) {
+                Set<String> directionsSet = new HashSet<>();
+                ((List<?>) directions).forEach(item -> {
+                    if (item instanceof String) {
+                        directionsSet.add((String) item);
+                    }
+                });
+                builder.directions(directionsSet);
+            }
+        }
+        
+        if (tradeCharacteristics.containsKey("statuses")) {
+            Object statuses = tradeCharacteristics.get("statuses");
+            if (statuses instanceof List<?>) {
+                Set<String> statusesSet = new HashSet<>();
+                ((List<?>) statuses).forEach(item -> {
+                    if (item instanceof String) {
+                        statusesSet.add((String) item);
+                    }
+                });
+                builder.statuses(statusesSet);
+            }
+        }
+        
+        if (tradeCharacteristics.containsKey("minHoldingTimeHours")) {
+            Object minHours = tradeCharacteristics.get("minHoldingTimeHours");
+            if (minHours != null) {
+                builder.minHoldingTimeHours(Integer.valueOf(minHours.toString()));
+            }
+        }
+        
+        if (tradeCharacteristics.containsKey("maxHoldingTimeHours")) {
+            Object maxHours = tradeCharacteristics.get("maxHoldingTimeHours");
+            if (maxHours != null) {
+                builder.maxHoldingTimeHours(Integer.valueOf(maxHours.toString()));
+            }
+        }
+        
+        return builder.build();
     }
     
-    private MetricsFilterRequest.ProfitLossFilter convertProfitLossFilters(Map<String, Object> profitLossFilters) {
-        // Implement conversion logic based on the structure of ProfitLossFilter
-        // This is a placeholder implementation
-        return new MetricsFilterRequest.ProfitLossFilter();
+    private ProfitLossFilter convertProfitLossFilters(Map<String, Object> profitLossFilters) {
+        if (profitLossFilters == null || profitLossFilters.isEmpty()) {
+            return null;
+        }
+        
+        ProfitLossFilter.ProfitLossFilterBuilder builder = ProfitLossFilter.builder();
+        
+        if (profitLossFilters.containsKey("minProfitLoss")) {
+            Object minPL = profitLossFilters.get("minProfitLoss");
+            if (minPL != null) {
+                builder.minProfitLoss(Double.valueOf(minPL.toString()));
+            }
+        }
+        
+        if (profitLossFilters.containsKey("maxProfitLoss")) {
+            Object maxPL = profitLossFilters.get("maxProfitLoss");
+            if (maxPL != null) {
+                builder.maxProfitLoss(Double.valueOf(maxPL.toString()));
+            }
+        }
+        
+        if (profitLossFilters.containsKey("minPositionSize")) {
+            Object minSize = profitLossFilters.get("minPositionSize");
+            if (minSize != null) {
+                builder.minPositionSize(Double.valueOf(minSize.toString()));
+            }
+        }
+        
+        if (profitLossFilters.containsKey("maxPositionSize")) {
+            Object maxSize = profitLossFilters.get("maxPositionSize");
+            if (maxSize != null) {
+                builder.maxPositionSize(Double.valueOf(maxSize.toString()));
+            }
+        }
+        
+        return builder.build();
     }
 }

@@ -2,6 +2,7 @@ package am.trade.common.models;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -23,6 +24,7 @@ public class MetricsFilterConfig {
     private Map<String, Object> dateRange;
     private Map<String, Object> timePeriod;
     private List<String> metricTypes;
+    private List<String> groupBy;
     private List<String> instruments;
     private Map<String, Object> instrumentFilters;
     private Map<String, Object> tradeCharacteristics;
