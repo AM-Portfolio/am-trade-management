@@ -7,7 +7,7 @@ spring:
 am:
   trade:
     market-data:
-      api:
+    api:
         # Base URL for the market data API
         base-url: http://localhost:8084
         # Path for historical data endpoint
