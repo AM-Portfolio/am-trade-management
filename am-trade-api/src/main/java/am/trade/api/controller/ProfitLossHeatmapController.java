@@ -117,10 +117,8 @@ public class ProfitLossHeatmapController {
             @RequestParam String portfolioId,
             @Parameter(description = "Granularity (YEARLY, MONTHLY, DAILY)") 
             @RequestParam String granularity,
-            @Parameter(description = "Financial year (required for MONTHLY granularity)") 
+            @Parameter(description = "Financial year (required for MONTHLY, DAILY granularity)") 
             @RequestParam(required = false) Integer financialYear,
-            @Parameter(description = "Year (required for DAILY granularity)") 
-            @RequestParam(required = false) Integer year,
             @Parameter(description = "Month (1-12, required for DAILY granularity)") 
             @RequestParam(required = false) Integer month,
             @Parameter(description = "Whether to include trade details in the response") 
@@ -142,10 +140,10 @@ public class ProfitLossHeatmapController {
                     heatmapData = profitLossHeatmapService.getMonthlyHeatmap(portfolioId, financialYear, includeTradeDetails);
                     break;
                 case "DAILY":
-                    if (year == null || month == null) {
+                    if (financialYear == null || month == null) {
                         return ResponseEntity.badRequest().build();
                     }
-                    heatmapData = profitLossHeatmapService.getDailyHeatmap(portfolioId, year, month, includeTradeDetails);
+                    heatmapData = profitLossHeatmapService.getDailyHeatmap(portfolioId, financialYear, month, includeTradeDetails);
                     break;
                 default:
                     log.error("Invalid granularity: {}", granularity);
