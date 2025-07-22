@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import am.trade.common.models.enums.TradeStatus;
+import am.trade.common.models.HeatmapRequest;
 import am.trade.common.models.PeriodProfitLossData;
 import am.trade.common.models.ProfitLossHeatmapData;
 import am.trade.common.models.TradeDetails;
@@ -346,5 +347,38 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
                 .map(trade -> trade.getMetrics().getProfitLoss().abs())
                 .max(BigDecimal::compareTo)
                 .orElse(BigDecimal.ZERO);
+    }
+    
+    @Override
+    public ProfitLossHeatmapData getHeatmapData(HeatmapRequest request) {
+        log.info("Generating heatmap with granularity: {} for portfolios: {}", request.getGranularity(), request.getPortfolioIds());
+        
+        if (request.getPortfolioIds() == null || request.getPortfolioIds().isEmpty()) {
+            throw new IllegalArgumentException("No portfolio IDs provided");
+        }
+        
+        // For now, we'll use the first portfolio ID for backward compatibility
+        // In the future, this method should be enhanced to aggregate data from multiple portfolios
+        String portfolioId = request.getPortfolioIds().get(0);
+        
+        switch (request.getGranularity()) {
+            case YEARLY:
+                return getYearlyHeatmap(portfolioId, request.isIncludeTradeDetails());
+                
+            case MONTHLY:
+                if (request.getFinancialYear() == null) {
+                    throw new IllegalArgumentException("Financial year is required for MONTHLY granularity");
+                }
+                return getMonthlyHeatmap(portfolioId, request.getFinancialYear(), request.isIncludeTradeDetails());
+                
+            case DAILY:
+                if (request.getFinancialYear() == null || request.getMonth() == null) {
+                    throw new IllegalArgumentException("Financial year and month are required for DAILY granularity");
+                }
+                return getDailyHeatmap(portfolioId, request.getFinancialYear(), request.getMonth(), request.isIncludeTradeDetails());
+                
+            default:
+                throw new IllegalArgumentException("Invalid granularity: " + request.getGranularity());
+        }
     }
 }
