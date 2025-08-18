@@ -21,12 +21,14 @@ class TradePsychologyDataMapperTest {
 
     private TradePsychologyDataMapper mapper;
     private TradeDetails tradeDetails;
+    private JsonConverter jsonConverter;
     private static final String TEST_RESOURCE_PATH = "tradedetails.json";
     
     @BeforeEach
     void setUp() {
         mapper = new TradePsychologyDataMapper();
-        tradeDetails = JsonConverter.fromJsonResource(TEST_RESOURCE_PATH, TradeDetails.class);
+        jsonConverter = new JsonConverter();
+        tradeDetails = jsonConverter.fromJsonResource(TEST_RESOURCE_PATH, TradeDetails.class);
     }
     
     @Test

@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.context.annotation.Import;
 
 import am.trade.api.config.ApiAutoConfiguration;
+import am.trade.analytics.config.TradeAnalyticsAutoConfiguration;
 import am.trade.dashboard.config.DashboardAutoConfiguration;
 import am.trade.exceptions.config.ExceptionsAutoConfiguration;
 import am.trade.kafka.config.KafkaAutoConfiguration;
@@ -30,7 +31,8 @@ import am.trade.services.config.TradeServicesAutoConfiguration;
     DashboardAutoConfiguration.class,
     ApiAutoConfiguration.class,
     KafkaAutoConfiguration.class,
-    ExceptionsAutoConfiguration.class
+    ExceptionsAutoConfiguration.class,
+    TradeAnalyticsAutoConfiguration.class
 }) 
 public class TradeManagementApplication {
 

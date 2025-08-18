@@ -1,0 +1,28 @@
+# Market Data Client Configuration
+spring:
+  config:
+    activate:
+      on-profile: market-data-client
+
+am:
+  trade:
+    market-data:
+    api:
+        # Base URL for the market data API
+        base-url: http://localhost:8084
+        # Path for historical data endpoint
+        historical-data-path: /api/v1/market-data/historical-data
+        # Connection timeout in milliseconds
+        connection-timeout: 5000
+        # Read timeout in milliseconds
+        read-timeout: 10000
+        # Retry configuration
+        retry:
+          max-attempts: 3
+          initial-backoff-ms: 1000
+          multiplier: 2.0
+        # Circuit breaker configuration
+        circuit-breaker:
+          failure-threshold: 50
+          wait-duration-in-open-state-ms: 60000
+          permitted-calls-in-half-open-state: 10

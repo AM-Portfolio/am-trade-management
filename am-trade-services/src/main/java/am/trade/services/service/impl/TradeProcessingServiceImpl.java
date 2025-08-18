@@ -1,6 +1,7 @@
 package am.trade.services.service.impl;
 
 import am.trade.common.models.EntryExitInfo;
+import am.trade.common.models.InstrumentInfo;
 import am.trade.common.models.PortfolioMetrics;
 import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.TradeDetails;
@@ -51,21 +52,60 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
     
     /**
      * Converts InstrumentInfo from TradeModel to standalone InstrumentInfo class
+     * with enhanced symbol parsing for derivatives
      * 
      * @param modelInstrumentInfo The instrument info from TradeModel
-     * @return Converted InstrumentInfo object
+     * @return Converted InstrumentInfo object with properly parsed symbol and segment
      */
-    private am.trade.common.models.InstrumentInfo convertToInstrumentInfo(am.trade.common.models.InstrumentInfo modelInstrumentInfo) {
+    private InstrumentInfo convertToInstrumentInfo(InstrumentInfo modelInstrumentInfo) {
         if (modelInstrumentInfo == null) {
             return null;
         }
         
-        return am.trade.common.models.InstrumentInfo.builder()
-                .symbol(modelInstrumentInfo.getSymbol())
+        String symbol = modelInstrumentInfo.getSymbol();
+        
+        // Use the domain-driven parsing logic to extract proper symbol and segment
+        InstrumentInfo parsedInfo = InstrumentInfo.fromRawSymbol(symbol);
+        if (parsedInfo != null) {
+            // Copy over any additional information from the original model
+            parsedInfo.setIsin(modelInstrumentInfo.getIsin());
+            if (modelInstrumentInfo.getExchange() != null) {
+                parsedInfo.setExchange(modelInstrumentInfo.getExchange());
+            }
+            if (modelInstrumentInfo.getSeries() != null) {
+                parsedInfo.setSeries(modelInstrumentInfo.getSeries());
+            }
+            
+            // Use the original description if available, otherwise generate one
+            if (modelInstrumentInfo.getDescription() != null && !modelInstrumentInfo.getDescription().isEmpty()) {
+                parsedInfo.setDescription(modelInstrumentInfo.getDescription());
+            } else {
+                parsedInfo.setDescription(parsedInfo.getFormattedDescription());
+            }
+            
+            // Copy over additional fields
+            parsedInfo.setCurrency(modelInstrumentInfo.getCurrency());
+            parsedInfo.setLotSize(modelInstrumentInfo.getLotSize());
+            
+            // If the original had derivative info but parsing didn't detect it, copy it over
+            if (parsedInfo.getDerivativeInfo() == null && modelInstrumentInfo.getDerivativeInfo() != null) {
+                parsedInfo.setDerivativeInfo(modelInstrumentInfo.getDerivativeInfo());
+            }
+            
+            return parsedInfo;
+        }
+        
+        // Fallback to original conversion if parsing fails
+        return InstrumentInfo.builder()
+                .symbol(symbol)
+                .rawSymbol(symbol)
                 .isin(modelInstrumentInfo.getIsin())
                 .exchange(modelInstrumentInfo.getExchange())
                 .segment(modelInstrumentInfo.getSegment())
                 .series(modelInstrumentInfo.getSeries())
+                .description(modelInstrumentInfo.getDescription())
+                .currency(modelInstrumentInfo.getCurrency())
+                .lotSize(modelInstrumentInfo.getLotSize())
                 .build();
     }
 
@@ -244,15 +284,13 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
     }
 
     @Override
-    public List<TradeDetails> 
-    processTradeModels(List<TradeModel> trades, String portfolioId) {
+    public List<TradeDetails> processTradeModels(List<TradeModel> trades, String portfolioId) {
         if (trades == null || trades.isEmpty()) {
             return new ArrayList<>();
         }
 
         // Group trades by symbol to handle multiple securities
-        Map<String, List<TradeModel>> tradesBySymbol = trades.stream()
-                .collect(Collectors.groupingBy(trade -> trade.getInstrumentInfo().getSymbol()));
+        Map<String, List<TradeModel>> tradesBySymbol = groupTradesBySymbol(trades);
         
         // Process each group of trades separately
         List<TradeDetails> result = new ArrayList<>();
@@ -260,65 +298,153 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             String symbol = entry.getKey();
             List<TradeModel> symbolTrades = entry.getValue();
             
-            // Sort trades by execution time
-            List<TradeModel> sortedTrades = symbolTrades.stream()
-                    .sorted(Comparator.comparing(trade -> trade.getBasicInfo().getOrderExecutionTime()))
-                    .collect(Collectors.toList());
-            
-            if (sortedTrades.isEmpty()) {
-                continue;
-            }
-            
-            // Identify separate trade cycles (buy-sell cycles) within the same symbol
-            List<List<TradeModel>> tradeCycles = identifyTradeCycles(sortedTrades);
-            
-            // Process each trade cycle separately
-            for (List<TradeModel> tradeCycle : tradeCycles) {
-                if (tradeCycle.isEmpty()) {
-                    continue;
-                }
-                
-                // Get the first trade to determine if it's a LONG or SHORT position
-                TradeModel firstTrade = tradeCycle.get(0);
-                TradePositionType tradePositionType = determineTradeType(firstTrade);
-                
-                // Process the trades to build entry and exit information
-                EntryExitInfo entryInfo = calculateEntryInfo(tradeCycle, tradePositionType);
-                EntryExitInfo exitInfo = calculateExitInfo(tradeCycle, tradePositionType);
-                
-                // For SHORT positions, swap entry and exit info since the first trade is a SELL (entry) and last trade is a BUY (exit)
-                // which is the reverse of LONG positions
-                if (tradePositionType == TradePositionType.SHORT) {
-                    EntryExitInfo temp = entryInfo;
-                    entryInfo = exitInfo;
-                    exitInfo = temp;
-                }
-                
-                // Calculate trade metrics
-                TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
-                
-                // Determine trade status
-                TradeStatus status = determineTradeStatus(entryInfo, exitInfo, metrics);
-                
-                // Build the complete trade model
-                TradeDetails tradeDetails = TradeDetails.builder()
-                        .tradeId(UUID.randomUUID().toString()) // Generate a unique ID for the trade
-                        .portfolioId(portfolioId)
-                        .symbol(symbol)
-                        .instrumentInfo(convertToInstrumentInfo(firstTrade.getInstrumentInfo()))
-                        .tradePositionType(tradePositionType)
-                        .status(status)
-                        .entryInfo(entryInfo)
-                        .exitInfo(exitInfo)
-                        .metrics(metrics)
-                        .tradeExecutions(tradeCycle)
-                        .build();
-                
-                result.add(tradeDetails);
-            }
+            List<TradeDetails> symbolTradeDetails = processSymbolTrades(symbolTrades, symbol, portfolioId);
+            result.addAll(symbolTradeDetails);
         }
         
         return result;
+    }
+    
+    /**
+     * Group trades by their symbol
+     * 
+     * @param trades List of trade models
+     * @return Map of trades grouped by symbol
+     */
+    private Map<String, List<TradeModel>> groupTradesBySymbol(List<TradeModel> trades) {
+        return trades.stream()
+                .collect(Collectors.groupingBy(trade -> trade.getInstrumentInfo().getSymbol()));
+    }
+    
+    /**
+     * Process all trades for a specific symbol
+     * 
+     * @param symbolTrades Trades for a specific symbol
+     * @param symbol The symbol being processed
+     * @param portfolioId The portfolio ID
+     * @return List of trade details for this symbol
+     */
+    private List<TradeDetails> processSymbolTrades(List<TradeModel> symbolTrades, String symbol, String portfolioId) {
+        List<TradeDetails> result = new ArrayList<>();
+        
+        // Sort trades by execution time
+        List<TradeModel> sortedTrades = sortTradesByExecutionTime(symbolTrades);
+        
+        if (sortedTrades.isEmpty()) {
+            return result;
+        }
+        
+        // Identify separate trade cycles (buy-sell cycles) within the same symbol
+        List<List<TradeModel>> tradeCycles = identifyTradeCycles(sortedTrades);
+        
+        // Process each trade cycle separately
+        for (List<TradeModel> tradeCycle : tradeCycles) {
+            if (tradeCycle.isEmpty()) {
+                continue;
+            }
+            
+            TradeDetails tradeDetails = processTradeCycle(tradeCycle, symbol, portfolioId);
+            result.add(tradeDetails);
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Sort trades by execution time in ascending order
+     * 
+     * @param trades List of trades to sort
+     * @return Sorted list of trades
+     */
+    private List<TradeModel> sortTradesByExecutionTime(List<TradeModel> trades) {
+        return trades.stream()
+                .sorted(Comparator.comparing(trade -> trade.getBasicInfo().getOrderExecutionTime()))
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Process a single trade cycle (buy-sell cycle) to create a TradeDetails object
+     * 
+     * @param tradeCycle List of trades in a single cycle
+     * @param symbol The symbol being traded
+     * @param portfolioId The portfolio ID
+     * @return TradeDetails object representing the complete trade
+     */
+    private TradeDetails processTradeCycle(List<TradeModel> tradeCycle, String symbol, String portfolioId) {
+        // Get the first trade to determine if it's a LONG or SHORT position
+        TradeModel firstTrade = tradeCycle.get(0);
+        TradePositionType tradePositionType = determineTradeType(firstTrade);
+        
+        // Get entry and exit information
+        EntryExitInfo entryInfo = calculateEntryInfo(tradeCycle, tradePositionType);
+        EntryExitInfo exitInfo = calculateExitInfo(tradeCycle, tradePositionType);
+        
+        // Handle SHORT positions differently
+        entryInfo = adjustEntryExitForShortPositions(entryInfo, exitInfo, tradePositionType);
+        
+        // Calculate trade metrics
+        TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
+        
+        // Determine trade status
+        TradeStatus status = determineTradeStatus(entryInfo, exitInfo, metrics);
+        
+        // Build and return the complete trade details
+        return buildTradeDetails(tradeCycle, firstTrade, symbol, portfolioId, tradePositionType, 
+                                status, entryInfo, exitInfo, metrics);
+    }
+    
+    /**
+     * For SHORT positions, swap entry and exit info since the first trade is a SELL (entry) 
+     * and last trade is a BUY (exit), which is the reverse of LONG positions
+     * 
+     * @param entryInfo Original entry info
+     * @param exitInfo Original exit info
+     * @param tradePositionType The position type (LONG or SHORT)
+     * @return Adjusted entry info
+     */
+    private EntryExitInfo adjustEntryExitForShortPositions(EntryExitInfo entryInfo, 
+                                                          EntryExitInfo exitInfo,
+                                                          TradePositionType tradePositionType) {
+        if (tradePositionType == TradePositionType.SHORT) {
+            // Swap entry and exit for SHORT positions
+            return exitInfo;
+        }
+        return entryInfo;
+    }
+    
+    /**
+     * Build a TradeDetails object from the processed trade data
+     * 
+     * @param tradeCycle The trade cycle
+     * @param firstTrade The first trade in the cycle
+     * @param symbol The symbol being traded
+     * @param portfolioId The portfolio ID
+     * @param tradePositionType The position type (LONG or SHORT)
+     * @param status The trade status
+     * @param entryInfo The entry information
+     * @param exitInfo The exit information
+     * @param metrics The calculated trade metrics
+     * @return Complete TradeDetails object
+     */
+    private TradeDetails buildTradeDetails(List<TradeModel> tradeCycle, TradeModel firstTrade,
+                                           String symbol, String portfolioId, 
+                                           TradePositionType tradePositionType, TradeStatus status,
+                                           EntryExitInfo entryInfo, EntryExitInfo exitInfo, 
+                                           TradeMetrics metrics) {
+        
+        InstrumentInfo instrumentInfo = convertToInstrumentInfo(firstTrade.getInstrumentInfo());
+        return TradeDetails.builder()
+                .tradeId(UUID.randomUUID().toString()) // Generate a unique ID for the trade
+                .portfolioId(portfolioId)
+                .symbol(instrumentInfo.getSymbol())
+                .instrumentInfo(instrumentInfo)
+                .tradePositionType(tradePositionType)
+                .status(status)
+                .entryInfo(entryInfo)
+                .exitInfo(exitInfo)
+                .metrics(metrics)
+                .tradeExecutions(tradeCycle)
+                .build();
     }
 
 
@@ -383,15 +509,6 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         } else {
             return TradePositionType.SHORT;
         }
-    }
-    
-    /**
-     * Extract the symbol from the trades
-     */
-    private String extractSymbol(List<TradeModel> trades) {
-        // For simplicity, we'll use the symbol from the first trade
-        // In a real implementation, you might want to validate that all trades have the same symbol
-        return trades.get(0).getInstrumentInfo().getSymbol();
     }
     
     /**

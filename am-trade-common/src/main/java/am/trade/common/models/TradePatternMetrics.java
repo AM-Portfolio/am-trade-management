@@ -20,6 +20,12 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TradePatternMetrics {
+
+    //OverAll metrics
+    private BigDecimal overallWinRate;
+    private BigDecimal overallExpectancy;
+    private BigDecimal overallRiskRewardRatio;
+    
     // Trade pattern performance
     private Map<TradeBehaviorPattern, Integer> patternFrequency;
     private Map<TradeBehaviorPattern, BigDecimal> patternProfitLoss;
@@ -35,12 +41,16 @@ public class TradePatternMetrics {
     private Map<EntryPsychology, BigDecimal> entryPsychologyWinRate;
     private List<EntryPsychology> mostProfitableEntryPsychology;
     private List<EntryPsychology> leastProfitableEntryPsychology;
+    private Map<EntryPsychology, BigDecimal> entryPsychologyExpectancy;
+    private Map<EntryPsychology, BigDecimal> entryPsychologyRiskRewardRatio;
     
     private Map<ExitPsychology, Integer> exitPsychologyFrequency;
     private Map<ExitPsychology, BigDecimal> exitPsychologyProfitLoss;
     private Map<ExitPsychology, BigDecimal> exitPsychologyWinRate;
     private List<ExitPsychology> mostProfitableExitPsychology;
     private List<ExitPsychology> leastProfitableExitPsychology;
+    private Map<ExitPsychology, BigDecimal> exitPsychologyExpectancy;
+    private Map<ExitPsychology, BigDecimal> exitPsychologyRiskRewardRatio;
     
     // Emotional control metrics
     private BigDecimal emotionalControlScore; // 0-100 score based on psychology factors

@@ -6,6 +6,10 @@ import java.time.LocalDateTime;
 
 import am.trade.common.models.enums.BrokerType;
 import am.trade.common.models.enums.TradeType;
+import am.trade.common.util.TradeModelDeserializer;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +23,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonDeserialize(using = TradeModelDeserializer.class)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TradeModel {
     private BasicInfo basicInfo;
     private InstrumentInfo instrumentInfo;
@@ -31,6 +37,7 @@ public class TradeModel {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public static class BasicInfo {
         private String tradeId;
         private String orderId;
@@ -44,6 +51,7 @@ public class TradeModel {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public static class Charges {
         private BigDecimal brokerage;
         private BigDecimal stt;
@@ -58,6 +66,7 @@ public class TradeModel {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public static class Financials {
         private BigDecimal turnover;
         private BigDecimal netAmount;
