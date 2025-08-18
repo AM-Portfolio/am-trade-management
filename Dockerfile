@@ -46,8 +46,8 @@ FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
-# Copy only the built jar from builder stage
-COPY --from=builder /build/trade-data-app/target/*.jar app.jar
+# Copy only the built jar from builder stage with correct path
+COPY --from=builder /build/am-trade-app/target/*.jar app.jar
 
 # Install curl and set timezone
 RUN apt-get update && \
