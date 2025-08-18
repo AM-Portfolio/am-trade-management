@@ -59,6 +59,16 @@ jobs:
             type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
             type=ref,event=branch,prefix=feature-,enable=${{ startsWith(github.ref, 'refs/heads/feature/') }}
 
+      - name: Verify source directories
+        run: |
+          echo "Checking required directories..."
+          for dir in "trade-data-scheduler/src" "trade-data-external-api/src" "trade-data-model/src"; do
+            if [ ! -d "$dir" ]; then
+              echo "::error::Directory $dir not found!"
+              exit 1
+            fi
+          done
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -69,6 +79,7 @@ jobs:
           build-args: |
             GITHUB_PACKAGES_USERNAME=${{ github.actor }}
             GITHUB_PACKAGES_TOKEN=${{ github.token }}
+          no-cache: true  # Disable cache to avoid checksum issues
       
       - name: Save image tag to artifact
         run: |
