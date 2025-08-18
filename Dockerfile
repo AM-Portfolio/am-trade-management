@@ -17,6 +17,7 @@ COPY trade-data-api/pom.xml trade-data-api/
 COPY trade-data-processor/pom.xml trade-data-processor/
 COPY trade-data-scheduler/pom.xml trade-data-scheduler/
 COPY trade-data-external-api/pom.xml trade-data-external-api/
+COPY trade-data-model/pom.xml trade-data-model/
 
 # Copy source code
 COPY trade-data-app/src trade-data-app/src/
@@ -27,13 +28,16 @@ COPY trade-data-api/src trade-data-api/src/
 COPY trade-data-processor/src trade-data-processor/src/
 COPY trade-data-scheduler/src trade-data-scheduler/src/
 COPY trade-data-external-api/src trade-data-external-api/src/
+COPY trade-data-model/src trade-data-model/src/
 
 # Build the application with GitHub credentials
 ARG GITHUB_PACKAGES_USERNAME
-# Use build secret for token instead of ARG
-RUN --mount=type=secret,id=github_token \
-    export GITHUB_PACKAGES_TOKEN="$(cat /run/secrets/github_token)" && \
-    mvn clean package -DskipTests
+ARG GITHUB_PACKAGES_TOKEN
+ENV GITHUB_PACKAGES_USERNAME=${GITHUB_PACKAGES_USERNAME}
+ENV GITHUB_PACKAGES_TOKEN=${GITHUB_PACKAGES_TOKEN}
+
+# Build the application
+RUN mvn clean package -DskipTests
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-jammy
@@ -57,13 +61,9 @@ ENV TZ=Asia/Kolkata
 # Expose the application port
 EXPOSE 8080
 
-# Health check
+# Health check with JSON format
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
-
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
+  CMD ["curl", "-f", "http://localhost:8080/actuator/health"]
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
