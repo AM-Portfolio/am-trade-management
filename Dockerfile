@@ -3,21 +3,41 @@ FROM maven:3.8.4-openjdk-17-slim AS builder
 
 WORKDIR /build
 
-# Copy Maven settings and pom files first for better caching
+# Copy Maven settings first
 COPY settings.xml /root/.m2/settings.xml
+
+# Copy root pom.xml
 COPY pom.xml .
-COPY */pom.xml ./*/
 
-# Download dependencies first (cached layer)
-RUN mvn dependency:go-offline -B
+# Copy all module pom files
+COPY am-trade-common/pom.xml am-trade-common/
+COPY am-trade-models/pom.xml am-trade-models/
+COPY am-trade-services/pom.xml am-trade-services/
+COPY am-trade-dashboard/pom.xml am-trade-dashboard/
+COPY am-trade-api/pom.xml am-trade-api/
+COPY am-trade-app/pom.xml am-trade-app/
+COPY am-trade-kafka/pom.xml am-trade-kafka/
+COPY am-trade-persistence/pom.xml am-trade-persistence/
+COPY am-trade-exceptions/pom.xml am-trade-exceptions/
 
-# Copy source code
-COPY . .
+# Download dependencies with debug output
+RUN mvn -X dependency:go-offline -B || (echo "Maven dependency download failed" && exit 1)
+
+# Copy all module source files
+COPY am-trade-common/src am-trade-common/src/
+COPY am-trade-models/src am-trade-models/src/
+COPY am-trade-services/src am-trade-services/src/
+COPY am-trade-dashboard/src am-trade-dashboard/src/
+COPY am-trade-api/src am-trade-api/src/
+COPY am-trade-app/src am-trade-app/src/
+COPY am-trade-kafka/src am-trade-kafka/src/
+COPY am-trade-persistence/src am-trade-persistence/src/
+COPY am-trade-exceptions/src am-trade-exceptions/src/
 
 # Build with Maven
 ARG GITHUB_PACKAGES_USERNAME
 ARG GITHUB_PACKAGES_TOKEN
-RUN mvn clean package -DskipTests \
+RUN mvn clean package -DskipTests -X \
     -DGITHUB_PACKAGES_USERNAME=${GITHUB_PACKAGES_USERNAME} \
     -DGITHUB_PACKAGES_TOKEN=${GITHUB_PACKAGES_TOKEN}
 
