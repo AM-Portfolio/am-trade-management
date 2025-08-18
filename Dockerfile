@@ -30,16 +30,8 @@ RUN mkdir -p trade-data-app/src \
     trade-data-external-api/src \
     trade-data-model/src
 
-# Copy source code with error handling
-COPY trade-data-app/src trade-data-app/src/ || true
-COPY trade-data-service/src trade-data-service/src/ || true
-COPY trade-data-kafka/src trade-data-kafka/src/ || true
-COPY trade-data-common/src trade-data-common/src/ || true
-COPY trade-data-api/src trade-data-api/src/ || true
-COPY trade-data-processor/src trade-data-processor/src/ || true
-COPY trade-data-scheduler/src trade-data-scheduler/src/ || true
-COPY trade-data-external-api/src trade-data-external-api/src/ || true
-COPY trade-data-model/src trade-data-model/src/ || true
+# Copy source code if available
+COPY . .
 
 # Build the application with GitHub credentials
 ARG GITHUB_PACKAGES_USERNAME
@@ -70,6 +62,14 @@ ENV SPRING_PROFILES_ACTIVE=docker
 ENV TZ=Asia/Kolkata
 
 # Expose the application port
+EXPOSE 8080
+
+# Health check with JSON format
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+# Run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
 EXPOSE 8080
 
 # Health check with JSON format

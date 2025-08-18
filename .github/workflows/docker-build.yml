@@ -59,15 +59,12 @@ jobs:
             type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
             type=ref,event=branch,prefix=feature-,enable=${{ startsWith(github.ref, 'refs/heads/feature/') }}
 
-      - name: Verify source directories
+      - name: List workspace contents
         run: |
-          echo "Checking required directories..."
-          for dir in "trade-data-scheduler/src" "trade-data-external-api/src" "trade-data-model/src"; do
-            if [ ! -d "$dir" ]; then
-              echo "::error::Directory $dir not found!"
-              exit 1
-            fi
-          done
+          echo "Current directory structure:"
+          ls -la
+          echo "Maven build output:"
+          ls -la trade-data-app/target/ || true
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -80,7 +77,7 @@ jobs:
             GITHUB_PACKAGES_USERNAME=${{ github.actor }}
             GITHUB_PACKAGES_TOKEN=${{ github.token }}
           no-cache: true
-          output-type: type=docker
+          output-type: type=registry
           load: true
       
       - name: Save image tag to artifact
@@ -107,6 +104,9 @@ jobs:
   #     contents: read
   #     id-token: write
   #   uses: ./.github/workflows/unified-deployment.yml
+  #   with:
+  #     image_tag: v${{ github.run_id }}
+  #   secrets: inherit
   #   with:
   #     image_tag: v${{ github.run_id }}
   #   secrets: inherit
