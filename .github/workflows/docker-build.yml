@@ -79,7 +79,9 @@ jobs:
           build-args: |
             GITHUB_PACKAGES_USERNAME=${{ github.actor }}
             GITHUB_PACKAGES_TOKEN=${{ github.token }}
-          no-cache: true  # Disable cache to avoid checksum issues
+          no-cache: true
+          output-type: type=docker
+          load: true
       
       - name: Save image tag to artifact
         run: |
