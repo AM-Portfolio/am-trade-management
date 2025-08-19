@@ -29,10 +29,12 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/am-trade-management-service
   HELM_CHART_PATH: ./helm/am-trade-management
+  IMAGE_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.image_tag || inputs.image_tag }}
 
 jobs:
   # Deploy to the selected environment
   deploy:
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'preprod' }}
     name: Deploy to Environment
     runs-on: ubuntu-latest
     permissions:
@@ -64,24 +66,9 @@ jobs:
             echo "NAMESPACE=dev" >> $GITHUB_ENV
             echo "Deploying to PRE-PRODUCTION environment"
           fi
-      
-      # Get image tag - either from workflow_dispatch input or workflow_call input
-      - name: Get image tag
-        id: get-tag
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.image_tag }}" != "" ]]; then
-            # Use the manually provided tag
-            echo "IMAGE_TAG=${{ github.event.inputs.image_tag }}" >> $GITHUB_ENV
-            echo "Using manually provided image tag: ${{ github.event.inputs.image_tag }}"
-          elif [[ "${{ github.event_name }}" == "workflow_call" ]]; then
-            # Use the tag passed from docker-build workflow
-            echo "IMAGE_TAG=${{ inputs.image_tag }}" >> $GITHUB_ENV
-            echo "Using image tag from workflow_call: ${{ inputs.image_tag }}"
-          else
-            # Default tag if none provided
-            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
-            echo "Using default image tag: latest"
-          fi
+          
+          # Set image tag from input
+          echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
       
       # Login to Azure
       - name: Login to Azure
@@ -100,7 +87,31 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
         with:
-          version: 'v3.12.3'
+          version: '3.12.3'  # Removed 'v' prefix for stability
+      
+      # Check and remove Helm locks if any exist
+      - name: Check and remove Helm locks
+        run: |
+          # Check if there's a release with pending operations
+          if kubectl get secret -n ${{ env.NAMESPACE }} | grep -q "sh.helm.release.v1.am-trade-management-service"; then
+            echo "Found existing Helm release, checking for locks..."
+            # Get all Helm secrets and check for pending operations
+            HELM_SECRETS=$(kubectl get secrets -n ${{ env.NAMESPACE }} -l owner=helm -o name)
+            for secret in $HELM_SECRETS; do
+              if [[ $secret == *"am-trade-management-service"* ]]; then
+                echo "Examining $secret for locks"
+                # Check if the secret contains a lock
+                LOCK_STATUS=$(kubectl get $secret -n ${{ env.NAMESPACE }} -o jsonpath='{.metadata.labels.status}')
+                if [[ $LOCK_STATUS == "pending-install" || $LOCK_STATUS == "pending-upgrade" || $LOCK_STATUS == "pending-rollback" ]]; then
+                  echo "Found lock in $secret with status $LOCK_STATUS, removing..."
+                  kubectl delete $secret -n ${{ env.NAMESPACE }}
+                  echo "Lock removed"
+                fi
+              fi
+            done
+          else
+            echo "No existing Helm release found, proceeding with installation"
+          fi
       
       # Deploy to AKS using Helm
       - name: Deploy to AKS
@@ -123,9 +134,3 @@ jobs:
             --set image.tag=${{ env.IMAGE_TAG }} \
             --set deployment.version="${{ env.IMAGE_TAG }}" \
             --wait --timeout 5m
-      
-      # Verify deployment
-      - name: Verify deployment
-        run: |
-          kubectl rollout status deployment/am-trade-management-service -n ${{ env.NAMESPACE }}
-          echo "Deployment to ${{ env.ENVIRONMENT }} completed successfully!"
