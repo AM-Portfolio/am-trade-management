@@ -84,7 +84,7 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
                     .collect(Collectors.toList());
         }
         
-        return ProfitLossHeatmapData.builder()
+        ProfitLossHeatmapData heatmapData = ProfitLossHeatmapData.builder()
                 .granularityType(ProfitLossHeatmapData.GranularityType.YEARLY)
                 .periodData(periodDataList)
                 .totalProfitLoss(totalProfitLoss)
@@ -95,6 +95,8 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
                 .winTrades(includeTradeDetails ? winningTrades : null)
                 .lossTrades(includeTradeDetails ? losingTrades : null)
                 .build();
+         // Calculate summary metrics from period data
+         return heatmapData.calculateSummaryMetricsFromPeriods();
     }
     
     @Override
@@ -156,7 +158,7 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
                     .collect(Collectors.toList());
         }
         
-        return ProfitLossHeatmapData.builder()
+        ProfitLossHeatmapData heatmapData = ProfitLossHeatmapData.builder()
                 .granularityType(ProfitLossHeatmapData.GranularityType.MONTHLY)
                 .periodData(periodDataList)
                 .totalProfitLoss(totalProfitLoss)
@@ -167,6 +169,8 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
                 .winTrades(includeTradeDetails ? winningTrades : null)
                 .lossTrades(includeTradeDetails ? losingTrades : null)
                 .build();
+        // Calculate summary metrics from period data
+        return heatmapData.calculateSummaryMetricsFromPeriods();
     }
     
     @Override
@@ -194,9 +198,6 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
         
         // Calculate detailed profit/loss data for each day
         List<PeriodProfitLossData> periodDataList = new ArrayList<>();
-        BigDecimal totalProfitLoss = BigDecimal.ZERO;
-        int winCount = 0;
-        int lossCount = 0;
         
         // Format for the period ID: "YYYY-MM-DD"
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -208,15 +209,7 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
             // Create detailed period data
             PeriodProfitLossData periodData = createPeriodProfitLossData(periodId, dayTrades);
             periodDataList.add(periodData);
-            
-            // Update totals
-            totalProfitLoss = totalProfitLoss.add(periodData.getProfitLoss());
-            winCount += periodData.getWinCount();
-            lossCount += periodData.getLossCount();
         }
-        
-        // Calculate win rate
-        BigDecimal winRate = calculateWinRate(winCount, lossCount);
         
         // If includeTradeDetails is true, separate win and loss trades
         List<TradeDetails> winningTrades = null;
@@ -232,17 +225,17 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
                     .collect(Collectors.toList());
         }
         
-        return ProfitLossHeatmapData.builder()
+        // Build the heatmap data with period data and trade details
+        ProfitLossHeatmapData heatmapData = ProfitLossHeatmapData.builder()
                 .granularityType(ProfitLossHeatmapData.GranularityType.DAILY)
                 .periodData(periodDataList)
-                .totalProfitLoss(totalProfitLoss)
-                .winCount(winCount)
-                .lossCount(lossCount)
-                .winRate(winRate)
                 .tradeDetails(includeTradeDetails ? monthlyTrades : null)
                 .winTrades(includeTradeDetails ? winningTrades : null)
                 .lossTrades(includeTradeDetails ? losingTrades : null)
                 .build();
+                
+        // Calculate summary metrics from period data
+        return heatmapData.calculateSummaryMetricsFromPeriods();
     }
     
     /**
