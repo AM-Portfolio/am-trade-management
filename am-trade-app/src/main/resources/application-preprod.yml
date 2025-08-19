@@ -1,18 +1,16 @@
-# Pre-production environment configuration
 
+MONGODB_URL: ${MONGODB_URL:mongodb://ssd2658:ssd2658@mongodb.dev.svc.cluster.local:27017/market_data?authSource=admin}
+MONGODB_DATABASE: ${MONGODB_DATABASE:am-trade-management}
+
+# Pre-production environment configuration
+app:
+  persistence:
+    mongodb:
+      uri: ${MONGODB_URL}
+      database: ${MONGODB_DATABASE}
 # MongoDB pre-production configuration
 spring:
   data:
-    mongodb:
-      host: ${MONGO_HOST:mongodb-preprod}
-      port: ${MONGO_PORT:27017}
-      database: trade_management_preprod
-      username: ${MONGO_USERNAME}
-      password: ${MONGO_PASSWORD}
-      authentication-database: admin
-      ssl:
-        enabled: true
-
 # Logging configuration for pre-production
 logging:
   level:

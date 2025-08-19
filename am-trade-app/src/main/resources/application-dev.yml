@@ -1,15 +1,4 @@
-# Development environment configuration
 
-# MongoDB development configuration
-# spring:
-#   data:
-#     mongodb:
-#       host: localhost
-#       port: 27017
-#       database: trade_management_dev
-#       username: ${MONGO_USERNAME:admin}
-#       password: ${MONGO_PASSWORD:password}
-#       authentication-database: admin
 
 app:
   persistence:
