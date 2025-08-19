@@ -1,5 +1,5 @@
 # Build stage
-FROM maven:3.8.4-openjdk-17-slim AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} maven:3.8.4-openjdk-17-slim AS builder
 
 WORKDIR /build
 
@@ -42,7 +42,7 @@ RUN mvn clean package -DskipTests -X \
     -DGITHUB_PACKAGES_TOKEN=${GITHUB_PACKAGES_TOKEN}
 
 # Runtime stage
-FROM eclipse-temurin:17-jre-jammy
+FROM --platform=${TARGETPLATFORM:-linux/amd64} eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
