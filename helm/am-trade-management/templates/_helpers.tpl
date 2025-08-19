@@ -1,22 +1,22 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "am-market-data.name" -}}
+{{- define "am-trade-management.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "am-market-data.fullname" -}}
+{{- define "am-trade-management.fullname" -}}
 {{- printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "am-market-data.labels" -}}
-app.kubernetes.io/name: {{ include "am-market-data.name" . }}
+{{- define "am-trade-management.labels" -}}
+app.kubernetes.io/name: {{ include "am-trade-management.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
@@ -25,26 +25,26 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "am-market-data.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "am-market-data.name" . }}
+{{- define "am-trade-management.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "am-trade-management.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Infrastructure service names
 */}}
-{{- define "am-market-data.postgresql.fullname" -}}
+{{- define "am-trade-management.postgresql.fullname" -}}
 {{- .Values.postgresql.fullname }}
 {{- end }}
 
-{{- define "am-market-data.influxdb.fullname" -}}
+{{- define "am-trade-management.influxdb.fullname" -}}
 {{- .Values.influxdb.url }}
 {{- end }}
 
-{{- define "am-market-data.kafka.fullname" -}}
+{{- define "am-trade-management.kafka.fullname" -}}
 {{- .Values.kafka.bootstrapServers }}
 {{- end }}
 
-{{- define "am-market-data.zookeeper.fullname" -}}
+{{- define "am-trade-management.zookeeper.fullname" -}}
 {{- .Values.kafka.zookeeper.connect }}
 {{- end }}
