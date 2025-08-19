@@ -16,11 +16,6 @@ on:
         description: 'Docker image tag to deploy'
         required: true
         type: string
-      ref:
-        description: 'The branch, tag, or SHA to deploy from'
-        required: true
-        default: 'main'
-        type: string
 
 env:
   REGISTRY: ghcr.io
@@ -40,8 +35,6 @@ jobs:
       # Checkout repository at the specified ref
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.ref }}
       
       # Set environment-specific variables
       - name: Set environment variables
