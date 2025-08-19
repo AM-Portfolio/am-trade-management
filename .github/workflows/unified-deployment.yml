@@ -27,8 +27,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/market-data-service
-  HELM_CHART_PATH: ./helm/market-data
+  IMAGE_NAME: ${{ github.repository }}/am-trade-management-service
+  HELM_CHART_PATH: ./helm/am-trade-management
 
 jobs:
   # Deploy to the selected environment
@@ -83,13 +83,11 @@ jobs:
             echo "Using default image tag: latest"
           fi
       
-      # Login to Azure
+    # Login to Azure
       - name: Login to Azure
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
       
       # Set AKS context
       - name: Set AKS context
@@ -118,7 +116,7 @@ jobs:
           echo "Namespace: ${{ env.NAMESPACE }}"
           
           # Deploy using Helm with the appropriate values file
-          helm upgrade --install market-data-service ${{ env.HELM_CHART_PATH }} \
+          helm upgrade --install am-trade-management-service ${{ env.HELM_CHART_PATH }} \
             --namespace ${{ env.NAMESPACE }} \
             -f ${{ env.HELM_CHART_PATH }}/values/${{ env.ENVIRONMENT }}.yaml \
             --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
@@ -129,5 +127,5 @@ jobs:
       # Verify deployment
       - name: Verify deployment
         run: |
-          kubectl rollout status deployment/market-data-service -n ${{ env.NAMESPACE }}
+          kubectl rollout status deployment/am-trade-management-service -n ${{ env.NAMESPACE }}
           echo "Deployment to ${{ env.ENVIRONMENT }} completed successfully!"

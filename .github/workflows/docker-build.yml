@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/market-data-service
+  IMAGE_NAME: ${{ github.repository }}/am-trade-management-service
 
 jobs:
   build-and-push:
