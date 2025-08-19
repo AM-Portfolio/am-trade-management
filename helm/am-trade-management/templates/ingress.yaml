@@ -1,5 +1,5 @@
 {{- if .Values.ingress.enabled -}}
-{{- $fullName := include "am-trade-management.fullname" . }}-ingress
+{{- $fullName := printf "%s-ingress" (include "am-trade-management.fullname" .) -}}
 {{- $svcPort := .Values.service.port -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
