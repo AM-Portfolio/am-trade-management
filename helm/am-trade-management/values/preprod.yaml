@@ -1,28 +1,49 @@
-replicaCount: 1
+# Pre-production Environment Configuration
+environment: preprod
 
+
+# Image Configuration
 image:
-  repository: ghcr.io/am-portfolio/am-trade-management-service
-  tag: latest
-  pullPolicy: Always
+  repository: am-market-data-market-data-service
+  pullPolicy: Never
+  tag: "latest"
 
-nameOverride: ""
-fullnameOverride: "am-trade-management-service"
+# Application Configuration
+config:
+  marketData:
+    maxRetries: 3
+    retryDelayMs: 1000
+    threadPoolSize: 5
+    threadQueueCapacity: 10
+    maxAgeMinutes: 15
+  trade:
+    maxRetries: ${TRADE_MAX_RETRIES}
+    retryDelayMs: ${TRADE_RETRY_DELAY_MS}
+    threadPoolSize: 5
+    threadQueueCapacity: 100
 
+replicaCount: 2
+
+# Service Configuration
 service:
   type: ClusterIP
-  port: 8080
+  port: 8084
 
+# Ingress Configuration
 ingress:
   enabled: true
-  className: "nginx"
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+  className: nginx
   hosts:
-    - host: preprod.trade.am-portfolio.com
+    - host: preprod.trade.aminvestment.com
       paths:
         - path: /
           pathType: Prefix
+  tls:
+    - secretName: trade-preprod-tls
+      hosts:
+        - preprod.trade.aminvestment.com
 
+# Resource Configuration
 resources:
   limits:
     cpu: 1000m
@@ -31,16 +52,62 @@ resources:
     cpu: 500m
     memory: 512Mi
 
-livenessProbe:
-  httpGet:
-    path: /actuator/health
-    port: 8080
-  initialDelaySeconds: 60
-  periodSeconds: 30
+postgresql:
+  enabled: true
+  fullname: am-trade-postgresql-preprod
+  auth:
+    database: trade_management
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
 
-readinessProbe:
-  httpGet:
-    path: /actuator/health
-    port: 8080
-  initialDelaySeconds: 30
-  periodSeconds: 10
+influxdb:
+  enabled: true
+  url: http://influxdb.dev.svc.cluster.local:8086
+  auth:
+    token: ssd2658admin123456789
+    org: am-portfolio
+    bucket: market-data
+
+mongodb:
+  enabled: true
+  fullname: host.docker.internal
+  auth:
+    url: mongodb://ssd2658:ssd2658@mongodb.dev.svc.cluster.local:27017/market_data?authSource=admin
+    database: market_data
+    username: ssd2658
+    password: ssd2658
+
+kafka:
+  enabled: true
+  bootstrapServers: am-preprod-kafka:9092
+  config:
+    consumerGroupId: am-trade-management-preprod
+    topics:
+      tradeExecution: am-trade-execution-preprod
+      tradeConfirmation: am-trade-confirmation-preprod
+      tradeSettlement: am-trade-settlement-preprod
+
+# Upstox Configuration
+upstox:
+  enabled: true
+  auth:
+    baseUrl: https://api.upstox.com/v2
+    redirectUri: http://localhost:8080
+
+# Vault Configuration
+vault:
+  enabled: false
+  secretPaths:
+    github: "secret/data/github/packages"
+    githubToken: "secret/data/github/token"
+    database: "secret/data/database/postgres"
+    influxdb: "secret/data/database/influxdb"
+    upstox: "secret/data/api/upstox"
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  prometheus:
+    scrape: true
+    port: "8084"
+    path: "/actuator/prometheus"

@@ -1,6 +1,8 @@
 apiVersion: v2
 name: am-trade-management
-description: A Helm chart for AM Trade Management Service
+description: AM Trade Management Service Helm Chart
 type: application
 version: 0.1.0
 appVersion: "1.0.0"
+maintainers:
+  - name: AM Portfolio Team
