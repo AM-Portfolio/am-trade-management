@@ -92,21 +92,13 @@ jobs:
           retention-days: 1
 
   # Trigger deployment workflow
-  # deploy:
-  #   needs: build-and-push
-  #   permissions:
-  #     contents: read
-  #     id-token: write
-  #   uses: ./.github/workflows/unified-deployment.yml
-  #   with:
-  #     image_tag: v${{ github.run_id }}
-  #   secrets: inherit
-  #     contents: read
-  #     id-token: write
-  #   uses: ./.github/workflows/unified-deployment.yml
-  #   with:
-  #     image_tag: v${{ github.run_id }}
-  #   secrets: inherit
-  #   with:
-  #     image_tag: v${{ github.run_id }}
-  #   secrets: inherit
+  deploy:
+    needs: build-and-push
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/unified-deployment.yml
+    with:
+      image_tag: v${{ github.run_id }}
+    secrets: inherit
+    
