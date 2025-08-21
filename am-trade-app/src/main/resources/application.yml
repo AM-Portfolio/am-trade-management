@@ -16,7 +16,7 @@ am:
       enable-auto-commit: false
       auto-offset-reset: latest
       properties:
-        security-protocol: SASL_SSL
+        security-protocol: SASL_PLAINTEXT
         sasl-mechanism: PLAIN
         sasl-jaas-config: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
     api:
@@ -60,9 +60,12 @@ spring:
       enable-auto-commit: ${am.trade.kafka.enable-auto-commit}
       max-poll-records: ${am.trade.kafka.max-poll-records}
     properties:
-      security.protocol: ${am.trade.kafka.properties.security-protocol}
-      sasl.mechanism: ${am.trade.kafka.properties.sasl-mechanism}
-      sasl.jaas.config: ${am.trade.kafka.properties.sasl-jaas-config}
+      "security.protocol": ${am.trade.kafka.properties.security-protocol}
+      "sasl.mechanism": ${am.trade.kafka.properties.sasl-mechanism}
+      "sasl.jaas.config": ${am.trade.kafka.properties.sasl-jaas-config}
+      "ssl.endpoint.identification.algorithm": ""
+      "ssl.truststore.location": /etc/ssl/certs/java/cacerts
+      "ssl.truststore.password": changeit
 
 # Management/Actuator Configuration
 management:
@@ -78,8 +81,7 @@ management:
       validate-group-membership: false
       group:
         readiness:
-          include: diskSpace
-          exclude: mongodb,redis,kafka
+          include: mongodb,kafka,diskSpace
   health:
     livenessstate:
       enabled: true
