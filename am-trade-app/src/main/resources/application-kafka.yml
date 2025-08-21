@@ -1,27 +1,11 @@
-# Kafka Configuration
-spring:
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    consumer:
-      group-id: ${KAFKA_CONSUMER_GROUP:am-trade-group}
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      properties:
-        fetch.max.bytes: 1048576
-        max.partition.fetch.bytes: 524288
-        fetch.max.wait.ms: 500
-        max.poll.records: 100
-
 # Kafka Topics
 am:
   trade:
     kafka:
-      trade:
-        consumer:
-          enabled: true
-        topic: am-trade
-        consumer-group-id: am-trade-group
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:am-kafka:9092}
+      consumer-group-id: ${KAFKA_CONSUMER_GROUP_ID:am-trade-group}
+      trade-events-topic: ${KAFKA_TOPICS_TRADE_EVENTS:am-trade-events}
+      order-events-topic: ${KAFKA_TOPICS_ORDER_EVENTS:am-order-events}
       retries: 3
       retry-backoff-ms: 1000
       max-poll-records: 500
@@ -30,4 +14,8 @@ am:
       heartbeat-interval-ms: 3000
       max-in-flight-requests-per-connection: 5
       enable-auto-commit: false
-      auto-offset-reset: earliest
+      auto-offset-reset: latest
+      properties:
+        security-protocol: SASL_SSL
+        sasl-mechanism: PLAIN
+        sasl-jaas-config: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
