@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "am-trade-management.fullname" . }}
+  labels:
+    {{- include "am-trade-management.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "am-trade-management.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Prometheus annotations for metrics collection
+        prometheus.io/scrape: "{{ .Values.monitoring.prometheus.scrape }}"
+        prometheus.io/path: "{{ .Values.monitoring.prometheus.path }}"
+        prometheus.io/port: "{{ .Values.monitoring.prometheus.port }}"
+        # Add checksum annotations for config changes
+        checksum/config: {{ include (print $.Template.BasePath "/config.yaml") . | sha256sum }}
+        # Vault Agent Injector annotations
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/auth-config-audience: "vault"  # Adding audience as per warning in logs
+        vault.hashicorp.com/auth-config-issuer: "https://kubernetes.default.svc.cluster.local"
+        vault.hashicorp.com/auth-config-disable-iss-validation: "true"
+        vault.hashicorp.com/auth-config-disable-local-ca-jwt: "true"
+        vault.hashicorp.com/role: "dev-role"
+        vault.hashicorp.com/agent-pre-populate-only: "true"
+        vault.hashicorp.com/agent-inject-secret-mongodb: "kv/preprod/database/mongo"
+        vault.hashicorp.com/agent-inject-template-mongodb: |
+          {{`{{- with secret "kv/preprod/database/mongo" -}}
+          export MONGODB_URL="{{ .Data.data.url }}"
+          export MONGODB_DATABASE="{{ .Data.data.marketdtadatabase }}"
+          export MONGODB_USERNAME="{{ .Data.data.username }}"
+          export MONGODB_PASSWORD="{{ .Data.data.password }}"
+          {{- end -}}`}}
+        vault.hashicorp.com/agent-inject-secret-redis: "kv/preprod/database/redis"
+        vault.hashicorp.com/agent-inject-template-redis: |
+          {{`{{- with secret "kv/preprod/database/redis" -}}
+          {{- $url := .Data.data.url -}}
+          {{- $hostname := .Data.data.hostname -}}
+          {{- $urlParts := split "://" $url -}}
+          {{- $hostPort := index $urlParts 1 -}}
+          {{- $hostPortParts := split ":" $hostPort -}}
+          export REDIS_URL="{{ $url }}"
+          export REDIS_HOSTNAME="{{ $hostname }}"
+          export REDIS_PORT="{{ if eq (len $hostPortParts) 2 }}{{ index $hostPortParts 1 }}{{ else }}6379{{ end }}"
+          export REDIS_PASSWORD="{{ .Data.data.password }}"
+          {{- end -}}`}}
+        
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "am-trade-management.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: vault-auth
+      imagePullSecrets:
+      - name: ghcr-secret
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "ghcr.io/am-portfolio/am-trade-management/am-trade-management-service:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: Always
+          # Load environment variables from ConfigMap
+          envFrom:
+            - configMapRef:
+                name: {{ include "am-trade-management.fullname" . }}-config
+          
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          # Health checks with retry-based thresholds
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: {{ .Values.config.marketData.maxRetries }}
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: {{ .Values.config.marketData.maxRetries }}
+          # Resource limits from values file
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

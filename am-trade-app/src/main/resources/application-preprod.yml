@@ -1,18 +1,13 @@
+
+MONGODB_URL: mongodb://ssd2658:ssd2658@mongodb.dev.svc.cluster.local:27017/market_data?authSource=admin
+MONGODB_DATABASE: am-trade-management
+
 # Pre-production environment configuration
-
-# MongoDB pre-production configuration
-spring:
-  data:
+app:
+  persistence:
     mongodb:
-      host: ${MONGO_HOST:mongodb-preprod}
-      port: ${MONGO_PORT:27017}
-      database: trade_management_preprod
-      username: ${MONGO_USERNAME}
-      password: ${MONGO_PASSWORD}
-      authentication-database: admin
-      ssl:
-        enabled: true
-
+      uri: ${MONGODB_URL}
+      database: ${MONGODB_DATABASE}
 # Logging configuration for pre-production
 logging:
   level:
@@ -27,22 +22,12 @@ logging:
 
 # Pre-production server configuration
 server:
-  port: 8085
+  port: 8080
   tomcat:
     max-threads: 200
     max-connections: 10000
     accept-count: 100
     connection-timeout: 5000
-
-# Actuator configuration for pre-production
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  endpoint:
-    health:
-      show-details: when-authorized
 
 # Pre-production-specific application settings
 am:

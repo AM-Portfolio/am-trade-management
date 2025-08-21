@@ -5,13 +5,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Data
-@Configuration
+@Configuration("kafkaProperties")
 @ConfigurationProperties(prefix = "am.trade.kafka")
 public class KafkaProperties {
-    private String bootstrapServers = "localhost:9092";
-    private String consumerGroupId = "am-trade-group";
-    private String tradeEventsTopic = "trade-events";
-    private String orderEventsTopic = "order-events";
+    private String bootstrapServers ;
+    private String consumerGroupId ;
+    private String tradeEventsTopic ;
+    private String orderEventsTopic;
+    
     private int retries = 3;
     private long retryBackoffMs = 1000;
     private int maxPollRecords = 500;
@@ -20,5 +21,15 @@ public class KafkaProperties {
     private int heartbeatIntervalMs = 3000;
     private int maxInFlightRequestsPerConnection = 5;
     private boolean enableAutoCommit = false;
-    private String autoOffsetReset = "earliest";
+    private String autoOffsetReset ;
+    private Properties properties;
+
+    @Data
+    public static class Properties {
+        private String securityProtocol;
+        private String saslMechanism;
+        private String saslJaasConfig;
+    }
 }
+
+

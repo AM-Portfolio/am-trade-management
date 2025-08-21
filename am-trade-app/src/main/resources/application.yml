@@ -1,23 +1,73 @@
+# Application specific common settings
+am:
+  trade:
+    kafka:
+      bootstrap-servers: kafka.dev.svc.cluster.local:9092
+      consumer-group-id: ${KAFKA_CONSUMER_GROUP_ID:am-trade-group}
+      trade-events-topic: ${KAFKA_TOPICS_TRADE_EVENTS:am-trade-events}
+      order-events-topic: ${KAFKA_TOPICS_ORDER_EVENTS:am-order-events}
+      retries: 3
+      retry-backoff-ms: 1000
+      max-poll-records: 500
+      max-poll-interval-ms: 300000
+      session-timeout-ms: 10000
+      heartbeat-interval-ms: 3000
+      max-in-flight-requests-per-connection: 5
+      enable-auto-commit: false
+      auto-offset-reset: latest
+      properties:
+        security-protocol: SASL_PLAINTEXT
+        sasl-mechanism: PLAIN
+        sasl-jaas-config: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
+    api:
+      enabled: true
+    common:
+      enabled: true
+      date-format: yyyy-MM-dd'T'HH:mm:ss.SSS
+    services:
+      enabled: true
+      retry:
+        max-attempts: 3
+        backoff-multiplier: 2.0
+      circuit-breaker:
+        failure-threshold: 40
+        reset-timeout-seconds: 60
+    dashboard:
+      enabled: true
+      metrics:
+        collection-interval-seconds: 60
+        retention-days: 30
+app:
+  persistence:
+    mongodb:
+      uri: mongodb://ssd2658:ssd2658@mongodb.dev.svc.cluster.local:27017/am-trade?authSource=admin
+      database: am-trade
+
 spring:
+  server:
+    port: 8080
   application:
     name: am-trade-management
-  profiles:
-    active: dev
-    group:
-      dev:
-        - common
-        - dev
-        - kafka
-      preprod:
-        - common
-        - preprod
-        - kafka
-      prod:
-        - common
-        - prod
-        - kafka
+  config:
+    import:
+      - classpath:application-common.yml
+  # Spring Kafka Configuration
+  kafka:
+    bootstrap-servers: ${am.trade.kafka.bootstrap-servers}
+    consumer:
+      group-id: ${am.trade.kafka.consumer-group-id}
+      auto-offset-reset: ${am.trade.kafka.auto-offset-reset}
+      enable-auto-commit: ${am.trade.kafka.enable-auto-commit}
+      max-poll-records: ${am.trade.kafka.max-poll-records}
+    properties:
+      "security.protocol": ${am.trade.kafka.properties.security-protocol}
+      "sasl.mechanism": ${am.trade.kafka.properties.sasl-mechanism}
+      "sasl.jaas.config": ${am.trade.kafka.properties.sasl-jaas-config}
+      "ssl.endpoint.identification.algorithm": ""
+      "ssl.truststore.location": /etc/ssl/certs/java/cacerts
+      "ssl.truststore.password": changeit
 
-# Actuator configuration
+# Management/Actuator Configuration
 management:
   endpoints:
     web:
@@ -25,14 +75,20 @@ management:
         include: health,info,metrics,prometheus
   endpoint:
     health:
-      show-details: when_authorized
-  info:
-    git:
-      mode: full
-    java:
+      probes:
+        enabled: true
+      show-details: always
+      validate-group-membership: false
+      group:
+        readiness:
+          include: mongodb,kafka,diskSpace
+  health:
+    livenessstate:
       enabled: true
-    build:
+    readinessstate:
       enabled: true
+    mongo:
+      enabled: false
 
 # Logging configuration
 logging:
@@ -41,15 +97,3 @@ logging:
     am.trade: INFO
     org.springframework.data.mongodb: INFO
     org.springframework.web: INFO
-
-# Common application properties
-am:
-  trade:
-    api:
-      enabled: true
-    services:
-      enabled: true
-    dashboard:
-      enabled: true
-    common:
-      enabled: true

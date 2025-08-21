@@ -50,20 +50,3 @@ springdoc:
     enabled: true
     mime-types: application/json,application/xml,text/html,text/plain
     min-response-size: 2048
-
-# Application specific common settings
-am:
-  trade:
-    common:
-      date-format: yyyy-MM-dd'T'HH:mm:ss.SSS
-    services:
-      retry:
-        max-attempts: 3
-        backoff-multiplier: 1.5
-      circuit-breaker:
-        failure-threshold: 50
-        reset-timeout-seconds: 30
-    dashboard:
-      metrics:
-        collection-interval-seconds: 60
-        retention-days: 30
