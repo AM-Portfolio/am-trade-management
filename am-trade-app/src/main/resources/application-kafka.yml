@@ -2,7 +2,7 @@
 am:
   trade:
     kafka:
-      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka.dev.svc.cluster.local:9092}
+      bootstrap-servers: kafka.dev.svc.cluster.local:9092
       consumer-group-id: ${KAFKA_CONSUMER_GROUP_ID:am-trade-group}
       trade-events-topic: ${KAFKA_TOPICS_TRADE_EVENTS:am-trade-events}
       order-events-topic: ${KAFKA_TOPICS_ORDER_EVENTS:am-order-events}
