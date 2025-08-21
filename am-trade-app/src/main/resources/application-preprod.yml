@@ -22,7 +22,7 @@ logging:
 
 # Pre-production server configuration
 server:
-  port: 8085
+  port: 8080
   tomcat:
     max-threads: 200
     max-connections: 10000
