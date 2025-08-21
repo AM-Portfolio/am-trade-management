@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Data
-@Configuration
+@Configuration("kafkaProperties")
 @ConfigurationProperties(prefix = "am.trade.kafka")
 public class KafkaProperties {
     private String bootstrapServers ;

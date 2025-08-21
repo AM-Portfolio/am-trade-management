@@ -59,18 +59,3 @@ management:
     export:
       prometheus:
         enabled: true
-
-# Production-specific application settings
-am:
-  trade:
-    services:
-      retry:
-        max-attempts: 3
-        backoff-multiplier: 2.0
-      circuit-breaker:
-        failure-threshold: 40  # More strict in production
-        reset-timeout-seconds: 60
-    dashboard:
-      metrics:
-        collection-interval-seconds: 120  # Less frequent in production to reduce load
-        retention-days: 365  # Longer retention in production
