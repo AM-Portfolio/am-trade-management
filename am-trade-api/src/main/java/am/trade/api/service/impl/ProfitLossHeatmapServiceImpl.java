@@ -14,9 +14,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import am.trade.common.models.enums.TradeStatus;
+import am.trade.common.models.HeatmapRequest;
+import am.trade.common.models.PeriodProfitLossData;
 import am.trade.common.models.ProfitLossHeatmapData;
 import am.trade.common.models.TradeDetails;
-import am.trade.common.models.enums.TradeStatus;
 import am.trade.api.service.ProfitLossHeatmapService;
 import am.trade.api.service.TradeManagementService;
 import lombok.extern.slf4j.Slf4j;
@@ -45,20 +47,24 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
                         trade -> trade.getEntryInfo().getTimestamp().getYear()
                 ));
         
-        // Calculate profit/loss for each year
-        Map<String, BigDecimal> profitLossMap = new HashMap<>();
+        // Calculate detailed profit/loss data for each year
+        List<PeriodProfitLossData> periodDataList = new ArrayList<>();
         BigDecimal totalProfitLoss = BigDecimal.ZERO;
         int winCount = 0;
         int lossCount = 0;
         
         for (Map.Entry<Integer, List<TradeDetails>> entry : tradesByYear.entrySet()) {
-            BigDecimal yearlyProfitLoss = calculateTotalProfitLoss(entry.getValue());
-            profitLossMap.put(String.valueOf(entry.getKey()), yearlyProfitLoss);
-            totalProfitLoss = totalProfitLoss.add(yearlyProfitLoss);
+            List<TradeDetails> yearTrades = entry.getValue();
+            String periodId = String.valueOf(entry.getKey());
             
-            // Count wins and losses
-            winCount += countTradesByStatus(entry.getValue(), TradeStatus.WIN);
-            lossCount += countTradesByStatus(entry.getValue(), TradeStatus.LOSS);
+            // Create detailed period data
+            PeriodProfitLossData periodData = createPeriodProfitLossData(periodId, yearTrades);
+            periodDataList.add(periodData);
+            
+            // Update totals
+            totalProfitLoss = totalProfitLoss.add(periodData.getProfitLoss());
+            winCount += periodData.getWinCount();
+            lossCount += periodData.getLossCount();
         }
         
         // Calculate win rate
@@ -80,7 +86,7 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
         
         return ProfitLossHeatmapData.builder()
                 .granularityType(ProfitLossHeatmapData.GranularityType.YEARLY)
-                .profitLossMap(profitLossMap)
+                .periodData(periodDataList)
                 .totalProfitLoss(totalProfitLoss)
                 .winCount(winCount)
                 .lossCount(lossCount)
@@ -110,23 +116,27 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
                         trade -> YearMonth.from(trade.getEntryInfo().getTimestamp())
                 ));
         
-        // Calculate profit/loss for each month
-        Map<String, BigDecimal> profitLossMap = new HashMap<>();
+        // Calculate detailed profit/loss data for each month
+        List<PeriodProfitLossData> periodDataList = new ArrayList<>();
         BigDecimal totalProfitLoss = BigDecimal.ZERO;
         int winCount = 0;
         int lossCount = 0;
         
-        // Format for the map key: "YYYY-MM"
+        // Format for the period ID: "YYYY-MM"
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
         
         for (Map.Entry<YearMonth, List<TradeDetails>> entry : tradesByMonth.entrySet()) {
-            BigDecimal monthlyProfitLoss = calculateTotalProfitLoss(entry.getValue());
-            profitLossMap.put(entry.getKey().format(formatter), monthlyProfitLoss);
-            totalProfitLoss = totalProfitLoss.add(monthlyProfitLoss);
+            List<TradeDetails> monthTrades = entry.getValue();
+            String periodId = entry.getKey().format(formatter);
             
-            // Count wins and losses
-            winCount += countTradesByStatus(entry.getValue(), TradeStatus.WIN);
-            lossCount += countTradesByStatus(entry.getValue(), TradeStatus.LOSS);
+            // Create detailed period data
+            PeriodProfitLossData periodData = createPeriodProfitLossData(periodId, monthTrades);
+            periodDataList.add(periodData);
+            
+            // Update totals
+            totalProfitLoss = totalProfitLoss.add(periodData.getProfitLoss());
+            winCount += periodData.getWinCount();
+            lossCount += periodData.getLossCount();
         }
         
         // Calculate win rate
@@ -148,7 +158,7 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
         
         return ProfitLossHeatmapData.builder()
                 .granularityType(ProfitLossHeatmapData.GranularityType.MONTHLY)
-                .profitLossMap(profitLossMap)
+                .periodData(periodDataList)
                 .totalProfitLoss(totalProfitLoss)
                 .winCount(winCount)
                 .lossCount(lossCount)
@@ -182,23 +192,27 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
                         trade -> trade.getEntryInfo().getTimestamp().toLocalDate()
                 ));
         
-        // Calculate profit/loss for each day
-        Map<String, BigDecimal> profitLossMap = new HashMap<>();
+        // Calculate detailed profit/loss data for each day
+        List<PeriodProfitLossData> periodDataList = new ArrayList<>();
         BigDecimal totalProfitLoss = BigDecimal.ZERO;
         int winCount = 0;
         int lossCount = 0;
         
-        // Format for the map key: "YYYY-MM-DD"
+        // Format for the period ID: "YYYY-MM-DD"
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         
         for (Map.Entry<LocalDate, List<TradeDetails>> entry : tradesByDay.entrySet()) {
-            BigDecimal dailyProfitLoss = calculateTotalProfitLoss(entry.getValue());
-            profitLossMap.put(entry.getKey().format(formatter), dailyProfitLoss);
-            totalProfitLoss = totalProfitLoss.add(dailyProfitLoss);
+            List<TradeDetails> dayTrades = entry.getValue();
+            String periodId = entry.getKey().format(formatter);
             
-            // Count wins and losses
-            winCount += countTradesByStatus(entry.getValue(), TradeStatus.WIN);
-            lossCount += countTradesByStatus(entry.getValue(), TradeStatus.LOSS);
+            // Create detailed period data
+            PeriodProfitLossData periodData = createPeriodProfitLossData(periodId, dayTrades);
+            periodDataList.add(periodData);
+            
+            // Update totals
+            totalProfitLoss = totalProfitLoss.add(periodData.getProfitLoss());
+            winCount += periodData.getWinCount();
+            lossCount += periodData.getLossCount();
         }
         
         // Calculate win rate
@@ -220,7 +234,7 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
         
         return ProfitLossHeatmapData.builder()
                 .granularityType(ProfitLossHeatmapData.GranularityType.DAILY)
-                .profitLossMap(profitLossMap)
+                .periodData(periodDataList)
                 .totalProfitLoss(totalProfitLoss)
                 .winCount(winCount)
                 .lossCount(lossCount)
@@ -262,5 +276,109 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
         return new BigDecimal(winCount)
                 .multiply(new BigDecimal(100))
                 .divide(new BigDecimal(totalTrades), 2, RoundingMode.HALF_UP);
+    }
+    
+    /**
+     * Create a PeriodProfitLossData object for a specific period
+     */
+    private PeriodProfitLossData createPeriodProfitLossData(String periodId, List<TradeDetails> trades) {
+        // Calculate profit/loss
+        BigDecimal profitLoss = calculateTotalProfitLoss(trades);
+        
+        // Count wins and losses
+        int winCount = countTradesByStatus(trades, TradeStatus.WIN);
+        int lossCount = countTradesByStatus(trades, TradeStatus.LOSS);
+        
+        // Calculate win rate
+        BigDecimal winRate = calculateWinRate(winCount, lossCount);
+        
+        // Get winning and losing trades
+        List<TradeDetails> winningTrades = trades.stream()
+                .filter(trade -> trade.getStatus() == TradeStatus.WIN)
+                .collect(Collectors.toList());
+                
+        List<TradeDetails> losingTrades = trades.stream()
+                .filter(trade -> trade.getStatus() == TradeStatus.LOSS)
+                .collect(Collectors.toList());
+        
+        // Calculate average win and loss amounts
+        BigDecimal avgWinAmount = calculateAverageAmount(winningTrades);
+        BigDecimal avgLossAmount = calculateAverageAmount(losingTrades);
+        
+        // Calculate max win and loss amounts
+        BigDecimal maxWinAmount = calculateMaxAmount(winningTrades);
+        BigDecimal maxLossAmount = calculateMaxAmount(losingTrades);
+        
+        return PeriodProfitLossData.builder()
+                .periodId(periodId)
+                .profitLoss(profitLoss)
+                .winCount(winCount)
+                .lossCount(lossCount)
+                .winRate(winRate)
+                .avgWinAmount(avgWinAmount)
+                .avgLossAmount(avgLossAmount)
+                .maxWinAmount(maxWinAmount)
+                .maxLossAmount(maxLossAmount)
+                .build();
+    }
+    
+    /**
+     * Calculate average profit/loss amount for a list of trades
+     */
+    private BigDecimal calculateAverageAmount(List<TradeDetails> trades) {
+        if (trades == null || trades.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
+        BigDecimal total = calculateTotalProfitLoss(trades);
+        return total.divide(new BigDecimal(trades.size()), 2, RoundingMode.HALF_UP);
+    }
+    
+    /**
+     * Calculate maximum profit/loss amount for a list of trades
+     */
+    private BigDecimal calculateMaxAmount(List<TradeDetails> trades) {
+        if (trades == null || trades.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
+        return trades.stream()
+                .filter(trade -> trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null)
+                .map(trade -> trade.getMetrics().getProfitLoss().abs())
+                .max(BigDecimal::compareTo)
+                .orElse(BigDecimal.ZERO);
+    }
+    
+    @Override
+    public ProfitLossHeatmapData getHeatmapData(HeatmapRequest request) {
+        log.info("Generating heatmap with granularity: {} for portfolios: {}", request.getGranularity(), request.getPortfolioIds());
+        
+        if (request.getPortfolioIds() == null || request.getPortfolioIds().isEmpty()) {
+            throw new IllegalArgumentException("No portfolio IDs provided");
+        }
+        
+        // For now, we'll use the first portfolio ID for backward compatibility
+        // In the future, this method should be enhanced to aggregate data from multiple portfolios
+        String portfolioId = request.getPortfolioIds().get(0);
+        
+        switch (request.getGranularity()) {
+            case YEARLY:
+                return getYearlyHeatmap(portfolioId, request.isIncludeTradeDetails());
+                
+            case MONTHLY:
+                if (request.getFinancialYear() == null) {
+                    throw new IllegalArgumentException("Financial year is required for MONTHLY granularity");
+                }
+                return getMonthlyHeatmap(portfolioId, request.getFinancialYear(), request.isIncludeTradeDetails());
+                
+            case DAILY:
+                if (request.getFinancialYear() == null || request.getMonth() == null) {
+                    throw new IllegalArgumentException("Financial year and month are required for DAILY granularity");
+                }
+                return getDailyHeatmap(portfolioId, request.getFinancialYear(), request.getMonth(), request.isIncludeTradeDetails());
+                
+            default:
+                throw new IllegalArgumentException("Invalid granularity: " + request.getGranularity());
+        }
     }
 }

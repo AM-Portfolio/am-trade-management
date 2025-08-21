@@ -12,7 +12,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 @AutoConfiguration
 @EnableKafka
 @ConditionalOnProperty(prefix = "am.trade.kafka", name = "enabled", havingValue = "true", matchIfMissing = true)
-@ComponentScan(basePackages = "am.trade.kafka")
+@ComponentScan(basePackages = {"am.trade.kafka", "am.trade.common"})
 public class KafkaAutoConfiguration {
     // Configuration is handled through component scanning and properties
 }

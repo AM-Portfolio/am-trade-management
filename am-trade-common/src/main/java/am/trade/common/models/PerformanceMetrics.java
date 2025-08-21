@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Model for detailed performance metrics of trading activity
  */
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class PerformanceMetrics {
     // Core performance metrics
     private BigDecimal totalProfitLoss;
@@ -35,6 +38,9 @@ public class PerformanceMetrics {
     private BigDecimal largestWinningTrade;
     private BigDecimal largestLosingTrade;
     private BigDecimal winLossRatio; // Average win / Average loss
+    private BigDecimal returnStandardDeviation; // Standard deviation of returns
+    private BigDecimal profitConsistency; // Percentage of profitable periods
+    private BigDecimal maxDrawdown; // Maximum drawdown from peak equity
     
     // Streak information
     private int longestWinningStreak;
@@ -49,6 +55,13 @@ public class PerformanceMetrics {
     // Efficiency metrics
     private BigDecimal returnOnCapital; // Profit / Capital used
     private BigDecimal returnPerUnit; // Return per unit of risk
+    
+    // Trade frequency metrics
+    private BigDecimal tradesPerDay;
+    private BigDecimal tradesPerWeek;
+    private BigDecimal tradesPerMonth;
+    private Integer tradingDays;
+    private BigDecimal averageVolumePerTrade;
     
     // Timestamp information
     private LocalDateTime lastWinningTradeDate;

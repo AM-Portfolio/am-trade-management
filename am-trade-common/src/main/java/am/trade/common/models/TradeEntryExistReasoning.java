@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Model class for storing technical and fundamental reasons for entering and exiting a trade
  * Includes summary fields for detailed explanation of both entry and exit decisions
@@ -18,6 +20,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TradeEntryExistReasoning {
     // Technical analysis reasons for entering the trade
     private List<TechnicalEntryReason> technicalReasons;
@@ -57,6 +60,8 @@ public class TradeEntryExistReasoning {
     
     // Exit quality assessment (1-10)
     private Integer exitQualityScore;
+
+    private String streategy;
     
     /**
      * Add a technical reason for entering the trade

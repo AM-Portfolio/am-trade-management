@@ -11,7 +11,6 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import am.trade.common.models.enums.TradeStatus;
-import am.trade.models.enums.OrderStatus;
 import am.trade.persistence.entity.TradeDetailsEntity;
 
 /**
@@ -75,4 +74,13 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
     
     @Query("{'tradeId': {$in: ?0}}")
     List<TradeDetailsEntity> findByTradeIdIn(List<String> tradeIds);
+    
+    /**
+     * Find all trade details belonging to a specific user
+     * 
+     * @param userId User ID to search for
+     * @return List of trade details belonging to the specified user
+     */
+    @Query("{'userId': ?0}")
+    List<TradeDetailsEntity> findByUserId(String userId);
 }

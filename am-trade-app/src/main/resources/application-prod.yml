@@ -9,13 +9,15 @@ spring:
       ssl:
         enabled: true
         invalid-hostname-allowed: false
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      ssl:
+        enabled: true
+        invalid-hostname-allowed: false
   cache:
     type: redis
-  redis:
-    host: ${REDIS_HOST}
-    port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD}
-    ssl: true
 
 # Logging configuration for production
 logging:
