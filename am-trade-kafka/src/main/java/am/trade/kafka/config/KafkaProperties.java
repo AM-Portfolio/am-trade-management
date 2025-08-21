@@ -24,7 +24,7 @@ public class KafkaProperties {
     private String autoOffsetReset ;
     private Properties properties;
 
-     @Data
+    @Data
     public static class Properties {
         private String securityProtocol;
         private String saslMechanism;

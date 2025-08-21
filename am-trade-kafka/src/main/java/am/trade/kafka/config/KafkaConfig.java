@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-//@EnableKafka
+@EnableKafka
 @RequiredArgsConstructor
 @org.springframework.context.annotation.DependsOn("kafkaProperties")
 public class KafkaConfig {
