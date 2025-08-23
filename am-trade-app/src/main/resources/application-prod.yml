@@ -1,21 +1,15 @@
 # Production environment configuration
 
+MONGODB_URI: ${MONGODB_URI}
+MONGODB_DATABASE: ${MONGODB_DATABASE}
+
 # MongoDB production configuration
 spring:
   data:
-    mongodb:
-      uri: ${MONGO_URI}
-      database: trade_management_prod
-      ssl:
-        enabled: true
-        invalid-hostname-allowed: false
-  cache:
-    type: redis
-  redis:
-    host: ${REDIS_HOST}
-    port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD}
-    ssl: true
+    redis:
+      host: ${REDIS_HOSTNAME}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
 
 # Logging configuration for production
 logging:

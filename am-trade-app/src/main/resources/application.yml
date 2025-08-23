@@ -1,11 +1,13 @@
+MONGODB_URI: mongodb://ssd2658:ssd2658@mongodb.dev.svc.cluster.local:27017/am-trade?authSource=admin
+MONGODB_DATABASE: am-trade
+
 # Application specific common settings
 am:
   trade:
     kafka:
       bootstrap-servers: kafka.dev.svc.cluster.local:9092
-      consumer-group-id: ${KAFKA_CONSUMER_GROUP_ID:am-trade-group}
-      trade-events-topic: ${KAFKA_TOPICS_TRADE_EVENTS:am-trade-events}
-      order-events-topic: ${KAFKA_TOPICS_ORDER_EVENTS:am-order-events}
+      trade-consumer-group-id: ${KAFKA_CONSUMER_GROUP_ID:am-trade-group}
+      trade-topic: ${KAFKA_TOPICS_TRADE_EVENTS:am-trade}
       retries: 3
       retry-backoff-ms: 1000
       max-poll-records: 500
@@ -37,11 +39,6 @@ am:
       metrics:
         collection-interval-seconds: 60
         retention-days: 30
-app:
-  persistence:
-    mongodb:
-      uri: mongodb://ssd2658:ssd2658@mongodb.dev.svc.cluster.local:27017/am-trade?authSource=admin
-      database: am-trade
 
 spring:
   server:
@@ -51,6 +48,20 @@ spring:
   config:
     import:
       - classpath:application-common.yml
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+      database: ${MONGODB_DATABASE}
+      ssl:
+        enabled: true 
+        invalid-hostname-allowed: false
+    jackson:
+      default-property-inclusion: non_null
+      serialization:
+        write-dates-as-timestamps: false
+      deserialization:
+        fail-on-unknown-properties: false
+      date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
   # Spring Kafka Configuration
   kafka:
     bootstrap-servers: ${am.trade.kafka.bootstrap-servers}

@@ -1,13 +1,7 @@
 
-MONGODB_URL: mongodb://ssd2658:ssd2658@mongodb.dev.svc.cluster.local:27017/market_data?authSource=admin
-MONGODB_DATABASE: am-trade-management
+MONGODB_URI: ${MONGODB_URI}
+MONGODB_DATABASE: ${MONGODB_DATABASE}
 
-# Pre-production environment configuration
-app:
-  persistence:
-    mongodb:
-      uri: ${MONGODB_URL}
-      database: ${MONGODB_DATABASE}
 # Logging configuration for pre-production
 logging:
   level:

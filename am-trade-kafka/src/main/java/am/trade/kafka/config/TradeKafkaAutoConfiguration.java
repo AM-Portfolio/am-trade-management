@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
-import am.trade.kafka.producer.KafkaProducerService;
+//import am.trade.kafka.producer.KafkaProducerService;
 
 /**
  * Auto-configuration for Trade Kafka components.
@@ -19,9 +19,9 @@ import am.trade.kafka.producer.KafkaProducerService;
 @Import({KafkaConfig.class})
 public class TradeKafkaAutoConfiguration {
 
-    @Bean
-    @ConditionalOnMissingBean
-    public KafkaProducerService kafkaProducerService(KafkaTemplate<String, Object> kafkaTemplate) {
-        return new KafkaProducerService(kafkaTemplate);
-    }
+    // @Bean
+    // @ConditionalOnMissingBean
+    // public KafkaProducerService kafkaProducerService(KafkaTemplate<String, Object> kafkaTemplate) {
+    //     return new KafkaProducerService(kafkaTemplate);
+    // }
 }

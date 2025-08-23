@@ -1,19 +1,5 @@
 # Common configuration shared across all environments
 
-# MongoDB common configuration
-spring:
-  data:
-    mongodb:
-      auto-index-creation: true
-      uuid-representation: standard
-  jackson:
-    default-property-inclusion: non_null
-    serialization:
-      write-dates-as-timestamps: false
-    deserialization:
-      fail-on-unknown-properties: false
-    date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
-
 # Resilience4j common configuration
 resilience4j:
   circuitbreaker:

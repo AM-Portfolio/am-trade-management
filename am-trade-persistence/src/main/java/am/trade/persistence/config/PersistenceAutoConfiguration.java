@@ -20,7 +20,7 @@ import am.trade.persistence.mapper.TradePsychologyDataMapper;
 @ComponentScan(basePackages = "am.trade.persistence")
 @EntityScan(basePackages = "am.trade.persistence.entity")
 //@EnableMongoRepositories(basePackages = "am.trade.persistence.repository")
-@Import(MongoConfig.class)
+//@Import(MongoConfig.class)
 public class PersistenceAutoConfiguration {
 
     /**

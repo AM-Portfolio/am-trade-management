@@ -29,10 +29,8 @@ spec:
         vault.hashicorp.com/agent-inject-secret-mongodb: "kv/preprod/database/mongo"
         vault.hashicorp.com/agent-inject-template-mongodb: |
           {{`{{- with secret "kv/preprod/database/mongo" -}}
-          export MONGODB_URL="{{ .Data.data.url }}"
-          export MONGODB_DATABASE="{{ .Data.data.marketdtadatabase }}"
-          export MONGODB_USERNAME="{{ .Data.data.username }}"
-          export MONGODB_PASSWORD="{{ .Data.data.password }}"
+          MONGODB_DATABASE="{{ .Data.data.marketdtadatabase }}"
+          MONGODB_URI= {{ .Data.data.uri }}/{{ .Data.data.marketdtadatabase }}?authSource={{ .Data.data.authsource }}
           {{- end -}}`}}
         vault.hashicorp.com/agent-inject-secret-redis: "kv/preprod/database/redis"
         vault.hashicorp.com/agent-inject-template-redis: |
@@ -42,10 +40,10 @@ spec:
           {{- $urlParts := split "://" $url -}}
           {{- $hostPort := index $urlParts 1 -}}
           {{- $hostPortParts := split ":" $hostPort -}}
-          export REDIS_URL="{{ $url }}"
-          export REDIS_HOSTNAME="{{ $hostname }}"
-          export REDIS_PORT="{{ if eq (len $hostPortParts) 2 }}{{ index $hostPortParts 1 }}{{ else }}6379{{ end }}"
-          export REDIS_PASSWORD="{{ .Data.data.password }}"
+          REDIS_URL="{{ $url }}"
+          REDIS_HOSTNAME="{{ $hostname }}"
+          REDIS_PORT="{{ if eq (len $hostPortParts) 2 }}{{ index $hostPortParts 1 }}{{ else }}6379{{ end }}"
+          REDIS_PASSWORD="{{ .Data.data.password }}"
           {{- end -}}`}}
         
         {{- with .Values.podAnnotations }}

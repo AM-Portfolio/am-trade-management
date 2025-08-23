@@ -10,7 +10,7 @@ import am.trade.api.config.ApiAutoConfiguration;
 import am.trade.dashboard.config.DashboardAutoConfiguration;
 import am.trade.exceptions.config.ExceptionsAutoConfiguration;
 import am.trade.kafka.config.KafkaAutoConfiguration;
-import am.trade.persistence.config.MongoConfig;
+//import am.trade.persistence.config.MongoConfig;
 import am.trade.services.config.TradeServicesAutoConfiguration;
 
 /**
@@ -25,7 +25,7 @@ import am.trade.services.config.TradeServicesAutoConfiguration;
     }
 )
 @Import({
-    MongoConfig.class,
+    //MongoConfig.class,
     TradeServicesAutoConfiguration.class,
     DashboardAutoConfiguration.class,
     ApiAutoConfiguration.class,

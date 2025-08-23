@@ -30,8 +30,8 @@ public class TradeConsumerService {
     private final TradeProcessingService tradeProcessingService;
     private final TradeDetailsService tradeDetailsService;
 
-    @KafkaListener(topics = "${am.trade.kafka.trade.topic}", 
-                  groupId = "${am.trade.kafka.trade.consumer-group-id}",
+    @KafkaListener(topics = "${am.trade.kafka.trade-topic}", 
+                  groupId = "${am.trade.kafka.trade-consumer-group-id}",
                   containerFactory = "kafkaListenerContainerFactory")
     public void consume(String message, Acknowledgment acknowledgment) {
         try {
