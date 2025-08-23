@@ -1,8 +1,14 @@
+# Kafka Configuration
+KAFKA_BOOTSTRAP_SERVERS: kafka.dev.svc.cluster.local:9092
+KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+KAFKA_SASL_MECHANISM: PLAIN
+KAFKA_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
+
 # Application specific common settings
 am:
   trade:
-    kafka:
-      bootstrap-servers: kafka.dev.svc.cluster.local:9092
+    kafka: 
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
       consumer-group-id: ${KAFKA_CONSUMER_GROUP_ID:am-trade-group}
       trade-events-topic: ${KAFKA_TOPICS_TRADE_EVENTS:am-trade-events}
       order-events-topic: ${KAFKA_TOPICS_ORDER_EVENTS:am-order-events}
@@ -16,9 +22,9 @@ am:
       enable-auto-commit: false
       auto-offset-reset: latest
       properties:
-        security-protocol: SASL_PLAINTEXT
-        sasl-mechanism: PLAIN
-        sasl-jaas-config: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
+        security-protocol: ${KAFKA_SECURITY_PROTOCOL}
+        sasl-mechanism: ${KAFKA_SASL_MECHANISM}
+        sasl-jaas-config: ${KAFKA_SASL_JAAS_CONFIG}
     api:
       enabled: true
     common:
