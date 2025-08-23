@@ -17,10 +17,10 @@ am:
       max-in-flight-requests-per-connection: 5
       enable-auto-commit: false
       auto-offset-reset: latest
-      # properties:
-      #   security-protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_PLAINTEXT}
-      #   sasl-mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
-      #   sasl-jaas-config: ${KAFKA_SASL_JAAS_CONFIG:org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";}
+      properties:
+        security-protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_PLAINTEXT}
+        sasl-mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
+        sasl-jaas-config: ${KAFKA_SASL_JAAS_CONFIG:org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";}
     api:
       enabled: true
     common:
@@ -52,9 +52,9 @@ spring:
     mongodb:
       uri: ${MONGODB_URI}
       database: ${MONGODB_DATABASE}
-      ssl:
-        enabled: true 
-        invalid-hostname-allowed: false
+      # ssl:
+      #   enabled: true 
+      #   invalid-hostname-allowed: false
     jackson:
       default-property-inclusion: non_null
       serialization:

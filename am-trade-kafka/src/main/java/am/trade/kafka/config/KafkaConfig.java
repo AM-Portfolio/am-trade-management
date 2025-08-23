@@ -59,7 +59,7 @@ public class KafkaConfig {
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> props = kafkaConfigs();
         props.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaProperties.getConsumerGroupId());
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -76,13 +76,13 @@ public class KafkaConfig {
     }
 
     // Topic Definitions
-    @Bean
-    public NewTopic tradeEventsTopic() {
-        return new NewTopic("trade-events", 3, (short) 1);
-    }
+    // @Bean
+    // public NewTopic tradeEventsTopic() {
+    //     return new NewTopic("trade-events", 3, (short) 1);
+    // }
 
-    @Bean
-    public NewTopic orderEventsTopic() {
-        return new NewTopic("order-events", 3, (short) 1);
-    }
+    // @Bean
+    // public NewTopic orderEventsTopic() {
+    //     return new NewTopic("order-events", 3, (short) 1);
+    // }
 }

@@ -88,13 +88,6 @@
             <scope>test</scope>
         </dependency>
         
-        <!-- Java Time API explicit dependency -->
-        <dependency>
-            <groupId>org.threeten</groupId>
-            <artifactId>threetenbp</artifactId>
-            <version>1.6.8</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
     
     <build>
