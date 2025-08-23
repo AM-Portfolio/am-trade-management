@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Model for detailed risk metrics of trading activity
  */
@@ -14,6 +16,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class RiskMetrics {
     // Drawdown metrics
     private BigDecimal maxDrawdown; // Maximum peak-to-trough decline

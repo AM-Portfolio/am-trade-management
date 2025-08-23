@@ -18,9 +18,9 @@ am:
       enable-auto-commit: false
       auto-offset-reset: latest
       properties:
-        security-protocol: SASL_PLAINTEXT
-        sasl-mechanism: PLAIN
-        sasl-jaas-config: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
+        security-protocol: ${KAFKA_SECURITY_PROTOCOL}
+        sasl-mechanism: ${KAFKA_SASL_MECHANISM}
+        sasl-jaas-config: ${KAFKA_SASL_JAAS_CONFIG}
     api:
       enabled: true
     common:

@@ -16,6 +16,7 @@ import am.trade.kafka.model.TradeUpdateEvent;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import am.trade.common.models.TradeDetails;
+import am.trade.common.util.JsonConverter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -26,7 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class TradeConsumerService {
 
     
-    private final ObjectMapper objectMapper;
+    private final JsonConverter jsonConverter;
     private final TradeProcessingService tradeProcessingService;
     private final TradeDetailsService tradeDetailsService;
 
@@ -38,7 +39,7 @@ public class TradeConsumerService {
             log.info("Received message: {}", message);
             
             // Convert JSON string to PortfolioUpdateEvent
-            TradeUpdateEvent event = objectMapper.readValue(message, TradeUpdateEvent.class);
+            TradeUpdateEvent event = jsonConverter.fromJson(message, TradeUpdateEvent.class);
             log.info("Converted to event: {}", event);
               
             // Process the event
@@ -55,10 +56,6 @@ public class TradeConsumerService {
     private void processMessage(TradeUpdateEvent event) {
         log.info("Processing trade update event with {} trades", event.getTrades().size());
         
-        // Convert TradeModel list to Trade entities
-        //List<Trade> trades = tradeEventMapper.toTrades(event.getTrades());
-        log.debug("Converted {} trade models to trade entities", event.getTrades().size());
-
         List<TradeDetails> tradeDetails = tradeProcessingService.processTradeModels(event.getTrades(), event.getPortfolioId());
         tradeDetailsService.saveAllTradeDetails(tradeDetails);
         tradeProcessingService.processTradeDetails(tradeDetails.stream().map(TradeDetails::getTradeId).collect(Collectors.toList()), event.getPortfolioId(), event.getUserId());

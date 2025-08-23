@@ -1,0 +1,28 @@
+{
+    "fromDate": "2023-11-30",
+    "symbol": "NIFTY 50",
+    "data": {
+        "tradingSymbol": "NIFTY 50",
+        "dataPoints": [
+            {
+                "time": [
+                    2023,
+                    11,
+                    30,
+                    9,
+                    15
+                ],
+                "open": 20108.5,
+                "high": 20136.15,
+                "low": 20015.85,
+                "close": 20047.35,
+                "volume": 0
+            }
+        ],
+        "dataPointCount": 0
+    },
+    "processingTimeMs": 394,
+    "toDate": "2024-11-30",
+    "count": 1729,
+    "interval": "60minute"
+}

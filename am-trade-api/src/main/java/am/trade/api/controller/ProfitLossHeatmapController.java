@@ -1,5 +1,6 @@
 package am.trade.api.controller;
 
+import am.trade.common.models.HeatmapRequest;
 import am.trade.common.models.ProfitLossHeatmapData;
 import am.trade.api.service.ProfitLossHeatmapService;
 
@@ -111,46 +112,15 @@ public class ProfitLossHeatmapController {
         @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @GetMapping
+    @PostMapping
     public ResponseEntity<ProfitLossHeatmapData> getHeatmap(
-            @Parameter(description = "Portfolio ID") 
-            @RequestParam String portfolioId,
-            @Parameter(description = "Granularity (YEARLY, MONTHLY, DAILY)") 
-            @RequestParam String granularity,
-            @Parameter(description = "Financial year (required for MONTHLY granularity)") 
-            @RequestParam(required = false) Integer financialYear,
-            @Parameter(description = "Year (required for DAILY granularity)") 
-            @RequestParam(required = false) Integer year,
-            @Parameter(description = "Month (1-12, required for DAILY granularity)") 
-            @RequestParam(required = false) Integer month,
-            @Parameter(description = "Whether to include trade details in the response") 
-            @RequestParam(defaultValue = "false") boolean includeTradeDetails) {
+            @Parameter(description = "Heatmap request parameters") 
+            @RequestBody HeatmapRequest request) {
         
         try {
-            log.info("Fetching profit/loss heatmap for portfolio: {} with granularity: {}", portfolioId, granularity);
+            log.info("Fetching profit/loss heatmap for portfolios: {} with granularity: {}", request.getPortfolioIds(), request.getGranularity());
             
-            ProfitLossHeatmapData heatmapData;
-            
-            switch (granularity.toUpperCase()) {
-                case "YEARLY":
-                    heatmapData = profitLossHeatmapService.getYearlyHeatmap(portfolioId, includeTradeDetails);
-                    break;
-                case "MONTHLY":
-                    if (financialYear == null) {
-                        return ResponseEntity.badRequest().build();
-                    }
-                    heatmapData = profitLossHeatmapService.getMonthlyHeatmap(portfolioId, financialYear, includeTradeDetails);
-                    break;
-                case "DAILY":
-                    if (year == null || month == null) {
-                        return ResponseEntity.badRequest().build();
-                    }
-                    heatmapData = profitLossHeatmapService.getDailyHeatmap(portfolioId, year, month, includeTradeDetails);
-                    break;
-                default:
-                    log.error("Invalid granularity: {}", granularity);
-                    return ResponseEntity.badRequest().build();
-            }
+            ProfitLossHeatmapData heatmapData = profitLossHeatmapService.getHeatmapData(request);
             
             return ResponseEntity.ok(heatmapData);
         } catch (IllegalArgumentException e) {

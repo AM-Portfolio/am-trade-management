@@ -17,7 +17,6 @@ on:
         required: true
         type: string
 
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/am-trade-management-service

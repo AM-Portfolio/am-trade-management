@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Model class for storing trade psychology data, behavior patterns, and categorized tags
  * Designed to work with the flexible enum system that supports user-provided values
@@ -22,6 +24,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TradePsychologyData {
     // Entry psychology factors that influenced this trade
     private List<EntryPsychology> entryPsychologyFactors;

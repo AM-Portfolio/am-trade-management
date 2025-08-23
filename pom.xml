@@ -42,6 +42,7 @@
 		<module>am-trade-kafka</module>
 		<module>am-trade-persistence</module>
 		<module>am-trade-exceptions</module>
+		<module>am-trade-analytics</module>
 	</modules>
 
 	<dependencyManagement>

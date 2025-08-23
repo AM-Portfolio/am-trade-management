@@ -1,4 +1,4 @@
-package am.trade.dashboard.service.metrics.feedback;
+package am.trade.dashboard.model.feeback;
 
 import lombok.Builder;
 import lombok.Data;
