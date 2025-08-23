@@ -18,9 +18,9 @@ am:
       enable-auto-commit: false
       auto-offset-reset: latest
       properties:
-        security-protocol: ${KAFKA_SECURITY_PROTOCOL}
-        sasl-mechanism: ${KAFKA_SASL_MECHANISM}
-        sasl-jaas-config: ${KAFKA_SASL_JAAS_CONFIG}
+        security-protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_PLAINTEXT}
+        sasl-mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
+        sasl-jaas-config: ${KAFKA_SASL_JAAS_CONFIG:org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!"}
     api:
       enabled: true
     common:
@@ -62,21 +62,21 @@ spring:
       deserialization:
         fail-on-unknown-properties: false
       date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
-  # Spring Kafka Configuration
-  kafka:
-    bootstrap-servers: ${am.trade.kafka.bootstrap-servers}
-    consumer:
-      group-id: ${am.trade.kafka.consumer-group-id}
-      auto-offset-reset: ${am.trade.kafka.auto-offset-reset}
-      enable-auto-commit: ${am.trade.kafka.enable-auto-commit}
-      max-poll-records: ${am.trade.kafka.max-poll-records}
-    properties:
-      "security.protocol": ${am.trade.kafka.properties.security-protocol}
-      "sasl.mechanism": ${am.trade.kafka.properties.sasl-mechanism}
-      "sasl.jaas.config": ${am.trade.kafka.properties.sasl-jaas-config}
-      "ssl.endpoint.identification.algorithm": ""
-      "ssl.truststore.location": /etc/ssl/certs/java/cacerts
-      "ssl.truststore.password": changeit
+  # # Spring Kafka Configuration
+  # kafka:
+  #   bootstrap-servers: ${am.trade.kafka.bootstrap-servers}
+  #   consumer:
+  #     group-id: ${am.trade.kafka.consumer-group-id}
+  #     auto-offset-reset: ${am.trade.kafka.auto-offset-reset}
+  #     enable-auto-commit: ${am.trade.kafka.enable-auto-commit}
+  #     max-poll-records: ${am.trade.kafka.max-poll-records}
+  #   properties:
+  #     "security.protocol": ${am.trade.kafka.properties.security-protocol}
+  #     "sasl.mechanism": ${am.trade.kafka.properties.sasl-mechanism}
+  #     "sasl.jaas.config": ${am.trade.kafka.properties.sasl-jaas-config}
+  #     "ssl.endpoint.identification.algorithm": ""
+  #     "ssl.truststore.location": /etc/ssl/certs/java/cacerts
+  #     "ssl.truststore.password": changeit
 
 # Management/Actuator Configuration
 management:
