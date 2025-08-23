@@ -3,11 +3,13 @@ package am.trade.analytics.mapper;
 import am.trade.analytics.model.TradeReplay;
 import am.trade.analytics.model.dto.TradeReplayResponse;
 import am.trade.analytics.model.dto.TradeReplayRequest;
+import am.trade.common.models.PriceDataPoint;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Mapper class for converting between TradeReplay entity and DTOs
@@ -44,7 +46,7 @@ public class TradeReplayMapper {
             Integer holdingPeriodDays,
             BigDecimal volatility,
             BigDecimal averageDailyMovement,
-            java.util.List<am.trade.analytics.model.PriceDataPoint> priceDataPoints) {
+            List<PriceDataPoint> priceDataPoints) {
         
         return TradeReplay.builder()
                 .replayId(replayId)

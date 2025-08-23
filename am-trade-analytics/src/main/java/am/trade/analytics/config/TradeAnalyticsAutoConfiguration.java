@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Import;
  * Enables component scanning and imports necessary configurations
  */
 @Configuration
-@ComponentScan(basePackages = {"am.trade.analytics"})
+@ComponentScan(basePackages = {"am.trade.analytics","am.trade.common.models"})
 @Import({
     RedisConfig.class,
     TradeSamplingConfig.class

@@ -1,6 +1,6 @@
 package am.trade.analytics.model.dto;
 
-import am.trade.analytics.model.PriceDataPoint;
+import am.trade.common.models.PriceDataPoint;
 import am.trade.models.enums.OrderSide;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,11 +1,11 @@
-MONGODB_URI: mongodb://ssd2658:ssd2658@mongodb.dev.svc.cluster.local:27017/am-trade?authSource=admin
+MONGODB_URI: mongodb://admin:password@localhost:27017/am-trade?authSource=admin
 MONGODB_DATABASE: am-trade
 
 # Application specific common settings
 am:
   trade:
     kafka:
-      bootstrap-servers: kafka.dev.svc.cluster.local:9092
+      bootstrap-servers: localhost:9092
       trade-consumer-group-id: ${KAFKA_CONSUMER_GROUP_ID:am-trade-group}
       trade-topic: ${KAFKA_TOPICS_TRADE_EVENTS:am-trade}
       retries: 3
@@ -17,10 +17,10 @@ am:
       max-in-flight-requests-per-connection: 5
       enable-auto-commit: false
       auto-offset-reset: latest
-      properties:
-        security-protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_PLAINTEXT}
-        sasl-mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
-        sasl-jaas-config: ${KAFKA_SASL_JAAS_CONFIG:org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!"}
+      # properties:
+      #   security-protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_PLAINTEXT}
+      #   sasl-mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
+      #   sasl-jaas-config: ${KAFKA_SASL_JAAS_CONFIG:org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";}
     api:
       enabled: true
     common:

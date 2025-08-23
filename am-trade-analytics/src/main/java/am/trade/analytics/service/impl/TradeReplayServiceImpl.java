@@ -1,18 +1,17 @@
 package am.trade.analytics.service.impl;
 
 import am.trade.analytics.model.TradeReplay;
-import am.trade.analytics.model.PriceDataPoint;
 import am.trade.analytics.model.dto.TradeReplayRequest;
 import am.trade.analytics.model.dto.TradeReplayResponse;
 import am.trade.analytics.service.TradeReplayService;
 import am.trade.analytics.service.TradeSamplingService;
 import am.trade.analytics.util.TradeAnalyticsUtils;
+import am.trade.common.models.PriceDataPoint;
 import am.trade.analytics.mapper.TradeReplayMapper;
+import am.trade.analytics.mapper.PersistenceModelMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
+import am.trade.persistence.repository.TradeReplayRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -32,10 +31,11 @@ import java.util.UUID;
 @Slf4j
 public class TradeReplayServiceImpl implements TradeReplayService {
 
-    private final MongoTemplate mongoTemplate;
+    private final TradeReplayRepository tradeReplayRepository;
     private final TradeAnalyticsUtils analyticsUtils;
     private final TradeReplayMapper tradeReplayMapper;
     private final TradeSamplingService tradeSamplingService;
+    private final PersistenceModelMapper persistenceModelMapper;
 
     @Override
     public TradeReplayResponse createTradeReplay(TradeReplayRequest request) {
@@ -104,7 +104,9 @@ public class TradeReplayServiceImpl implements TradeReplayService {
         // Only save to MongoDB if sampling strategy determines it should be stored
         if (shouldStore) {
             log.info("Storing trade replay {} based on sampling strategy", replayId);
-            savedReplay = mongoTemplate.save(tradeReplay);
+            am.trade.persistence.entity.TradeReplay persistenceEntity = persistenceModelMapper.toPersistenceEntity(tradeReplay);
+            am.trade.persistence.entity.TradeReplay savedEntity = tradeReplayRepository.save(persistenceEntity);
+            savedReplay = persistenceModelMapper.toAnalyticsModel(savedEntity);
         } else {
             log.info("Skipping storage of trade replay {} based on sampling strategy", replayId);
             savedReplay = tradeReplay; // Use the unsaved entity for response
@@ -120,55 +122,49 @@ public class TradeReplayServiceImpl implements TradeReplayService {
     @Override
     public Optional<TradeReplay> getTradeReplayById(String replayId) {
         log.info("Fetching trade replay with ID: {}", replayId);
-        Query query = new Query(Criteria.where("replay_id").is(replayId));
-        return Optional.ofNullable(mongoTemplate.findOne(query, TradeReplay.class));
+        Optional<am.trade.persistence.entity.TradeReplay> entityOptional = tradeReplayRepository.findByReplayId(replayId);
+        return entityOptional.map(persistenceModelMapper::toAnalyticsModel);
     }
 
     @Override
     public List<TradeReplay> findTradeReplaysBySymbol(String symbol) {
         log.info("Finding trade replays for symbol: {}", symbol);
-        Query query = new Query(Criteria.where("symbol").is(symbol));
-        return mongoTemplate.find(query, TradeReplay.class);
+        List<am.trade.persistence.entity.TradeReplay> entities = tradeReplayRepository.findBySymbol(symbol);
+        return persistenceModelMapper.toAnalyticsModelList(entities);
     }
 
     @Override
     public List<TradeReplay> findTradeReplaysByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
         log.info("Finding trade replays between {} and {}", startDate, endDate);
-        Query query = new Query(
-                new Criteria().orOperator(
-                        Criteria.where("entry_date").gte(startDate).lte(endDate),
-                        Criteria.where("exit_date").gte(startDate).lte(endDate)
-                )
-        );
-        return mongoTemplate.find(query, TradeReplay.class);
+        List<am.trade.persistence.entity.TradeReplay> entities = tradeReplayRepository.findByDateRange(startDate, endDate);
+        return persistenceModelMapper.toAnalyticsModelList(entities);
     }
 
     @Override
     public List<TradeReplay> findTradeReplaysByPortfolioId(String portfolioId) {
         log.info("Finding trade replays for portfolio ID: {}", portfolioId);
-        Query query = new Query(Criteria.where("portfolio_id").is(portfolioId));
-        return mongoTemplate.find(query, TradeReplay.class);
+        List<am.trade.persistence.entity.TradeReplay> entities = tradeReplayRepository.findByPortfolioId(portfolioId);
+        return persistenceModelMapper.toAnalyticsModelList(entities);
     }
 
     @Override
     public List<TradeReplay> findTradeReplaysByStrategyId(String strategyId) {
         log.info("Finding trade replays for strategy ID: {}", strategyId);
-        Query query = new Query(Criteria.where("strategy_id").is(strategyId));
-        return mongoTemplate.find(query, TradeReplay.class);
+        List<am.trade.persistence.entity.TradeReplay> entities = tradeReplayRepository.findByStrategyId(strategyId);
+        return persistenceModelMapper.toAnalyticsModelList(entities);
     }
 
     @Override
     public List<TradeReplay> findTradeReplaysByOriginalTradeId(String tradeId) {
         log.info("Finding trade replays for original trade ID: {}", tradeId);
-        Query query = new Query(Criteria.where("original_trade_id").is(tradeId));
-        return mongoTemplate.find(query, TradeReplay.class);
+        List<am.trade.persistence.entity.TradeReplay> entities = tradeReplayRepository.findByOriginalTradeId(tradeId);
+        return persistenceModelMapper.toAnalyticsModelList(entities);
     }
 
     @Override
     public boolean deleteTradeReplay(String replayId) {
         log.info("Deleting trade replay with ID: {}", replayId);
-        Query query = new Query(Criteria.where("replay_id").is(replayId));
-        return mongoTemplate.remove(query, TradeReplay.class).getDeletedCount() > 0;
+        return tradeReplayRepository.deleteByReplayId(replayId) > 0;
     }
 
     /**

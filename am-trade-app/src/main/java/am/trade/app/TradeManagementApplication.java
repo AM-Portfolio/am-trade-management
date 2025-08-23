@@ -31,7 +31,7 @@ import am.trade.services.config.TradeServicesAutoConfiguration;
     DashboardAutoConfiguration.class,
     ApiAutoConfiguration.class,
     KafkaAutoConfiguration.class,
-    ExceptionsAutoConfiguration.class,
+    ExceptionsAutoConfiguration.class,  
     TradeAnalyticsAutoConfiguration.class
 }) 
 public class TradeManagementApplication {

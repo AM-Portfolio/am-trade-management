@@ -2,7 +2,7 @@ package am.trade.analytics.client.util;
 
 import am.trade.analytics.client.model.HistoricalMarketDataResponse;
 import am.trade.analytics.client.model.MarketDataPoint;
-import am.trade.analytics.model.PriceDataPoint;
+import am.trade.common.models.PriceDataPoint;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 

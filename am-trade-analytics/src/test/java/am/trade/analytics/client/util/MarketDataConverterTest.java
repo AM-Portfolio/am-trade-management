@@ -1,9 +1,7 @@
 package am.trade.analytics.client.util;
 
 import am.trade.analytics.client.model.HistoricalMarketDataResponse;
-import am.trade.analytics.client.model.MarketData;
-import am.trade.analytics.client.model.MarketDataPoint;
-import am.trade.analytics.model.PriceDataPoint;
+import am.trade.common.models.PriceDataPoint;
 import lombok.SneakyThrows;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,12 +11,8 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
+import org.threeten.bp.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 

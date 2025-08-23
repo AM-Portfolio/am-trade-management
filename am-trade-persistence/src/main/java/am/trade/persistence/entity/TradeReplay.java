@@ -1,4 +1,4 @@
-package am.trade.analytics.model;
+package am.trade.persistence.entity;
 
 import am.trade.common.models.PriceDataPoint;
 import am.trade.models.enums.OrderSide;
@@ -7,7 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.math.BigDecimal;
@@ -18,6 +20,8 @@ import java.util.List;
  * Document model for trade replay analysis
  * Stores information about trade replays including entry and exit points
  */
+@Document(collection = "trade_replays")
+@CompoundIndex(name = "idx_symbol_entry_exit", def = "{'symbol': 1, 'entry_date': 1, 'exit_date': 1}")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

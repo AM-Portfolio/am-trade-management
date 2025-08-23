@@ -3,7 +3,7 @@ package am.trade.analytics.util;
 import am.trade.analytics.client.MarketDataClient;
 import am.trade.analytics.client.model.HistoricalMarketDataResponse;
 import am.trade.analytics.client.util.MarketDataConverter;
-import am.trade.analytics.model.PriceDataPoint;
+import am.trade.common.models.PriceDataPoint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
