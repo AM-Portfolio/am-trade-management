@@ -1,10 +1,10 @@
-MONGODB_URI: mongodb://admin:password@localhost:27017/am-trade?authSource=admin
+MONGODB_URI: mongodb://ssd2658:ssd2658@mongodb.dev.svc.cluster.local:27017/am-trade?authSource=admin
 MONGODB_DATABASE: am-trade
 
-KAFKA_BOOTSTRAP_SERVERS: localhost:9092
-KAFKA_SECURITY_PROTOCOL: PLAINTEXT
+KAFKA_BOOTSTRAP_SERVERS: kafka.dev.svc.cluster.local:9092
+KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
 KAFKA_SASL_MECHANISM: PLAIN
-KAFKA_SASL_JAAS_CONFIG:
+KAFKA_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
 
 # Application specific common settings
 am:
