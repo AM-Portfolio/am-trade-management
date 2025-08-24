@@ -34,16 +34,16 @@
 		<springdoc-openapi.version>2.3.0</springdoc-openapi.version>
 	</properties>
 	<modules>
-		<module>am-trade-common</module>
+		<!-- <module>am-trade-common</module>
 		<module>am-trade-models</module>
-		<module>am-trade-services</module>
-		<module>am-trade-dashboard</module>
+		<module>am-trade-services</module> -->
+		<!-- <module>am-trade-dashboard</module> -->
 		<module>am-trade-api</module>
 		<module>am-trade-app</module>
-		<module>am-trade-kafka</module>
+		<!-- <module>am-trade-kafka</module>
 		<module>am-trade-persistence</module>
-		<module>am-trade-exceptions</module>
-		<module>am-trade-analytics</module>
+		<module>am-trade-exceptions</module> -->
+		<!-- <module>am-trade-analytics</module> -->
 	</modules>
 
 	<dependencyManagement>

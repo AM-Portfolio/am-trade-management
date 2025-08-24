@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import am.trade.api.config.ApiAutoConfiguration;
-import am.trade.analytics.config.TradeAnalyticsAutoConfiguration;
+//import am.trade.analytics.config.TradeAnalyticsAutoConfiguration;
 import am.trade.dashboard.config.DashboardAutoConfiguration;
 import am.trade.exceptions.config.ExceptionsAutoConfiguration;
 import am.trade.kafka.config.KafkaConfig;
@@ -22,7 +22,7 @@ import am.trade.services.config.TradeServicesAutoConfiguration;
     DashboardAutoConfiguration.class,
     ApiAutoConfiguration.class,
     ExceptionsAutoConfiguration.class,  
-    TradeAnalyticsAutoConfiguration.class
+    //TradeAnalyticsAutoConfiguration.class
 })
 @EnableMongoRepositories(basePackages = "am.trade.models.repository")
 public class TradeManagementApplication {
