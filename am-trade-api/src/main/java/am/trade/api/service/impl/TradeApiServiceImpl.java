@@ -8,9 +8,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import am.trade.exceptions.TradeFieldValidationException;
-import am.trade.exceptions.model.ErrorDetail;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -119,8 +116,6 @@ public class TradeApiServiceImpl implements TradeApiService {
         // Get the original trade
         TradeDetails originalTrade = existingTradeOpt.get();
         
-        // Validate non-editable fields
-        validateNonEditableFields(originalTrade, tradeDetails);
         
         // Ensure the trade ID in the path matches the one in the body
         tradeDetails.setTradeId(tradeId);
@@ -146,74 +141,6 @@ public class TradeApiServiceImpl implements TradeApiService {
         return savedTrade;
     }
     
-    /**
-     * Validates that non-editable fields haven't been changed in the update request
-     * @param originalTrade The original trade details
-     * @param updatedTrade The updated trade details
-     * @throws TradeFieldValidationException with HTTP 400 Bad Request if non-editable fields are modified
-     */
-    private void validateNonEditableFields(TradeDetails originalTrade, TradeDetails updatedTrade) {
-        // Create a validation exception builder to collect all validation errors
-        TradeFieldValidationException.TradeFieldValidationExceptionBuilder exceptionBuilder = 
-                TradeFieldValidationException.fieldBuilder("Trade update contains modifications to non-editable fields");
-        
-        boolean hasErrors = false;
-        
-        // Check symbol - non-editable
-        if (updatedTrade.getSymbol() != null && !updatedTrade.getSymbol().equals(originalTrade.getSymbol())) {
-            exceptionBuilder.addFieldError("symbol", "Symbol cannot be modified");
-            hasErrors = true;
-        }
-        
-        // Check portfolio ID - non-editable
-        if (updatedTrade.getPortfolioId() != null && !updatedTrade.getPortfolioId().isEmpty() 
-                && !updatedTrade.getPortfolioId().equals(originalTrade.getPortfolioId())) {
-            exceptionBuilder.addFieldError("portfolioId", "Portfolio ID cannot be modified");
-            hasErrors = true;
-        }
-        
-        // Check user ID - non-editable
-        if (updatedTrade.getUserId() != null && !updatedTrade.getUserId().equals(originalTrade.getUserId())) {
-            exceptionBuilder.addFieldError("userId", "User ID cannot be modified");
-            hasErrors = true;
-        }
-        
-        // Check trade position type - non-editable
-        if (updatedTrade.getTradePositionType() != null && !updatedTrade.getTradePositionType().equals(originalTrade.getTradePositionType())) {
-            exceptionBuilder.addFieldError("tradePositionType", "Trade position type (long/short) cannot be modified");
-            hasErrors = true;
-        }
-        
-        // Check entry info - non-editable core fields
-        if (updatedTrade.getEntryInfo() != null && originalTrade.getEntryInfo() != null) {
-            // Check if price was modified
-            if (updatedTrade.getEntryInfo().getPrice() != null && 
-                    !Objects.equals(updatedTrade.getEntryInfo().getPrice(), originalTrade.getEntryInfo().getPrice())) {
-                exceptionBuilder.addFieldError("entryInfo.price", "Entry price cannot be modified");
-                hasErrors = true;
-            }
-            
-            // Check if quantity was modified
-            if (updatedTrade.getEntryInfo().getQuantity() != null && 
-                    !Objects.equals(updatedTrade.getEntryInfo().getQuantity(), originalTrade.getEntryInfo().getQuantity())) {
-                exceptionBuilder.addFieldError("entryInfo.quantity", "Position quantity cannot be modified");
-                hasErrors = true;
-            }
-        }
-        
-        // Check instrument info - non-editable
-        if (updatedTrade.getInstrumentInfo() != null && originalTrade.getInstrumentInfo() != null &&
-                !Objects.equals(updatedTrade.getInstrumentInfo(), originalTrade.getInstrumentInfo())) {
-            exceptionBuilder.addFieldError("instrumentInfo", "Instrument information cannot be modified");
-            hasErrors = true;
-        }
-        
-        // If any non-editable fields were modified, throw the validation exception with all errors
-        if (hasErrors) {
-            log.warn("Attempt to modify non-editable fields for trade {}", originalTrade.getTradeId());
-            throw exceptionBuilder.build();
-        }
-    }
     
     /**
      * Preserves non-editable fields from the original trade in the updated trade
