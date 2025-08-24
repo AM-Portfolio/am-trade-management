@@ -1,24 +1,16 @@
+MONGODB_URI: mongodb://ssd2658:ssd2658@mongodb.dev.svc.cluster.local:27017/am-trade?authSource=admin
+MONGODB_DATABASE: am-trade
+
+KAFKA_BOOTSTRAP_SERVERS: kafka.dev.svc.cluster.local:9092
+KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+KAFKA_SASL_MECHANISM: PLAIN
+KAFKA_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
+
 # Application specific common settings
 am:
   trade:
     kafka:
-      bootstrap-servers: kafka.dev.svc.cluster.local:9092
-      consumer-group-id: ${KAFKA_CONSUMER_GROUP_ID:am-trade-group}
-      trade-events-topic: ${KAFKA_TOPICS_TRADE_EVENTS:am-trade-events}
-      order-events-topic: ${KAFKA_TOPICS_ORDER_EVENTS:am-order-events}
-      retries: 3
-      retry-backoff-ms: 1000
-      max-poll-records: 500
-      max-poll-interval-ms: 300000
-      session-timeout-ms: 10000
-      heartbeat-interval-ms: 3000
-      max-in-flight-requests-per-connection: 5
-      enable-auto-commit: false
-      auto-offset-reset: latest
-      properties:
-        security-protocol: SASL_PLAINTEXT
-        sasl-mechanism: PLAIN
-        sasl-jaas-config: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
+      enabled: true
     api:
       enabled: true
     common:
@@ -37,11 +29,6 @@ am:
       metrics:
         collection-interval-seconds: 60
         retention-days: 30
-app:
-  persistence:
-    mongodb:
-      uri: mongodb://ssd2658:ssd2658@mongodb.dev.svc.cluster.local:27017/am-trade?authSource=admin
-      database: am-trade
 
 spring:
   server:
@@ -51,21 +38,30 @@ spring:
   config:
     import:
       - classpath:application-common.yml
-  # Spring Kafka Configuration
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+      database: ${MONGODB_DATABASE}
+      # ssl:
+      #   enabled: true 
+      #   invalid-hostname-allowed: false
+    jackson:
+      default-property-inclusion: non_null
+      serialization:
+        write-dates-as-timestamps: false
+      deserialization:
+        fail-on-unknown-properties: false
+      date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
   kafka:
-    bootstrap-servers: ${am.trade.kafka.bootstrap-servers}
-    consumer:
-      group-id: ${am.trade.kafka.consumer-group-id}
-      auto-offset-reset: ${am.trade.kafka.auto-offset-reset}
-      enable-auto-commit: ${am.trade.kafka.enable-auto-commit}
-      max-poll-records: ${am.trade.kafka.max-poll-records}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     properties:
-      "security.protocol": ${am.trade.kafka.properties.security-protocol}
-      "sasl.mechanism": ${am.trade.kafka.properties.sasl-mechanism}
-      "sasl.jaas.config": ${am.trade.kafka.properties.sasl-jaas-config}
-      "ssl.endpoint.identification.algorithm": ""
-      "ssl.truststore.location": /etc/ssl/certs/java/cacerts
-      "ssl.truststore.password": changeit
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG} 
+    consumer:
+      group-id: am-trade-management
+      auto-offset-reset: latest
+    trade-topic: ${KAFKA_TOPICS_TRADE_EVENTS:am-trade}
 
 # Management/Actuator Configuration
 management:

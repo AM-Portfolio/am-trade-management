@@ -18,12 +18,10 @@ import am.trade.services.service.TradeProcessingService;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.util.JsonConverter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "am.trade.kafka.trade.consumer.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "am.trade.kafka.enabled", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class TradeConsumerService {
 
     
@@ -31,8 +29,8 @@ public class TradeConsumerService {
     private final TradeProcessingService tradeProcessingService;
     private final TradeDetailsService tradeDetailsService;
 
-    @KafkaListener(topics = "${am.trade.kafka.trade.topic}", 
-                  groupId = "${am.trade.kafka.trade.consumer-group-id}",
+    @KafkaListener(topics = "${spring.kafka.trade-topic}", 
+                  groupId = "${spring.kafka.consumer.group-id}",
                   containerFactory = "kafkaListenerContainerFactory")
     public void consume(String message, Acknowledgment acknowledgment) {
         try {
