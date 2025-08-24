@@ -52,16 +52,9 @@ public class TradeController {
         
         log.info("Fetching trade details for portfolio: {} with symbols: {}", portfolioId, symbols);
         
-        try {
-            List<TradeDetails> tradeDetails = tradeApiService.getTradeDetailsByPortfolioAndSymbols(portfolioId, symbols);
-            return ResponseEntity.ok(tradeDetails);
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid request parameters: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            log.error("Error fetching trade details", e);
-            return ResponseEntity.internalServerError().build();
-        }
+        // Let the global exception handler manage exceptions
+        List<TradeDetails> tradeDetails = tradeApiService.getTradeDetailsByPortfolioAndSymbols(portfolioId, symbols);
+        return ResponseEntity.ok(tradeDetails);
     }
     
     @Operation(summary = "Add a new trade")
@@ -77,16 +70,9 @@ public class TradeController {
         log.info("Adding new trade for portfolio: {} and symbol: {}", 
                 tradeDetails.getPortfolioId(), tradeDetails.getSymbol());
         
-        try {
-            TradeDetails savedTrade = tradeApiService.addTrade(tradeDetails);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedTrade);
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid trade data: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            log.error("Error adding trade", e);
-            return ResponseEntity.internalServerError().build();
-        }
+        // Let the global exception handler manage exceptions
+        TradeDetails savedTrade = tradeApiService.addTrade(tradeDetails);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedTrade);
     }
     
     @Operation(summary = "Update an existing trade")
@@ -115,16 +101,8 @@ public class TradeController {
             return ResponseEntity.badRequest().build();
         }
         
-        try {
-            TradeDetails updatedTrade = tradeApiService.updateTrade(tradeId, tradeDetails);
-            return ResponseEntity.ok(updatedTrade);
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid trade data: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            log.error("Error updating trade", e);
-            return ResponseEntity.internalServerError().build();
-        }
+        TradeDetails updatedTrade = tradeApiService.updateTrade(tradeId, tradeDetails);
+        return ResponseEntity.ok(updatedTrade);
     }
     
     @Operation(summary = "Filter trades by multiple criteria")
@@ -148,17 +126,10 @@ public class TradeController {
         log.info("Filtering trades with criteria - portfolioIds: {}, symbols: {}, statuses: {}, startDate: {}, endDate: {}, strategies: {}", 
                 portfolioIds, symbols, statuses, startDate, endDate, strategies);
         
-        try {
-            Page<TradeDetails> filteredTrades = tradeApiService.getTradesByFilters(
-                    portfolioIds, symbols, statuses, startDate, endDate, strategies, pageable);
-            return ResponseEntity.ok(filteredTrades);
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid filter parameters: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            log.error("Error filtering trades", e);
-            return ResponseEntity.internalServerError().build();
-        }
+        // Let the global exception handler manage exceptions
+        Page<TradeDetails> filteredTrades = tradeApiService.getTradesByFilters(
+                portfolioIds, symbols, statuses, startDate, endDate, strategies, pageable);
+        return ResponseEntity.ok(filteredTrades);
     }
     
     @Operation(summary = "Add or update multiple trades")
@@ -173,16 +144,9 @@ public class TradeController {
         
         log.info("Processing batch of {} trades", tradeDetailsList.size());
         
-        try {
-            List<TradeDetails> savedTrades = tradeApiService.addOrUpdateTrades(tradeDetailsList);
-            return ResponseEntity.ok(savedTrades);
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid trade data in batch: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            log.error("Error processing trade batch", e);
-            return ResponseEntity.internalServerError().build();
-        }
+        // Let the global exception handler manage exceptions
+        List<TradeDetails> savedTrades = tradeApiService.addOrUpdateTrades(tradeDetailsList);
+        return ResponseEntity.ok(savedTrades);
     }
     
     @Operation(summary = "Get trade details by trade IDs")
@@ -197,15 +161,8 @@ public class TradeController {
         
         log.info("Fetching trade details for {} trade IDs", tradeIds.size());
         
-        try {
-            List<TradeDetails> tradeDetails = tradeApiService.getTradeDetailsByTradeIds(tradeIds);
-            return ResponseEntity.ok(tradeDetails);
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid request: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            log.error("Error fetching trade details by IDs", e);
-            return ResponseEntity.internalServerError().build();
-        }
+        // Let the global exception handler manage exceptions
+        List<TradeDetails> tradeDetails = tradeApiService.getTradeDetailsByTradeIds(tradeIds);
+        return ResponseEntity.ok(tradeDetails);
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Import;
 
 import am.trade.api.config.ApiAutoConfiguration;
 import am.trade.dashboard.config.DashboardAutoConfiguration;
+import am.trade.exceptions.config.ExceptionsAutoConfiguration;
 import am.trade.kafka.config.KafkaAutoConfiguration;
 import am.trade.persistence.config.MongoConfig;
 import am.trade.services.config.TradeServicesAutoConfiguration;
@@ -28,7 +29,8 @@ import am.trade.services.config.TradeServicesAutoConfiguration;
     TradeServicesAutoConfiguration.class,
     DashboardAutoConfiguration.class,
     ApiAutoConfiguration.class,
-    KafkaAutoConfiguration.class
+    KafkaAutoConfiguration.class,
+    ExceptionsAutoConfiguration.class
 }) 
 public class TradeManagementApplication {
 

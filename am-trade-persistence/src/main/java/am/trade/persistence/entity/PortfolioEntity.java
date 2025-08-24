@@ -27,9 +27,6 @@ import lombok.NoArgsConstructor;
 public class PortfolioEntity {
     
     @Id
-    private String id;
-    
-    @Indexed(unique = true)
     private String portfolioId;
     
     private String name;
