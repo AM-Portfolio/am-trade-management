@@ -44,11 +44,11 @@
             <version>2.3.0</version>
         </dependency>
         <!-- Custom exceptions module -->
-        <dependency>
+        <!-- <dependency>
             <groupId>am.trade</groupId>
             <artifactId>am-trade-exceptions</artifactId>
             <version>${project.version}</version>
-        </dependency>
+        </dependency> -->
         <!-- Dashboard module dependency is already included above -->
     </dependencies>
     
