@@ -15,13 +15,7 @@
     <name>AM Trade Exceptions</name>
     <description>Exception handling module for AM Trade Management</description>
 
-    <dependencies>
-        <!-- Spring Web for HTTP status codes -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-        </dependency>
-        
+    <dependencies> 
         <!-- Jackson for JSON serialization -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
