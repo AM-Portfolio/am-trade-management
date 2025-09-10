@@ -43,7 +43,7 @@ public class TradeAnalyticsUtils {
                     symbol, 
                     startDate, 
                     endDate, 
-                    "60minute", 
+                    "1H", 
                     false);
             
             // Convert the response to our internal PriceDataPoint model

@@ -38,6 +38,8 @@ spring:
   config:
     import:
       - classpath:application-common.yml
+      - classpath:application-redis.yml
+      - classpath:application-market-data-client.yml
   data:
     mongodb:
       uri: ${MONGODB_URI}

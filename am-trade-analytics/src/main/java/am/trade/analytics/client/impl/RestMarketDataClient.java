@@ -1,16 +1,17 @@
 package am.trade.analytics.client.impl;
 
 import am.trade.analytics.client.MarketDataClient;
+import am.trade.analytics.client.interceptor.RequestResponseLoggingInterceptor;
 import am.trade.analytics.client.model.HistoricalMarketDataResponse;
 import am.trade.analytics.model.historicaldata.HistoricalDataRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
@@ -24,26 +25,26 @@ import java.time.LocalDateTime;
 public class RestMarketDataClient implements MarketDataClient {
 
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RequestResponseLoggingInterceptor loggingInterceptor;
     
-    @Value("${market-data.api.base-url:http://localhost:8084}")
+    @Value("${market-data.api.base-url}")
     private String baseUrl;
     
-    @Value("${market-data.api.historical-data-path:/api/v1/market-data/historical-data}")
+    @Value("${market-data.api.historical-data-path}")
     private String historicalDataPath;
     
-    @Value("${market-data.api.retry.max-attempts:3}")
+    @Value("${market-data.api.retry.max-attempts}")
     private int maxRetryAttempts;
     
-    @Value("${market-data.api.retry.initial-backoff-ms:1000}")
+    @Value("${market-data.api.retry.initial-backoff-ms}")
     private long initialBackoffMs;
-    
-    @Value("${market-data.api.retry.multiplier:2.0}")
+
+    @Value("${market-data.api.retry.multiplier}")
     private double backoffMultiplier;
     
 
     @Override
-    @Retryable(value = {RestClientException.class}, maxAttempts = 3, 
-               backoff = @Backoff(delay = 1000, multiplier = 2))
     public HistoricalMarketDataResponse fetchHistoricalData(
             String symbol, 
             LocalDateTime from, 
@@ -68,13 +69,21 @@ public class RestMarketDataClient implements MarketDataClient {
     }
     
     @Override
-    @Retryable(value = {RestClientException.class}, 
-               maxAttempts = 3, 
-               backoff = @Backoff(delay = 1000, multiplier = 2))
     public HistoricalMarketDataResponse fetchHistoricalData(HistoricalDataRequest request) {
-        log.info("Fetching historical data with request: {}", request);
-        
         String url = baseUrl + historicalDataPath;
+        
+        long startTime = System.currentTimeMillis();
+        
+        try {
+            // Convert request to JSON for logging
+            String jsonRequest = objectMapper.writeValueAsString(request);
+            
+            // Use the logging interceptor directly to log the request and generate curl command
+            loggingInterceptor.logRequest(HttpMethod.POST, url, jsonRequest);
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to serialize request to JSON: {}", e.getMessage());
+            log.info("Fetching historical data with request: {}", request);
+        }
         
         try {
             log.debug("Making POST request to: {}", url);
@@ -84,8 +93,8 @@ public class RestMarketDataClient implements MarketDataClient {
             if (response.getStatusCode().is2xxSuccessful()) {
                 HistoricalMarketDataResponse responseBody = response.getBody();
                 if (responseBody != null) {
-                    log.info("Successfully fetched historical data for {}, received {} data points", 
-                            request.getSymbols(), responseBody.getCount());
+                    // Use the logging interceptor to log the response
+                    loggingInterceptor.logResponse(response, startTime);
                     return responseBody;
                 } else {
                     log.error("Received empty response body");
@@ -100,4 +109,5 @@ public class RestMarketDataClient implements MarketDataClient {
             throw new RuntimeException("Error fetching historical data: " + e.getMessage(), e);
         }
     }
+    
 }
