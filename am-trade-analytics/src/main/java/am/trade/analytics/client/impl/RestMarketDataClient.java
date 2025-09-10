@@ -2,6 +2,7 @@ package am.trade.analytics.client.impl;
 
 import am.trade.analytics.client.MarketDataClient;
 import am.trade.analytics.client.model.HistoricalMarketDataResponse;
+import am.trade.analytics.model.historicaldata.HistoricalDataRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,10 +12,8 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 /**
  * REST implementation of the MarketDataClient interface
@@ -41,7 +40,6 @@ public class RestMarketDataClient implements MarketDataClient {
     @Value("${market-data.api.retry.multiplier:2.0}")
     private double backoffMultiplier;
     
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     @Retryable(value = {RestClientException.class}, maxAttempts = 3, 
@@ -56,25 +54,38 @@ public class RestMarketDataClient implements MarketDataClient {
         log.info("Fetching historical data for symbol: {}, from: {}, to: {}, interval: {}, continuous: {}", 
                 symbol, from, to, interval, continuous);
         
-        String url = UriComponentsBuilder.fromUriString(baseUrl + historicalDataPath)
-                .queryParam("symbol", symbol)
-                .queryParam("from", from.format(DATE_TIME_FORMATTER))
-                .queryParam("to", to.format(DATE_TIME_FORMATTER))
-                .queryParam("interval", interval)
-                .queryParam("continuous", continuous)
-                .build()
-                .toUriString();
+        // Create a request object from the parameters
+        HistoricalDataRequest request = HistoricalDataRequest.builder()
+                .symbols(symbol)
+                .fromDate(from.toLocalDate())
+                .toDate(to.toLocalDate())
+                .interval(interval)
+                .continuous(continuous)
+                .build();
+        
+        // Call the new method that uses POST
+        return fetchHistoricalData(request);
+    }
+    
+    @Override
+    @Retryable(value = {RestClientException.class}, 
+               maxAttempts = 3, 
+               backoff = @Backoff(delay = 1000, multiplier = 2))
+    public HistoricalMarketDataResponse fetchHistoricalData(HistoricalDataRequest request) {
+        log.info("Fetching historical data with request: {}", request);
+        
+        String url = baseUrl + historicalDataPath;
         
         try {
-            log.debug("Making request to: {}", url);
-            ResponseEntity<HistoricalMarketDataResponse> response = restTemplate.getForEntity(
-                    url, HistoricalMarketDataResponse.class);
+            log.debug("Making POST request to: {}", url);
+            ResponseEntity<HistoricalMarketDataResponse> response = restTemplate.postForEntity(
+                    url, request, HistoricalMarketDataResponse.class);
             
             if (response.getStatusCode().is2xxSuccessful()) {
                 HistoricalMarketDataResponse responseBody = response.getBody();
                 if (responseBody != null) {
                     log.info("Successfully fetched historical data for {}, received {} data points", 
-                            symbol, responseBody.getCount());
+                            request.getSymbols(), responseBody.getCount());
                     return responseBody;
                 } else {
                     log.error("Received empty response body");
