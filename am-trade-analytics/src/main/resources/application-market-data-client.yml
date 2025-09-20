@@ -1,7 +1,9 @@
+AM_MARKET_DATA_API_URL: http://localhost:8092
+
 market-data:
   api:
     # Base URL for the market data API
-    base-url: http://localhost:8092
+    base-url: ${AM_MARKET_DATA_API_URL}
     # Path for historical data endpoint
     historical-data-path: /api/v1/market-data/historical-data
     # Connection timeout in milliseconds

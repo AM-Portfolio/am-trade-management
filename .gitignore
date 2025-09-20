@@ -61,7 +61,7 @@ ehthumbs.db
 Thumbs.db
 
 # Environment files
-.env
+#.env
 .env.local
 .env.development.local
 .env.test.local
