@@ -1,0 +1,119 @@
+{
+    "portfolioId": "MKU257_TES29T1",
+    "symbol": "HDFC",
+    "instrumentInfo": {
+        "symbol": "HDFC",
+        "description": "HDFC Bank Ltd.",
+        "type": "STOCK",
+        "exchange": "NASDAQ"
+    },
+    "strategy": "SWING_TRADE",
+    "status": "WIN",
+    "tradePositionType": "LONG",
+    "entryInfo": {
+        "timestamp": "2025-07-01T10:30:00",
+        "price": 198.75,
+        "quantity": 100,
+        "fees": 1.99,
+        "notes": "Entered on support level bounce with increasing volume"
+    },
+    "exitInfo": {
+        "timestamp": "2025-07-03T14:45:00",
+        "price": 205.50,
+        "quantity": 100,
+        "fees": 1.99,
+        "notes": "Exited at resistance level with decreasing momentum"
+    },
+    "metrics": {
+        "profitLoss": 675.00,
+        "profitLossPercentage": 3.40,
+        "riskRewardRatio": 2.5,
+        "holdingPeriodHours": 52.25
+    },
+    "tradeExecutions": [
+        {
+            "executionId": "exec1",
+            "timestamp": "2025-07-01T10:30:00",
+            "type": "BUY",
+            "price": 198.75,
+            "quantity": 100,
+            "fees": 1.99
+        },
+        {
+            "executionId": "exec2",
+            "timestamp": "2025-07-03T14:45:00",
+            "type": "SELL",
+            "price": 205.50,
+            "quantity": 100,
+            "fees": 1.99
+        }
+    ],
+    "notes": "Strong technical setup with good fundamental backdrop. Earnings momentum and sector strength supported the trade.",
+    "tags": [
+        "tech",
+        "momentum",
+        "earnings",
+        "swing"
+    ],
+    "userId": "user457",
+    "attachments": [
+        {
+            "type": "CHART",
+            "name": "entry-chart.png",
+            "data": "base64encodedstringhere..."
+        },
+        {
+            "type": "CHART",
+            "name": "exit-chart.png",
+            "data": "base64encodedstringhere..."
+        }
+    ],
+    "psychologyData": {
+        "entryPsychologyFactors": [
+            "FOLLOWING_THE_PLAN",
+            "INTUITION",
+            "OVERCONFIDENCE",
+            "CUSTOM_ENTRY"
+        ],
+        "exitPsychologyFactors": [
+            "DISCIPLINE",
+            "TAKING_PROFITS",
+            "CUSTOM_EXIT"
+        ],
+        "behaviorPatterns": [
+            "DISCIPLINED_EXECUTION",
+            "POSITION_SIZING_ISSUES",
+            "CUSTOM_BEHAVIOR"
+        ],
+        "psychologyTags": {
+            "POSITIVE": [
+                "calm",
+                "focused",
+                "prepared"
+            ],
+            "NEGATIVE": []
+        },
+        "psychologyNotes": "Felt confident in the setup and maintained discipline throughout the trade. No emotional decision-making."
+    },
+    "entryReasoning": {
+        "technicalReasons": [
+            "SUPPORT_BOUNCE",
+            "MOVING_AVERAGE_CROSSOVER",
+            "VOLUME_SPIKE"
+        ],
+        "fundamentalReasons": [
+            "ANALYST_UPGRADE",
+            "EARNINGS_BEAT",
+            "PRODUCT_LAUNCH"
+        ],
+        "confidenceLevel": 7,
+        "supportingIndicators": [
+            "RSI showing oversold conditions",
+            "MACD bullish crossover",
+            "Positive volume flow"
+        ],
+        "conflictingIndicators": [
+            "Overall market uncertainty"
+        ]
+    }
+}

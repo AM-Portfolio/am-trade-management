@@ -27,7 +27,22 @@
         </dependency>
         <dependency>
             <groupId>am.trade</groupId>
+            <artifactId>am-trade-persistence</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>am.trade</groupId>
             <artifactId>am-trade-kafka</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>am.trade</groupId>
+            <artifactId>am-trade-exceptions</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>am.trade</groupId>
+            <artifactId>am-trade-analytics</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

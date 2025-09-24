@@ -7,10 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 
-import am.trade.models.config.MongoConfig;
-import am.trade.services.mapper.TradeMapper;
-import am.trade.services.service.TradeService;
-import am.trade.services.service.impl.TradeServiceImpl;
+import am.trade.models.mapper.TradeMapper;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.retry.RetryConfig;
 
@@ -18,9 +15,9 @@ import io.github.resilience4j.retry.RetryConfig;
  * Auto-configuration for trade services
  */
 @AutoConfiguration
+@Import(ServicesAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "am.trade.services", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ComponentScan(basePackages = "am.trade.services")
-@Import(MongoConfig.class)
 public class TradeServicesAutoConfiguration {
     
     /**

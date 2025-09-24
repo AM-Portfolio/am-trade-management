@@ -1,0 +1,23 @@
+# Redis
+REDIS_HOSTNAME: localhost
+REDIS_PASSWORD: RedisPassword123!
+REDIS_PORT: 6379
+
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOSTNAME}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD} # Uncomment and set if your Redis instance requires authentication
+      # database: 0 # Default is 0
+      # timeout: 2000 # Connection timeout in milliseconds
+      # ssl: false # Enable SSL support
+      client-name: am-trade-analytics
+      connect-timeout: 5000 # Connection timeout in milliseconds
+      # Lettuce specific configurations
+      lettuce:
+        pool:
+          max-active: 8 # Maximum number of connections that can be allocated
+          max-idle: 8 # Maximum number of idle connections
+          min-idle: 0 # Minimum number of idle connections
+          max-wait: -1ms # Maximum amount of time to wait for a connection

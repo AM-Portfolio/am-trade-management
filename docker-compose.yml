@@ -1,0 +1,57 @@
+version: '3.8'
+
+
+services:
+  am-trade-service:
+    container_name: am-trade-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+        - .env
+    environment:
+      AM_MARKET_DATA_API_URL: ${AM_MARKET_DATA_API_URL}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: docker
+
+      # MongoDB Configuration
+      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_DATABASE: ${MONGODB_DATABASE}
+      MONGODB_AUTHENTICATION_DATABASE: admin
+
+      # Redis Configuration
+      REDIS_HOSTNAME: ${REDIS_HOSTNAME}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+
+    entrypoint: ["/bin/sh", "-c"]
+    command: 
+      - |
+        echo "=== AM Trade Service Environment Variables ==="
+        echo "Database URI: $${MONGODB_URI}"
+        echo "Database User: $${MONGODB_USERNAME}"
+        echo "Kafka Servers: $${KAFKA_BOOTSTRAP_SERVERS}"
+        echo "Kafka Group: $${KAFKA_CONSUMER_GROUP_ID}"
+        echo "Max Retries: $${AM_TRADE_MAX_RETRIES}"
+        echo "=== Starting AM Trade Service ==="
+        java -jar app.jar
+    ports:
+      - "8073:8080"
+    networks:
+      - market-data-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 3s
+      retries: ${AM_TRADE_MAX_RETRIES}
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  influxdb_data:
+  grafana_data:
+
+networks:
+  market-data-network:
+    driver: bridge

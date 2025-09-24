@@ -61,17 +61,12 @@ ehthumbs.db
 Thumbs.db
 
 # Environment files
-.env
+#.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Application properties overrides
-application-*.properties
-!application-example.properties
-application-*.yml
-!application-example.yml
 
 # Test reports and logs
 **/test-output/

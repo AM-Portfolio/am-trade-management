@@ -1,0 +1,23 @@
+# Persistence Module Configuration
+am:
+  trade:
+    persistence:
+      enabled: true
+      portfolio:
+        enabled: true
+        collection-name: portfolios
+        cache-ttl-minutes: 30
+        validate-on-save: true
+      mongo:
+        remove-type-info: true
+        connection-pool-size: 20
+        max-wait-time-ms: 5000
+        socket-timeout-ms: 10000
+        retry-writes: true
+        write-concern: MAJORITY
+      retry:
+        enabled: true
+        max-attempts: 3
+        initial-interval-ms: 1000
+        multiplier: 2.0
+        max-interval-ms: 10000
