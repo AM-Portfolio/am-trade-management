@@ -35,8 +35,8 @@ public class TradePsychologyData {
     // Behavior patterns identified in this trade
     private List<TradeBehaviorPattern> behaviorPatterns;
     
-    // Tags organized by categories
-    private Map<TradeTagCategories, List<String>> categorizedTags;
+    // Tags organized by categories - using String keys for MongoDB compatibility
+    private Map<String, List<String>> categorizedTags;
     
     // Notes about psychological aspects of the trade
     private String psychologyNotes;
@@ -90,7 +90,7 @@ public class TradePsychologyData {
      * Add a tag to a specific category
      * 
      * @param categoryCode The code for the tag category
-     * @param categoryDescription Optional description for new custom category
+     * @param categoryDescription Optional description for new custom category (not used, kept for backward compatibility)
      * @param tag The tag to add
      * @return This instance for method chaining
      */
@@ -99,8 +99,7 @@ public class TradePsychologyData {
             categorizedTags = new HashMap<>();
         }
         
-        TradeTagCategories category = TradeTagCategories.fromCode(categoryCode, categoryDescription);
-        categorizedTags.computeIfAbsent(category, k -> new ArrayList<>()).add(tag);
+        categorizedTags.computeIfAbsent(categoryCode, k -> new ArrayList<>()).add(tag);
         return this;
     }
 }

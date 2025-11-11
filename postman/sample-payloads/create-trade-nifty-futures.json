@@ -1,0 +1,178 @@
+{
+  "portfolioId": "{{portfolioId}}",
+  "userId": "{{userId}}",
+  "instrumentInfo": {
+    "symbol": "NIFTY25JULFUT",
+    "isin": null,
+    "exchange": "NSE",
+    "segment": "INDEX_FUTURES",
+    "series": "FUT",
+    "derivativeInfo": {
+      "expiryDate": "2025-07-31",
+      "underlyingSymbol": "NIFTY",
+      "futureType": "MONTHLY",
+      "isCashSettled": true
+    },
+    "description": "Nifty July Futures",
+    "currency": "INR",
+    "lotSize": "50"
+  },
+  "strategy": "Momentum Trading",
+  "status": "WIN",
+  "tradePositionType": "LONG",
+  "entryInfo": {
+    "timestamp": "2025-07-01T09:30:00",
+    "price": 22450.75,
+    "quantity": 2,
+    "fees": 125.50
+  },
+  "exitInfo": {
+    "timestamp": "2025-07-01T15:15:00",
+    "price": 22675.25,
+    "quantity": 2,
+    "fees": 127.75
+  },
+  "metrics": {
+    "profitLoss": 22450.0,
+    "profitLossPercentage": 1.0,
+    "holdingTimeHours": 5.75,
+    "riskRewardRatio": 2.5
+  },
+  "psychologyData": {
+    "entryPsychologyFactors": [
+      {
+        "code": "FOLLOWING_THE_PLAN",
+        "description": "Disciplined entry according to trading plan"
+      },
+      {
+        "code": "DISCIPLINED",
+        "description": "Disciplined entry according to trading plan"
+      }
+    ],
+    "exitPsychologyFactors": [
+      {
+        "code": "DISCIPLINE",
+        "description": "Exiting according to predefined plan"
+      },
+      {
+        "code": "TAKING_PROFITS",
+        "description": "Disciplined profit-taking at target"
+      }
+    ],
+    "behaviorPatterns": [
+      {
+        "code": "DISCIPLINED_EXECUTION",
+        "description": "Following trading plan consistently"
+      }
+    ],
+    "categorizedTags": {
+      "STRATEGY": ["Momentum Trading", "Breakout Strategy"],
+      "MARKET_CONDITION": ["Bullish Trend", "High Volume"],
+      "SETUP_TYPE": ["Flag Pattern", "Breakout"],
+      "TIME_FRAME": ["15 Minutes", "Intraday"],
+      "RISK_LEVEL": ["Medium Risk"],
+      "TECHNICAL_PATTERN": ["Bullish Flag", "MACD Crossover"],
+      "SENTIMENT": ["Bullish"]
+    },
+    "psychologyNotes": "Felt confident after confirming bullish trend with multiple indicators. Stuck to predetermined entry and exit levels. No FOMO or emotional decision making. Entry was planned and executed with discipline. Exit was based on reaching resistance level as per the trading plan, not on fear or greed."
+  },
+  "entryReasoning": {
+    "technicalReasons": [
+      {
+        "code": "TREND_FOLLOWING",
+        "description": "Entry based on established price trend"
+      },
+      {
+        "code": "RESISTANCE_BREAKOUT",
+        "description": "Price breaking above resistance level"
+      },
+      {
+        "code": "MOVING_AVERAGE_CROSSOVER",
+        "description": "Crossover of moving averages"
+      },
+      {
+        "code": "MACD_SIGNAL",
+        "description": "MACD signal line crossover"
+      },
+      {
+        "code": "VOLUME_SPIKE",
+        "description": "Unusual increase in trading volume"
+      },
+      {
+        "code": "CHART_PATTERN",
+        "description": "Recognized chart pattern formation"
+      }
+    ],
+    "fundamentalReasons": [
+      {
+        "code": "ECONOMIC_DATA",
+        "description": "Favorable economic indicators"
+      }
+    ],
+    "primaryReason": "Bullish flag breakout with strong momentum",
+    "reasoningSummary": "Strong bullish setup with multiple technical confirmations (RSI 62.5, MACD positive crossover, 20 EMA above 50 EMA) and positive fundamental backdrop (GDP growth data at 7.2%). Bullish flag pattern formed with high volume breakout at 22450.75. Entry at breakout with risk-reward ratio of 2.5:1. Stop loss placed at 22350 (100 points risk) targeting 22650 resistance level (200 points reward). Volume increased from 120000 to 145000 confirming breakout strength. Pre-market analysis showed FII buying of 2500 Cr supporting bullish sentiment.",
+    "confidenceLevel": 8,
+    "supportingIndicators": [
+      "RSI 62.5 - above 60 indicating strong momentum with room to move higher without being overbought",
+      "MACD positive crossover on 15M timeframe - histogram showing increasing bullish momentum",
+      "20 EMA (22420) crossed above 50 EMA (22390) on 30M chart confirming trend reversal",
+      "Bullish flag pattern breakout - pole formed from 22200 to 22480, flag consolidation 22400-22450",
+      "Above average volume - 145000 contracts vs 120000 average supporting the breakout validity",
+      "Support levels established at 22400 (previous resistance) and 22350 (flag lower boundary)",
+      "Positive GDP growth data - 7.2% growth in Q2 2025 exceeded market expectations of 6.8%",
+      "FII buying strong - Net inflow of 2500 Cr in index stocks in last 3 sessions",
+      "Banking and IT sectors showing leadership - contributing 65% to index gains",
+      "Positive correlation with US futures - S&P 500 futures up 0.35% in pre-market",
+      "VIX at 14.5 - low volatility environment favorable for trend following",
+      "Open interest increased by 8% showing fresh long buildup"
+    ],
+    "conflictingIndicators": [
+      "Approaching major psychological level at 22500 - potential resistance zone",
+      "Global crude oil prices showing weakness - potential headwind for Indian markets"
+    ]
+  },
+  "exitReasoning": {
+    "technicalReasons": [
+      {
+        "code": "RESISTANCE_BREAKOUT",
+        "description": "Price at resistance level"
+      },
+      {
+        "code": "OVERBOUGHT_RSI",
+        "description": "RSI indicating overbought conditions"
+      },
+      {
+        "code": "VOLUME_SPIKE",
+        "description": "Volume declining at resistance"
+      },
+      {
+        "code": "DIVERGENCE",
+        "description": "Price and indicator moving in opposite directions"
+      }
+    ],
+    "fundamentalReasons": [],
+    "exitPrimaryReason": "Resistance level reached with overbought RSI",
+    "exitReasoningSummary": "Exited at predetermined resistance level of 22675 as per trading plan. RSI moved into overbought territory at 72.5 indicating potential reversal. Volume declining from 145000 to 95000 at resistance showing weakening buying pressure. Minor bearish divergence forming on 5-min chart (price making higher highs but RSI making lower highs). Profit target of 1% achieved successfully (224 points gain). Risk-reward ratio of 2.5:1 captured perfectly. Adhered to trading plan - booked profits at resistance rather than being greedy. US futures weakness in afternoon session provided additional exit confirmation.",
+    "exitConfidenceLevel": 9,
+    "exitSupportingIndicators": [
+      "RSI 72.5 - moved into overbought territory above 70 suggesting potential reversal",
+      "Price reached predetermined resistance zone at 22675 - target achieved",
+      "Volume declining sharply - 145000 contracts at entry dropped to 95000 at resistance",
+      "Bearish divergence forming on 5-min chart - price higher high vs RSI lower high",
+      "Profit booking visible in banking stocks - Nifty Bank down 0.3% from highs",
+      "US futures showing weakness - S&P 500 futures dropped to -0.15% in afternoon",
+      "Profit target of 1% achieved - 224 points gain on 100 points risk (2.24:1 actual RR)",
+      "MACD histogram showing declining momentum on 15M chart",
+      "Previous resistance at 22680 rejected twice in last week - strong supply zone",
+      "Open interest remained flat at resistance - no fresh buying interest"
+    ],
+    "exitConflictingIndicators": [
+      "Market breadth still positive - advance/decline ratio at 1.8:1"
+    ],
+    "exitQualityScore": 9
+  },
+  "notes": "Perfect execution of momentum trading strategy. Entry at breakout with multiple confirmations. Exit at resistance as planned.",
+  "tags": ["futures", "momentum", "intraday", "win"],
+  "tradeExecutions": [],
+  "attachments": []
+}

@@ -1,33 +1,63 @@
 package am.trade.common.models.enums;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Enum representing different market segments
  */
+@Schema(description = "Market segment classification for the trading instrument")
 public enum MarketSegment {
     // Primary instrument types
+    @Schema(description = "Regular equity/stock segment")
     EQUITY("Equity", "Regular equity/stock segment", false),
+    
+    @Schema(description = "Market index segment")
     INDEX("Index", "Market index segment", false),
     
     // Derivative types
+    @Schema(description = "Futures contracts on individual stocks")
     EQUITY_FUTURES("Equity Futures", "Futures contracts on individual stocks", true),
+    
+    @Schema(description = "Options contracts on individual stocks")
     EQUITY_OPTIONS("Equity Options", "Options contracts on individual stocks", true),
+    
+    @Schema(description = "Futures contracts on market indices")
     INDEX_FUTURES("Index Futures", "Futures contracts on market indices", true),
+    
+    @Schema(description = "Options contracts on market indices")
     INDEX_OPTIONS("Index Options", "Options contracts on market indices", true),
     
     // Other segments
+    @Schema(description = "Currency trading segment")
     CURRENCY("Currency", "Currency segment", false),
+    
+    @Schema(description = "Commodity trading segment")
     COMMODITY("Commodity", "Commodity segment", false),
+    
+    @Schema(description = "Debt/Bond trading segment")
     DEBT("Debt", "Debt/Bond segment", false),
+    
+    @Schema(description = "Mutual fund segment")
     MUTUAL_FUND("Mutual Fund", "Mutual fund segment", false),
+    
+    @Schema(description = "Exchange Traded Fund segment")
     ETF("ETF", "Exchange Traded Fund segment", false),
     
     // Legacy codes (kept for backward compatibility)
+    @Schema(description = "Generic futures segment (legacy)")
     FUT("Futures", "Generic futures segment", true),
+    
+    @Schema(description = "Generic options segment (legacy)")
     OPT("Options", "Generic options segment", true),
+    
+    @Schema(description = "Equity segment (legacy code)")
     EQ("Equity", "Equity segment", false),
+    
+    @Schema(description = "Futures and Options segment (legacy)")
     FO("F&O", "Futures and Options segment", true),
     
     // Default
+    @Schema(description = "Unknown market segment")
     UNKNOWN("Unknown", "Unknown market segment", false);
     
     private final String displayName;
