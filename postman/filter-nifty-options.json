@@ -1,0 +1,19 @@
+{
+  "name": "NIFTY Options This Month",
+  "description": "NIFTY options trades from current month",
+  "isDefault": false,
+  "filterConfig": {
+    "portfolioIds": ["163d0143-4fcb-480c-ac20-622f14e0e293"],
+    "timePeriod": {
+      "period": "THIS_MONTH"
+    },
+    "instruments": ["NIFTY"],
+    "instrumentFilters": {
+      "marketSegments": ["INDEX_OPTIONS"],
+      "indexTypes": ["NIFTY"],
+      "derivativeTypes": ["OPTIONS"]
+    },
+    "metricTypes": ["PERFORMANCE", "RISK", "DISTRIBUTION"],
+    "groupBy": ["STRATEGY", "DAY_OF_WEEK"]
+  }
+}

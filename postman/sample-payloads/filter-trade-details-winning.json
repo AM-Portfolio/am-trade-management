@@ -1,0 +1,9 @@
+{
+  "userId": "user123",
+  "portfolioIds": ["163d0143-4fcb-480c-ac20-622f14e0e293"],
+  "symbols": ["NIFTY", "BANKNIFTY"],
+  "statuses": ["WIN"],
+  "startDate": "2025-01-01",
+  "endDate": "2025-12-31",
+  "minProfitLoss": 0.01
+}

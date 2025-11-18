@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import am.trade.api.dto.FilterTradeDetailsRequest;
+import am.trade.api.dto.FilterTradeDetailsResponse;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.enums.TradeStatus;
 
@@ -76,4 +78,13 @@ public interface TradeApiService {
      * @return List of trade details matching the provided IDs
      */
     List<TradeDetails> getTradeDetailsByTradeIds(List<String> tradeIds);
+    
+    /**
+     * Filter trade details using favorite filter configuration
+     * 
+     * @param request Filter request containing criteria and optional favorite filter ID
+     * @param pageable Pagination parameters (optional)
+     * @return Filtered trade details response with pagination metadata
+     */
+    FilterTradeDetailsResponse filterTradeDetails(FilterTradeDetailsRequest request, org.springframework.data.domain.Pageable pageable);
 }

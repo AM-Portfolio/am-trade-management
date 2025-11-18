@@ -1,0 +1,19 @@
+{
+  "name": "Recent Losses",
+  "description": "Losing trades from last 7 days for review",
+  "isDefault": false,
+  "filterConfig": {
+    "portfolioIds": ["163d0143-4fcb-480c-ac20-622f14e0e293"],
+    "timePeriod": {
+      "period": "LAST_7_DAYS"
+    },
+    "metricTypes": ["PROFIT_LOSS", "RISK"],
+    "profitLossFilters": {
+      "maxProfitLoss": -0.01
+    },
+    "tradeCharacteristics": {
+      "statuses": ["CLOSED"],
+      "tags": ["loss"]
+    }
+  }
+}
