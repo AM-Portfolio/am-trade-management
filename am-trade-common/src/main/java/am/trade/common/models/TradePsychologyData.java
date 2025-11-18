@@ -13,8 +13,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Model class for storing trade psychology data, behavior patterns, and categorized tags
@@ -40,6 +42,72 @@ public class TradePsychologyData {
     
     // Notes about psychological aspects of the trade
     private String psychologyNotes;
+    
+    /**
+     * Get entry psychology factors, filtering out null values
+     * This method is used during JSON serialization to exclude nulls
+     */
+    @JsonProperty("entryPsychologyFactors")
+    public List<EntryPsychology> getEntryPsychologyFactors() {
+        if (entryPsychologyFactors == null || entryPsychologyFactors.isEmpty()) {
+            return null;
+        }
+        List<EntryPsychology> filtered = entryPsychologyFactors.stream()
+            .filter(p -> p != null)
+            .collect(Collectors.toList());
+        return filtered.isEmpty() ? null : filtered;
+    }
+    
+    /**
+     * Get exit psychology factors, filtering out null values
+     * This method is used during JSON serialization to exclude nulls
+     */
+    @JsonProperty("exitPsychologyFactors")
+    public List<ExitPsychology> getExitPsychologyFactors() {
+        if (exitPsychologyFactors == null || exitPsychologyFactors.isEmpty()) {
+            return null;
+        }
+        List<ExitPsychology> filtered = exitPsychologyFactors.stream()
+            .filter(p -> p != null)
+            .collect(Collectors.toList());
+        return filtered.isEmpty() ? null : filtered;
+    }
+    
+    /**
+     * Get behavior patterns, filtering out null values
+     * This method is used during JSON serialization to exclude nulls
+     */
+    @JsonProperty("behaviorPatterns")
+    public List<TradeBehaviorPattern> getBehaviorPatterns() {
+        if (behaviorPatterns == null || behaviorPatterns.isEmpty()) {
+            return null;
+        }
+        List<TradeBehaviorPattern> filtered = behaviorPatterns.stream()
+            .filter(p -> p != null)
+            .collect(Collectors.toList());
+        return filtered.isEmpty() ? null : filtered;
+    }
+    
+    /**
+     * Set entry psychology factors (for deserialization)
+     */
+    public void setEntryPsychologyFactors(List<EntryPsychology> entryPsychologyFactors) {
+        this.entryPsychologyFactors = entryPsychologyFactors;
+    }
+    
+    /**
+     * Set exit psychology factors (for deserialization)
+     */
+    public void setExitPsychologyFactors(List<ExitPsychology> exitPsychologyFactors) {
+        this.exitPsychologyFactors = exitPsychologyFactors;
+    }
+    
+    /**
+     * Set behavior patterns (for deserialization)
+     */
+    public void setBehaviorPatterns(List<TradeBehaviorPattern> behaviorPatterns) {
+        this.behaviorPatterns = behaviorPatterns;
+    }
     
     /**
      * Add an entry psychology factor to the trade
