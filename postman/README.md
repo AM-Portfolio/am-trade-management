@@ -1,6 +1,6 @@
-# AM Trade Management - Postman Collections
+# AM Trade Management - Postman Collections & API Documentation
 
-This directory contains comprehensive Postman collections and environment configurations for testing the AM Trade Management API system.
+This directory contains comprehensive Postman collections, API schemas, documentation, and testing scripts for the AM Trade Management API system.
 
 ## 🚀 Getting Started
 
@@ -21,9 +21,50 @@ docker-compose up -d
 curl http://localhost:8073/actuator/health
 ```
 
+## 📚 Documentation Files
+
+### API Schemas & Code Generation
+| File | Description |
+|------|-------------|
+| `favorite-filter-api-schema.json` | **Complete JSON Schema** for FavoriteFilterController API - OpenAPI 3.0 compliant |
+| `favorite-filter-examples.json` | **Comprehensive examples** - 7 request types, 5 response types, curl examples |
+| `SCHEMA-CODE-GENERATION-GUIDE.md` | **Multi-language code generation** guide (Java, Python, Flutter, TypeScript) |
+| `SCHEMA-UPDATE-SUMMARY.md` | **Latest updates** to schema - metric types, groupBy dimensions, status enums |
+
+### Quick Reference Guides
+| File | Description |
+|------|-------------|
+| `FAVORITE-FILTER-QUICK-REF.md` | **Quick reference card** - All endpoints, models, common mistakes, pro tips |
+| `PAGINATION-QUICK-REF.md` | **Pagination guide** - Spring Pageable usage, sorting, filtering |
+| `QUICK-REFERENCE.md` | **General API reference** - Core endpoints and usage patterns |
+
+### Implementation Documentation
+| File | Description |
+|------|-------------|
+| `FILTER-IMPLEMENTATION-SUMMARY.md` | Filter implementation architecture and design decisions |
+| `FILTER-PAGINATION-GUIDE.md` | Detailed pagination implementation guide |
+| `FILTER-EXAMPLES-README.md` | Filter usage examples and patterns |
+| `FILTER-TRADE-DETAILS-README.md` | Trade details filtering documentation |
+| `BULK-DELETE-FILTERS.md` | Bulk deletion feature documentation |
+
+### Testing Scripts
+| File | Description |
+|------|-------------|
+| `test-comprehensive-filter.sh` | **Bash script** - Test all filter endpoints (Linux/Mac) |
+| `test-comprehensive-filter.ps1` | **PowerShell script** - Test all filter endpoints (Windows) |
+
 ## 📁 Collection Files
 
-### 1. AM-Trade-Management-API.postman_collection.json
+### 1. FavoriteFilterController.postman_collection.json
+**Favorite Filter Management** - Complete CRUD operations for user filter preferences:
+- Create/Update/Delete favorite filters
+- Get all filters for a user
+- Set/Get default filter
+- Apply saved filters to get metrics
+- Bulk delete multiple filters
+- Save current filter configuration
+
+### 2. AM-Trade-Management-API.postman_collection.json
 **Main API Collection** - Contains core trade management endpoints:
 
 #### 🔄 Trade Management
