@@ -26,10 +26,17 @@ curl http://localhost:8073/actuator/health
 ### API Schemas & Code Generation
 | File | Description |
 |------|-------------|
+| **FavoriteFilterController API** | |
 | `favorite-filter-api-schema.json` | **Complete JSON Schema** for FavoriteFilterController API - OpenAPI 3.0 compliant |
 | `favorite-filter-examples.json` | **Comprehensive examples** - 7 request types, 5 response types, curl examples |
 | `SCHEMA-CODE-GENERATION-GUIDE.md` | **Multi-language code generation** guide (Java, Python, Flutter, TypeScript) |
 | `SCHEMA-UPDATE-SUMMARY.md` | **Latest updates** to schema - metric types, groupBy dimensions, status enums |
+| **TradeController API** | |
+| `trade-controller-api-schema.json` | **Complete JSON Schema** for TradeController API - OpenAPI 3.0 compliant (19 models) |
+| `TRADE-CONTROLLER-EXAMPLES.md` | **Comprehensive examples** - Create, update, filter trades with full models |
+| `TRADE-SCHEMA-CODE-GENERATION-GUIDE.md` | **Multi-language code generation** guide for Trade models |
+| `TRADE-CONTROLLER-QUICK-REF.md` | **Quick reference** - Endpoints, data models, common filters |
+| `TRADE-SCHEMA-SUMMARY.md` | **Complete summary** - Schema statistics, model breakdown, best practices |
 
 ### Quick Reference Guides
 | File | Description |

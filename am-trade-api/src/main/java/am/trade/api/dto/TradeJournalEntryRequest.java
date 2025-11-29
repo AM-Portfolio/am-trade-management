@@ -1,5 +1,6 @@
 package am.trade.api.dto;
 
+import am.trade.common.models.Attachment;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -44,7 +45,18 @@ public class TradeJournalEntryRequest {
     @NotNull(message = "Entry date is required")
     private LocalDateTime entryDate;
     
+    // Legacy field - maintained for backward compatibility
+    @Deprecated
     private List<String> imageUrls; // URLs to attached images
+    
+    // Enhanced attachment support with metadata (similar to TradeDetails)
+    private List<Attachment> attachments;
+    
+    // Additional URL fields for various resources
+    private List<String> chartUrls;           // Chart analysis images
+    private List<String> documentUrls;        // PDF documents, notes, etc.
+    private List<String> videoUrls;           // Video analysis or recordings
+    private List<String> externalUrls;        // External references (news, articles, etc.)
     
     private List<String> relatedTradeIds; // Other related trades
 }
