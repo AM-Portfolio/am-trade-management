@@ -25,9 +25,6 @@ public class TradeJournalEntry {
     private String tradeId;
     private String title;
     private String content;
-    private String mood;
-    private Integer marketSentiment;
-    private List<String> tags;
     private Map<String, Object> customFields;
     private LocalDateTime entryDate;
     
@@ -45,6 +42,7 @@ public class TradeJournalEntry {
     private List<String> externalUrls;        // External references (news, articles, etc.)
     
     private List<String> relatedTradeIds;
+    private List<BehaviorPatternSummary> behaviorPatternSummaries; // Daily behavior pattern summaries
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

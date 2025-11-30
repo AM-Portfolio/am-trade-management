@@ -4,6 +4,37 @@
     "description": "Complete JSON Schema for TradeJournalController API with enhanced attachment support",
     "version": "2.0.0",
     "definitions": {
+        "BehaviorPatternSummary": {
+            "type": "object",
+            "description": "Behavior pattern summary for a trading day",
+            "properties": {
+                "summary": {
+                    "type": "string",
+                    "description": "Brief summary of the day's trading activities and observations",
+                    "example": "Active trading day with 3 positions. Strong bullish momentum in IT sector."
+                },
+                "mood": {
+                    "type": "string",
+                    "description": "Overall mood for the day (e.g., CONFIDENT, ANXIOUS, NEUTRAL, OPTIMISTIC, CAUTIOUS)",
+                    "example": "CONFIDENT"
+                },
+                "marketSentiment": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10,
+                    "description": "Market sentiment for the day (1-10: 1=bearish, 10=bullish)",
+                    "example": 7
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Tags categorizing the day's activities or themes",
+                    "example": ["high-volatility", "options-trading", "profit-day"]
+                }
+            }
+        },
         "Attachment": {
             "type": "object",
             "required": [
@@ -58,22 +89,6 @@
                 "content": {
                     "type": "string",
                     "description": "Content is required"
-                },
-                "mood": {
-                    "type": "string",
-                    "description": "Trading mood/psychology (e.g., CONFIDENT, ANXIOUS, NEUTRAL)"
-                },
-                "marketSentiment": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 10,
-                    "description": "Scale of 1-10, 1 being bearish, 10 being bullish"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 },
                 "customFields": {
                     "type": "object",
@@ -133,6 +148,13 @@
                         "type": "string"
                     },
                     "description": "Other related trades"
+                },
+                "behaviorPatternSummaries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/BehaviorPatternSummary"
+                    },
+                    "description": "List of daily behavior pattern summaries"
                 }
             }
         },
@@ -167,21 +189,6 @@
                 "content": {
                     "type": "string",
                     "description": "Journal entry content/body"
-                },
-                "mood": {
-                    "type": "string",
-                    "description": "Trading mood/psychology (e.g., CONFIDENT, ANXIOUS, NEUTRAL)"
-                },
-                "marketSentiment": {
-                    "type": "integer",
-                    "description": "Market sentiment scale (1-10: 1=bearish, 10=bullish)"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "description": "Tags for categorizing the journal entry"
                 },
                 "customFields": {
                     "type": "object",
@@ -242,6 +249,13 @@
                         "type": "string"
                     },
                     "description": "IDs of related trades"
+                },
+                "behaviorPatternSummaries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/BehaviorPatternSummary"
+                    },
+                    "description": "List of daily behavior pattern summaries"
                 },
                 "createdAt": {
                     "type": "string",

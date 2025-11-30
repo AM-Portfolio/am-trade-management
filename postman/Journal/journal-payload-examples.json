@@ -21,9 +21,14 @@
         "tradeId": "trade_67890",
         "title": "Nifty 50 Scalp Trade",
         "content": "Executed quick scalp on Nifty based on 5-minute breakout. Entry was clean at support level.",
-        "mood": "CONFIDENT",
-        "marketSentiment": 7,
-        "tags": ["scalping", "nifty50", "intraday"],
+        "behaviorPatternSummaries": [
+          {
+            "summary": "Quick scalping session on Nifty 50. Clean entry at support.",
+            "mood": "CONFIDENT",
+            "marketSentiment": 7,
+            "tags": ["scalping", "nifty50", "intraday"]
+          }
+        ],
         "entryDate": "2025-11-30T14:45:00Z"
       }
     },
@@ -35,9 +40,14 @@
         "tradeId": "trade_67890",
         "title": "Bank Nifty Options Trade",
         "content": "Executed call option on Bank Nifty. Chart showed bullish engulfing pattern.",
-        "mood": "OPTIMISTIC",
-        "marketSentiment": 8,
-        "tags": ["options", "banknifty"],
+        "behaviorPatternSummaries": [
+          {
+            "summary": "Options trading on Bank Nifty with bullish pattern confirmation.",
+            "mood": "OPTIMISTIC",
+            "marketSentiment": 8,
+            "tags": ["options", "banknifty"]
+          }
+        ],
         "entryDate": "2025-11-30T09:15:00Z",
         "imageUrls": [
           "https://storage.example.com/charts/banknifty_20251130.png",
@@ -54,9 +64,14 @@
         "tradeId": "trade_67890",
         "title": "Comprehensive Analysis - Reliance Industries",
         "content": "Detailed technical and fundamental analysis of Reliance Industries position trade. Entry based on multiple timeframe confirmation.",
-        "mood": "ANALYTICAL",
-        "marketSentiment": 6,
-        "tags": ["position-trade", "reliance", "technical-analysis", "fundamental-analysis"],
+        "behaviorPatternSummaries": [
+          {
+            "summary": "Position trade setup on Reliance with multi-timeframe analysis.",
+            "mood": "ANALYTICAL",
+            "marketSentiment": 6,
+            "tags": ["position-trade", "reliance", "technical-analysis", "fundamental-analysis"]
+          }
+        ],
         "entryDate": "2025-11-30T11:00:00Z",
         "attachments": [
           {
@@ -92,9 +107,14 @@
         "tradeId": "trade_67893",
         "title": "HDFC Bank Swing Trade Setup",
         "content": "Setting up swing trade on HDFC Bank based on weekly chart pattern. Multiple confirmations from volume and RSI.",
-        "mood": "CONFIDENT",
-        "marketSentiment": 7,
-        "tags": ["swing-trade", "hdfc-bank", "weekly-chart"],
+        "behaviorPatternSummaries": [
+          {
+            "summary": "Swing trade setup with strong technical confirmations.",
+            "mood": "CONFIDENT",
+            "marketSentiment": 7,
+            "tags": ["swing-trade", "hdfc-bank", "weekly-chart"]
+          }
+        ],
         "entryDate": "2025-11-30T16:30:00Z",
         "chartUrls": [
           "https://tradingview.com/chart/HDFCBANK/weekly_analysis",
@@ -124,15 +144,20 @@
         "tradeId": "trade_67894",
         "title": "Major Position Trade - TCS Weekly Options Strategy",
         "content": "Comprehensive weekly options strategy on TCS. Implemented iron condor based on earnings expectations and volatility analysis. Entry executed with precise risk management parameters. Position sizing calculated based on portfolio allocation rules.",
-        "mood": "STRATEGIC",
-        "marketSentiment": 6,
-        "tags": [
-          "options-strategy",
-          "iron-condor",
-          "tcs",
-          "weekly-options",
-          "volatility-play",
-          "earnings-trade"
+        "behaviorPatternSummaries": [
+          {
+            "summary": "Complex options strategy execution with comprehensive planning.",
+            "mood": "STRATEGIC",
+            "marketSentiment": 6,
+            "tags": [
+              "options-strategy",
+              "iron-condor",
+              "tcs",
+              "weekly-options",
+              "volatility-play",
+              "earnings-trade"
+            ]
+          }
         ],
         "customFields": {
           "strategy_type": "iron_condor",
@@ -212,9 +237,14 @@
         "userId": "user_12345",
         "title": "Market Observation - High Volatility Day",
         "content": "Observed unusual volatility across the board. Bank Nifty showing strong bearish pressure while IT stocks holding support. VIX spiked to 18.5. Decision made to stay on sidelines until clearer direction emerges.",
-        "mood": "CAUTIOUS",
-        "marketSentiment": 4,
-        "tags": ["market-analysis", "high-volatility", "observation"],
+        "behaviorPatternSummaries": [
+          {
+            "summary": "High volatility market conditions. Decided to remain on sidelines.",
+            "mood": "CAUTIOUS",
+            "marketSentiment": 4,
+            "tags": ["market-analysis", "high-volatility", "observation"]
+          }
+        ],
         "entryDate": "2025-11-30T15:30:00Z",
         "chartUrls": [
           "https://tradingview.com/chart/NIFTY50/market_overview",
@@ -234,14 +264,19 @@
         "tradeId": "trade_67895",
         "title": "Lesson Learned - Overtrading Due to FOMO",
         "content": "Made the mistake of entering a trade based on FOMO after seeing strong moves in the market. Violated my trading plan by not waiting for proper setup. Position immediately went against me. Closed with small loss but important lesson learned about discipline and patience.",
-        "mood": "REFLECTIVE",
-        "marketSentiment": 5,
-        "tags": [
-          "psychology",
-          "lesson-learned",
-          "fomo",
-          "discipline",
-          "trading-mistakes"
+        "behaviorPatternSummaries": [
+          {
+            "summary": "FOMO-driven trade violation. Lesson in discipline and patience.",
+            "mood": "REFLECTIVE",
+            "marketSentiment": 5,
+            "tags": [
+              "psychology",
+              "lesson-learned",
+              "fomo",
+              "discipline",
+              "trading-mistakes"
+            ]
+          }
         ],
         "customFields": {
           "emotional_state": "FOMO_driven",
@@ -270,9 +305,14 @@
         "tradeId": "trade_67890",
         "title": "Nifty 50 Scalp Trade - Updated with Exit Analysis",
         "content": "Executed quick scalp on Nifty based on 5-minute breakout. Entry was clean at support level. UPDATE: Exited with 1.2% profit after hitting first target. Price continued higher but followed plan to take profits at predetermined level. Discipline maintained.",
-        "mood": "SATISFIED",
-        "marketSentiment": 7,
-        "tags": ["scalping", "nifty50", "intraday", "successful-trade"],
+        "behaviorPatternSummaries": [
+          {
+            "summary": "Successful scalp with disciplined exit at target. Profit taken as planned.",
+            "mood": "SATISFIED",
+            "marketSentiment": 7,
+            "tags": ["scalping", "nifty50", "intraday", "successful-trade"]
+          }
+        ],
         "entryDate": "2025-11-30T14:45:00Z",
         "attachments": [
           {

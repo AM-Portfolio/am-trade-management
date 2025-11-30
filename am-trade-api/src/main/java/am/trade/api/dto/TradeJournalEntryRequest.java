@@ -1,6 +1,7 @@
 package am.trade.api.dto;
 
 import am.trade.common.models.Attachment;
+import am.trade.common.models.BehaviorPatternSummary;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -34,12 +35,6 @@ public class TradeJournalEntryRequest {
     @NotBlank(message = "Content is required")
     private String content;
     
-    private String mood; // Trading mood/psychology (e.g., CONFIDENT, ANXIOUS, NEUTRAL)
-    
-    private Integer marketSentiment; // Scale of 1-10, 1 being bearish, 10 being bullish
-    
-    private List<String> tags;
-    
     private Map<String, Object> customFields;
     
     @NotNull(message = "Entry date is required")
@@ -59,4 +54,6 @@ public class TradeJournalEntryRequest {
     private List<String> externalUrls;        // External references (news, articles, etc.)
     
     private List<String> relatedTradeIds; // Other related trades
+    
+    private List<BehaviorPatternSummary> behaviorPatternSummaries; // Daily behavior pattern summaries
 }

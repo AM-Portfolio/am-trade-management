@@ -1,6 +1,7 @@
 package am.trade.api.dto;
 
 import am.trade.common.models.Attachment;
+import am.trade.common.models.BehaviorPatternSummary;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -38,15 +39,6 @@ public class TradeJournalEntryResponse {
     @Schema(description = "Journal entry content/body")
     private String content;
     
-    @Schema(description = "Trading mood/psychology (e.g., CONFIDENT, ANXIOUS, NEUTRAL)")
-    private String mood;
-    
-    @Schema(description = "Market sentiment scale (1-10: 1=bearish, 10=bullish)")
-    private Integer marketSentiment;
-    
-    @Schema(description = "Tags for categorizing the journal entry")
-    private List<String> tags;
-    
     @Schema(description = "Custom fields for extensibility")
     private Map<String, Object> customFields;
     
@@ -77,6 +69,9 @@ public class TradeJournalEntryResponse {
     
     @Schema(description = "IDs of related trades")
     private List<String> relatedTradeIds;
+    
+    @Schema(description = "List of daily behavior pattern summaries")
+    private List<BehaviorPatternSummary> behaviorPatternSummaries;
     
     @Schema(description = "Timestamp when the entry was created")
     private LocalDateTime createdAt;

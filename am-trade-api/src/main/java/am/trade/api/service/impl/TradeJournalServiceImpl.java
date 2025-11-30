@@ -105,13 +105,11 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         // Update fields
         existingEntry.setTitle(request.getTitle());
         existingEntry.setContent(request.getContent());
-        existingEntry.setMood(request.getMood());
-        existingEntry.setMarketSentiment(request.getMarketSentiment());
-        existingEntry.setTags(request.getTags());
         existingEntry.setCustomFields(request.getCustomFields());
         existingEntry.setEntryDate(request.getEntryDate());
         existingEntry.setImageUrls(request.getImageUrls());
         existingEntry.setRelatedTradeIds(request.getRelatedTradeIds());
+        existingEntry.setBehaviorPatternSummaries(request.getBehaviorPatternSummaries());
         existingEntry.setUpdatedAt(LocalDateTime.now());
         
         // Don't update tradeId as it's a key relationship
@@ -171,11 +169,6 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         if (request.getEntryDate() == null) {
             throw new IllegalArgumentException("Entry date is required");
         }
-        
-        if (request.getMarketSentiment() != null && 
-                (request.getMarketSentiment() < 1 || request.getMarketSentiment() > 10)) {
-            throw new IllegalArgumentException("Market sentiment must be between 1 and 10");
-        }
     }
     
     /**
@@ -190,13 +183,11 @@ public class TradeJournalServiceImpl implements TradeJournalService {
                 .tradeId(request.getTradeId())
                 .title(request.getTitle())
                 .content(request.getContent())
-                .mood(request.getMood())
-                .marketSentiment(request.getMarketSentiment())
-                .tags(request.getTags())
                 .customFields(request.getCustomFields())
                 .entryDate(request.getEntryDate())
                 .imageUrls(request.getImageUrls())
                 .relatedTradeIds(request.getRelatedTradeIds())
+                .behaviorPatternSummaries(request.getBehaviorPatternSummaries())
                 .build();
     }
     
@@ -213,13 +204,11 @@ public class TradeJournalServiceImpl implements TradeJournalService {
                 .tradeId(entry.getTradeId())
                 .title(entry.getTitle())
                 .content(entry.getContent())
-                .mood(entry.getMood())
-                .marketSentiment(entry.getMarketSentiment())
-                .tags(entry.getTags())
                 .customFields(entry.getCustomFields())
                 .entryDate(entry.getEntryDate())
                 .imageUrls(entry.getImageUrls())
                 .relatedTradeIds(entry.getRelatedTradeIds())
+                .behaviorPatternSummaries(entry.getBehaviorPatternSummaries())
                 .createdAt(entry.getCreatedAt())
                 .updatedAt(entry.getUpdatedAt())
                 .build();
