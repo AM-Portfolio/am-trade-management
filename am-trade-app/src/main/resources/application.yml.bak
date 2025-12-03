@@ -30,7 +30,7 @@ am:
         collection-interval-seconds: 60
         retention-days: 30
 server:
-  port: 8073
+  port: 8080
 
 spring:
   application:
@@ -64,15 +64,6 @@ spring:
       group-id: am-trade-management
       auto-offset-reset: latest
     trade-topic: ${KAFKA_TOPICS_TRADE_EVENTS:am-trade}
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          # TODO: Replace with your Identity Provider's JWK Set URI
-          # Example: https://idp.example.com/.well-known/jwks.json
-          jwk-set-uri: ${JWT_JWK_SET_URI:https://your-idp-url/.well-known/jwks.json}
-          # Or use issuer-uri if you want Spring to discover the JWK Set URI
-          # issuer-uri: ${JWT_ISSUER_URI:https://your-idp-url}
 
 # Management/Actuator Configuration
 management:
