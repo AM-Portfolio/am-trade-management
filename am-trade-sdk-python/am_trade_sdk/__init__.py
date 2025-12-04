@@ -6,6 +6,25 @@ from am_trade_sdk.analytics_client import AnalyticsClient
 from am_trade_sdk.base_client import BaseApiClient
 from am_trade_sdk.client import AmTradeSdk
 from am_trade_sdk.config import SdkConfig, ConfigBuilder
+from am_trade_sdk.dto import (
+    DTOTransformer,
+    ErrorResponse,
+    FavoriteFilterCreateRequest,
+    FavoriteFilterResponse,
+    JournalEntryCreateRequest,
+    JournalEntryResponse,
+    PagedResponse,
+    PortfolioCreateRequest,
+    PortfolioResponse,
+    PortfolioUpdateRequest,
+    SuccessResponse,
+    TradeCreateRequest,
+    TradeFilterRequest,
+    TradeResponse,
+    TradeStatusEnum,
+    TradeTypeEnum,
+    TradeUpdateRequest,
+)
 from am_trade_sdk.exceptions import (
     AmTradeSdkException,
     ApiException,
@@ -45,6 +64,14 @@ from am_trade_sdk.wrapper import (
     SdkResponseMetadata,
     VersionedDataTransformer,
 )
+from am_trade_sdk.tier import (
+    UserTier,
+    TierConfig,
+    TokenAnalyzer,
+    TierValidator,
+    FieldFilter,
+    TierContext,
+)
 
 __all__ = [
     # Main SDK
@@ -59,7 +86,25 @@ __all__ = [
     "AnalyticsClient",
     "JournalClient",
     "FilterClient",
-    # Models
+    # User-Facing DTOs (USE THESE!)
+    "TradeStatusEnum",
+    "TradeTypeEnum",
+    "TradeCreateRequest",
+    "TradeUpdateRequest",
+    "TradeResponse",
+    "TradeFilterRequest",
+    "PortfolioCreateRequest",
+    "PortfolioUpdateRequest",
+    "PortfolioResponse",
+    "JournalEntryCreateRequest",
+    "JournalEntryResponse",
+    "FavoriteFilterCreateRequest",
+    "FavoriteFilterResponse",
+    "PagedResponse",
+    "ErrorResponse",
+    "SuccessResponse",
+    "DTOTransformer",
+    # Internal Models (DEPRECATED - Use DTOs instead)
     "Trade",
     "TradeFilter",
     "TradeStatus",
@@ -79,6 +124,13 @@ __all__ = [
     "SdkRequestMetadata",
     "SdkResponseMetadata",
     "VersionedDataTransformer",
+    # Tier-Based Access Control
+    "UserTier",
+    "TierConfig",
+    "TokenAnalyzer",
+    "TierValidator",
+    "FieldFilter",
+    "TierContext",
     # Exceptions
     "AmTradeSdkException",
     "ApiException",

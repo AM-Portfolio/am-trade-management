@@ -17,6 +17,7 @@ from am_trade_sdk.exceptions import (
 from am_trade_sdk.models import ApiResponse
 from am_trade_sdk.version import SdkIdentifier, VersionMetadata
 from am_trade_sdk.wrapper import SdkRequest, SdkResponse
+from am_trade_sdk.tier import TierContext
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,19 @@ class BaseApiClient:
         self.session = self._create_session()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.sdk_version = VersionMetadata.get_current_version()
+        
+        # Initialize tier context from config API key (token)
+        self.tier_context = None
+        if config.api_key:
+            try:
+                self.tier_context = TierContext(config.api_key)
+                self.logger.info(
+                    f"Tier context initialized: {self.tier_context.user_tier.value}",
+                    extra={"user_tier": self.tier_context.user_tier.value}
+                )
+            except Exception as e:
+                self.logger.warning(f"Failed to initialize tier context: {str(e)}")
+        
         self.logger.info(
             f"AM Trade SDK initialized - Version: {self.sdk_version}",
             extra={"sdk_version": self.sdk_version}
@@ -248,6 +262,33 @@ class BaseApiClient:
     def delete(self, endpoint: str, **kwargs) -> Dict[str, Any]:
         """Make DELETE request."""
         return self.request("DELETE", endpoint, **kwargs)
+
+    def filter_response_by_tier(self, response: Dict[str, Any], resource_type: str) -> Dict[str, Any]:
+        """
+        Filter response fields based on user tier.
+
+        Args:
+            response: Response data
+            resource_type: Resource type (trade, portfolio, etc.)
+
+        Returns:
+            Filtered response with only accessible fields
+        """
+        if not self.tier_context:
+            # No tier context, return response as-is
+            return response
+
+        if isinstance(response, dict):
+            # Single item response
+            if "data" in response:
+                response["data"] = self.tier_context.filter_response(
+                    response.get("data", {}),
+                    resource_type
+                )
+            else:
+                response = self.tier_context.filter_response(response, resource_type)
+
+        return response
 
     def close(self) -> None:
         """Close session."""
