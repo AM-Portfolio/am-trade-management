@@ -83,18 +83,37 @@ jobs:
           python -c "
           import sys
           try:
-              from sdk.client.trade_client import TradeClient
+              # Test basic imports
+              import sdk
+              print('[OK] SDK package imported successfully')
+              
+              # Test client imports
+              from sdk.client import TradeClient
+              print('[OK] TradeClient imported')
+              
+              # Test model imports  
               from sdk.models import Trade
+              print('[OK] Trade model imported')
+              
+              # Test config imports
               from sdk.config import SdkConfig
-              print('[OK] All core modules imported successfully')
-              print('[OK] TradeClient:', TradeClient)
-              print('[OK] Trade:', Trade)
-              print('[OK] SdkConfig:', SdkConfig)
+              print('[OK] SdkConfig imported')
+              
+              # Test DTO imports
+              from sdk.dto import TradeResponse, TradeCreateRequest
+              print('[OK] DTO models imported')
+              
               print()
               print('=== SDK VERIFICATION PASSED ===')
               print('Package: am-trade-sdk')
               print('Status: Successfully published to PyPI')
               print('Installation: pip install am-trade-sdk')
+              print()
+              print('Available modules:')
+              print('  - sdk.client (TradeClient, etc.)')
+              print('  - sdk.models (Trade, etc.)')
+              print('  - sdk.config (SdkConfig, etc.)')
+              print('  - sdk.dto (Request/Response models)')
               sys.exit(0)
           except Exception as e:
               print('[ERROR] Verification failed:', e)
@@ -105,7 +124,16 @@ jobs:
 
       - name: Verify SDK Version
         run: |
-          python -c "from sdk.version import version; print('[OK] SDK Version:', version.__version__)"
+          python -c "
+          try:
+              from sdk import __version__
+              print('[OK] SDK Version:', __version__)
+          except ImportError:
+              # Fallback: get version from package metadata
+              import importlib.metadata
+              version = importlib.metadata.version('am-trade-sdk')
+              print('[OK] SDK Version:', version)
+          "
 
       - name: Check Package Metadata
         run: |
