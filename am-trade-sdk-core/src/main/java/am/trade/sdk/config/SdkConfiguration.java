@@ -100,14 +100,7 @@ public class SdkConfiguration {
         return apiUrl != null ? apiUrl.replaceAll("/$", "") : "http://localhost:8073";
     }
 
-    /**
-     * Create a new builder instance
-     *
-     * @return Builder
-     */
-    public static SdkConfigurationBuilder defaultBuilder() {
-        return builder();
-    }
+
 
     @Override
     public String toString() {

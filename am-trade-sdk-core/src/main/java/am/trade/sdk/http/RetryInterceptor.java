@@ -35,7 +35,12 @@ public class RetryInterceptor implements Interceptor {
                     long backoffMs = (long) Math.pow(2, attempt) * 1000;
                     log.debug("Retrying request, attempt {}/{}, backoff {}ms", 
                             attempt + 1, maxRetries, backoffMs);
-                    Thread.sleep(backoffMs);
+                    try {
+                        Thread.sleep(backoffMs);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new IOException("Request interrupted", e);
+                    }
                     continue;
                 }
 

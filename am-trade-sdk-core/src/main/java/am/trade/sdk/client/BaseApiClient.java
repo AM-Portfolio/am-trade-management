@@ -59,6 +59,37 @@ public abstract class BaseApiClient {
     }
 
     /**
+     * Make GET request with query parameters
+     *
+     * @param endpoint API endpoint
+     * @param params Query parameters
+     * @return Response as JsonObject
+     */
+    protected JsonObject get(String endpoint, java.util.Map<String, Object> params) {
+        if (params == null || params.isEmpty()) {
+            return get(endpoint);
+        }
+        
+        StringBuilder urlBuilder = new StringBuilder(endpoint);
+        if (!endpoint.contains("?")) {
+            urlBuilder.append("?");
+        } else {
+            urlBuilder.append("&");
+        }
+        
+        boolean first = true;
+        for (java.util.Map.Entry<String, Object> entry : params.entrySet()) {
+            if (!first) {
+                urlBuilder.append("&");
+            }
+            urlBuilder.append(entry.getKey()).append("=").append(entry.getValue());
+            first = false;
+        }
+        
+        return get(urlBuilder.toString());
+    }
+
+    /**
      * Make POST request
      *
      * @param endpoint API endpoint

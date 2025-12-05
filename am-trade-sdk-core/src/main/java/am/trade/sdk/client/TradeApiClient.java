@@ -2,6 +2,7 @@ package am.trade.sdk.client;
 
 import am.trade.sdk.config.SdkConfiguration;
 import am.trade.sdk.dto.TradeDTO;
+import am.trade.models.document.Trade;
 import am.trade.sdk.dto.DTOTransformer;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
