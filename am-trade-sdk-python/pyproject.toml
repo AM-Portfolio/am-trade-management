@@ -62,7 +62,7 @@ Repository = "https://github.com/AM-Portfolio/am-trade-management.git"
 "Bug Tracker" = "https://github.com/AM-Portfolio/am-trade-management/issues"
 
 [tool.setuptools]
-packages = ["am_trade_sdk"]
+packages = ["sdk"]
 
 [tool.black]
 line-length = 100

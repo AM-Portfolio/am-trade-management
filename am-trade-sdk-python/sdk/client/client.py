@@ -2,7 +2,7 @@
 Main SDK client class providing unified access to all AM Trade APIs.
 
 Example:
-    >>> from am_trade_sdk import AmTradeSdk
+    >>> from sdk import AmTradeSdk
     >>> sdk = AmTradeSdk(
     ...     api_url="http://localhost:8073",
     ...     api_key="your-api-key",
@@ -15,7 +15,7 @@ Example:
     >>> analytics = sdk.analytics_client.get_trade_analytics()
     >>> 
     >>> # Create a new trade
-    >>> from am_trade_sdk.models import Trade
+    >>> from sdk.dto import Trade
     >>> trade = Trade(
     ...     symbol="NIFTY50",
     ...     quantity=1,
@@ -27,12 +27,12 @@ Example:
 import logging
 from typing import Optional
 
-from am_trade_sdk.config import SdkConfig
-from am_trade_sdk.analytics_client import AnalyticsClient
-from am_trade_sdk.filter_client import FilterClient
-from am_trade_sdk.journal_client import JournalClient
-from am_trade_sdk.portfolio_client import PortfolioClient
-from am_trade_sdk.trade_client import TradeClient
+from sdk.config import SdkConfig
+from sdk.client.analytics_client import AnalyticsClient
+from sdk.client.filter_client import FilterClient
+from sdk.client.journal_client import JournalClient
+from sdk.client.portfolio_client import PortfolioClient
+from sdk.client.trade_client import TradeClient
 
 logger = logging.getLogger(__name__)
 

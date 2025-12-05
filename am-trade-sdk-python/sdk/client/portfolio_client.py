@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, List
 
-from am_trade_sdk.base_client import BaseApiClient
+from sdk.http.base_client import BaseApiClient
 
 
 class PortfolioClient(BaseApiClient):

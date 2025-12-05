@@ -7,17 +7,17 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from am_trade_sdk.config import SdkConfig
-from am_trade_sdk.exceptions import (
+from sdk.config import SdkConfig
+from sdk.exception import (
     ApiException,
     NetworkException,
     TimeoutException,
     ValidationException,
 )
-from am_trade_sdk.models import ApiResponse
-from am_trade_sdk.version import SdkIdentifier, VersionMetadata
-from am_trade_sdk.wrapper import SdkRequest, SdkResponse
-from am_trade_sdk.tier import TierContext
+from sdk.dto import ApiResponse
+from sdk.version import SdkIdentifier, VersionMetadata
+from sdk.client.wrapper import SdkRequest, SdkResponse
+from sdk.dto import TierContext
 
 logger = logging.getLogger(__name__)
 

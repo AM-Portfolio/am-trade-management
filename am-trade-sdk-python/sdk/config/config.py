@@ -19,13 +19,13 @@ class SdkConfig(BaseModel):
     prefix AM_TRADE_SDK_ (e.g., AM_TRADE_SDK_API_URL).
     
     Example:
-        >>> config = SdkConfig(api_url="http://localhost:8073")
+        >>> config = SdkConfig(api_url="https://api.munish.org")
         >>> config.api_url
-        'http://localhost:8073'
+        'https://api.munish.org'
     """
     
     api_url: str = Field(
-        default="http://localhost:8073",
+        default="https://api.munish.org",
         description="Base URL for the Trade Management API"
     )
     api_key: Optional[str] = Field(
@@ -94,7 +94,7 @@ class SdkConfig(BaseModel):
         return cls(
             api_url=os.getenv(
                 'AM_TRADE_SDK_API_URL',
-                'http://localhost:8073'
+                'https://api.munish.org'
             ),
             api_key=os.getenv('AM_TRADE_SDK_API_KEY'),
             timeout=int(os.getenv('AM_TRADE_SDK_TIMEOUT', 30)),
@@ -120,7 +120,7 @@ class SdkConfig(BaseModel):
             
         Example:
             >>> config = SdkConfig.builder() \\
-            ...     .api_url("http://api.example.com") \\
+            ...     .api_url("https://api.munish.org") \\
             ...     .api_key("secret-key") \\
             ...     .timeout(60) \\
             ...     .build()
@@ -153,7 +153,7 @@ class ConfigBuilder:
     
     Example:
         >>> config = SdkConfig.builder() \\
-        ...     .api_url("http://api.example.com") \\
+        ...     .api_url("https://api.munish.org") \\
         ...     .api_key("my-key") \\
         ...     .timeout(60) \\
         ...     .max_retries(5) \\
@@ -162,7 +162,7 @@ class ConfigBuilder:
     
     def __init__(self):
         """Initialize builder with defaults."""
-        self._api_url = "http://localhost:8073"
+        self._api_url = "https://api.munish.org"
         self._api_key: Optional[str] = None
         self._timeout = 30
         self._max_retries = 3

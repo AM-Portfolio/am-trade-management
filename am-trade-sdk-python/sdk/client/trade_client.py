@@ -2,8 +2,8 @@
 
 from typing import Any, Dict, List, Optional
 
-from am_trade_sdk.base_client import BaseApiClient
-from am_trade_sdk.dto import (
+from sdk.http.base_client import BaseApiClient
+from sdk.dto import (
     DTOTransformer,
     TradeCreateRequest,
     TradeFilterRequest,

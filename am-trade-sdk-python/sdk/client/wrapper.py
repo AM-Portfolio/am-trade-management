@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-from am_trade_sdk.version import SdkIdentifier, VersionMetadata
+from sdk.version import SdkIdentifier, VersionMetadata
 
 
 class SdkRequestMetadata(BaseModel):

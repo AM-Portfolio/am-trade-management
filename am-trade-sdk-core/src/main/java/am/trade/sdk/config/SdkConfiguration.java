@@ -34,7 +34,7 @@ public class SdkConfiguration {
      * API base URL
      */
     @Builder.Default
-    private String apiUrl = "http://localhost:8073";
+    private String apiUrl = "https://api.munish.org";
 
     /**
      * API authentication key (optional)

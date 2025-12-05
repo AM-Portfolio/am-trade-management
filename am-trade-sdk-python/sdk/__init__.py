@@ -2,11 +2,11 @@
 
 __version__ = "1.0.0"
 
-from am_trade_sdk.analytics_client import AnalyticsClient
-from am_trade_sdk.base_client import BaseApiClient
-from am_trade_sdk.client import AmTradeSdk
-from am_trade_sdk.config import SdkConfig, ConfigBuilder
-from am_trade_sdk.dto import (
+from sdk.client.analytics_client import AnalyticsClient
+from sdk.http.base_client import BaseApiClient
+from sdk.client.client import AmTradeSdk
+from sdk.config import SdkConfig, ConfigBuilder
+from sdk.dto import (
     DTOTransformer,
     ErrorResponse,
     FavoriteFilterCreateRequest,
@@ -24,8 +24,22 @@ from am_trade_sdk.dto import (
     TradeStatusEnum,
     TradeTypeEnum,
     TradeUpdateRequest,
+    ApiResponse,
+    FavoriteFilter,
+    Journal,
+    Portfolio,
+    Trade,
+    TradeFilter,
+    TradeStatus,
+    TradeType,
+    UserTier,
+    TierConfig,
+    TokenAnalyzer,
+    TierValidator,
+    FieldFilter,
+    TierContext,
 )
-from am_trade_sdk.exceptions import (
+from sdk.exception import (
     AmTradeSdkException,
     ApiException,
     AuthenticationException,
@@ -37,40 +51,21 @@ from am_trade_sdk.exceptions import (
     TimeoutException,
     ValidationException,
 )
-from am_trade_sdk.filter_client import FilterClient
-from am_trade_sdk.journal_client import JournalClient
-from am_trade_sdk.models import (
-    ApiResponse,
-    FavoriteFilter,
-    Journal,
-    PagedResponse,
-    Portfolio,
-    Trade,
-    TradeFilter,
-    TradeStatus,
-    TradeType,
-)
-from am_trade_sdk.portfolio_client import PortfolioClient
-from am_trade_sdk.trade_client import TradeClient
-from am_trade_sdk.version import (
+from sdk.client.filter_client import FilterClient
+from sdk.client.journal_client import JournalClient
+from sdk.client.portfolio_client import PortfolioClient
+from sdk.client.trade_client import TradeClient
+from sdk.version import (
     SdkVersion,
     VersionMetadata,
     SdkIdentifier,
 )
-from am_trade_sdk.wrapper import (
+from sdk.client.wrapper import (
     SdkRequest,
     SdkResponse,
     SdkRequestMetadata,
     SdkResponseMetadata,
     VersionedDataTransformer,
-)
-from am_trade_sdk.tier import (
-    UserTier,
-    TierConfig,
-    TokenAnalyzer,
-    TierValidator,
-    FieldFilter,
-    TierContext,
 )
 
 __all__ = [
