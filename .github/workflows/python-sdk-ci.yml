@@ -28,6 +28,8 @@ jobs:
           pip install build twine
           # Install the package in editable mode with dev dependencies (pytest, etc.)
           pip install -e .[dev]
+          # Explicitly install jwt dependency
+          pip install PyJWT>=2.8.0
 
       - name: Run Tests
         working-directory: ./am-trade-sdk-python
