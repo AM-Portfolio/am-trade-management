@@ -1,6 +1,11 @@
 name: Publish Python SDK to PyPI
 
 on:
+  push:
+    branches:
+      - "**"
+      - feature/**
+      - feature/sdk
   workflow_dispatch:  # Manual trigger only
     inputs:
       pypi_api_token:

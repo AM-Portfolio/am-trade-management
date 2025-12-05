@@ -2,9 +2,13 @@ name: Python SDK CI
 
 on:
   push:
-    branches: [ "**" ]
+    branches:
+      - "**"
+      - feature/**
   pull_request:
-    branches: [ "**" ]
+    branches:
+      - "**"
+      - feature/**
   workflow_dispatch:
 
 jobs:
@@ -21,6 +25,19 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Check and fix file encoding
+        working-directory: ./am-trade-sdk-python
+        run: |
+          echo "Checking Python files for encoding issues..."
+          find . -name "*.py" -type f | while read file; do
+            if file "$file" | grep -q "UTF-8"; then
+              echo "OK: $file"
+            else
+              echo "WARNING: $file may have encoding issues"
+              dos2unix "$file" 2>/dev/null || sed -i 's/\r$//' "$file"
+            fi
+          done
+
       - name: Install dependencies
         working-directory: ./am-trade-sdk-python
         run: |
@@ -33,7 +50,10 @@ jobs:
 
       - name: Run Tests
         working-directory: ./am-trade-sdk-python
-        run: pytest
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONUNBUFFERED: 1
+        run: pytest --tb=short -v
 
       - name: Build Package
         working-directory: ./am-trade-sdk-python
