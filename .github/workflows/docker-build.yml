@@ -103,3 +103,11 @@ jobs:
     with:
       image_tag: v${{ github.run_id }}
     secrets: inherit
+
+  publish-sdks:
+    needs: build-and-push
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/publish-sdks.yml
+    secrets: inherit
