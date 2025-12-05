@@ -1,488 +1,109 @@
-# AM Trade SDK - Master Documentation
+# AM Trade SDK - Python
 
-**Status:** Ready for Production  
-**Last Updated:** December 5, 2025
+Python SDK for AM Trade Management System - A comprehensive client library for trading portfolio management, analytics, and journal operations.
 
-> **Note:** This is the master SDK documentation. This file should be referenced in both `am-trade-sdk-core/` and `am-trade-sdk-python/` folders.
-
----
-
-## 📋 Overview
-
-The AM Trade SDK provides language-specific libraries to integrate with the AM Trade Management system:
-
-| Aspect | Java SDK | Python SDK |
-|--------|----------|-----------|
-| **Location** | `am-trade-sdk-core/` | `am-trade-sdk-python/` |
-| **Name** | am-trade-sdk-core | am-trade-sdk-python |
-| **Artifact** | JAR | Package (PyPI) |
-| **Language** | Java 17+ | Python 3.8+ |
-| **Package Manager** | Maven | pip |
-| **HTTP Client** | OkHttp | requests |
-| **Serialization** | Gson | pydantic |
+**Version:** 1.0.0  
+**Python:** 3.8+  
+**Status:** Production Ready
 
 ---
 
-## 🚀 Quick Start
+## 📦 Installation
 
-### Java SDK
+### Option 1: Install from Local Build (Development)
 
-```xml
-<dependency>
-    <groupId>am.trade</groupId>
-    <artifactId>am-trade-sdk-core</artifactId>
-    <version>1.0.0</version>
-</dependency>
+```bash
+# Build the SDK
+cd am-trade-sdk-python
+python -m build
+
+# Install the wheel file
+pip install dist/am_trade_sdk-1.0.0-py3-none-any.whl
 ```
 
-```java
-// Initialize SDK
-AmTradeSdk sdk = new AmTradeSdk(
-    "http://localhost:8073",
-    "your-api-key"
-);
+### Option 2: Install in Editable Mode (Development)
 
-// Get trades
-List<Trade> trades = sdk.getTradeClient().getAllTrades();
-
-// Filter trades by FREE tier
-Map<String, Object> freeTrades = sdk.getTradeClient()
-    .getTradesByFreeTab(0, 20);
+```bash
+# Install in editable mode (changes reflect immediately)
+pip install -e /path/to/am-trade-sdk-python
 ```
 
-### Python SDK
+### Option 3: Install from PyPI (Production)
 
 ```bash
 pip install am-trade-sdk
 ```
 
+### Dependencies
+
+The SDK automatically installs:
+- `requests>=2.28.0` - HTTP client
+- `pydantic>=1.10.0` - Data validation
+- `python-dotenv>=0.19.0` - Environment configuration
+- `typing-extensions>=4.0.0` - Type hints
+
+---
+
+## 🚀 Quick Start
+
 ```python
-from am_trade_sdk import AmTradeSdk
+from sdk import AmTradeSdk
 
 # Initialize SDK
 sdk = AmTradeSdk(
-    api_url="http://localhost:8073",
-    api_key="your-api-key"
+    api_url="https://api.munish.org",
+    api_key="your-api-key-here"
 )
 
-# Get trades
-trades = sdk.trade_client.get_all_trades()
-
-# Filter trades by FREE tier
-free_trades = sdk.trade_client.get_trades_by_free_tab(page=0, page_size=20)
-```
-
----
-
-## 📚 Core Features
-
-### Trade Management
-
-**Get all trades:**
-```java
-// Java
-List<Trade> trades = sdk.getTradeClient().getAllTrades(0, 20);
-```
-
-```python
-# Python
+# Get all trades
 trades = sdk.trade_client.get_all_trades(page=0, page_size=20)
-```
-
-**Get specific trade:**
-```java
-// Java
-Trade trade = sdk.getTradeClient().getTradeById("trade-123");
-```
-
-```python
-# Python
-trade = sdk.trade_client.get_trade_by_id("trade-123")
-```
-
-**Create trade:**
-```java
-// Java
-Trade newTrade = sdk.getTradeClient().createTrade(
-    "portfolio-123",
-    "NIFTY",
-    "FUTURES",
-    10,
-    18500.00,
-    "2025-01-15"
-);
-```
-
-```python
-# Python
-new_trade = sdk.trade_client.create_trade(
-    portfolio_id="portfolio-123",
-    symbol="NIFTY",
-    trade_type="FUTURES",
-    quantity=10,
-    entry_price=18500.00,
-    entry_date="2025-01-15"
-)
-```
-
-### Free Tab Feature (NEW)
-
-**Get trades available in FREE tier:**
-```java
-// Java - Get FREE tier trades (max 20 per page)
-Map<String, Object> freeTrades = sdk.getTradeClient()
-    .getTradesByFreeTab(0, 20);
-
-// With symbol filter
-Map<String, Object> niftyTrades = sdk.getTradeClient()
-    .getTradesByFreeTabAndSymbol("NIFTY", 0, 20);
-
-// With status filter
-Map<String, Object> winningTrades = sdk.getTradeClient()
-    .getTradesByFreeTabAndStatus("WIN", 0, 20);
-```
-
-```python
-# Python - Get FREE tier trades (max 20 per page)
-free_trades = sdk.trade_client.get_trades_by_free_tab(page=0, page_size=20)
-
-# With symbol filter
-nifty_trades = sdk.trade_client.get_trades_by_free_tab_and_symbol(
-    symbol="NIFTY", 
-    page=0, 
-    page_size=20
-)
-
-# With status filter
-winning_trades = sdk.trade_client.get_trades_by_free_tab_and_status(
-    status="WIN",
-    page=0,
-    page_size=20
-)
-```
-
-**FREE Tier Fields:**
-- ✅ id
-- ✅ portfolio_id
-- ✅ symbol
-- ✅ trade_type
-- ✅ quantity
-- ✅ entry_price
-- ✅ entry_date
-- ✅ status
-- ✅ pnl
-- ✅ pnl_percentage
-
-### Portfolio Operations
-
-**Get portfolio:**
-```java
-// Java
-Portfolio portfolio = sdk.getPortfolioClient()
-    .getPortfolioById("portfolio-123");
-```
-
-```python
-# Python
-portfolio = sdk.portfolio_client.get_portfolio_by_id("portfolio-123")
-```
-
-**Get portfolio trades:**
-```java
-// Java
-List<Trade> trades = sdk.getTradeClient()
-    .getTradesByPortfolio("portfolio-123", 0, 20);
-```
-
-```python
-# Python
-trades = sdk.trade_client.get_trades_by_portfolio(
-    portfolio_id="portfolio-123",
-    page=0,
-    page_size=20
-)
-```
-
-### Journal Management
-
-**Create journal entry:**
-```java
-// Java
-Journal entry = sdk.getJournalClient()
-    .createJournal("trade-123", "Great win today!", "Technical setup");
-```
-
-```python
-# Python
-entry = sdk.journal_client.create_journal(
-    trade_id="trade-123",
-    title="Great win today!",
-    notes="Technical setup"
-)
-```
-
-### Filter Management
-
-**Create favorite filter:**
-```java
-// Java
-FavoriteFilter filter = sdk.getFilterClient()
-    .createFilter("My Winning Trades", filterConfig, true);
-```
-
-```python
-# Python
-filter = sdk.filter_client.create_filter(
-    name="My Winning Trades",
-    filter_config=filter_config,
-    is_default=True
-)
-```
-
-**Apply favorite filter:**
-```java
-// Java
-List<Trade> filteredTrades = sdk.getTradeClient()
-    .filterTrades(filterCriteria);
-```
-
-```python
-# Python
-filtered_trades = sdk.trade_client.filter_trades(
-    portfolio_id="portfolio-123",
-    statuses=["WIN"],
-    min_pnl=1000.0
-)
+print(f"Total trades: {trades['totalCount']}")
 ```
 
 ---
 
-## 🔐 Tier-Based Access Control
+## 🔧 Configuration
 
-The SDK automatically handles tier-based field filtering:
-
-**FREE Tier:**
-- 10 fields visible
-- 10 requests/minute
-- Max batch size: 10
-- Max page size: 20
-
-**PREMIUM Tier:**
-- 13 fields visible (+ transaction_cost, fee_paid, tax_impact)
-- 100 requests/minute
-- Max batch size: 100
-- Max page size: 500
-
-**ENTERPRISE Tier:**
-- 16 fields visible (+ margin_used, internal_id, metadata)
-- 1000 requests/minute
-- Max batch size: 1000
-- Max page size: 5000
-
-```java
-// Java - Check user tier
-UserTier tier = sdk.getTradeClient().getTierContext().getUserTier();
-System.out.println("User tier: " + tier);
-
-// Check if feature available
-boolean canBatch = sdk.getTradeClient().getTierContext()
-    .isFeatureAvailable("batch_operations");
-```
+### Basic Configuration
 
 ```python
-# Python - Check user tier
-tier = sdk.trade_client.tier_context.user_tier
-print(f"User tier: {tier.value}")
+from sdk import AmTradeSdk
 
-# Check if feature available
-can_batch = sdk.trade_client.tier_context.is_feature_available("batch_operations")
+sdk = AmTradeSdk(
+    api_url="https://api.munish.org",
+    api_key="your-api-key",
+    timeout=30,
+    max_retries=3
+)
 ```
 
----
-
-## 🛠️ Advanced Usage
-
-### Batch Operations
-
-```java
-// Java - Batch create trades
-List<Trade> trades = Arrays.asList(
-    new Trade("NIFTY", 10, 18500.00),
-    new Trade("BANKNIFTY", 5, 45000.00)
-);
-List<Trade> created = sdk.getTradeClient().batchCreateTrades(trades);
-```
+### Using Environment Variables
 
 ```python
-# Python - Batch create trades
-trades = [
-    {"symbol": "NIFTY", "quantity": 10, "entry_price": 18500.00},
-    {"symbol": "BANKNIFTY", "quantity": 5, "entry_price": 45000.00}
-]
-created = sdk.trade_client.batch_create_trades(trades)
+# .env file
+API_URL=https://api.munish.org
+API_KEY=your-api-key-here
+TIMEOUT=30
+
+# Python code
+from sdk import AmTradeSdk
+from dotenv import load_dotenv
+
+load_dotenv()
+sdk = AmTradeSdk()  # Reads from environment
 ```
 
-### Error Handling
-
-```java
-// Java
-try {
-    Trade trade = sdk.getTradeClient().getTradeById("invalid-id");
-} catch (ResourceNotFoundException e) {
-    System.err.println("Trade not found: " + e.getMessage());
-} catch (ApiException e) {
-    System.err.println("API error: " + e.getMessage());
-}
-```
+### Advanced Configuration
 
 ```python
-# Python
-try:
-    trade = sdk.trade_client.get_trade_by_id("invalid-id")
-except sdk.exceptions.ResourceNotFoundException:
-    print("Trade not found")
-except sdk.exceptions.ApiException as e:
-    print(f"API error: {e}")
-```
+from sdk.config import SdkConfig, ConfigBuilder
 
-### Pagination
-
-```java
-// Java
-Page<Trade> page = sdk.getTradeClient()
-    .getAllTrades(2, 50);  // Get page 2 with 50 items
-System.out.println("Total: " + page.getTotalCount());
-System.out.println("Pages: " + page.getTotalPages());
-```
-
-```python
-# Python
-response = sdk.trade_client.get_all_trades(page=2, page_size=50)
-print(f"Total: {response['totalCount']}")
-print(f"Pages: {response['totalPages']}")
-```
-
----
-
-## 📦 Project Structure
-
-### Java SDK (`am-trade-sdk-core/`)
-
-```
-am-trade-sdk-core/
-├── pom.xml
-└── src/main/java/am/trade/sdk/
-    ├── AmTradeSdk.java          # Main SDK entry point
-    ├── client/
-    │   ├── BaseApiClient.java
-    │   ├── TradeApiClient.java
-    │   ├── PortfolioClient.java
-    │   ├── JournalClient.java
-    │   └── FilterClient.java
-    ├── config/
-    │   └── SdkConfiguration.java
-    ├── dto/                      # Data Transfer Objects
-    ├── exceptions/               # Custom exceptions
-    └── util/                     # Utilities
-```
-
-### Python SDK (`am-trade-sdk-python/`)
-
-```
-am-trade-sdk-python/
-├── pyproject.toml
-├── setup.py
-└── am_trade_sdk/
-    ├── __init__.py              # Main SDK entry point
-    ├── client.py                # AmTradeSdk class
-    ├── base_client.py
-    ├── trade_client.py
-    ├── portfolio_client.py
-    ├── journal_client.py
-    ├── filter_client.py
-    ├── config.py                # Configuration
-    ├── dto.py                   # DTOs
-    ├── exceptions.py            # Custom exceptions
-    └── tier.py                  # Tier-based access control
-```
-
----
-
-## 🧪 Testing
-
-### Java SDK
-
-```java
-@Test
-public void testGetTradeByFreeTab() {
-    Map<String, Object> freeTrades = sdk.getTradeClient()
-        .getTradesByFreeTab(0, 20);
-    
-    assertNotNull(freeTrades);
-    assertTrue(freeTrades.containsKey("trades"));
-    assertTrue(freeTrades.containsKey("totalCount"));
-}
-
-@Test
-public void testGetTradeByFreeTabWithSymbol() {
-    Map<String, Object> trades = sdk.getTradeClient()
-        .getTradesByFreeTabAndSymbol("NIFTY", 0, 20);
-    
-    assertNotNull(trades);
-    assertEquals("NIFTY", trades.get("symbol"));
-}
-```
-
-### Python SDK
-
-```python
-def test_get_trades_by_free_tab():
-    free_trades = sdk.trade_client.get_trades_by_free_tab(page=0, page_size=20)
-    
-    assert free_trades is not None
-    assert "trades" in free_trades
-    assert "totalCount" in free_trades
-
-def test_get_trades_by_free_tab_with_symbol():
-    trades = sdk.trade_client.get_trades_by_free_tab_and_symbol(
-        symbol="NIFTY",
-        page=0,
-        page_size=20
-    )
-    
-    assert trades is not None
-    assert trades["symbol"] == "NIFTY"
-```
-
----
-
-## 🔗 Configuration
-
-### Java SDK
-
-```java
-// Configuration builder
-SdkConfiguration config = SdkConfiguration.builder()
-    .apiUrl("http://localhost:8073")
-    .apiKey("your-api-key")
-    .timeout(30)
-    .retryAttempts(3)
-    .build();
-
-AmTradeSdk sdk = new AmTradeSdk(config);
-```
-
-### Python SDK
-
-```python
-from am_trade_sdk import SdkConfig, ConfigBuilder
-
-# Configuration builder
 config = ConfigBuilder() \
-    .api_url("http://localhost:8073") \
+    .api_url("https://api.munish.org") \
     .api_key("your-api-key") \
     .timeout(30) \
-    .retry_attempts(3) \
+    .max_retries(3) \
+    .enable_logging(True) \
     .build()
 
 sdk = AmTradeSdk(config=config)
@@ -490,10 +111,24 @@ sdk = AmTradeSdk(config=config)
 
 ---
 
-## 📊 API Response Format
+## 📚 Features & Examples
 
-All FREE tab endpoints return:
+### 1. Trade Management
 
+#### Get All Trades
+
+```python
+# Get paginated trades
+response = sdk.trade_client.get_all_trades(page=0, page_size=20)
+
+print(f"Total: {response['totalCount']}")
+print(f"Page: {response['page']} of {response['totalPages']}")
+
+for trade in response['trades']:
+    print(f"{trade['symbol']}: {trade['pnl']}")
+```
+
+**Response Format:**
 ```json
 {
   "trades": [
@@ -519,57 +154,316 @@ All FREE tab endpoints return:
 }
 ```
 
----
+#### Get Trade by ID
 
-## ⚠️ Important Notes
+```python
+trade = sdk.trade_client.get_trade_by_id("trade-123")
 
-1. **FREE Tier Limits:**
-   - Max page size: 20 (automatically enforced)
-   - Max batch operations: 10 items
-   - Rate limited to 10 requests/minute
+print(f"Symbol: {trade['symbol']}")
+print(f"P&L: ₹{trade['pnl']}")
+print(f"Status: {trade['status']}")
+```
 
-2. **Field Filtering:**
-   - FREE tier users automatically receive filtered responses
-   - Extra fields are removed from responses
-   - No code changes needed for tier upgrades
+**Response Format:**
+```json
+{
+  "id": "trade-123",
+  "portfolio_id": "portfolio-456",
+  "symbol": "NIFTY",
+  "trade_type": "FUTURES",
+  "quantity": 10,
+  "entry_price": 18500.00,
+  "exit_price": 19000.00,
+  "entry_date": "2025-01-15",
+  "exit_date": "2025-01-20",
+  "status": "WIN",
+  "pnl": 5000.00,
+  "pnl_percentage": 2.70
+}
+```
 
-3. **Error Handling:**
-   - Always catch `ApiException` and tier-specific exceptions
-   - Use specific exception types for granular error handling
-   - Log errors for debugging
+#### Create Trade
 
-4. **Performance:**
-   - Use pagination for large datasets
-   - Batch operations for creating multiple trades
-   - Cache token and tier information
+```python
+new_trade = sdk.trade_client.create_trade(
+    portfolio_id="portfolio-456",
+    symbol="BANKNIFTY",
+    trade_type="OPTIONS",
+    quantity=50,
+    entry_price=45000.00,
+    entry_date="2025-01-15"
+)
 
----
+print(f"Created trade: {new_trade['id']}")
+```
 
-## 🔄 Upgrade from FREE to PREMIUM
+### 2. Filter Trades
 
-When a user upgrades their tier:
+#### Filter by Status
 
-1. New JWT token is generated with `tier: "PREMIUM"`
-2. SDK automatically detects new tier
-3. Same code works with more fields visible
-4. No client code changes required
+```python
+# Get winning trades only
+winning_trades = sdk.trade_client.filter_trades({
+    "portfolio_id": "portfolio-456",
+    "statuses": ["WIN"],
+    "min_pnl": 1000.0
+})
 
-```java
-// Same code works for all tiers!
-Trade trade = sdk.getTradeClient().getTradeById("trade-123");
-// FREE: receives 10 fields
-// PREMIUM: receives 13 fields (automatic!)
-// ENTERPRISE: receives 16 fields (automatic!)
+print(f"Winning trades: {len(winning_trades['trades'])}")
+```
+
+#### Filter by Symbol and Date Range
+
+```python
+# Get NIFTY trades from last month
+filtered = sdk.trade_client.filter_trades({
+    "portfolio_id": "portfolio-456",
+    "symbols": ["NIFTY"],
+    "start_date": "2025-01-01",
+    "end_date": "2025-01-31"
+})
+
+for trade in filtered['trades']:
+    print(f"{trade['entry_date']}: {trade['symbol']} - ₹{trade['pnl']}")
+```
+
+**Response Format:**
+```json
+{
+  "trades": [
+    {
+      "id": "trade-789",
+      "symbol": "NIFTY",
+      "entry_date": "2025-01-15",
+      "status": "WIN",
+      "pnl": 3500.00
+    }
+  ],
+  "totalCount": 25,
+  "filters_applied": {
+    "symbols": ["NIFTY"],
+    "start_date": "2025-01-01",
+    "end_date": "2025-01-31"
+  }
+}
+```
+
+### 3. Portfolio Operations
+
+#### Get Portfolio
+
+```python
+portfolio = sdk.portfolio_client.get_portfolio_by_id("portfolio-456")
+
+print(f"Name: {portfolio['name']}")
+print(f"Total P&L: ₹{portfolio['total_pnl']}")
+print(f"Win Rate: {portfolio['win_rate']}%")
+```
+
+**Response Format:**
+```json
+{
+  "id": "portfolio-456",
+  "name": "My Trading Portfolio",
+  "total_trades": 150,
+  "total_pnl": 125000.00,
+  "win_rate": 65.5,
+  "average_pnl": 833.33,
+  "created_at": "2024-01-01T00:00:00Z"
+}
+```
+
+#### Get Portfolio Trades
+
+```python
+trades = sdk.trade_client.get_trades_by_portfolio(
+    portfolio_id="portfolio-456",
+    page=0,
+    page_size=50
+)
+
+print(f"Portfolio has {trades['totalCount']} trades")
+```
+
+### 4. Analytics
+
+#### Get Trade Statistics
+
+```python
+stats = sdk.analytics_client.get_trade_metrics("portfolio-456")
+
+print(f"Total Trades: {stats['total_trades']}")
+print(f"Win Rate: {stats['win_rate']}%")
+print(f"Average P&L: ₹{stats['average_pnl']}")
+print(f"Best Trade: ₹{stats['best_trade']}")
+print(f"Worst Trade: ₹{stats['worst_trade']}")
+```
+
+**Response Format:**
+```json
+{
+  "total_trades": 150,
+  "winning_trades": 98,
+  "losing_trades": 52,
+  "win_rate": 65.33,
+  "total_pnl": 125000.00,
+  "average_pnl": 833.33,
+  "best_trade": 15000.00,
+  "worst_trade": -8500.00,
+  "sharpe_ratio": 1.85
+}
+```
+
+#### Get Performance Chart Data
+
+```python
+# Get 1-month performance
+performance = sdk.analytics_client.get_performance_chart(
+    portfolio_id="portfolio-456",
+    period="1M"
+)
+
+for point in performance['data']:
+    print(f"{point['date']}: ₹{point['cumulative_pnl']}")
+```
+
+**Response Format:**
+```json
+{
+  "period": "1M",
+  "data": [
+    {
+      "date": "2025-01-01",
+      "daily_pnl": 2500.00,
+      "cumulative_pnl": 2500.00
+    },
+    {
+      "date": "2025-01-02",
+      "daily_pnl": 1800.00,
+      "cumulative_pnl": 4300.00
+    }
+  ]
+}
+```
+
+### 5. Journal Management
+
+#### Create Journal Entry
+
+```python
+entry = sdk.journal_client.create_entry({
+    "trade_id": "trade-123",
+    "title": "Great NIFTY Trade",
+    "notes": "Perfect technical setup. Entry at support level.",
+    "tags": ["technical", "support-level"]
+})
+
+print(f"Journal entry created: {entry['id']}")
+```
+
+#### Get Journal Entries
+
+```python
+entries = sdk.journal_client.get_all_entries(
+    portfolio_id="portfolio-456",
+    page=0,
+    page_size=10
+)
+
+for entry in entries['entries']:
+    print(f"{entry['title']}: {entry['notes'][:50]}...")
 ```
 
 ---
 
-## 📞 Support
+## 🔐 Error Handling
 
-For issues or questions:
-- Check the [TIER-BASED-ACCESS-CONTROL.md](../TIER-BASED-ACCESS-CONTROL.md) for tier details
-- Review [TIER-QUICK-REFERENCE.md](../TIER-QUICK-REFERENCE.md) for quick answers
-- Consult [SDK-STRATEGY-PLAN.md](../SDK-STRATEGY-PLAN.md) for architecture details
+```python
+from sdk.exception import (
+    ApiException,
+    ResourceNotFoundException,
+    ValidationException,
+    NetworkException
+)
+
+try:
+    trade = sdk.trade_client.get_trade_by_id("invalid-id")
+except ResourceNotFoundException as e:
+    print(f"Trade not found: {e}")
+except ValidationException as e:
+    print(f"Invalid data: {e}")
+except NetworkException as e:
+    print(f"Network error: {e}")
+except ApiException as e:
+    print(f"API error: {e.status_code} - {e.message}")
+```
+
+---
+
+## 📊 Complete Usage Example
+
+```python
+from sdk import AmTradeSdk
+from sdk.exception import ApiException
+
+def main():
+    # Initialize SDK
+    sdk = AmTradeSdk(
+        api_url="https://api.munish.org",
+        api_key="your-api-key"
+    )
+    
+    try:
+        # Get portfolio
+        portfolio = sdk.portfolio_client.get_portfolio_by_id("portfolio-456")
+        print(f"Portfolio: {portfolio['name']}")
+        
+        # Get recent trades
+        trades = sdk.trade_client.get_all_trades(page=0, page_size=10)
+        print(f"Recent trades: {trades['totalCount']}")
+        
+        # Filter winning trades
+        winners = sdk.trade_client.filter_trades({
+            "portfolio_id": "portfolio-456",
+            "statuses": ["WIN"],
+            "min_pnl": 1000.0
+        })
+        print(f"Winning trades (>₹1000): {len(winners['trades'])}")
+        
+        # Get analytics
+        stats = sdk.analytics_client.get_trade_metrics("portfolio-456")
+        print(f"Win Rate: {stats['win_rate']}%")
+        
+        # Create journal entry
+        entry = sdk.journal_client.create_entry({
+            "trade_id": trades['trades'][0]['id'],
+            "title": "Trade Review",
+            "notes": "Excellent execution"
+        })
+        print(f"Journal entry: {entry['id']}")
+        
+    except ApiException as e:
+        print(f"Error: {e}")
+    finally:
+        sdk.close()
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## 🔗 API Endpoints
+
+| Feature | Endpoint | Method |
+|---------|----------|--------|
+| Get All Trades | `/api/v1/trades` | GET |
+| Get Trade by ID | `/api/v1/trades/{id}` | GET |
+| Create Trade | `/api/v1/trades` | POST |
+| Filter Trades | `/api/v1/trades/filter` | POST |
+| Get Portfolio | `/api/v1/portfolio-summary/{id}` | GET |
+| Get Analytics | `/api/v1/metrics/{portfolio_id}` | GET |
+| Create Journal | `/api/v1/journal` | POST |
 
 ---
 
@@ -579,6 +473,6 @@ Part of AM Trade Management System - All rights reserved
 
 ---
 
-**Last Updated:** December 5, 2025  
+**Last Updated:** December 6, 2025  
 **Version:** 1.0.0  
-**Status:** Production Ready
+**API Base URL:** https://api.munish.org

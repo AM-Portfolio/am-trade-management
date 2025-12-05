@@ -13,7 +13,6 @@ from sdk.dto import (
     FavoriteFilterResponse,
     JournalEntryCreateRequest,
     JournalEntryResponse,
-    PagedResponse,
     PortfolioCreateRequest,
     PortfolioResponse,
     PortfolioUpdateRequest,
@@ -25,19 +24,16 @@ from sdk.dto import (
     TradeTypeEnum,
     TradeUpdateRequest,
     ApiResponse,
-    FavoriteFilter,
-    Journal,
-    Portfolio,
-    Trade,
-    TradeFilter,
-    TradeStatus,
-    TradeType,
     UserTier,
     TierConfig,
     TokenAnalyzer,
     TierValidator,
     FieldFilter,
     TierContext,
+)
+from sdk.models import (
+    Trade,
+    PagedResponse,
 )
 from sdk.exception import (
     AmTradeSdkException,
@@ -95,19 +91,11 @@ __all__ = [
     "JournalEntryResponse",
     "FavoriteFilterCreateRequest",
     "FavoriteFilterResponse",
-    "PagedResponse",
     "ErrorResponse",
     "SuccessResponse",
     "DTOTransformer",
-    # Internal Models (DEPRECATED - Use DTOs instead)
+    # Models
     "Trade",
-    "TradeFilter",
-    "TradeStatus",
-    "TradeType",
-    "Journal",
-    "Portfolio",
-    "FavoriteFilter",
-    "ApiResponse",
     "PagedResponse",
     # Versioning & Metadata
     "SdkVersion",

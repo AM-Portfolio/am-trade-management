@@ -11,11 +11,6 @@ from .wrapper import (
     VersionedDataTransformer,
 )
 
-# AmTradeSdk is imported in the main __init__.py to avoid circular imports if client.py imports other clients
-# But client.py imports other clients, so it's fine.
-# However, client.py imports SdkConfig from config.
-# Let's expose clients here.
-
 __all__ = [
     "AnalyticsClient",
     "FilterClient",
