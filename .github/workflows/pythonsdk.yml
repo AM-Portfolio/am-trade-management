@@ -54,55 +54,81 @@ jobs:
             --skip-existing \
             --non-interactive \
             --verbose
-        continue-on-error: true
 
-      - name: Verify PyPI Publication
+      - name: Wait for PyPI to sync
         run: |
-          echo "Package published! Verify at:"
-          echo "https://pypi.org/project/am-trade-sdk/"
-          echo ""
-          echo "Install with: pip install am-trade-sdk"
+          echo "Waiting 30 seconds for PyPI to sync..."
+          sleep 30
 
-  publish-test-pypi:
+  verify-pypi-publication:
     runs-on: ubuntu-latest
-    name: Publish to TestPyPI (Optional)
-    if: github.event_name == 'workflow_dispatch'
+    name: Verify PyPI Publication
+    needs: publish-pypi
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install build dependencies
+      - name: Install SDK from PyPI
         run: |
           python -m pip install --upgrade pip
-          pip install build setuptools wheel twine
+          echo "Installing am-trade-sdk from PyPI..."
+          pip install am-trade-sdk
 
-      - name: Build distribution
-        working-directory: ./am-trade-sdk-python
+      - name: Verify SDK Installation
         run: |
-          python -m build
+          echo "Verifying SDK installation..."
+          python -c "
+          import sys
+          try:
+              from sdk.client.trade_client import TradeClient
+              from sdk.models import Trade
+              from sdk.config import SdkConfig
+              print('[OK] All core modules imported successfully')
+              print('[OK] TradeClient:', TradeClient)
+              print('[OK] Trade:', Trade)
+              print('[OK] SdkConfig:', SdkConfig)
+              print()
+              print('=== SDK VERIFICATION PASSED ===')
+              print('Package: am-trade-sdk')
+              print('Status: Successfully published to PyPI')
+              print('Installation: pip install am-trade-sdk')
+              sys.exit(0)
+          except Exception as e:
+              print('[ERROR] Verification failed:', e)
+              import traceback
+              traceback.print_exc()
+              sys.exit(1)
+          "
 
-      - name: Publish to TestPyPI
-        working-directory: ./am-trade-sdk-python
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+      - name: Verify SDK Version
         run: |
-          echo "Publishing am-trade-sdk to TestPyPI..."
-          python -m twine upload dist/* \
-            --repository testpypi \
-            --skip-existing \
-            --non-interactive \
-            --verbose || true
+          python -c "from sdk.version import version; print('[OK] SDK Version:', version.__version__)"
 
-      - name: Verify TestPyPI Publication
+      - name: Check Package Metadata
         run: |
-          echo "Test package published! Verify at:"
-          echo "https://test.pypi.org/project/am-trade-sdk/"
+          pip show am-trade-sdk
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "========================================"
+          echo "✓ PyPI Publication Verification SUCCESS"
+          echo "========================================"
           echo ""
-          echo "Test install with: pip install -i https://test.pypi.org/simple/ am-trade-sdk"
+          echo "Package Details:"
+          echo "  - Name: am-trade-sdk"
+          echo "  - Repository: PyPI (https://pypi.org/project/am-trade-sdk/)"
+          echo "  - Installation: pip install am-trade-sdk"
+          echo ""
+          echo "Module Details:"
+          echo "  - TradeClient available"
+          echo "  - Trade model available"
+          echo "  - SdkConfig available"
+          echo ""
+          echo "Next Steps:"
+          echo "  1. Users can now install: pip install am-trade-sdk"
+          echo "  2. Use the SDK in their projects"
+          echo "========================================"
