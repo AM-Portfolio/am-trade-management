@@ -1,0 +1,17 @@
+# AM Trade SDK Test Requirements
+# Install with: pip install -r requirements.txt
+
+# SDK Package (from GitHub Releases)
+# Direct wheel URL from GitHub Releases
+https://github.com/ssd2658/am-trade-managment/releases/download/feature%2Fsdk/am_trade_sdk-1.0.0-py3-none-any.whl
+
+# Runtime Dependencies
+requests>=2.28.0
+pydantic>=1.10.0
+python-dotenv>=0.19.0
+typing-extensions>=4.0.0
+PyJWT>=2.8.0
+
+# Test/Verification Dependencies
+pytest>=7.0.0
+pytest-cov>=4.0.0
