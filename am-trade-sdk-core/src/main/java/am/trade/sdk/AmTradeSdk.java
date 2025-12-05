@@ -132,7 +132,7 @@ public class AmTradeSdk {
      * Builder class for fluent SDK configuration
      */
     public static class Builder {
-        private String apiUrl = "http://localhost:8073";
+        private String apiUrl = "https://api.munish.org";
         private String apiKey;
         private int timeout = 30;
         private int maxRetries = 3;
