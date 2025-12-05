@@ -38,7 +38,7 @@ jobs:
         run: python -m build
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: python-sdk-dist
           path: am-trade-sdk-python/dist/*
