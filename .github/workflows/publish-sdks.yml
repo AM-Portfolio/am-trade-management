@@ -21,16 +21,18 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
-          settings-path: ${{ github.workspace }} # location for the settings.xml file
+          cache: maven
 
-      - name: Build with Maven
-        run: mvn -B package --file am-trade-sdk-core/pom.xml
+      - name: Setup Maven settings.xml
+        run: |
+          mkdir -p ~/.m2
+          cp settings.xml ~/.m2/settings.xml
 
       - name: Publish to GitHub Packages
-        run: mvn deploy -DskipTests --file am-trade-sdk-core/pom.xml -s $GITHUB_WORKSPACE/settings.xml
+        run: mvn deploy -pl am-trade-sdk-core -am -DskipTests
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_PACKAGES_USERNAME: ${{ github.actor }}
+          GITHUB_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-python:
     runs-on: ubuntu-latest
@@ -58,7 +60,7 @@ jobs:
       - name: Publish to GitHub Packages
         working-directory: ./am-trade-sdk-python
         run: |
-          twine upload dist/* --repository-url https://pypi.pkg.github.com/AM-Portfolio/am-trade-management
+          twine upload dist/* --repository-url https://pypi.pkg.github.com/AM-Portfolio/
         env:
           TWINE_USERNAME: ${{ github.actor }}
           TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
