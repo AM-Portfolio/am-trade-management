@@ -4,6 +4,10 @@ on:
   release:
     types: [created]
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for release (optional)'
+        required: false
   workflow_call:
 
 jobs:
@@ -37,7 +41,7 @@ jobs:
   publish-python:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
@@ -60,6 +64,8 @@ jobs:
       - name: Publish to GitHub Release
         working-directory: ./am-trade-sdk-python
         run: |
-          gh release upload ${{ github.event.release.tag_name }} dist/* --clobber
+          TAG_NAME="${{ inputs.tag_name || github.event.release.tag_name || github.ref_name }}"
+          echo "Uploading to release tag: $TAG_NAME"
+          gh release upload "$TAG_NAME" dist/* --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
