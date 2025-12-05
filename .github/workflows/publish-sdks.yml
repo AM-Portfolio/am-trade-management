@@ -57,10 +57,9 @@ jobs:
         working-directory: ./am-trade-sdk-python
         run: python -m build
 
-      - name: Publish to GitHub Packages
+      - name: Publish to GitHub Release
         working-directory: ./am-trade-sdk-python
         run: |
-          twine upload dist/* --repository-url https://pypi.pkg.github.com/AM-Portfolio/
+          gh release upload ${{ github.event.release.tag_name }} dist/* --clobber
         env:
-          TWINE_USERNAME: ${{ github.actor }}
-          TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
