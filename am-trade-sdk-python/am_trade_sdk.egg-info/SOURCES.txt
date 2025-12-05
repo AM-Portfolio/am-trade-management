@@ -6,3 +6,4 @@ am_trade_sdk.egg-info/dependency_links.txt
 am_trade_sdk.egg-info/requires.txt
 am_trade_sdk.egg-info/top_level.txt
 sdk/__init__.py
+tests/test_trade_client.py
