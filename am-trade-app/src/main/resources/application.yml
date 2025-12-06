@@ -34,7 +34,7 @@ server:
 
 # Security Configuration
 security:
-  enabled: ${SECURITY_ENABLED:false}  # false for development, true for production
+  enabled: ${SECURITY_ENABLED:true}  # false for development, true for production
 
 # JWT Configuration (only used when security.enabled=true)
 jwt:
