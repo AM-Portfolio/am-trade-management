@@ -36,10 +36,8 @@ services:
         echo "Max Retries: $${AM_TRADE_MAX_RETRIES}"
         echo "=== Starting AM Trade Service ==="
         java -jar app.jar
-    ports:
-      - "8073:8080"
     networks:
-      - market-data-network
+      - am-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
@@ -53,5 +51,6 @@ volumes:
   grafana_data:
 
 networks:
-  market-data-network:
+  am-network:
     driver: bridge
+    name: am-network
