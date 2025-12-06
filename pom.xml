@@ -44,8 +44,8 @@
 		<module>am-trade-persistence</module>
 		<module>am-trade-exceptions</module>
 		<module>am-trade-analytics</module>
-		<module>am-trade-sdk-core</module>
-		<module>am-trade-sdk-python</module>
+		<!-- <module>am-trade-sdk-core</module>
+		<module>am-trade-sdk-python</module> -->
 	</modules>
 
 	<dependencyManagement>

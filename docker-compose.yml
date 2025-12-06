@@ -36,6 +36,8 @@ services:
         echo "Max Retries: $${AM_TRADE_MAX_RETRIES}"
         echo "=== Starting AM Trade Service ==="
         java -jar app.jar
+    ports:
+      - "8077:8080"
     networks:
       - am-network
     healthcheck:
