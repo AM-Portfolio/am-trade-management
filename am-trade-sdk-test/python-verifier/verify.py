@@ -5,30 +5,22 @@ import subprocess
 from datetime import datetime
 
 def install_sdk():
-    """Install the AM Trade SDK directly from GitHub Releases"""
-    print("[INSTALL] Installing AM Trade SDK from GitHub Releases...")
+    """Install the AM Trade SDK from PyPI"""
+    print("[INSTALL] Installing AM Trade SDK from PyPI...")
     
     sdk_version = "1.0.0"
-    # Release tag: feature/sdk (URL needs %2F for the forward slash)
-    release_tag = "feature%2Fsdk"
-    wheel_filename = f"am_trade_sdk-{sdk_version}-py3-none-any.whl"
+    package_name = "am-trade-sdk"
     
-    # GitHub Releases download URL
-    github_release_url = (
-        f"https://github.com/ssd2658/am-trade-managment/releases/download/"
-        f"{release_tag}/{wheel_filename}"
-    )
-    
-    print(f"   Package: am-trade-sdk=={sdk_version}")
-    print(f"   Source: GitHub Releases")
-    print(f"   Method: Direct wheel download")
+    print(f"   Package: {package_name}=={sdk_version}")
+    print(f"   Source: PyPI (https://pypi.org/project/am-trade-sdk/)")
+    print(f"   Method: pip install from PyPI registry")
     
     try:
-        # Install the SDK wheel directly from GitHub Releases
-        print(f"   Downloading from: {github_release_url}")
+        # Install the SDK from PyPI
+        print(f"   Installing {package_name} from PyPI...")
         cmd = [
             sys.executable, "-m", "pip", "install", "-q",
-            github_release_url,
+            f"{package_name}=={sdk_version}",
             # Also install required dependencies
             "requests>=2.28.0",
             "pydantic>=1.10.0",
@@ -49,7 +41,7 @@ def install_sdk():
             print(result.stderr)
             sys.exit(1)
         
-        print("[OK] SDK and dependencies installed successfully")
+        print("[OK] SDK and dependencies installed successfully from PyPI")
         return True
         
     except subprocess.TimeoutExpired:
@@ -229,7 +221,7 @@ def verify_trade():
 if __name__ == "__main__":
     print("=" * 70)
     print("AM Trade SDK - Python Verifier")
-    print("Using Published SDK from GitHub Releases")
+    print("Using Published SDK from PyPI (https://pypi.org/project/am-trade-sdk/)")
     print("=" * 70)
     
     # Step 1: Install SDK from GitHub Releases (with all dependencies)
