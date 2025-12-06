@@ -32,15 +32,20 @@ am:
 server:
   port: 8080
 
-# JWT Configuration
+# Security Configuration
+security:
+  enabled: ${SECURITY_ENABLED:false}  # false for development, true for production
+
+# JWT Configuration (only used when security.enabled=true)
 jwt:
-  secret: ${JWT_SECRET:your-secret-key-min-256-bits-long-change-in-production}
+  secret: ${JWT_SECRET:internal-service-super-secret-key-32chars-minimum-change-in-prod}
 
 spring:
   application:
     name: am-trade-management
   config:
     import:
+
       - classpath:application-common.yml
       - classpath:application-redis.yml
       - classpath:application-market-data-client.yml
