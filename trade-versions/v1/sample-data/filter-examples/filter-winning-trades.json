@@ -1,0 +1,19 @@
+{
+  "name": "Winning Trades Only",
+  "description": "Filter to show only profitable/winning trades",
+  "isDefault": false,
+  "filterConfig": {
+    "portfolioIds": ["163d0143-4fcb-480c-ac20-622f14e0e293"],
+    "dateRange": {
+      "startDate": "2025-01-01",
+      "endDate": "2025-12-31"
+    },
+    "metricTypes": ["PROFIT_LOSS", "WIN_RATE", "RISK_REWARD"],
+    "profitLossFilters": {
+      "minProfitLoss": 0.01
+    },
+    "tradeCharacteristics": {
+      "statuses": ["CLOSED"]
+    }
+  }
+}

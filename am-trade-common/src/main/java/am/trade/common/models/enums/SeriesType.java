@@ -1,21 +1,51 @@
 package am.trade.common.models.enums;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Enum representing different series types
  */
+@Schema(description = "Trading series type for the instrument")
 public enum SeriesType {
-    EQ,             // Equity series
-    BE,             // Book Entry
-    BZ,             // Block Deal
-    IL,             // Institutional
-    GC,             // Government Securities
-    CE,             // Call Option European
-    PE,             // Put Option European
-    CA,             // Call Option American 
-    PA,             // Put Option American
-    FUT,            // Futures
-    WEEKLY_FUT,     // Weekly Futures
-    MONTHLY_FUT,    // Monthly Futures
-    QUARTERLY_FUT,   // Quarterly Futures
-    UNKNOWN         // Unknown series type
+    @Schema(description = "Equity series")
+    EQ,
+    
+    @Schema(description = "Book Entry series")
+    BE,
+    
+    @Schema(description = "Block Deal series")
+    BZ,
+    
+    @Schema(description = "Institutional series")
+    IL,
+    
+    @Schema(description = "Government Securities series")
+    GC,
+    
+    @Schema(description = "Call Option European style")
+    CE,
+    
+    @Schema(description = "Put Option European style")
+    PE,
+    
+    @Schema(description = "Call Option American style")
+    CA,
+    
+    @Schema(description = "Put Option American style")
+    PA,
+    
+    @Schema(description = "Futures contract")
+    FUT,
+    
+    @Schema(description = "Weekly Futures contract")
+    WEEKLY_FUT,
+    
+    @Schema(description = "Monthly Futures contract")
+    MONTHLY_FUT,
+    
+    @Schema(description = "Quarterly Futures contract")
+    QUARTERLY_FUT,
+    
+    @Schema(description = "Unknown series type")
+    UNKNOWN
 }

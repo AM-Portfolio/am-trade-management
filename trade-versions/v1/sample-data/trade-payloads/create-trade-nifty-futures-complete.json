@@ -1,0 +1,235 @@
+{
+  "portfolioId": "{{portfolioId}}",
+  "userId": "{{userId}}",
+  "instrumentInfo": {
+    "symbol": "NIFTY25JULFUT",
+    "isin": null,
+    "exchange": "NSE",
+    "segment": "INDEX_FUTURES",
+    "series": "FUT",
+    "derivativeInfo": {
+      "expiryDate": "2025-07-31",
+      "underlyingSymbol": "NIFTY",
+      "futureType": "MONTHLY",
+      "isCashSettled": true
+    },
+    "description": "Nifty July Futures",
+    "currency": "INR",
+    "lotSize": "50"
+  },
+  "strategy": "Momentum Trading",
+  "status": "WIN",
+  "tradePositionType": "LONG",
+  "entryInfo": {
+    "timestamp": "2025-07-01T09:30:00",
+    "price": 22450.75,
+    "quantity": 2,
+    "totalValue": 44901.50,
+    "fees": 125.50,
+    "reason": "Bullish flag breakout with strong volume confirmation"
+  },
+  "exitInfo": {
+    "timestamp": "2025-07-01T15:15:00",
+    "price": 22675.25,
+    "quantity": 2,
+    "totalValue": 45350.50,
+    "fees": 127.75,
+    "reason": "Resistance level reached, RSI overbought"
+  },
+  "metrics": {
+    "profitLoss": 22450.0,
+    "profitLossPercentage": 1.0,
+    "returnOnEquity": 0.5,
+    "riskAmount": 201.50,
+    "rewardAmount": 449.00,
+    "riskRewardRatio": 2.5,
+    "holdingTimeDays": 0,
+    "holdingTimeHours": 5,
+    "holdingTimeMinutes": 345,
+    "maxAdverseExcursion": -112.50,
+    "maxFavorableExcursion": 450.00
+  },
+  "psychologyData": {
+    "entryPsychologyFactors": [
+      {
+        "code": "FOLLOWING_THE_PLAN",
+        "description": "Disciplined entry according to trading plan"
+      },
+      {
+        "code": "DISCIPLINED",
+        "description": "Disciplined entry according to trading plan"
+      }
+    ],
+    "exitPsychologyFactors": [
+      {
+        "code": "DISCIPLINE",
+        "description": "Exiting according to predefined plan"
+      },
+      {
+        "code": "TAKING_PROFITS",
+        "description": "Disciplined profit-taking at target"
+      }
+    ],
+    "behaviorPatterns": [
+      {
+        "code": "DISCIPLINED_EXECUTION",
+        "description": "Following trading plan consistently"
+      }
+    ],
+    "categorizedTags": {
+      "STRATEGY": ["Momentum Trading", "Breakout Strategy", "Flag Pattern"],
+      "MARKET_CONDITION": ["Bullish Trend", "High Volume", "Strong Momentum"],
+      "SETUP_TYPE": ["Flag Pattern", "Breakout", "EMA Crossover"],
+      "TIME_FRAME": ["15 Minutes", "30 Minutes", "Intraday"],
+      "RISK_LEVEL": ["Medium Risk", "2.5:1 RR"],
+      "SECTOR": ["Index", "Nifty"],
+      "TECHNICAL_PATTERN": ["Bullish Flag", "MACD Crossover", "EMA Crossover", "RSI Momentum"],
+      "FUNDAMENTAL_FACTOR": ["GDP Growth", "FII Buying"],
+      "SENTIMENT": ["Bullish", "Positive Market Sentiment"],
+      "PERFORMANCE": ["Win", "Target Achieved", "Perfect Execution"]
+    },
+    "psychologyNotes": "Felt confident after confirming the bullish trend with multiple indicators. Stuck to predetermined entry and exit levels. Morning preparation and pre-market analysis helped in maintaining composure. No FOMO, no greed at exit. Emotional discipline maintained throughout. Entry was planned based on pre-market analysis. Exit was executed perfectly at resistance without hesitation or greed to hold longer."
+  },
+  "entryReasoning": {
+    "technicalReasons": [
+      {
+        "code": "TREND_FOLLOWING",
+        "description": "Entry based on established price trend"
+      },
+      {
+        "code": "RESISTANCE_BREAKOUT",
+        "description": "Price breaking above resistance level"
+      },
+      {
+        "code": "MOVING_AVERAGE_CROSSOVER",
+        "description": "Crossover of moving averages"
+      },
+      {
+        "code": "MACD_SIGNAL",
+        "description": "MACD signal line crossover"
+      },
+      {
+        "code": "VOLUME_SPIKE",
+        "description": "Unusual increase in trading volume"
+      },
+      {
+        "code": "CHART_PATTERN",
+        "description": "Recognized chart pattern formation"
+      },
+      {
+        "code": "SUPPORT_BOUNCE",
+        "description": "Price holding at support level"
+      }
+    ],
+    "fundamentalReasons": [
+      {
+        "code": "ECONOMIC_DATA",
+        "description": "Favorable economic indicators"
+      },
+      {
+        "code": "SECTOR_ROTATION",
+        "description": "Capital flowing into this market sector"
+      }
+    ],
+    "primaryReason": "Multi-timeframe confirmation with cup and handle breakout",
+    "reasoningSummary": "Comprehensive technical setup across all timeframes. Daily chart showed cup and handle pattern completing 8-week formation with handle breakout at 22450. Weekly trend established with higher highs/lows since March. 50 EMA (22380) crossed above 200 EMA (22250) signaling strong momentum. 15-min MACD bullish crossover with expanding histogram showing increasing buying pressure. Entry triggered on volume spike (185000 vs 130000 avg) with RSI at healthy 64 - not overbought. Support established at 22400 with multiple tests holding. GDP data beat estimates (7.3% vs 6.9% exp) and manufacturing PMI expanded to 58.2 showing robust economy. FII data showed consistent buying (8500 Cr net in last 5 days). Sector rotation into financials and cyclicals supporting index strength. Risk management: 100 point stop loss at handle low (22350) targeting measured move to 22750 (3:1 RR). Market breadth excellent with 82% stocks above 50-day MA.",
+    "confidenceLevel": 9,
+    "supportingIndicators": [
+      "Daily cup and handle pattern - 8 week formation with clean breakout above 22450",
+      "Weekly higher highs and higher lows trend intact since March 2025",
+      "50 EMA (22380) golden cross above 200 EMA (22250) on daily chart",
+      "15-min MACD bullish crossover - signal line above zero with histogram expanding",
+      "Volume surge 40% above average - 185000 contracts vs 130000 average",
+      "RSI at 64 on daily - strong but not overbought, room for continuation",
+      "Multiple timeframe alignment - weekly, daily, 4H, 1H all bullish",
+      "Support zone established at 22400 - tested and held 4 times in 2 weeks",
+      "GDP growth beat estimates - 7.3% actual vs 6.9% forecast for Q2 2025",
+      "Manufacturing PMI expanded to 58.2 - highest in 6 months",
+      "Services PMI strong at 61.5 - broad-based economic strength",
+      "FII net buying of 8500 Cr in last 5 trading sessions - institutional support",
+      "DII also positive with 3200 Cr inflow showing domestic strength",
+      "Sector rotation into financials (weight 38%) and cyclicals supporting index",
+      "Market breadth excellent - 82% stocks trading above 50-day MA",
+      "VIX declining from 18 to 14.2 - reducing risk premium in market",
+      "Global sentiment positive - Dow up 1.2%, Nasdaq up 1.5% overnight",
+      "Crude oil stable around $78 - not a headwind for Indian economy",
+      "INR strengthening to 82.85 - foreign investment attractiveness",
+      "Bank Nifty correlation positive - leading with 1.8% gain",
+      "Open interest buildup in far month contracts - bullish positioning"
+    ],
+    "conflictingIndicators": [
+      "Approaching major psychological level 22500 - may see profit booking",
+      "China economic data mixed - potential spillover concern",
+      "Valuation stretched - Nifty PE at 22.5x vs historical 20x average"
+    ]
+  },
+  "exitReasoning": {
+    "technicalReasons": [
+      {
+        "code": "RESISTANCE_BREAKOUT",
+        "description": "Price at resistance level"
+      },
+      {
+        "code": "OVERBOUGHT_RSI",
+        "description": "RSI indicating overbought conditions"
+      },
+      {
+        "code": "VOLUME_SPIKE",
+        "description": "Volume declining at resistance"
+      },
+      {
+        "code": "DIVERGENCE",
+        "description": "Price and indicator moving in opposite directions"
+      }
+    ],
+    "fundamentalReasons": [],
+    "exitPrimaryReason": "Measured target achieved with technical divergence signals",
+    "exitReasoningSummary": "Systematic exit at 22745 achieving measured move projection from cup and handle pattern (depth 300 pts added to breakout = 22750 target). Multiple technical divergence signals emerged: price made new high at 22745 while RSI formed lower high at 68 vs previous 71, MACD histogram declining despite price advance, and volume dropping 35% from breakout levels (120000 vs 185000). Stochastic reached overbought extreme at 89. Profit of 294 points (1.3%) exceeded minimum target with actual risk-reward of 2.94:1. Intraday momentum shifted as US futures weakened to -0.25% and banking stocks showed profit booking. Exit executed in two tranches: 60% at 22720 and 40% at 22745 to maximize gains while protecting capital. Quality of exit rated 9/10 - methodical, data-driven decision following trading plan rather than emotional reaction.",
+    "exitConfidenceLevel": 9,
+    "exitSupportingIndicators": [
+      "Measured move target achieved - 22745 reached vs 22750 projection (99.8% fill)",
+      "Negative RSI divergence - price higher high but RSI lower high (68 vs 71)",
+      "MACD histogram declining - showing momentum loss despite price advance",
+      "Volume declining 35% - 120000 contracts vs 185000 at breakout",
+      "Stochastic overbought at 89 - extreme reading suggesting reversal",
+      "US futures weakness - S&P 500 dropped to -0.25% in afternoon session",
+      "Banking stocks profit booking - Nifty Bank down 0.6% from day high",
+      "Profit target exceeded - 294 points vs 200 minimum target (47% bonus)",
+      "Risk-reward achieved - 2.94:1 actual vs 3:1 planned",
+      "Two-tranche exit executed - 60% at 22720, 40% at 22745 for optimization",
+      "Resistance cluster 22750-22800 - high probability reversal zone ahead",
+      "Open interest declined 4% at highs - longs exiting positions"
+    ],
+    "exitConflictingIndicators": [
+      "Market breadth still healthy at 1.6:1 advance/decline ratio",
+      "FII data not yet available - could show continued buying"
+    ],
+    "exitQualityScore": 9
+  },
+  "tradeExecutions": [],
+  "notes": "Perfect execution of momentum trading strategy. Followed pre-market analysis and trading plan strictly. Entry at bullish flag breakout with multiple technical confirmations (RSI, MACD, EMA crossover) and strong fundamental support (GDP data, FII buying). Exit at resistance as planned when RSI became overbought and volume declined. Emotional discipline maintained throughout - no FOMO, no greed at exit. Risk management worked perfectly with 2.5:1 reward-risk ratio achieved.",
+  "tags": ["futures", "momentum", "intraday", "win", "nifty", "index-futures", "technical-setup", "bullish-flag", "perfect-execution"],
+  "attachments": [
+    {
+      "fileName": "nifty-entry-chart-15min.png",
+      "fileUrl": "https://storage.example.com/trades/2025-07-01/nifty-entry-chart-15min.png",
+      "fileType": "image/png",
+      "uploadedAt": "2025-07-01T09:35:00",
+      "description": "Entry chart showing bullish flag breakout with RSI, MACD indicators on 15-min timeframe"
+    },
+    {
+      "fileName": "nifty-exit-chart-15min.png",
+      "fileUrl": "https://storage.example.com/trades/2025-07-01/nifty-exit-chart-15min.png",
+      "fileType": "image/png",
+      "uploadedAt": "2025-07-01T15:20:00",
+      "description": "Exit chart showing resistance rejection, overbought RSI and declining volume"
+    },
+    {
+      "fileName": "pre-market-analysis.pdf",
+      "fileUrl": "https://storage.example.com/trades/2025-07-01/pre-market-analysis.pdf",
+      "fileType": "application/pdf",
+      "uploadedAt": "2025-07-01T08:45:00",
+      "description": "Pre-market analysis document with GDP data impact and trading plan"
+    }
+  ]
+}

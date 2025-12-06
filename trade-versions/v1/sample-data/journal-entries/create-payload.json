@@ -1,0 +1,26 @@
+{
+    "userId": "user-12345",
+    "tradeId": "trade-67890",
+    "title": "My First Trade Journal Entry",
+    "content": "This is a detailed note about my trade execution. I felt confident about the setup.",
+    "mood": "CONFIDENT",
+    "marketSentiment": 8,
+    "tags": [
+        "setup-A",
+        "long",
+        "scalp"
+    ],
+    "customFields": {
+        "weather": "Sunny",
+        "location": "Home Office"
+    },
+    "entryDate": "2023-10-27T10:00:00",
+    "imageUrls": [
+        "http://example.com/chart1.png",
+        "http://example.com/chart2.png"
+    ],
+    "relatedTradeIds": [
+        "trade-11111",
+        "trade-22222"
+    ]
+}

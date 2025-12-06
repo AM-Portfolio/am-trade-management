@@ -1,0 +1,291 @@
+{
+	"info": {
+		"_postman_id": "trademetricscontroller-{{$randomUUID}}",
+		"name": "TradeMetricsController Collection",
+		"description": "API collection for TradeMetricsController - Performance metrics, risk analysis, and comparative analytics",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Metric Types",
+			"item": [
+				{
+					"name": "Get Available Metric Types",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Contains expected metric types\", function () {",
+									"    const types = pm.response.json();",
+									"    pm.expect(types).to.include('PERFORMANCE');",
+									"    pm.expect(types).to.include('RISK');",
+									"});",
+									"",
+									"// Save metric types for other requests",
+									"if (pm.response.code === 200) {",
+									"    pm.environment.set('availableMetricTypes', JSON.stringify(pm.response.json()));",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/types",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"metrics",
+								"types"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Metrics Analysis",
+			"item": [
+				{
+					"name": "Get Trade Metrics with Filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has metrics structure\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"portfolioIds\": [\"{{portfolioId}}\"],\n  \"metricTypes\": [\"PERFORMANCE\", \"RISK\"],\n  \"startDate\": \"2020-01-01\",\n  \"endDate\": \"2020-12-31\",\n  \"symbols\": [\"AAPL\", \"TSLA\"],\n  \"strategies\": null,\n  \"granularity\": \"MONTHLY\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"metrics"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Compare Metrics Between Periods",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array for comparison\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/compare?portfolioIds={{portfolioId}}&metricTypes=PERFORMANCE,RISK&startDate1=2020-01-01&endDate1=2020-06-30&startDate2=2020-07-01&endDate2=2020-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"metrics",
+								"compare"
+							],
+							"query": [
+								{
+									"key": "portfolioIds",
+									"value": "{{portfolioId}}"
+								},
+								{
+									"key": "metricTypes",
+									"value": "PERFORMANCE,RISK"
+								},
+								{
+									"key": "startDate1",
+									"value": "2020-01-01",
+									"description": "First period start date"
+								},
+								{
+									"key": "endDate1",
+									"value": "2020-06-30",
+									"description": "First period end date"
+								},
+								{
+									"key": "startDate2",
+									"value": "2020-07-01",
+									"description": "Second period start date"
+								},
+								{
+									"key": "endDate2",
+									"value": "2020-12-31",
+									"description": "Second period end date"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Metrics Trends",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains trend data\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/trends?portfolioIds={{portfolioId}}&metricTypes=PERFORMANCE&startDate=2020-01-01&endDate=2020-12-31&granularity=MONTHLY",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"metrics",
+								"trends"
+							],
+							"query": [
+								{
+									"key": "portfolioIds",
+									"value": "{{portfolioId}}"
+								},
+								{
+									"key": "metricTypes",
+									"value": "PERFORMANCE"
+								},
+								{
+									"key": "startDate",
+									"value": "2020-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2020-12-31"
+								},
+								{
+									"key": "granularity",
+									"value": "MONTHLY",
+									"description": "DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8073"
+		},
+		{
+			"key": "portfolioId",
+			"value": "8a57024c-05c2-475b-a2c4-0545865efa4a"
+		}
+	]
+}

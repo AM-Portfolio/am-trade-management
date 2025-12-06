@@ -1,0 +1,114 @@
+{
+  "name": "Comprehensive Filter Example",
+  "description": "Filter with all possible configuration options",
+  "isDefault": false,
+  "filterConfig": {
+    "portfolioIds": [
+      "163d0143-4fcb-480c-ac20-622f14e0e293",
+      "PORT-001",
+      "PORT-002"
+    ],
+    "dateRange": {
+      "startDate": "2025-01-01",
+      "endDate": "2025-12-31"
+    },
+    "timePeriod": {
+      "period": "LAST_30_DAYS",
+      "customStartDate": null,
+      "customEndDate": null
+    },
+    "metricTypes": [
+      "PERFORMANCE",
+      "RISK",
+      "DISTRIBUTION",
+      "TIMING",
+      "PATTERN",
+      "PROFIT_LOSS",
+      "WIN_RATE",
+      "RISK_REWARD",
+      "DRAWDOWN",
+      "SHARPE_RATIO"
+    ],
+    "instruments": [
+      "NIFTY",
+      "BANKNIFTY",
+      "FINNIFTY",
+      "NIFTY25JULFUT",
+      "RELIANCE",
+      "TCS",
+      "INFY"
+    ],
+    "instrumentFilters": {
+      "marketSegments": [
+        "EQUITY",
+        "INDEX",
+        "EQUITY_FUTURES",
+        "INDEX_FUTURES",
+        "EQUITY_OPTIONS",
+        "INDEX_OPTIONS"
+      ],
+      "baseSymbols": [
+        "NIFTY",
+        "BANKNIFTY",
+        "RELIANCE",
+        "TCS"
+      ],
+      "indexTypes": [
+        "NIFTY",
+        "BANKNIFTY",
+        "FINNIFTY"
+      ],
+      "derivativeTypes": [
+        "FUTURES",
+        "OPTIONS"
+      ]
+    },
+    "tradeCharacteristics": {
+      "strategies": [
+        "Momentum Trading",
+        "Scalping",
+        "Swing Trading",
+        "Options Strategy",
+        "Breakout Strategy",
+        "Mean Reversion"
+      ],
+      "tags": [
+        "futures",
+        "momentum",
+        "intraday",
+        "win",
+        "loss",
+        "nifty",
+        "index-futures",
+        "technical-setup",
+        "bullish-flag"
+      ],
+      "directions": [
+        "LONG",
+        "SHORT"
+      ],
+      "statuses": [
+        "OPEN",
+        "CLOSED",
+        "CANCELLED"
+      ],
+      "minHoldingTimeHours": 1,
+      "maxHoldingTimeHours": 168
+    },
+    "profitLossFilters": {
+      "minProfitLoss": -10000.0,
+      "maxProfitLoss": 50000.0,
+      "minPositionSize": 1000.0,
+      "maxPositionSize": 100000.0
+    },
+    "groupBy": [
+      "STRATEGY",
+      "SYMBOL",
+      "DAY_OF_WEEK",
+      "MONTH",
+      "TRADE_TYPE",
+      "INSTRUMENT_TYPE",
+      "DIRECTION"
+    ]
+  }
+}

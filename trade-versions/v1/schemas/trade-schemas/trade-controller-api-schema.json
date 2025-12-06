@@ -1,0 +1,1468 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Trade Controller API Schema",
+  "description": "Complete JSON Schema for TradeController API - Supports code generation for Java, Python, Flutter, and JavaScript",
+  "version": "1.0.0",
+  "definitions": {
+    "InstrumentInfo": {
+      "type": "object",
+      "description": "Instrument information for various market instruments including equities, futures, and options",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": "Trading symbol",
+          "example": "BANKNIFTY2091722500CE"
+        },
+        "isin": {
+          "type": "string",
+          "description": "ISIN (International Securities Identification Number)",
+          "example": "INE123456789"
+        },
+        "rawSymbol": {
+          "type": "string",
+          "description": "The original unparsed symbol string",
+          "example": "BANKNIFTY2091722500CE"
+        },
+        "exchange": {
+          "type": "string",
+          "enum": ["NSE", "BSE", "MCX", "NCDEX"],
+          "description": "Exchange where the instrument is traded",
+          "example": "NSE"
+        },
+        "segment": {
+          "type": "string",
+          "enum": [
+            "EQUITY",
+            "INDEX_OPTIONS",
+            "EQUITY_OPTIONS",
+            "EQUITY_FUTURES",
+            "INDEX_FUTURES",
+            "CURRENCY_FUTURES",
+            "COMMODITY_FUTURES"
+          ],
+          "description": "Market segment",
+          "example": "INDEX_OPTIONS"
+        },
+        "series": {
+          "type": "string",
+          "enum": ["EQ", "BE", "BZ", "SM", "ST"],
+          "description": "Series type for equities",
+          "example": "EQ"
+        },
+        "indexType": {
+          "type": "string",
+          "enum": ["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY", "SENSEX", "OTHER"],
+          "description": "Index type for index-based instruments",
+          "example": "BANKNIFTY"
+        },
+        "derivativeInfo": {
+          "$ref": "#/definitions/DerivativeInfo"
+        },
+        "description": {
+          "type": "string",
+          "description": "Instrument description",
+          "example": "Bank Nifty Options"
+        },
+        "currency": {
+          "type": "string",
+          "description": "Currency code",
+          "example": "INR"
+        },
+        "lotSize": {
+          "type": "string",
+          "description": "Lot size for derivatives",
+          "example": "25"
+        }
+      }
+    },
+    "DerivativeInfo": {
+      "type": "object",
+      "description": "Derivative-specific information for options and futures",
+      "properties": {
+        "derivativeType": {
+          "type": "string",
+          "enum": ["FUTURES", "OPTIONS", "CALL", "PUT"],
+          "description": "Type of derivative",
+          "example": "OPTIONS"
+        },
+        "strikePrice": {
+          "type": "number",
+          "format": "double",
+          "description": "Strike price for options",
+          "example": 22500.00
+        },
+        "expiryDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Expiry date of the derivative contract",
+          "example": "2020-09-17"
+        },
+        "optionType": {
+          "type": "string",
+          "enum": ["CALL", "PUT"],
+          "description": "Option type (for options only)",
+          "example": "CALL"
+        },
+        "underlyingSymbol": {
+          "type": "string",
+          "description": "Underlying symbol",
+          "example": "BANKNIFTY"
+        }
+      }
+    },
+    "EntryExitInfo": {
+      "type": "object",
+      "description": "Entry or exit information for a trade",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Entry/Exit timestamp",
+          "example": "2025-01-15T10:30:00Z"
+        },
+        "price": {
+          "type": "number",
+          "format": "double",
+          "description": "Entry/Exit price",
+          "example": 125.50
+        },
+        "quantity": {
+          "type": "integer",
+          "description": "Quantity traded",
+          "example": 100
+        },
+        "totalValue": {
+          "type": "number",
+          "format": "double",
+          "description": "Total value of the trade",
+          "example": 12550.00
+        },
+        "fees": {
+          "type": "number",
+          "format": "double",
+          "description": "Trading fees",
+          "example": 50.25
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason for entry/exit",
+          "example": "Breakout above resistance"
+        }
+      }
+    },
+    "TradeMetrics": {
+      "type": "object",
+      "description": "Trade-specific performance and risk metrics",
+      "properties": {
+        "profitLoss": {
+          "type": "number",
+          "format": "double",
+          "description": "Profit or loss amount",
+          "example": 2500.00
+        },
+        "profitLossPercentage": {
+          "type": "number",
+          "format": "double",
+          "description": "Profit or loss percentage",
+          "example": 15.75
+        },
+        "returnOnEquity": {
+          "type": "number",
+          "format": "double",
+          "description": "Return on equity",
+          "example": 12.50
+        },
+        "riskAmount": {
+          "type": "number",
+          "format": "double",
+          "description": "Amount at risk",
+          "example": 1000.00
+        },
+        "rewardAmount": {
+          "type": "number",
+          "format": "double",
+          "description": "Potential reward amount",
+          "example": 3000.00
+        },
+        "riskRewardRatio": {
+          "type": "number",
+          "format": "double",
+          "description": "Risk to reward ratio",
+          "example": 3.0
+        },
+        "holdingTimeDays": {
+          "type": "integer",
+          "description": "Holding time in days",
+          "example": 5
+        },
+        "holdingTimeHours": {
+          "type": "integer",
+          "description": "Holding time in hours",
+          "example": 120
+        },
+        "holdingTimeMinutes": {
+          "type": "integer",
+          "description": "Holding time in minutes",
+          "example": 7200
+        },
+        "maxAdverseExcursion": {
+          "type": "number",
+          "format": "double",
+          "description": "Maximum loss during trade",
+          "example": -500.00
+        },
+        "maxFavorableExcursion": {
+          "type": "number",
+          "format": "double",
+          "description": "Maximum profit during trade",
+          "example": 3500.00
+        }
+      }
+    },
+    "Attachment": {
+      "type": "object",
+      "description": "File attachment for trade analysis",
+      "properties": {
+        "fileName": {
+          "type": "string",
+          "description": "Name of the file",
+          "example": "chart_analysis.png"
+        },
+        "fileUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the file",
+          "example": "https://storage.example.com/files/chart_analysis.png"
+        },
+        "fileType": {
+          "type": "string",
+          "description": "MIME type of the file",
+          "example": "image/png"
+        },
+        "uploadedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Upload timestamp",
+          "example": "2025-01-15T10:30:00Z"
+        },
+        "description": {
+          "type": "string",
+          "description": "File description",
+          "example": "Entry chart analysis"
+        }
+      }
+    },
+    "TradePsychologyData": {
+      "type": "object",
+      "description": "Psychology and behavior data for the trade",
+      "properties": {
+        "entryPsychologyFactors": {
+          "type": "array",
+          "description": "Entry psychology factors",
+          "items": {
+            "type": "string",
+            "enum": [
+              "FEAR_OF_MISSING_OUT",
+              "OVERCONFIDENCE",
+              "REVENGE_TRADING",
+              "GREED",
+              "PATIENCE",
+              "DISCIPLINE",
+              "CALM_ANALYSIS",
+              "EMOTIONAL_CONTROL"
+            ]
+          },
+          "example": ["CALM_ANALYSIS", "DISCIPLINE"]
+        },
+        "exitPsychologyFactors": {
+          "type": "array",
+          "description": "Exit psychology factors",
+          "items": {
+            "type": "string",
+            "enum": [
+              "FEAR",
+              "GREED",
+              "PANIC",
+              "TARGET_ACHIEVED",
+              "STOP_LOSS_HIT",
+              "PLAN_FOLLOWED",
+              "EMOTIONAL_EXIT",
+              "RATIONAL_EXIT"
+            ]
+          },
+          "example": ["TARGET_ACHIEVED", "PLAN_FOLLOWED"]
+        },
+        "behaviorPatterns": {
+          "type": "array",
+          "description": "Behavior patterns identified",
+          "items": {
+            "type": "string",
+            "enum": [
+              "OVERTRADING",
+              "LOSS_AVERSION",
+              "CONFIRMATION_BIAS",
+              "DISCIPLINED_TRADING",
+              "PLAN_ADHERENCE",
+              "RULE_FOLLOWING"
+            ]
+          },
+          "example": ["DISCIPLINED_TRADING", "PLAN_ADHERENCE"]
+        },
+        "categorizedTags": {
+          "type": "object",
+          "description": "Tags organized by categories",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "example": {
+            "STRATEGY": ["momentum", "breakout"],
+            "RISK": ["high-risk", "calculated"],
+            "PERFORMANCE": ["winning", "profitable"]
+          }
+        },
+        "psychologyNotes": {
+          "type": "string",
+          "description": "Notes about psychological aspects",
+          "example": "Maintained discipline despite market volatility"
+        }
+      }
+    },
+    "TradeEntryExistReasoning": {
+      "type": "object",
+      "description": "Technical and fundamental reasons for entry/exit",
+      "properties": {
+        "technicalReasons": {
+          "type": "array",
+          "description": "Technical analysis reasons",
+          "items": {
+            "type": "string",
+            "enum": [
+              "BREAKOUT",
+              "SUPPORT_BOUNCE",
+              "RESISTANCE_BREAK",
+              "TREND_FOLLOWING",
+              "PATTERN_RECOGNITION",
+              "INDICATOR_SIGNAL",
+              "MOVING_AVERAGE_CROSS",
+              "RSI_DIVERGENCE"
+            ]
+          },
+          "example": ["BREAKOUT", "MOVING_AVERAGE_CROSS"]
+        },
+        "fundamentalReasons": {
+          "type": "array",
+          "description": "Fundamental analysis reasons",
+          "items": {
+            "type": "string",
+            "enum": [
+              "EARNINGS_BEAT",
+              "SECTOR_STRENGTH",
+              "MARKET_SENTIMENT",
+              "NEWS_CATALYST",
+              "VALUATION",
+              "GROWTH_PROSPECTS"
+            ]
+          },
+          "example": ["SECTOR_STRENGTH", "MARKET_SENTIMENT"]
+        },
+        "primaryReason": {
+          "type": "string",
+          "description": "Primary reason for entry",
+          "example": "Breakout above key resistance with volume"
+        },
+        "reasoningSummary": {
+          "type": "string",
+          "description": "Detailed summary of entry reasoning",
+          "example": "Strong technical setup with breakout confirmation"
+        },
+        "confidenceLevel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Confidence level in the analysis (1-10)",
+          "example": 8
+        },
+        "supportingIndicators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Supporting indicators or metrics",
+          "example": ["RSI above 50", "Volume spike", "MACD bullish"]
+        },
+        "conflictingIndicators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Conflicting indicators or metrics",
+          "example": ["ADX below 25"]
+        },
+        "exitPrimaryReason": {
+          "type": "string",
+          "description": "Primary reason for exit",
+          "example": "Target achieved"
+        },
+        "exitReasoningSummary": {
+          "type": "string",
+          "description": "Detailed summary of exit reasoning",
+          "example": "Reached planned profit target"
+        },
+        "exitConfidenceLevel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Confidence level in exit analysis (1-10)",
+          "example": 9
+        },
+        "exitSupportingIndicators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Supporting indicators for exit",
+          "example": ["Target reached", "Risk-reward satisfied"]
+        },
+        "exitConflictingIndicators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Conflicting indicators for exit",
+          "example": []
+        },
+        "exitQualityScore": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Exit quality assessment (1-10)",
+          "example": 9
+        },
+        "streategy": {
+          "type": "string",
+          "description": "Trading strategy used",
+          "example": "Momentum Trading"
+        }
+      }
+    },
+    "TradeDetails": {
+      "type": "object",
+      "description": "Complete trade details including all related information",
+      "required": ["tradeId", "portfolioId", "instrumentInfo", "status", "tradePositionType", "entryInfo"],
+      "properties": {
+        "tradeId": {
+          "type": "string",
+          "description": "Unique trade identifier",
+          "example": "TRD-2025-001"
+        },
+        "portfolioId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Portfolio ID",
+          "example": "163d0143-4fcb-480c-ac20-622f14e0e293"
+        },
+        "instrumentInfo": {
+          "$ref": "#/definitions/InstrumentInfo"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Trading symbol (derived from instrumentInfo)",
+          "example": "BANKNIFTY"
+        },
+        "strategy": {
+          "type": "string",
+          "description": "Trading strategy used",
+          "example": "Momentum Trading"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["OPEN", "CLOSED", "WIN", "LOSS", "BREAKEVEN", "CANCELLED"],
+          "description": "Trade status",
+          "example": "WIN"
+        },
+        "tradePositionType": {
+          "type": "string",
+          "enum": ["LONG", "SHORT"],
+          "description": "Position type",
+          "example": "LONG"
+        },
+        "entryInfo": {
+          "$ref": "#/definitions/EntryExitInfo"
+        },
+        "exitInfo": {
+          "$ref": "#/definitions/EntryExitInfo"
+        },
+        "metrics": {
+          "$ref": "#/definitions/TradeMetrics"
+        },
+        "tradeExecutions": {
+          "type": "array",
+          "description": "Associated trade executions",
+          "items": {
+            "$ref": "#/definitions/TradeModel"
+          }
+        },
+        "notes": {
+          "type": "string",
+          "description": "Trade notes",
+          "example": "Good setup with clear risk management"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Trade tags",
+          "items": {
+            "type": "string"
+          },
+          "example": ["intraday", "high-probability", "momentum"]
+        },
+        "userId": {
+          "type": "string",
+          "description": "User ID",
+          "example": "ssd2658"
+        },
+        "attachments": {
+          "type": "array",
+          "description": "Trade analysis attachments",
+          "items": {
+            "$ref": "#/definitions/Attachment"
+          }
+        },
+        "psychologyData": {
+          "$ref": "#/definitions/TradePsychologyData"
+        },
+        "entryReasoning": {
+          "$ref": "#/definitions/TradeEntryExistReasoning"
+        },
+        "exitReasoning": {
+          "$ref": "#/definitions/TradeEntryExistReasoning"
+        }
+      }
+    },
+    "TradeModel": {
+      "type": "object",
+      "description": "Trade execution model based on broker trade book structure",
+      "properties": {
+        "basicInfo": {
+          "$ref": "#/definitions/BasicInfo"
+        },
+        "instrumentInfo": {
+          "$ref": "#/definitions/InstrumentInfo"
+        },
+        "executionInfo": {
+          "$ref": "#/definitions/ExecutionInfo"
+        },
+        "fnoInfo": {
+          "$ref": "#/definitions/FnOInfo"
+        },
+        "charges": {
+          "$ref": "#/definitions/Charges"
+        },
+        "financials": {
+          "$ref": "#/definitions/Financials"
+        }
+      }
+    },
+    "BasicInfo": {
+      "type": "object",
+      "description": "Basic trade execution information",
+      "properties": {
+        "tradeId": {
+          "type": "string",
+          "description": "Trade ID",
+          "example": "TRD-2025-001"
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Order ID",
+          "example": "ORD-2025-001"
+        },
+        "tradeDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Trade date",
+          "example": "2025-01-15"
+        },
+        "orderExecutionTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Order execution timestamp",
+          "example": "2025-01-15T10:30:00Z"
+        },
+        "brokerType": {
+          "type": "string",
+          "enum": ["ZERODHA", "UPSTOX", "ANGEL", "ICICI", "HDFC", "OTHER"],
+          "description": "Broker type",
+          "example": "ZERODHA"
+        },
+        "tradeType": {
+          "type": "string",
+          "enum": ["BUY", "SELL"],
+          "description": "Trade type",
+          "example": "BUY"
+        }
+      }
+    },
+    "ExecutionInfo": {
+      "type": "object",
+      "description": "Trade execution details",
+      "properties": {
+        "quantity": {
+          "type": "integer",
+          "description": "Quantity executed",
+          "example": 100
+        },
+        "price": {
+          "type": "number",
+          "format": "double",
+          "description": "Execution price",
+          "example": 125.50
+        },
+        "orderType": {
+          "type": "string",
+          "enum": ["MARKET", "LIMIT", "STOP_LOSS", "STOP_LOSS_MARKET"],
+          "description": "Order type",
+          "example": "LIMIT"
+        }
+      }
+    },
+    "FnOInfo": {
+      "type": "object",
+      "description": "Futures and Options specific information",
+      "properties": {
+        "expiryDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Expiry date",
+          "example": "2025-01-30"
+        },
+        "strikePrice": {
+          "type": "number",
+          "format": "double",
+          "description": "Strike price",
+          "example": 22500.00
+        },
+        "optionType": {
+          "type": "string",
+          "enum": ["CALL", "PUT"],
+          "description": "Option type",
+          "example": "CALL"
+        }
+      }
+    },
+    "Charges": {
+      "type": "object",
+      "description": "Trading charges breakdown",
+      "properties": {
+        "brokerage": {
+          "type": "number",
+          "format": "double",
+          "description": "Brokerage charges",
+          "example": 20.00
+        },
+        "stt": {
+          "type": "number",
+          "format": "double",
+          "description": "Securities Transaction Tax",
+          "example": 10.00
+        },
+        "transactionCharges": {
+          "type": "number",
+          "format": "double",
+          "description": "Transaction charges",
+          "example": 5.00
+        },
+        "stampDuty": {
+          "type": "number",
+          "format": "double",
+          "description": "Stamp duty",
+          "example": 2.50
+        },
+        "sebiCharges": {
+          "type": "number",
+          "format": "double",
+          "description": "SEBI charges",
+          "example": 1.00
+        },
+        "gst": {
+          "type": "number",
+          "format": "double",
+          "description": "GST",
+          "example": 7.50
+        },
+        "totalTaxes": {
+          "type": "number",
+          "format": "double",
+          "description": "Total taxes",
+          "example": 46.00
+        }
+      }
+    },
+    "Financials": {
+      "type": "object",
+      "description": "Financial summary",
+      "properties": {
+        "turnover": {
+          "type": "number",
+          "format": "double",
+          "description": "Turnover amount",
+          "example": 12550.00
+        },
+        "netAmount": {
+          "type": "number",
+          "format": "double",
+          "description": "Net amount after charges",
+          "example": 12504.00
+        }
+      }
+    },
+    "FilterTradeDetailsRequest": {
+      "type": "object",
+      "description": "Request for filtering trade details using favorite filter configuration",
+      "required": ["userId"],
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "User ID",
+          "example": "ssd2658"
+        },
+        "favoriteFilterId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Favorite filter ID to apply (optional)",
+          "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        },
+        "metricsConfig": {
+          "$ref": "#/definitions/MetricsFilterConfig"
+        }
+      }
+    },
+    "FilterTradeDetailsResponse": {
+      "type": "object",
+      "description": "Response containing filtered trade details",
+      "properties": {
+        "trades": {
+          "type": "array",
+          "description": "List of filtered trade details",
+          "items": {
+            "$ref": "#/definitions/TradeDetails"
+          }
+        },
+        "totalCount": {
+          "type": "integer",
+          "description": "Total number of trades matching the filter",
+          "example": 150
+        },
+        "appliedFilterName": {
+          "type": "string",
+          "description": "Applied filter name (if using favorite filter)",
+          "example": "High Risk Intraday Trades"
+        },
+        "filterSummary": {
+          "$ref": "#/definitions/FilterSummary"
+        },
+        "page": {
+          "type": "integer",
+          "description": "Current page number (0-based)",
+          "example": 0
+        },
+        "size": {
+          "type": "integer",
+          "description": "Page size",
+          "example": 20
+        },
+        "totalPages": {
+          "type": "integer",
+          "description": "Total number of pages",
+          "example": 8
+        },
+        "isFirst": {
+          "type": "boolean",
+          "description": "Whether this is the first page",
+          "example": true
+        },
+        "isLast": {
+          "type": "boolean",
+          "description": "Whether this is the last page",
+          "example": false
+        }
+      }
+    },
+    "FilterSummary": {
+      "type": "object",
+      "description": "Summary of applied filter criteria",
+      "properties": {
+        "portfolioIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Filtered portfolio IDs",
+          "example": ["163d0143-4fcb-480c-ac20-622f14e0e293"]
+        },
+        "symbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Filtered symbols",
+          "example": ["NIFTY", "BANKNIFTY"]
+        },
+        "statuses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Filtered statuses",
+          "example": ["WIN", "LOSS"]
+        },
+        "dateRange": {
+          "type": "string",
+          "description": "Date range summary",
+          "example": "2025-01-01 to 2025-12-31"
+        },
+        "strategies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Filtered strategies",
+          "example": ["Momentum Trading", "Scalping"]
+        },
+        "profitLossRange": {
+          "type": "string",
+          "description": "Profit/loss range summary",
+          "example": "-10000.00 to 50000.00"
+        },
+        "holdingTimeRange": {
+          "type": "string",
+          "description": "Holding time range summary",
+          "example": "1 to 24 hours"
+        }
+      }
+    },
+    "MetricsFilterConfig": {
+      "type": "object",
+      "description": "Configuration for metrics filters (imported from FavoriteFilter schema)",
+      "properties": {
+        "portfolioIds": {
+          "type": "array",
+          "description": "List of portfolio IDs to filter",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "example": ["163d0143-4fcb-480c-ac20-622f14e0e293"]
+        },
+        "dateRange": {
+          "type": "object",
+          "description": "Date range filter as Map<String, Object>",
+          "additionalProperties": true,
+          "properties": {
+            "startDate": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-01-01"
+            },
+            "endDate": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-12-31"
+            }
+          }
+        },
+        "timePeriod": {
+          "type": "object",
+          "description": "Time period filter as Map<String, Object>",
+          "additionalProperties": true,
+          "properties": {
+            "period": {
+              "type": "string",
+              "example": "LAST_30_DAYS"
+            }
+          }
+        },
+        "metricTypes": {
+          "type": "array",
+          "description": "Types of metrics to include",
+          "items": {
+            "type": "string",
+            "enum": [
+              "PERFORMANCE",
+              "RISK",
+              "DISTRIBUTION",
+              "TIMING",
+              "PATTERN",
+              "PROFIT_LOSS",
+              "WIN_RATE",
+              "RISK_REWARD",
+              "DRAWDOWN",
+              "SHARPE_RATIO"
+            ]
+          },
+          "example": ["PERFORMANCE", "RISK"]
+        },
+        "instruments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": ["NIFTY", "BANKNIFTY"]
+        },
+        "instrumentFilters": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "marketSegments": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "baseSymbols": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tradeCharacteristics": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "statuses": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "strategies": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "profitLossFilters": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "minProfitLoss": {
+              "type": "number"
+            },
+            "maxProfitLoss": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "description": "Standard error response structure",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the error occurred",
+          "example": "2025-01-15T10:30:00Z"
+        },
+        "status": {
+          "type": "integer",
+          "description": "HTTP status code",
+          "example": 400
+        },
+        "error": {
+          "type": "string",
+          "description": "Error type",
+          "example": "Bad Request"
+        },
+        "message": {
+          "type": "string",
+          "description": "Error message",
+          "example": "Invalid trade data"
+        },
+        "path": {
+          "type": "string",
+          "description": "API endpoint path",
+          "example": "/api/v1/trades/details"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional error details",
+          "example": ["Field 'portfolioId' is required"]
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/trades/details/portfolio/{portfolioId}": {
+      "get": {
+        "summary": "Get trade details by portfolio ID and symbols",
+        "operationId": "getTradeDetailsByPortfolioAndSymbols",
+        "tags": ["Trade API"],
+        "parameters": [
+          {
+            "name": "portfolioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Portfolio ID",
+            "example": "163d0143-4fcb-480c-ac20-622f14e0e293"
+          },
+          {
+            "name": "symbols",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Symbols to filter by (optional)",
+            "example": ["NIFTY", "BANKNIFTY"]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trade details found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/TradeDetails"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/trades/details": {
+      "post": {
+        "summary": "Add a new trade",
+        "operationId": "addTrade",
+        "tags": ["Trade API"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/TradeDetails"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Trade created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/TradeDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid trade data"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/trades/details/{tradeId}": {
+      "put": {
+        "summary": "Update an existing trade",
+        "operationId": "updateTrade",
+        "tags": ["Trade API"],
+        "parameters": [
+          {
+            "name": "tradeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Trade ID",
+            "example": "TRD-2025-001"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/TradeDetails"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Trade updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/TradeDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid trade data"
+          },
+          "404": {
+            "description": "Trade not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/trades/filter": {
+      "get": {
+        "summary": "Filter trades by multiple criteria",
+        "operationId": "getTradesByFilters",
+        "tags": ["Trade API"],
+        "parameters": [
+          {
+            "name": "portfolioIds",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Portfolio IDs to filter by",
+            "example": ["163d0143-4fcb-480c-ac20-622f14e0e293"]
+          },
+          {
+            "name": "symbols",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Symbols to filter by",
+            "example": ["NIFTY", "BANKNIFTY"]
+          },
+          {
+            "name": "statuses",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["OPEN", "CLOSED", "WIN", "LOSS", "BREAKEVEN", "CANCELLED"]
+              }
+            },
+            "description": "Trade statuses to filter by",
+            "example": ["WIN", "LOSS"]
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Start date for filtering trades (format: yyyy-MM-dd)",
+            "example": "2025-01-01"
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "End date for filtering trades (format: yyyy-MM-dd)",
+            "example": "2025-12-31"
+          },
+          {
+            "name": "strategies",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Strategies to filter by",
+            "example": ["Momentum Trading", "Scalping"]
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
+            "description": "Page number (0-based)",
+            "example": 0
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            },
+            "description": "Page size",
+            "example": 20
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Sort criteria (e.g., profitLoss,desc)",
+            "example": "profitLoss,desc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trades found successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/TradeDetails"
+                      }
+                    },
+                    "totalElements": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "number": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid filter parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/trades/details/batch": {
+      "post": {
+        "summary": "Add or update multiple trades",
+        "operationId": "addOrUpdateTrades",
+        "tags": ["Trade API"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/TradeDetails"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Trades processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/TradeDetails"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid trade data"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/trades/details/by-ids": {
+      "post": {
+        "summary": "Get trade details by trade IDs",
+        "operationId": "getTradeDetailsByTradeIds",
+        "tags": ["Trade API"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["TRD-2025-001", "TRD-2025-002"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Trade details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/TradeDetails"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/trades/details/filter": {
+      "post": {
+        "summary": "Filter trade details using favorite filter configuration",
+        "operationId": "filterTradeDetails",
+        "tags": ["Trade API"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
+            "description": "Page number (0-based)",
+            "example": 0
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            },
+            "description": "Page size",
+            "example": 20
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Sort criteria (e.g., profitLoss,desc)",
+            "example": "profitLoss,desc"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/FilterTradeDetailsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Trade details filtered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/FilterTradeDetailsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid filter request"
+          },
+          "404": {
+            "description": "Favorite filter not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  }
+}

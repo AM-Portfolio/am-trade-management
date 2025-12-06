@@ -25,6 +25,9 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: ${REDIS_PORT}
 
+      INTERNAL_JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+
     entrypoint: ["/bin/sh", "-c"]
     command: 
       - |
@@ -37,9 +40,9 @@ services:
         echo "=== Starting AM Trade Service ==="
         java -jar app.jar
     ports:
-      - "8073:8080"
+      - "8077:8080"
     networks:
-      - market-data-network
+      - am-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
@@ -53,5 +56,6 @@ volumes:
   grafana_data:
 
 networks:
-  market-data-network:
+  am-network:
     driver: bridge
+    name: am-network

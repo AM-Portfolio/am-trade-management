@@ -45,17 +45,6 @@ public interface TradeJournalRepository extends MongoRepository<TradeJournalEntr
             String userId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
     
     /**
-     * Find journal entries by user ID and tags
-     * 
-     * @param userId User ID
-     * @param tags List of tags
-     * @param pageable Pagination information
-     * @return Page of journal entries
-     */
-    Page<TradeJournalEntry> findByUserIdAndTagsInOrderByEntryDateDesc(
-            String userId, List<String> tags, Pageable pageable);
-    
-    /**
      * Count journal entries by user ID
      * 
      * @param userId User ID

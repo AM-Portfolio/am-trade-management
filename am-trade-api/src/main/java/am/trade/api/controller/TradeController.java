@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import am.trade.api.dto.FilterTradeDetailsRequest;
+import am.trade.api.dto.FilterTradeDetailsResponse;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.enums.TradeStatus;
 import am.trade.api.service.TradeApiService;
@@ -26,6 +28,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -164,5 +167,29 @@ public class TradeController {
         // Let the global exception handler manage exceptions
         List<TradeDetails> tradeDetails = tradeApiService.getTradeDetailsByTradeIds(tradeIds);
         return ResponseEntity.ok(tradeDetails);
+    }
+    
+    @Operation(summary = "Filter trade details using favorite filter configuration")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Trade details filtered successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid filter request"),
+        @ApiResponse(responseCode = "404", description = "Favorite filter not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/details/filter")
+    public ResponseEntity<FilterTradeDetailsResponse> filterTradeDetails(
+            @Parameter(description = "Filter criteria for trade details") 
+            @RequestBody @Valid FilterTradeDetailsRequest request,
+            @Parameter(description = "Pagination parameters (page, size, sort) - optional", 
+                       example = "page=0&size=20&sort=profitLoss,desc")
+            Pageable pageable) {
+        
+        log.info("Filtering trade details for user: {} with favorite filter: {}, page: {}, size: {}", 
+                request.getUserId(), request.getFavoriteFilterId(), 
+                pageable != null ? pageable.getPageNumber() : "unpaged",
+                pageable != null ? pageable.getPageSize() : "all");
+        
+        FilterTradeDetailsResponse response = tradeApiService.filterTradeDetails(request, pageable);
+        return ResponseEntity.ok(response);
     }
 }

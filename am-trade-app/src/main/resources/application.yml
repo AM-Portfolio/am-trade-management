@@ -1,7 +1,7 @@
-MONGODB_URI: mongodb://ssd2658:ssd2658@localhost:27017/am-trade?authSource=admin
-MONGODB_DATABASE: am-trade
+MONGODB_URI: ${MONGODB_URI:mongodb://ssd2658:ssd2658@localhost:27017/am-trade?authSource=admin}
+MONGODB_DATABASE: ${MONGODB_DATABASE:am-trade}
 
-KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
 KAFKA_SASL_MECHANISM: PLAIN
 KAFKA_SASL_JAAS_CONFIG: #org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
@@ -30,13 +30,22 @@ am:
         collection-interval-seconds: 60
         retention-days: 30
 server:
-  port: 8073
+  port: 8080
+
+# Security Configuration
+security:
+  enabled: ${SECURITY_ENABLED:true}  # false for development, true for production
+
+# JWT Configuration (only used when security.enabled=true)
+jwt:
+  secret: ${JWT_SECRET:internal-service-super-secret-key-32chars-minimum-change-in-prod}
 
 spring:
   application:
     name: am-trade-management
   config:
     import:
+
       - classpath:application-common.yml
       - classpath:application-redis.yml
       - classpath:application-market-data-client.yml

@@ -1,5 +1,6 @@
 package am.trade.common.models.enums;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -13,19 +14,50 @@ import java.util.Set;
  */
 @Getter
 @EqualsAndHashCode
+@Schema(
+    description = "Asset class classification. Supports both predefined and custom values.",
+    example = "STOCK",
+    allowableValues = {
+        "STOCK", "ETF", "MUTUAL_FUND", "BOND", "OPTION", "FUTURES",
+        "FOREX", "CRYPTO", "COMMODITY", "REIT", "CASH", "OTHER"
+    }
+)
 public class AssetClass {
     // Predefined asset classes
+    @Schema(description = "Individual Stock")
     public static final AssetClass STOCK = new AssetClass("STOCK", "Individual Stock");
+    
+    @Schema(description = "Exchange Traded Fund")
     public static final AssetClass ETF = new AssetClass("ETF", "Exchange Traded Fund");
+    
+    @Schema(description = "Mutual Fund")
     public static final AssetClass MUTUAL_FUND = new AssetClass("MUTUAL_FUND", "Mutual Fund");
+    
+    @Schema(description = "Bond")
     public static final AssetClass BOND = new AssetClass("BOND", "Bond");
+    
+    @Schema(description = "Option Contract")
     public static final AssetClass OPTION = new AssetClass("OPTION", "Option Contract");
+    
+    @Schema(description = "Futures Contract")
     public static final AssetClass FUTURES = new AssetClass("FUTURES", "Futures Contract");
+    
+    @Schema(description = "Foreign Exchange")
     public static final AssetClass FOREX = new AssetClass("FOREX", "Foreign Exchange");
+    
+    @Schema(description = "Cryptocurrency")
     public static final AssetClass CRYPTO = new AssetClass("CRYPTO", "Cryptocurrency");
+    
+    @Schema(description = "Physical Commodity")
     public static final AssetClass COMMODITY = new AssetClass("COMMODITY", "Physical Commodity");
+    
+    @Schema(description = "Real Estate Investment Trust")
     public static final AssetClass REIT = new AssetClass("REIT", "Real Estate Investment Trust");
+    
+    @Schema(description = "Cash or Cash Equivalent")
     public static final AssetClass CASH = new AssetClass("CASH", "Cash or Cash Equivalent");
+    
+    @Schema(description = "Other Asset Type")
     public static final AssetClass OTHER = new AssetClass("OTHER", "Other Asset Type");
 
     // Set of predefined values for validation

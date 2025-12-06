@@ -1,0 +1,1115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Favorite Filter API Schema",
+  "description": "Complete JSON Schema for FavoriteFilterController API - Supports code generation for Java, Python, Flutter, and JavaScript",
+  "version": "1.0.0",
+  "definitions": {
+    "DateRangeFilter": {
+      "type": "object",
+      "description": "Filter criteria for date ranges",
+      "required": ["startDate", "endDate"],
+      "properties": {
+        "startDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Start date for the metrics calculation period (ISO 8601 format: YYYY-MM-DD)",
+          "example": "2025-01-01"
+        },
+        "endDate": {
+          "type": "string",
+          "format": "date",
+          "description": "End date for the metrics calculation period (ISO 8601 format: YYYY-MM-DD)",
+          "example": "2025-12-31"
+        }
+      }
+    },
+    "TimePeriodFilter": {
+      "type": "string",
+      "description": "Predefined time periods for quick date range selection",
+      "enum": [
+        "TODAY",
+        "YESTERDAY",
+        "LAST_7_DAYS",
+        "LAST_14_DAYS",
+        "LAST_30_DAYS",
+        "THIS_WEEK",
+        "LAST_WEEK",
+        "THIS_MONTH",
+        "LAST_MONTH",
+        "THIS_QUARTER",
+        "LAST_QUARTER",
+        "THIS_YEAR",
+        "LAST_YEAR",
+        "LAST_3_MONTHS",
+        "LAST_6_MONTHS",
+        "LAST_12_MONTHS",
+        "LAST_2_YEARS",
+        "LAST_3_YEARS",
+        "LAST_5_YEARS",
+        "CUSTOM"
+      ],
+      "example": "LAST_30_DAYS"
+    },
+    "InstrumentFilterCriteria": {
+      "type": "object",
+      "description": "Criteria for filtering trades based on instrument characteristics",
+      "properties": {
+        "marketSegments": {
+          "type": "array",
+          "description": "Filter trades by market segment",
+          "items": {
+            "type": "string",
+            "enum": [
+              "EQUITY",
+              "INDEX",
+              "EQUITY_FUTURES",
+              "INDEX_FUTURES",
+              "EQUITY_OPTIONS",
+              "INDEX_OPTIONS"
+            ]
+          },
+          "uniqueItems": true,
+          "example": ["INDEX_OPTIONS", "EQUITY_OPTIONS"]
+        },
+        "baseSymbols": {
+          "type": "array",
+          "description": "Filter trades by specific base symbols",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "example": ["NIFTY", "BANKNIFTY", "RELIANCE"]
+        },
+        "indexTypes": {
+          "type": "array",
+          "description": "Filter trades by index type",
+          "items": {
+            "type": "string",
+            "enum": ["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY"]
+          },
+          "uniqueItems": true,
+          "example": ["NIFTY", "BANKNIFTY"]
+        },
+        "derivativeTypes": {
+          "type": "array",
+          "description": "Filter trades by derivative type",
+          "items": {
+            "type": "string",
+            "enum": ["FUTURES", "OPTIONS"]
+          },
+          "uniqueItems": true,
+          "example": ["OPTIONS"]
+        }
+      }
+    },
+    "TradeCharacteristicsFilter": {
+      "type": "object",
+      "description": "Filter criteria for trade characteristics",
+      "properties": {
+        "strategies": {
+          "type": "array",
+          "description": "Filter trades by specific strategies",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "example": ["Momentum Trading", "Scalping", "Swing Trading"]
+        },
+        "tags": {
+          "type": "array",
+          "description": "Filter trades by specific tags",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "example": ["intraday", "high-risk", "momentum"]
+        },
+        "directions": {
+          "type": "array",
+          "description": "Filter trades by trade direction",
+          "items": {
+            "type": "string",
+            "enum": ["LONG", "SHORT"]
+          },
+          "uniqueItems": true,
+          "example": ["LONG"]
+        },
+        "statuses": {
+          "type": "array",
+          "description": "Filter trades by specific trade statuses",
+          "items": {
+            "type": "string",
+            "enum": ["OPEN", "CLOSED", "WIN", "LOSS", "BREAKEVEN", "CANCELLED"]
+          },
+          "uniqueItems": true,
+          "example": ["CLOSED", "WIN"]
+        },
+        "minHoldingTimeHours": {
+          "type": "integer",
+          "description": "Filter trades by minimum holding time in hours",
+          "minimum": 0,
+          "example": 1
+        },
+        "maxHoldingTimeHours": {
+          "type": "integer",
+          "description": "Filter trades by maximum holding time in hours",
+          "minimum": 0,
+          "example": 24
+        }
+      }
+    },
+    "ProfitLossFilter": {
+      "type": "object",
+      "description": "Filter criteria for profit/loss metrics",
+      "properties": {
+        "minProfitLoss": {
+          "type": "number",
+          "format": "double",
+          "description": "Filter trades by minimum profit/loss amount",
+          "example": -10000.00
+        },
+        "maxProfitLoss": {
+          "type": "number",
+          "format": "double",
+          "description": "Filter trades by maximum profit/loss amount",
+          "example": 50000.00
+        },
+        "minPositionSize": {
+          "type": "number",
+          "format": "double",
+          "description": "Filter trades by minimum position size",
+          "example": 100.00
+        },
+        "maxPositionSize": {
+          "type": "number",
+          "format": "double",
+          "description": "Filter trades by maximum position size",
+          "example": 10000.00
+        }
+      }
+    },
+    "MetricsFilterConfig": {
+      "type": "object",
+      "description": "Configuration for metrics filters that can be saved as favorites. Uses flexible Map-based structure for nested filters.",
+      "properties": {
+        "portfolioIds": {
+          "type": "array",
+          "description": "List of portfolio IDs to filter",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "example": ["163d0143-4fcb-480c-ac20-622f14e0e293"]
+        },
+        "dateRange": {
+          "type": "object",
+          "description": "Date range filter as Map<String, Object>",
+          "additionalProperties": true,
+          "properties": {
+            "startDate": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-01-01"
+            },
+            "endDate": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-12-31"
+            }
+          }
+        },
+        "timePeriod": {
+          "type": "object",
+          "description": "Time period filter as Map<String, Object>",
+          "additionalProperties": true,
+          "properties": {
+            "period": {
+              "type": "string",
+              "example": "LAST_30_DAYS"
+            }
+          }
+        },
+        "metricTypes": {
+          "type": "array",
+          "description": "Types of metrics to include",
+          "items": {
+            "type": "string",
+            "enum": [
+              "PERFORMANCE",
+              "RISK",
+              "DISTRIBUTION",
+              "TIMING",
+              "PATTERN",
+              "PROFIT_LOSS",
+              "WIN_RATE",
+              "RISK_REWARD",
+              "DRAWDOWN",
+              "SHARPE_RATIO"
+            ]
+          },
+          "example": ["PERFORMANCE", "RISK", "PROFIT_LOSS", "WIN_RATE"]
+        },
+        "groupBy": {
+          "type": "array",
+          "description": "Group metrics by dimensions",
+          "items": {
+            "type": "string",
+            "enum": [
+              "STRATEGY",
+              "SYMBOL",
+              "DAY_OF_WEEK",
+              "MONTH",
+              "PORTFOLIO",
+              "TRADE_TYPE",
+              "INSTRUMENT_TYPE",
+              "DIRECTION"
+            ]
+          },
+          "example": ["STRATEGY", "SYMBOL", "MONTH"]
+        },
+        "instruments": {
+          "type": "array",
+          "description": "Filter trades by specific instruments",
+          "items": {
+            "type": "string"
+          },
+          "example": ["NIFTY", "BANKNIFTY"]
+        },
+        "instrumentFilters": {
+          "type": "object",
+          "description": "Instrument filter criteria as Map<String, Object>",
+          "additionalProperties": true,
+          "properties": {
+            "marketSegments": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "baseSymbols": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "indexTypes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "derivativeTypes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tradeCharacteristics": {
+          "type": "object",
+          "description": "Trade characteristics filter as Map<String, Object>. IMPORTANT: statuses, strategies, tags must be inside this object.",
+          "additionalProperties": true,
+          "properties": {
+            "statuses": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "example": ["LOSS", "WIN"]
+            },
+            "strategies": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "example": ["Momentum Trading"]
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "example": ["intraday"]
+            },
+            "directions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "example": ["LONG"]
+            },
+            "minHoldingTimeHours": {
+              "type": "integer",
+              "example": 1
+            },
+            "maxHoldingTimeHours": {
+              "type": "integer",
+              "example": 24
+            }
+          }
+        },
+        "profitLossFilters": {
+          "type": "object",
+          "description": "Profit/loss filter criteria as Map<String, Object>",
+          "additionalProperties": true,
+          "properties": {
+            "minProfitLoss": {
+              "type": "number",
+              "example": -10000.00
+            },
+            "maxProfitLoss": {
+              "type": "number",
+              "example": 50000.00
+            },
+            "minPositionSize": {
+              "type": "number",
+              "example": 100.00
+            },
+            "maxPositionSize": {
+              "type": "number",
+              "example": 10000.00
+            }
+          }
+        }
+      }
+    },
+    "FavoriteFilterRequest": {
+      "type": "object",
+      "description": "Request DTO for creating or updating a favorite filter",
+      "required": ["name", "filterConfig"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the favorite filter",
+          "minLength": 1,
+          "maxLength": 100,
+          "example": "High Risk Intraday Trades"
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional description of the filter",
+          "maxLength": 500,
+          "example": "Filter for high-risk intraday trades with specific characteristics"
+        },
+        "isDefault": {
+          "type": "boolean",
+          "description": "Whether this filter should be set as default",
+          "default": false,
+          "example": false
+        },
+        "filterConfig": {
+          "$ref": "#/definitions/MetricsFilterConfig"
+        }
+      }
+    },
+    "FavoriteFilterResponse": {
+      "type": "object",
+      "description": "Response DTO for favorite filter operations",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the filter",
+          "format": "uuid",
+          "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the favorite filter",
+          "example": "High Risk Intraday Trades"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the filter",
+          "example": "Filter for high-risk intraday trades with specific characteristics"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the filter was created",
+          "example": "2025-01-15T10:30:00Z"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the filter was last updated",
+          "example": "2025-01-15T14:45:00Z"
+        },
+        "isDefault": {
+          "type": "boolean",
+          "description": "Whether this is the default filter",
+          "example": false
+        },
+        "filterConfig": {
+          "$ref": "#/definitions/MetricsFilterConfig"
+        }
+      }
+    },
+    "BulkDeleteRequest": {
+      "type": "object",
+      "description": "Request DTO for bulk deletion of favorite filters",
+      "required": ["userId", "filterIds"],
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID of the user performing the bulk delete",
+          "minLength": 1,
+          "example": "ssd2658"
+        },
+        "filterIds": {
+          "type": "array",
+          "description": "List of filter IDs to delete",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "example": [
+            "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+            "a12bc34d-56ef-7890-b123-4567890abcde"
+          ]
+        }
+      }
+    },
+    "BulkDeleteResponse": {
+      "type": "object",
+      "description": "Response DTO for bulk deletion of favorite filters",
+      "properties": {
+        "deletedCount": {
+          "type": "integer",
+          "description": "Number of filters successfully deleted",
+          "minimum": 0,
+          "example": 2
+        },
+        "totalRequested": {
+          "type": "integer",
+          "description": "Total number of filters requested for deletion",
+          "minimum": 0,
+          "example": 3
+        },
+        "message": {
+          "type": "string",
+          "description": "Summary message of the deletion operation",
+          "example": "Successfully deleted 2 out of 3 filters"
+        }
+      }
+    },
+    "MetricsFilterRequest": {
+      "type": "object",
+      "description": "Request DTO for flexible trade metrics filtering",
+      "required": ["portfolioIds"],
+      "properties": {
+        "portfolioIds": {
+          "type": "array",
+          "description": "Portfolio IDs to include in metrics calculation",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "example": ["163d0143-4fcb-480c-ac20-622f14e0e293"]
+        },
+        "dateRange": {
+          "$ref": "#/definitions/DateRangeFilter"
+        },
+        "timePeriod": {
+          "$ref": "#/definitions/TimePeriodFilter"
+        },
+        "metricTypes": {
+          "type": "array",
+          "description": "Types of metrics to include in the response",
+          "items": {
+            "type": "string",
+            "enum": ["PERFORMANCE", "RISK", "DISTRIBUTION", "TIMING", "PATTERN"]
+          },
+          "uniqueItems": true,
+          "example": ["PERFORMANCE", "RISK"]
+        },
+        "instruments": {
+          "type": "array",
+          "description": "Filter trades by specific instruments",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "example": ["NIFTY", "BANKNIFTY"]
+        },
+        "instrumentFilters": {
+          "$ref": "#/definitions/InstrumentFilterCriteria"
+        },
+        "tradeCharacteristics": {
+          "$ref": "#/definitions/TradeCharacteristicsFilter"
+        },
+        "profitLossFilters": {
+          "$ref": "#/definitions/ProfitLossFilter"
+        },
+        "groupBy": {
+          "type": "array",
+          "description": "Group metrics by specific dimensions",
+          "items": {
+            "type": "string",
+            "enum": ["STRATEGY", "SYMBOL", "DAY_OF_WEEK", "MONTH", "PORTFOLIO"]
+          },
+          "example": ["STRATEGY", "SYMBOL"]
+        },
+        "includeTradeDetails": {
+          "type": "boolean",
+          "description": "Flag to include trade details in the response",
+          "default": false,
+          "example": false
+        },
+        "customFilters": {
+          "type": "object",
+          "description": "Additional custom filters as key-value pairs",
+          "additionalProperties": true
+        }
+      }
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "description": "Standard error response structure",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the error occurred",
+          "example": "2025-01-15T10:30:00Z"
+        },
+        "status": {
+          "type": "integer",
+          "description": "HTTP status code",
+          "example": 400
+        },
+        "error": {
+          "type": "string",
+          "description": "Error type",
+          "example": "Bad Request"
+        },
+        "message": {
+          "type": "string",
+          "description": "Error message",
+          "example": "Filter not found"
+        },
+        "path": {
+          "type": "string",
+          "description": "API endpoint path",
+          "example": "/api/v1/filters/apply/invalid-id"
+        },
+        "details": {
+          "type": "array",
+          "description": "Additional error details",
+          "items": {
+            "type": "string"
+          },
+          "example": ["The requested filter ID was not found"]
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/filters": {
+      "post": {
+        "summary": "Create a new favorite filter",
+        "operationId": "createFilter",
+        "tags": ["Favorite Filters"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID",
+            "example": "ssd2658"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/FavoriteFilterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Filter created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/FavoriteFilterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all favorite filters for a user",
+        "operationId": "getUserFilters",
+        "tags": ["Favorite Filters"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID",
+            "example": "ssd2658"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filters retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/FavoriteFilterResponse"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/filters/{filterId}": {
+      "get": {
+        "summary": "Get a specific favorite filter by ID",
+        "operationId": "getFilterById",
+        "tags": ["Favorite Filters"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID",
+            "example": "ssd2658"
+          },
+          {
+            "name": "filterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter ID",
+            "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filter retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/FavoriteFilterResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Filter not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update an existing favorite filter",
+        "operationId": "updateFilter",
+        "tags": ["Favorite Filters"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID",
+            "example": "ssd2658"
+          },
+          {
+            "name": "filterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter ID",
+            "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/FavoriteFilterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Filter updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/FavoriteFilterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "404": {
+            "description": "Filter not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a favorite filter",
+        "operationId": "deleteFilter",
+        "tags": ["Favorite Filters"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID",
+            "example": "ssd2658"
+          },
+          {
+            "name": "filterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter ID",
+            "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Filter deleted successfully"
+          },
+          "404": {
+            "description": "Filter not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/filters/bulk": {
+      "delete": {
+        "summary": "Delete multiple favorite filters",
+        "operationId": "deleteMultipleFilters",
+        "tags": ["Favorite Filters"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/BulkDeleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Filters deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/BulkDeleteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/filters/default": {
+      "get": {
+        "summary": "Get the user's default filter",
+        "operationId": "getDefaultFilter",
+        "tags": ["Favorite Filters"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID",
+            "example": "ssd2658"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default filter retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/FavoriteFilterResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No default filter found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/filters/{filterId}/default": {
+      "put": {
+        "summary": "Set a filter as the default",
+        "operationId": "setDefaultFilter",
+        "tags": ["Favorite Filters"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID",
+            "example": "ssd2658"
+          },
+          {
+            "name": "filterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter ID to set as default",
+            "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filter set as default successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/FavoriteFilterResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Filter not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/filters/save-current": {
+      "post": {
+        "summary": "Save current filter as favorite",
+        "operationId": "saveCurrentFilter",
+        "tags": ["Favorite Filters"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID",
+            "example": "ssd2658"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name for the filter",
+            "example": "My Custom Filter"
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Description for the filter"
+          },
+          {
+            "name": "isDefault",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Set as default filter"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/MetricsFilterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Filter saved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/FavoriteFilterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/filters/apply/{filterId}": {
+      "get": {
+        "summary": "Get trade metrics using a saved favorite filter",
+        "operationId": "getMetricsWithFavoriteFilter",
+        "tags": ["Favorite Filters"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID",
+            "example": "ssd2658"
+          },
+          {
+            "name": "filterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter ID to apply",
+            "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          },
+          {
+            "name": "portfolioIds",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "description": "Optional portfolio IDs to override filter config"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Metrics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "MetricsResponse - structure varies based on filters"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Filter not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  }
+}

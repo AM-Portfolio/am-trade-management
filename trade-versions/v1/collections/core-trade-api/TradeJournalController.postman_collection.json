@@ -1,0 +1,455 @@
+{
+	"info": {
+		"_postman_id": "tradejournalcontroller-{{$randomUUID}}",
+		"name": "TradeJournalController Collection",
+		"description": "API collection for TradeJournalController - Trading journal and notes management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Journal Entry Management",
+			"item": [
+				{
+					"name": "Create Journal Entry",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response contains entry data\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('entryId');",
+									"    pm.expect(response).to.have.property('userId');",
+									"    pm.expect(response).to.have.property('content');",
+									"});",
+									"",
+									"// Save entry ID for other requests",
+									"if (pm.response.code === 201) {",
+									"    const entryId = pm.response.json().entryId;",
+									"    pm.environment.set('entryId', entryId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"tradeId\": \"sample-trade-id\",\n  \"title\": \"Market Analysis - AAPL Trade\",\n  \"content\": \"Analyzed AAPL chart showing strong support at $145. RSI oversold, expecting bounce. Entry at $146.50 with stop at $144.\",\n  \"category\": \"ANALYSIS\",\n  \"tags\": [\"AAPL\", \"technical-analysis\", \"support-resistance\"],\n  \"mood\": \"CONFIDENT\",\n  \"isPrivate\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/journal",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"journal"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Journal Entry by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Response contains journal entry details\", function () {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response).to.have.property('entryId');",
+									"        pm.expect(response).to.have.property('userId');",
+									"        pm.expect(response).to.have.property('content');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/journal/{{entryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"journal",
+								"{{entryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Journal Entry",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Response contains updated entry data\", function () {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response).to.have.property('entryId');",
+									"        pm.expect(response.title).to.include('Updated');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"tradeId\": \"sample-trade-id\",\n  \"title\": \"Updated: Market Analysis - AAPL Trade Result\",\n  \"content\": \"Trade executed successfully. AAPL bounced from support as expected. Exit at $149.20 for +1.85% gain. Technical analysis proved correct.\",\n  \"category\": \"RESULT\",\n  \"tags\": [\"AAPL\", \"successful-trade\", \"technical-analysis\"],\n  \"mood\": \"SATISFIED\",\n  \"isPrivate\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/journal/{{entryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"journal",
+								"{{entryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Journal Entry",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([204, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 204) {",
+									"    pm.test(\"Journal entry deleted successfully\", function () {",
+									"        console.log('Journal entry deleted successfully');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/journal/{{entryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"journal",
+								"{{entryId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Search & Filter",
+			"item": [
+				{
+					"name": "Get Journal Entries by User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains paginated entries\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('content');",
+									"    pm.expect(response).to.have.property('pageable');",
+									"    pm.expect(response).to.have.property('totalElements');",
+									"});",
+									"",
+									"pm.test(\"All entries belong to user\", function () {",
+									"    const response = pm.response.json();",
+									"    response.content.forEach(entry => {",
+									"        pm.expect(entry.userId).to.equal(pm.environment.get('userId'));",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/journal/user/{{userId}}?page=0&size=10&sort=createdDate,desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"journal",
+								"user",
+								"{{userId}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Page number (0-based)"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "Page size"
+								},
+								{
+									"key": "sort",
+									"value": "createdDate,desc",
+									"description": "Sort by created date descending"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Journal Entries by Trade",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"All entries are for specified trade\", function () {",
+									"    const entries = pm.response.json();",
+									"    entries.forEach(entry => {",
+									"        pm.expect(entry.tradeId).to.equal('sample-trade-id');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/journal/trade/sample-trade-id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"journal",
+								"trade",
+								"sample-trade-id"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Journal Entries by Date Range",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains paginated entries\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('content');",
+									"    pm.expect(response).to.have.property('pageable');",
+									"});",
+									"",
+									"pm.test(\"Entries are within date range\", function () {",
+									"    const entries = pm.response.json().content;",
+									"    console.log(`Found ${entries.length} journal entries in date range`);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/journal/date-range?userId={{userId}}&startDate=2020-01-01&endDate=2020-12-31&page=0&size=20&sort=createdDate,desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"journal",
+								"date-range"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}",
+									"description": "User ID for filtering entries"
+								},
+								{
+									"key": "startDate",
+									"value": "2020-01-01",
+									"description": "Start date in YYYY-MM-DD format"
+								},
+								{
+									"key": "endDate",
+									"value": "2020-12-31",
+									"description": "End date in YYYY-MM-DD format"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								},
+								{
+									"key": "sort",
+									"value": "createdDate,desc"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8073"
+		},
+		{
+			"key": "userId",
+			"value": "sample-user-id"
+		},
+		{
+			"key": "entryId",
+			"value": "sample-entry-id"
+		}
+	]
+}

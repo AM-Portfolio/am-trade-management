@@ -1,0 +1,162 @@
+name: Publish Python SDK to PyPI
+
+on:
+  push:
+    branches:
+      - "**"
+      - feature/**
+      - feature/sdk
+  workflow_dispatch:  # Manual trigger only
+    inputs:
+      pypi_api_token:
+        description: 'PyPI API Token'
+        required: false
+        type: string
+
+jobs:
+  publish-pypi:
+    runs-on: ubuntu-latest
+    name: Publish to PyPI
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build setuptools wheel twine
+
+      - name: Build distribution
+        working-directory: ./am-trade-sdk-python
+        run: |
+          python -m build
+
+      - name: Display build artifacts
+        working-directory: ./am-trade-sdk-python
+        run: |
+          echo "=== Build Artifacts ==="
+          ls -lh dist/
+
+      - name: Publish to PyPI
+        working-directory: ./am-trade-sdk-python
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          echo "Publishing am-trade-sdk to PyPI..."
+          python -m twine upload dist/* \
+            --skip-existing \
+            --non-interactive \
+            --verbose
+
+      - name: Wait for PyPI to sync
+        run: |
+          echo "Waiting 30 seconds for PyPI to sync..."
+          sleep 30
+
+  verify-pypi-publication:
+    runs-on: ubuntu-latest
+    name: Verify PyPI Publication
+    needs: publish-pypi
+    
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install SDK from PyPI
+        run: |
+          python -m pip install --upgrade pip
+          echo "Installing am-trade-sdk from PyPI..."
+          pip install am-trade-sdk
+
+      - name: Verify SDK Installation
+        run: |
+          echo "Verifying SDK installation..."
+          python -c "
+          import sys
+          try:
+              # Test basic imports
+              import sdk
+              print('[OK] SDK package imported successfully')
+              
+              # Test client imports
+              from sdk.client import TradeClient
+              print('[OK] TradeClient imported')
+              
+              # Test model imports  
+              from sdk.models import Trade
+              print('[OK] Trade model imported')
+              
+              # Test config imports
+              from sdk.config import SdkConfig
+              print('[OK] SdkConfig imported')
+              
+              # Test DTO imports
+              from sdk.dto import TradeResponse, TradeCreateRequest
+              print('[OK] DTO models imported')
+              
+              print()
+              print('=== SDK VERIFICATION PASSED ===')
+              print('Package: am-trade-sdk')
+              print('Status: Successfully published to PyPI')
+              print('Installation: pip install am-trade-sdk')
+              print()
+              print('Available modules:')
+              print('  - sdk.client (TradeClient, etc.)')
+              print('  - sdk.models (Trade, etc.)')
+              print('  - sdk.config (SdkConfig, etc.)')
+              print('  - sdk.dto (Request/Response models)')
+              sys.exit(0)
+          except Exception as e:
+              print('[ERROR] Verification failed:', e)
+              import traceback
+              traceback.print_exc()
+              sys.exit(1)
+          "
+
+      - name: Verify SDK Version
+        run: |
+          python -c "
+          try:
+              from sdk import __version__
+              print('[OK] SDK Version:', __version__)
+          except ImportError:
+              # Fallback: get version from package metadata
+              import importlib.metadata
+              version = importlib.metadata.version('am-trade-sdk')
+              print('[OK] SDK Version:', version)
+          "
+
+      - name: Check Package Metadata
+        run: |
+          pip show am-trade-sdk
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "========================================"
+          echo "✓ PyPI Publication Verification SUCCESS"
+          echo "========================================"
+          echo ""
+          echo "Package Details:"
+          echo "  - Name: am-trade-sdk"
+          echo "  - Repository: PyPI (https://pypi.org/project/am-trade-sdk/)"
+          echo "  - Installation: pip install am-trade-sdk"
+          echo ""
+          echo "Module Details:"
+          echo "  - TradeClient available"
+          echo "  - Trade model available"
+          echo "  - SdkConfig available"
+          echo ""
+          echo "Next Steps:"
+          echo "  1. Users can now install: pip install am-trade-sdk"
+          echo "  2. Use the SDK in their projects"
+          echo "========================================"

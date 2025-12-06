@@ -44,6 +44,8 @@
 		<module>am-trade-persistence</module>
 		<module>am-trade-exceptions</module>
 		<module>am-trade-analytics</module>
+		<!-- <module>am-trade-sdk-core</module>
+		<module>am-trade-sdk-python</module> -->
 	</modules>
 
 	<dependencyManagement>
@@ -136,5 +138,13 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub AM Trade Management Apache Maven Packages</name>
+			<url>https://maven.pkg.github.com/AM-Portfolio/am-trade-management</url>
+		</repository>
+	</distributionManagement>
 
 </project>

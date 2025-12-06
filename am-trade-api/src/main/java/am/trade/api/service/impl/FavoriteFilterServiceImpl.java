@@ -2,6 +2,7 @@ package am.trade.api.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class FavoriteFilterServiceImpl implements FavoriteFilterService {
         }
         
         FavoriteFilter filter = FavoriteFilter.builder()
+                .id(UUID.randomUUID().toString())
                 .userId(userId)
                 .name(request.getName())
                 .description(request.getDescription())
@@ -107,6 +109,30 @@ public class FavoriteFilterServiceImpl implements FavoriteFilterService {
         log.info("Deleted favorite filter with ID: {}", filterId);
         
         return true;
+    }
+
+    @Override
+    @Transactional
+    public int deleteMultipleFilters(String userId, List<String> filterIds) {
+        log.info("Deleting {} filters for user: {}", filterIds.size(), userId);
+        
+        int deletedCount = 0;
+        for (String filterId : filterIds) {
+            try {
+                // Verify filter exists and belongs to user
+                FavoriteFilter filter = favoriteFilterRepository.findByIdAndUserId(filterId, userId)
+                        .orElseThrow(() -> new IllegalArgumentException("Filter not found or not owned by user"));
+                
+                favoriteFilterRepository.delete(filter);
+                deletedCount++;
+                log.info("Deleted favorite filter with ID: {}", filterId);
+            } catch (IllegalArgumentException e) {
+                log.warn("Failed to delete filter {}: {}", filterId, e.getMessage());
+            }
+        }
+        
+        log.info("Successfully deleted {} out of {} filters for user: {}", deletedCount, filterIds.size(), userId);
+        return deletedCount;
     }
 
     @Override
