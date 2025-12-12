@@ -27,7 +27,7 @@ am:
         collection-interval-seconds: 60
         retention-days: 30
 server:
-  port: 8060
+  port: 8080
 
 # Security Configuration
 security:
