@@ -1,0 +1,420 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Trade Performance API",
+    "description": "API for detailed trade performance analysis including summary, daily, and timing metrics.",
+    "type": "object",
+    "definitions": {
+        "PerformanceMetrics": {
+            "type": "object",
+            "properties": {
+                "avgHoldTime": {
+                    "type": "number"
+                },
+                "longestTradeDuration": {
+                    "type": "number"
+                },
+                "maxTradingWeeksDuration": {
+                    "type": "number"
+                },
+                "avgTradingWeeksDuration": {
+                    "type": "number"
+                },
+                "avgGrossTradePnL": {
+                    "type": "number"
+                },
+                "avgLoss": {
+                    "type": "number"
+                },
+                "avgMaxTradeLoss": {
+                    "type": "number"
+                },
+                "avgMaxTradeProfit": {
+                    "type": "number"
+                },
+                "avgTradeWinLossRatio": {
+                    "type": "number"
+                },
+                "avgWeeklyGrossPnL": {
+                    "type": "number"
+                },
+                "avgWeeklyWinLossRatio": {
+                    "type": "number"
+                },
+                "avgWin": {
+                    "type": "number"
+                },
+                "grossPnL": {
+                    "type": "number"
+                },
+                "largestLosingTrade": {
+                    "type": "number"
+                },
+                "largestProfitableTrade": {
+                    "type": "number"
+                },
+                "profitFactor": {
+                    "type": "number"
+                },
+                "avgWeeklyGrossDrawdown": {
+                    "type": "number"
+                },
+                "avgPlannedRMultiple": {
+                    "type": "number"
+                },
+                "avgRealizedRMultiple": {
+                    "type": "number"
+                },
+                "breakevenDays": {
+                    "type": "integer"
+                },
+                "breakevenTrades": {
+                    "type": "integer"
+                },
+                "losingDays": {
+                    "type": "integer"
+                },
+                "maxWeeklyGrossDrawdown": {
+                    "type": "number"
+                },
+                "avgWeeklyWinPercentage": {
+                    "type": "number"
+                },
+                "longsWinPercentage": {
+                    "type": "number"
+                },
+                "maxConsecutiveLosingWeeks": {
+                    "type": "integer"
+                },
+                "maxConsecutiveLosses": {
+                    "type": "integer"
+                },
+                "maxConsecutiveWinningWeeks": {
+                    "type": "integer"
+                },
+                "maxConsecutiveWins": {
+                    "type": "integer"
+                },
+                "shortsWinPercentage": {
+                    "type": "number"
+                },
+                "winPercentage": {
+                    "type": "number"
+                },
+                "winningDays": {
+                    "type": "integer"
+                }
+            }
+        },
+        "TradePerformanceSummary": {
+            "type": "object",
+            "properties": {
+                "totalTrades": {
+                    "type": "integer"
+                },
+                "winningTrades": {
+                    "type": "integer"
+                },
+                "losingTrades": {
+                    "type": "integer"
+                },
+                "breakEvenTrades": {
+                    "type": "integer"
+                },
+                "winPercentage": {
+                    "type": "number"
+                },
+                "totalProfitLoss": {
+                    "type": "number"
+                },
+                "averageProfitPerTrade": {
+                    "type": "number"
+                },
+                "averageWinAmount": {
+                    "type": "number"
+                },
+                "averageLossAmount": {
+                    "type": "number"
+                },
+                "averageHoldingTimeWin": {
+                    "type": "number"
+                },
+                "averageHoldingTimeLoss": {
+                    "type": "number"
+                },
+                "maxDrawdown": {
+                    "type": "number"
+                },
+                "profitFactor": {
+                    "type": "number"
+                },
+                "largestWin": {
+                    "type": "number"
+                },
+                "largestLoss": {
+                    "type": "number"
+                },
+                "metrics": {
+                    "$ref": "#/definitions/PerformanceMetrics"
+                }
+            }
+        },
+        "DailyPerformance": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "totalProfitLoss": {
+                    "type": "number"
+                },
+                "tradeCount": {
+                    "type": "integer"
+                },
+                "winCount": {
+                    "type": "integer"
+                },
+                "lossCount": {
+                    "type": "integer"
+                },
+                "winRate": {
+                    "type": "number"
+                },
+                "bestTradeSymbol": {
+                    "type": "string"
+                },
+                "bestTradePnL": {
+                    "type": "number"
+                },
+                "metrics": {
+                    "$ref": "#/definitions/PerformanceMetrics"
+                }
+            }
+        },
+        "TimingAnalysis": {
+            "type": "object",
+            "properties": {
+                "hourlyPerformance": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/HourlyPerformance"
+                    }
+                },
+                "dayOfWeekPerformance": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DayOfWeekPerformance"
+                    }
+                },
+                "monthlyPerformance": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MonthlyPerformance"
+                    }
+                },
+                "yearlyPerformance": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/YearlyPerformance"
+                    }
+                },
+                "weeklyPerformance": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WeeklyPerformance"
+                    }
+                },
+                "bestTradingHour": {
+                    "type": "integer"
+                },
+                "worstTradingHour": {
+                    "type": "integer"
+                },
+                "bestTradingDay": {
+                    "type": "string"
+                },
+                "worstTradingDay": {
+                    "type": "string"
+                },
+                "bestTradingMonth": {
+                    "type": "string"
+                },
+                "worstTradingMonth": {
+                    "type": "string"
+                }
+            }
+        },
+        "HourlyPerformance": {
+            "type": "object",
+            "properties": {
+                "hour": {
+                    "type": "integer"
+                },
+                "tradeCount": {
+                    "type": "integer"
+                },
+                "winCount": {
+                    "type": "integer"
+                },
+                "lossCount": {
+                    "type": "integer"
+                },
+                "winRate": {
+                    "type": "number"
+                },
+                "totalProfitLoss": {
+                    "type": "number"
+                },
+                "averageWinAmount": {
+                    "type": "number"
+                },
+                "averageLossAmount": {
+                    "type": "number"
+                },
+                "averageHoldingTime": {
+                    "type": "number"
+                },
+                "metrics": {
+                    "$ref": "#/definitions/PerformanceMetrics"
+                }
+            }
+        },
+        "DayOfWeekPerformance": {
+            "type": "object",
+            "properties": {
+                "dayOfWeek": {
+                    "type": "string"
+                },
+                "dayOrder": {
+                    "type": "integer"
+                },
+                "tradeCount": {
+                    "type": "integer"
+                },
+                "winCount": {
+                    "type": "integer"
+                },
+                "lossCount": {
+                    "type": "integer"
+                },
+                "winRate": {
+                    "type": "number"
+                },
+                "totalProfitLoss": {
+                    "type": "number"
+                },
+                "averageWinAmount": {
+                    "type": "number"
+                },
+                "averageLossAmount": {
+                    "type": "number"
+                },
+                "averageHoldingTime": {
+                    "type": "number"
+                },
+                "metrics": {
+                    "$ref": "#/definitions/PerformanceMetrics"
+                }
+            }
+        },
+        "MonthlyPerformance": {
+            "type": "object",
+            "properties": {
+                "month": {
+                    "type": "string"
+                },
+                "monthOrder": {
+                    "type": "integer"
+                },
+                "tradeCount": {
+                    "type": "integer"
+                },
+                "winCount": {
+                    "type": "integer"
+                },
+                "lossCount": {
+                    "type": "integer"
+                },
+                "winRate": {
+                    "type": "number"
+                },
+                "totalProfitLoss": {
+                    "type": "number"
+                },
+                "averageWinAmount": {
+                    "type": "number"
+                },
+                "averageLossAmount": {
+                    "type": "number"
+                },
+                "averageHoldingTime": {
+                    "type": "number"
+                },
+                "metrics": {
+                    "$ref": "#/definitions/PerformanceMetrics"
+                }
+            }
+        },
+        "YearlyPerformance": {
+            "type": "object",
+            "properties": {
+                "year": {
+                    "type": "integer"
+                },
+                "tradeCount": {
+                    "type": "integer"
+                },
+                "winCount": {
+                    "type": "integer"
+                },
+                "lossCount": {
+                    "type": "integer"
+                },
+                "winRate": {
+                    "type": "number"
+                },
+                "totalProfitLoss": {
+                    "type": "number"
+                },
+                "averageWinAmount": {
+                    "type": "number"
+                },
+                "averageLossAmount": {
+                    "type": "number"
+                },
+                "averageHoldingTime": {
+                    "type": "number"
+                },
+                "metrics": {
+                    "$ref": "#/definitions/PerformanceMetrics"
+                }
+            }
+        },
+        "WeeklyPerformance": {
+            "type": "object",
+            "properties": {
+                "weekId": {
+                    "type": "string"
+                },
+                "tradeCount": {
+                    "type": "integer"
+                },
+                "winCount": {
+                    "type": "integer"
+                },
+                "lossCount": {
+                    "type": "integer"
+                },
+                "winRate": {
+                    "type": "number"
+                },
+                "totalProfitLoss": {
+                    "type": "number"
+                },
+                "metrics": {
+                    "$ref": "#/definitions/PerformanceMetrics"
+                }
+            }
+        }
+    }
+}

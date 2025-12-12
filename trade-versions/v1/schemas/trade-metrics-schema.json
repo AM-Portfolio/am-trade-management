@@ -1,0 +1,455 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Trade Metrics API",
+    "description": "API for flexible trade metrics analysis and reporting",
+    "type": "object",
+    "definitions": {
+        "MetricsFilterRequest": {
+            "type": "object",
+            "required": [
+                "portfolioIds",
+                "dateRange"
+            ],
+            "properties": {
+                "portfolioIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Portfolio IDs to include in metrics calculation"
+                },
+                "dateRange": {
+                    "$ref": "#/definitions/DateRangeFilter"
+                },
+                "timePeriod": {
+                    "type": "string",
+                    "enum": [
+                        "TODAY",
+                        "YESTERDAY",
+                        "LAST_7_DAYS",
+                        "LAST_14_DAYS",
+                        "LAST_30_DAYS",
+                        "THIS_WEEK",
+                        "LAST_WEEK",
+                        "THIS_MONTH",
+                        "LAST_MONTH",
+                        "THIS_QUARTER",
+                        "LAST_QUARTER",
+                        "THIS_YEAR",
+                        "LAST_YEAR",
+                        "LAST_3_MONTHS",
+                        "LAST_6_MONTHS",
+                        "LAST_12_MONTHS",
+                        "LAST_2_YEARS",
+                        "LAST_3_YEARS",
+                        "LAST_5_YEARS",
+                        "CUSTOM"
+                    ],
+                    "description": "Predefined time period for quick selection"
+                },
+                "metricTypes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Types of metrics to include (e.g., PERFORMANCE, RISK)"
+                },
+                "instruments": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Filter trades by specific instruments"
+                },
+                "instrumentFilters": {
+                    "$ref": "#/definitions/InstrumentFilterCriteria"
+                },
+                "tradeCharacteristics": {
+                    "$ref": "#/definitions/TradeCharacteristicsFilter"
+                },
+                "profitLossFilters": {
+                    "$ref": "#/definitions/ProfitLossFilter"
+                },
+                "groupBy": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Group metrics by specific dimensions (e.g., STRATEGY, SYMBOL)"
+                },
+                "includeTradeDetails": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Flag to include detailed trade list"
+                },
+                "customFilters": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "DateRangeFilter": {
+            "type": "object",
+            "required": [
+                "startDate",
+                "endDate"
+            ],
+            "properties": {
+                "startDate": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "endDate": {
+                    "type": "string",
+                    "format": "date"
+                }
+            }
+        },
+        "InstrumentFilterCriteria": {
+            "type": "object",
+            "properties": {
+                "marketSegments": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "baseSymbols": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "indexTypes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "derivativeTypes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "TradeCharacteristicsFilter": {
+            "type": "object",
+            "properties": {
+                "strategies": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "directions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "LONG, SHORT"
+                },
+                "statuses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "OPEN, CLOSED, etc."
+                },
+                "minHoldingTimeHours": {
+                    "type": "integer"
+                },
+                "maxHoldingTimeHours": {
+                    "type": "integer"
+                }
+            }
+        },
+        "ProfitLossFilter": {
+            "type": "object",
+            "properties": {
+                "minProfitLoss": {
+                    "type": "number"
+                },
+                "maxProfitLoss": {
+                    "type": "number"
+                },
+                "minPositionSize": {
+                    "type": "number"
+                },
+                "maxPositionSize": {
+                    "type": "number"
+                }
+            }
+        },
+        "MetricsResponse": {
+            "type": "object",
+            "properties": {
+                "portfolioIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "startDate": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "endDate": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "totalTradesCount": {
+                    "type": "integer"
+                },
+                "tradeDetails": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TradeDetails"
+                    }
+                },
+                "performanceMetrics": {
+                    "$ref": "#/definitions/PerformanceMetrics"
+                },
+                "riskMetrics": {
+                    "$ref": "#/definitions/RiskMetrics"
+                },
+                "distributionMetrics": {
+                    "$ref": "#/definitions/TradeDistributionMetrics"
+                },
+                "timingMetrics": {
+                    "$ref": "#/definitions/TradeTimingMetrics"
+                },
+                "patternMetrics": {
+                    "$ref": "#/definitions/TradePatternMetrics"
+                },
+                "strategyMetrics": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/StrategyPerformanceMetrics"
+                    }
+                },
+                "groupedMetrics": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "PerformanceMetrics": {
+            "type": "object",
+            "properties": {
+                "totalProfitLoss": {
+                    "type": "number"
+                },
+                "totalProfitLossPercentage": {
+                    "type": "number"
+                },
+                "winRate": {
+                    "type": "number"
+                },
+                "profitFactor": {
+                    "type": "number"
+                },
+                "expectancy": {
+                    "type": "number"
+                },
+                "annualizedReturn": {
+                    "type": "number"
+                },
+                "averageWinningTrade": {
+                    "type": "number"
+                },
+                "averageLosingTrade": {
+                    "type": "number"
+                },
+                "largestWinningTrade": {
+                    "type": "number"
+                },
+                "largestLosingTrade": {
+                    "type": "number"
+                },
+                "winLossRatio": {
+                    "type": "number"
+                },
+                "maxDrawdown": {
+                    "type": "number"
+                },
+                "longestWinningStreak": {
+                    "type": "integer"
+                },
+                "longestLosingStreak": {
+                    "type": "integer"
+                },
+                "returnOnCapital": {
+                    "type": "number"
+                },
+                "tradesPerDay": {
+                    "type": "number"
+                }
+            }
+        },
+        "RiskMetrics": {
+            "type": "object",
+            "properties": {
+                "maxDrawdown": {
+                    "type": "number"
+                },
+                "sharpeRatio": {
+                    "type": "number"
+                },
+                "sortinoRatio": {
+                    "type": "number"
+                },
+                "valueAtRisk": {
+                    "type": "number"
+                },
+                "probabilityOfRuin": {
+                    "type": "number"
+                }
+            }
+        },
+        "TradeDistributionMetrics": {
+            "type": "object",
+            "properties": {
+                "tradesByDay": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "profitByDay": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
+                    }
+                },
+                "tradesByHour": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "profitByHour": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
+                    }
+                },
+                "tradeCountByAssetClass": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "tradeCountByStrategy": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "TradeTimingMetrics": {
+            "type": "object",
+            "properties": {
+                "entryTimingScore": {
+                    "type": "number"
+                },
+                "exitTimingScore": {
+                    "type": "number"
+                },
+                "earlyEntries": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "optimalEntries": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "TradePatternMetrics": {
+            "type": "object",
+            "properties": {
+                "emotionalControlScore": {
+                    "type": "number"
+                },
+                "disciplineScore": {
+                    "type": "number"
+                },
+                "patternConsistencyScore": {
+                    "type": "number"
+                },
+                "patternFrequency": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "StrategyPerformanceMetrics": {
+            "type": "object",
+            "properties": {
+                "strategyName": {
+                    "type": "string"
+                },
+                "totalProfitLoss": {
+                    "type": "number"
+                },
+                "winRate": {
+                    "type": "number"
+                },
+                "sharpeRatio": {
+                    "type": "number"
+                }
+            }
+        },
+        "TradeDetails": {
+            "type": "object",
+            "properties": {
+                "tradeId": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "strategy": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tradePositionType": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,179 @@
+{
+    "info": {
+        "name": "Trade Metrics API",
+        "description": "API for flexible trade metrics analysis and reporting. \n\nSee `tradeMetricsSchema` variable for full JSON Schema.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Get Trade Metrics",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"portfolioIds\": [\"portfolio_101\"],\n  \"dateRange\": {\n    \"startDate\": \"2023-01-01\",\n    \"endDate\": \"2023-12-31\"\n  },\n  \"metricTypes\": [\"PERFORMANCE\", \"RISK\"]\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/metrics",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "metrics"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Get Metric Types",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v1/metrics/types",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "metrics",
+                        "types"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Compare Metrics",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v1/metrics/compare?portfolioIds=p1,p2&metricTypes=PERFORMANCE&firstPeriodStart=2023-01-01&firstPeriodEnd=2023-01-31&secondPeriodStart=2023-02-01&secondPeriodEnd=2023-02-28",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "metrics",
+                        "compare"
+                    ],
+                    "query": [
+                        {
+                            "key": "portfolioIds",
+                            "value": "p1,p2"
+                        },
+                        {
+                            "key": "metricTypes",
+                            "value": "PERFORMANCE"
+                        },
+                        {
+                            "key": "firstPeriodStart",
+                            "value": "2023-01-01"
+                        },
+                        {
+                            "key": "firstPeriodEnd",
+                            "value": "2023-01-31"
+                        },
+                        {
+                            "key": "secondPeriodStart",
+                            "value": "2023-02-01"
+                        },
+                        {
+                            "key": "secondPeriodEnd",
+                            "value": "2023-02-28"
+                        }
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Get Metrics Trends",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v1/metrics/trends?portfolioIds=p1&metricTypes=PERFORMANCE&startDate=2023-01-01&endDate=2023-12-31&interval=MONTH",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "metrics",
+                        "trends"
+                    ],
+                    "query": [
+                        {
+                            "key": "portfolioIds",
+                            "value": "p1"
+                        },
+                        {
+                            "key": "metricTypes",
+                            "value": "PERFORMANCE"
+                        },
+                        {
+                            "key": "startDate",
+                            "value": "2023-01-01"
+                        },
+                        {
+                            "key": "endDate",
+                            "value": "2023-12-31"
+                        },
+                        {
+                            "key": "interval",
+                            "value": "MONTH"
+                        }
+                    ]
+                }
+            },
+            "response": []
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080"
+        },
+        {
+            "key": "jwt_token",
+            "value": "YOUR_JWT_TOKEN_HERE"
+        },
+        {
+            "key": "tradeMetricsSchema",
+            "value": "{\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"title\": \"Trade Metrics API\",\n    \"description\": \"API for flexible trade metrics analysis and reporting\",\n    \"type\": \"object\",\n    \"definitions\": {\n        \"MetricsFilterRequest\": {\n            \"type\": \"object\",\n            \"required\": [\n                \"portfolioIds\",\n                \"dateRange\"\n            ],\n            \"properties\": {\n                \"portfolioIds\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    },\n                    \"description\": \"Portfolio IDs to include in metrics calculation\"\n                },\n                \"dateRange\": {\n                    \"$ref\": \"#/definitions/DateRangeFilter\"\n                },\n                \"timePeriod\": {\n                    \"type\": \"string\",\n                    \"enum\": [\n                        \"TODAY\",\n                        \"YESTERDAY\",\n                        \"LAST_7_DAYS\",\n                        \"LAST_14_DAYS\",\n                        \"LAST_30_DAYS\",\n                        \"THIS_WEEK\",\n                        \"LAST_WEEK\",\n                        \"THIS_MONTH\",\n                        \"LAST_MONTH\",\n                        \"THIS_QUARTER\",\n                        \"LAST_QUARTER\",\n                        \"THIS_YEAR\",\n                        \"LAST_YEAR\",\n                        \"LAST_3_MONTHS\",\n                        \"LAST_6_MONTHS\",\n                        \"LAST_12_MONTHS\",\n                        \"LAST_2_YEARS\",\n                        \"LAST_3_YEARS\",\n                        \"LAST_5_YEARS\",\n                        \"CUSTOM\"\n                    ],\n                    \"description\": \"Predefined time period for quick selection\"\n                },\n                \"metricTypes\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    },\n                    \"description\": \"Types of metrics to include (e.g., PERFORMANCE, RISK)\"\n                },\n                \"instruments\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    },\n                    \"description\": \"Filter trades by specific instruments\"\n                },\n                \"instrumentFilters\": {\n                    \"$ref\": \"#/definitions/InstrumentFilterCriteria\"\n                },\n                \"tradeCharacteristics\": {\n                    \"$ref\": \"#/definitions/TradeCharacteristicsFilter\"\n                },\n                \"profitLossFilters\": {\n                    \"$ref\": \"#/definitions/ProfitLossFilter\"\n                },\n                \"groupBy\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    },\n                    \"description\": \"Group metrics by specific dimensions (e.g., STRATEGY, SYMBOL)\"\n                },\n                \"includeTradeDetails\": {\n                    \"type\": \"boolean\",\n                    \"default\": false,\n                    \"description\": \"Flag to include detailed trade list\"\n                },\n                \"customFilters\": {\n                    \"type\": \"object\",\n                    \"additionalProperties\": true\n                }\n            }\n        },\n        \"DateRangeFilter\": {\n            \"type\": \"object\",\n            \"required\": [\n                \"startDate\",\n                \"endDate\"\n            ],\n            \"properties\": {\n                \"startDate\": {\n                    \"type\": \"string\",\n                    \"format\": \"date\"\n                },\n                \"endDate\": {\n                    \"type\": \"string\",\n                    \"format\": \"date\"\n                }\n            }\n        },\n        \"InstrumentFilterCriteria\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"marketSegments\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    }\n                },\n                \"baseSymbols\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    }\n                },\n                \"indexTypes\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    }\n                },\n                \"derivativeTypes\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        },\n        \"TradeCharacteristicsFilter\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"strategies\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    }\n                },\n                \"tags\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    }\n                },\n                \"directions\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    },\n                    \"description\": \"LONG, SHORT\"\n                },\n                \"statuses\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    },\n                    \"description\": \"OPEN, CLOSED, etc.\"\n                },\n                \"minHoldingTimeHours\": {\n                    \"type\": \"integer\"\n                },\n                \"maxHoldingTimeHours\": {\n                    \"type\": \"integer\"\n                }\n            }\n        },\n        \"ProfitLossFilter\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"minProfitLoss\": {\n                    \"type\": \"number\"\n                },\n                \"maxProfitLoss\": {\n                    \"type\": \"number\"\n                },\n                \"minPositionSize\": {\n                    \"type\": \"number\"\n                },\n                \"maxPositionSize\": {\n                    \"type\": \"number\"\n                }\n            }\n        },\n        \"MetricsResponse\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"portfolioIds\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    }\n                },\n                \"startDate\": {\n                    \"type\": \"string\",\n                    \"format\": \"date\"\n                },\n                \"endDate\": {\n                    \"type\": \"string\",\n                    \"format\": \"date\"\n                },\n                \"totalTradesCount\": {\n                    \"type\": \"integer\"\n                },\n                \"tradeDetails\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"$ref\": \"#/definitions/TradeDetails\"\n                    }\n                },\n                \"performanceMetrics\": {\n                    \"$ref\": \"#/definitions/PerformanceMetrics\"\n                },\n                \"riskMetrics\": {\n                    \"$ref\": \"#/definitions/RiskMetrics\"\n                },\n                \"distributionMetrics\": {\n                    \"$ref\": \"#/definitions/TradeDistributionMetrics\"\n                },\n                \"timingMetrics\": {\n                    \"$ref\": \"#/definitions/TradeTimingMetrics\"\n                },\n                \"patternMetrics\": {\n                    \"$ref\": \"#/definitions/TradePatternMetrics\"\n                },\n                \"strategyMetrics\": {\n                    \"type\": \"object\",\n                    \"additionalProperties\": {\n                        \"$ref\": \"#/definitions/StrategyPerformanceMetrics\"\n                    }\n                },\n                \"groupedMetrics\": {\n                    \"type\": \"object\",\n                    \"additionalProperties\": {\n                        \"type\": \"object\",\n                        \"additionalProperties\": true\n                    }\n                },\n                \"metadata\": {\n                    \"type\": \"object\",\n                    \"additionalProperties\": true\n                }\n            }\n        },\n        \"PerformanceMetrics\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"avgHoldTime\": { \"type\": \"number\" },\n                \"longestTradeDuration\": { \"type\": \"number\" },\n                \"maxTradingWeeksDuration\": { \"type\": \"number\" },\n                \"avgTradingWeeksDuration\": { \"type\": \"number\" },\n                \"avgGrossTradePnL\": { \"type\": \"number\" },\n                \"avgLoss\": { \"type\": \"number\" },\n                \"avgMaxTradeLoss\": { \"type\": \"number\" },\n                \"avgMaxTradeProfit\": { \"type\": \"number\" },\n                \"avgTradeWinLossRatio\": { \"type\": \"number\" },\n                \"avgWeeklyGrossPnL\": { \"type\": \"number\" },\n                \"avgWeeklyWinLossRatio\": { \"type\": \"number\" },\n                \"avgWin\": { \"type\": \"number\" },\n                \"grossPnL\": { \"type\": \"number\" },\n                \"largestLosingTrade\": { \"type\": \"number\" },\n                \"largestProfitableTrade\": { \"type\": \"number\" },\n                \"profitFactor\": { \"type\": \"number\" },\n                \"avgWeeklyGrossDrawdown\": { \"type\": \"number\" },\n                \"avgPlannedRMultiple\": { \"type\": \"number\" },\n                \"avgRealizedRMultiple\": { \"type\": \"number\" },\n                \"breakevenDays\": { \"type\": \"integer\" },\n                \"breakevenTrades\": { \"type\": \"integer\" },\n                \"losingDays\": { \"type\": \"integer\" },\n                \"maxWeeklyGrossDrawdown\": { \"type\": \"number\" },\n                \"avgWeeklyWinPercentage\": { \"type\": \"number\" },\n                \"longsWinPercentage\": { \"type\": \"number\" },\n                \"maxConsecutiveLosingWeeks\": { \"type\": \"integer\" },\n                \"maxConsecutiveLosses\": { \"type\": \"integer\" },\n                \"maxConsecutiveWinningWeeks\": { \"type\": \"integer\" },\n                \"maxConsecutiveWins\": { \"type\": \"integer\" },\n                \"shortsWinPercentage\": { \"type\": \"number\" },\n                \"winPercentage\": { \"type\": \"number\" },\n                \"winningDays\": { \"type\": \"integer\" }\n            }\n        },\n        \"RiskMetrics\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"maxDrawdown\": {\n                    \"type\": \"number\"\n                },\n                \"sharpeRatio\": {\n                    \"type\": \"number\"\n                },\n                \"sortinoRatio\": {\n                    \"type\": \"number\"\n                },\n                \"valueAtRisk\": {\n                    \"type\": \"number\"\n                },\n                \"probabilityOfRuin\": {\n                    \"type\": \"number\"\n                }\n            }\n        },\n        \"TradeDistributionMetrics\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"tradesByDay\": {\n                    \"type\": \"object\",\n                    \"additionalProperties\": {\n                        \"type\": \"integer\"\n                    }\n                },\n                \"profitByDay\": {\n                    \"type\": \"object\",\n                    \"additionalProperties\": {\n                        \"type\": \"number\"\n                    }\n                },\n                \"tradesByHour\": {\n                    \"type\": \"object\",\n                    \"additionalProperties\": {\n                        \"type\": \"integer\"\n                    }\n                },\n                \"profitByHour\": {\n                    \"type\": \"object\",\n                    \"additionalProperties\": {\n                        \"type\": \"number\"\n                    }\n                },\n                \"tradeCountByAssetClass\": {\n                    \"type\": \"object\",\n                    \"additionalProperties\": {\n                        \"type\": \"integer\"\n                    }\n                },\n                \"tradeCountByStrategy\": {\n                    \"type\": \"object\",\n                    \"additionalProperties\": {\n                        \"type\": \"integer\"\n                    }\n                }\n            }\n        },\n        \"TradeTimingMetrics\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"entryTimingScore\": {\n                    \"type\": \"number\"\n                },\n                \"exitTimingScore\": {\n                    \"type\": \"number\"\n                },\n                \"earlyEntries\": {\n                    \"type\": \"object\",\n                    \"additionalProperties\": {\n                        \"type\": \"integer\"\n                    }\n                },\n                \"optimalEntries\": {\n                    \"type\": \"object\",\n                    \"additionalProperties\": {\n                        \"type\": \"integer\"\n                    }\n                }\n            }\n        },\n        \"TradePatternMetrics\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"emotionalControlScore\": {\n                    \"type\": \"number\"\n                },\n                \"disciplineScore\": {\n                    \"type\": \"number\"\n                },\n                \"patternConsistencyScore\": {\n                    \"type\": \"number\"\n                },\n                \"patternFrequency\": {\n                    \"type\": \"object\",\n                    \"additionalProperties\": {\n                        \"type\": \"integer\"\n                    }\n                }\n            }\n        },\n        \"StrategyPerformanceMetrics\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"strategyName\": {\n                    \"type\": \"string\"\n                },\n                \"totalProfitLoss\": {\n                    \"type\": \"number\"\n                },\n                \"winRate\": {\n                    \"type\": \"number\"\n                },\n                \"sharpeRatio\": {\n                    \"type\": \"number\"\n                }\n            }\n        },\n        \"TradeDetails\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"tradeId\": {\n                    \"type\": \"string\"\n                },\n                \"symbol\": {\n                    \"type\": \"string\"\n                },\n                \"strategy\": {\n                    \"type\": \"string\"\n                },\n                \"status\": {\n                    \"type\": \"string\"\n                },\n                \"tradePositionType\": {\n                    \"type\": \"string\"\n                },\n                \"notes\": {\n                    \"type\": \"string\"\n                },\n                \"tags\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        }\n    }\n}",
+            "type": "string"
+        }
+    ]
+}
