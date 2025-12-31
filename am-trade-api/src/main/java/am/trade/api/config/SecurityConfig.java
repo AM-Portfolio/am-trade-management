@@ -58,7 +58,10 @@ public class SecurityConfig {
                                                 .anyRequest().denyAll())
 
                                 // ✅ ZERO TRUST: Enforce JWT Validation
-                                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder())))
+                                .oauth2ResourceServer(oauth2 -> oauth2.jwt(
+                                                jwt -> jwt.decoder(jwtDecoder())
+                                                                .jwtAuthenticationConverter(
+                                                                                new am.trade.api.security.CustomJwtConverter())))
 
                                 // Disable HTTP Basic authentication (not needed, using JWT)
                                 .httpBasic(basic -> basic.disable())
