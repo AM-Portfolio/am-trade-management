@@ -51,7 +51,9 @@ public class SecurityConfig {
 
                                                 // ✅ PROTECTED ENDPOINTS - Require valid JWT
                                                 .requestMatchers(
-                                                                "/api/v1/trades/**" // All trade operations
+                                                                "/api/v1/trades/**", // All trade operations
+                                                                "/api/v1/portfolio-summary/**" // Portfolio summary
+                                                                                               // operations
                                                 ).authenticated()
 
                                                 // ❌ Deny all other endpoints (fail secure)

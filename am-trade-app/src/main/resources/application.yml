@@ -63,7 +63,10 @@ spring:
     properties:
       security.protocol: ${KAFKA_SECURITY_PROTOCOL}
       sasl.mechanism: ${KAFKA_SASL_MECHANISM}
-      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG} 
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG}
+      session.timeout.ms: 60000
+      heartbeat.interval.ms: 20000
+      max.poll.interval.ms: 300000
     consumer:
       group-id: am-trade-management
       auto-offset-reset: latest
@@ -77,6 +80,9 @@ spring:
           jwk-set-uri: ${JWT_JWK_SET_URI:https://your-idp-url/.well-known/jwks.json}
           # Or use issuer-uri if you want Spring to discover the JWK Set URI
           # issuer-uri: ${JWT_ISSUER_URI:https://your-idp-url}
+
+jwt:
+  secret: ${JWT_SECRET:internal-service-super-secret-key-32chars-minimum-change-in-prod}
 
 # Management/Actuator Configuration
 management:
