@@ -48,16 +48,14 @@ spring:
     mongodb:
       uri: ${MONGODB_URI}
       database: ${MONGODB_DATABASE}
+      field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy
       # ssl:
       #   enabled: true 
       #   invalid-hostname-allowed: false
-    jackson:
-      default-property-inclusion: non_null
-      serialization:
-        write-dates-as-timestamps: false
-      deserialization:
-        fail-on-unknown-properties: false
-      date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: false
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     properties:
