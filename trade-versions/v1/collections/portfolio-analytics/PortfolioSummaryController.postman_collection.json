@@ -1,0 +1,323 @@
+{
+	"info": {
+		"_postman_id": "portfoliosummarycontroller-{{$randomUUID}}",
+		"name": "PortfolioSummaryController Collection",
+		"description": "API collection for PortfolioSummaryController - Portfolio analytics, asset allocation, performance metrics, and comparisons",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Portfolio Summary",
+			"item": [
+				{
+					"name": "Get Portfolio Summary by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Portfolio summary has required fields\", function () {",
+									"    const portfolio = pm.response.json();",
+									"    pm.expect(portfolio).to.have.property('portfolioId');",
+									"    pm.expect(portfolio).to.have.property('name');",
+									"    pm.expect(portfolio).to.have.property('ownerId');",
+									"});",
+									"",
+									"// Save portfolio data for other tests",
+									"if (pm.response.code === 200) {",
+									"    const portfolio = pm.response.json();",
+									"    pm.environment.set('portfolioOwnerId', portfolio.ownerId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/portfolio-summary/{{portfolioId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"portfolio-summary",
+								"{{portfolioId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Asset Allocation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});",
+									"",
+									"if (pm.response.json().length > 0) {",
+									"    pm.test(\"Asset allocation has required fields\", function () {",
+									"        const asset = pm.response.json()[0];",
+									"        pm.expect(asset).to.have.property('symbol');",
+									"        pm.expect(asset).to.have.property('allocation');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/portfolio-summary/{{portfolioId}}/asset-allocation",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"portfolio-summary",
+								"{{portfolioId}}",
+								"asset-allocation"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Portfolio Performance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Performance data has metrics\", function () {",
+									"    const performance = pm.response.json();",
+									"    pm.expect(performance).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/portfolio-summary/{{portfolioId}}/performance?startDate=2020-01-01&endDate=2020-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"portfolio-summary",
+								"{{portfolioId}}",
+								"performance"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2020-01-01",
+									"description": "Performance start date (YYYY-MM-DD)"
+								},
+								{
+									"key": "endDate",
+									"value": "2020-12-31",
+									"description": "Performance end date (YYYY-MM-DD)"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Portfolio Comparison",
+			"item": [
+				{
+					"name": "Compare Portfolios",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains comparison data\", function () {",
+									"    const comparison = pm.response.json();",
+									"    pm.expect(comparison).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/portfolio-summary/compare?portfolioIds={{portfolioId}}&startDate=2020-01-01&endDate=2020-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"portfolio-summary",
+								"compare"
+							],
+							"query": [
+								{
+									"key": "portfolioIds",
+									"value": "{{portfolioId}}",
+									"description": "Comma-separated portfolio IDs to compare"
+								},
+								{
+									"key": "startDate",
+									"value": "2020-01-01",
+									"description": "Comparison start date (YYYY-MM-DD)"
+								},
+								{
+									"key": "endDate",
+									"value": "2020-12-31",
+									"description": "Comparison end date (YYYY-MM-DD)"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Portfolios by Owner",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});",
+									"",
+									"if (pm.response.json().length > 0) {",
+									"    pm.test(\"Portfolio has owner ID\", function () {",
+									"        const portfolio = pm.response.json()[0];",
+									"        pm.expect(portfolio).to.have.property('ownerId');",
+									"        pm.expect(portfolio.ownerId).to.eql(pm.environment.get('traderId'));",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/portfolio-summary/by-owner/{{traderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"portfolio-summary",
+								"by-owner",
+								"{{traderId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8073"
+		},
+		{
+			"key": "portfolioId",
+			"value": "8a57024c-05c2-475b-a2c4-0545865efa4a"
+		},
+		{
+			"key": "traderId",
+			"value": "ssd2658"
+		}
+	]
+}

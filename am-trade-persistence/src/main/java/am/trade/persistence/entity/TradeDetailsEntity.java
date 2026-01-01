@@ -11,8 +11,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import am.trade.common.models.Attachment;
 import am.trade.common.models.EntryExitInfo;
 import am.trade.common.models.InstrumentInfo;
+import am.trade.common.models.TradeEntryExistReasoning;
 import am.trade.common.models.TradeMetrics;
 import am.trade.common.models.TradeModel;
+import am.trade.common.models.TradePsychologyData;
 import am.trade.common.models.enums.TradePositionType;
 import am.trade.common.models.enums.TradeStatus;
 
@@ -67,12 +69,12 @@ public class TradeDetailsEntity {
     private String notes;
     private List<String> tags;
     
-    // Trade psychology and behavior data (stored as entity for MongoDB compatibility)
-    private TradePsychologyDataEntity psychologyData;
+    // Trade psychology and behavior data - using common model directly
+    private TradePsychologyData psychologyData;
     
-    // Trade entry reasoning (technical and fundamental analysis) (stored as entity for MongoDB compatibility)
-    private TradeEntryExistReasoningEntity entryReasoning;
+    // Trade entry reasoning (technical and fundamental analysis) - using common model directly
+    private TradeEntryExistReasoning entryReasoning;
 
-    // Trade exit reasoning (technical and fundamental analysis) (stored as entity for MongoDB compatibility)
-    private TradeEntryExistReasoningEntity exitReasoning;
+    // Trade exit reasoning (technical and fundamental analysis) - using common model directly
+    private TradeEntryExistReasoning exitReasoning;
 }

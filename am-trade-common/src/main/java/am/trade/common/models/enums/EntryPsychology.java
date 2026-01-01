@@ -1,5 +1,9 @@
 package am.trade.common.models.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,15 +14,39 @@ import java.util.Map;
  * Supports both predefined values and custom user-defined values
  */
 @Getter
+@Schema(
+    description = "Psychological factor influencing trade entry decision. Supports both predefined and custom values.",
+    example = "FOLLOWING_THE_PLAN",
+    allowableValues = {
+        "FEAR_OF_MISSING_OUT", "OVERCONFIDENCE", "REVENGE_TRADING",
+        "ANALYSIS_PARALYSIS", "FOLLOWING_THE_PLAN", "INTUITION",
+        "PEER_PRESSURE", "DISCIPLINED"
+    }
+)
 public class EntryPsychology {
     // Predefined common entry psychology factors
+    @Schema(description = "Fear of missing out on potential gains (FOMO)")
     public static final EntryPsychology FEAR_OF_MISSING_OUT = new EntryPsychology("FEAR_OF_MISSING_OUT", "Fear of missing out on potential gains");
+    
+    @Schema(description = "Excessive confidence in analysis or prediction")
     public static final EntryPsychology OVERCONFIDENCE = new EntryPsychology("OVERCONFIDENCE", "Excessive confidence in analysis or prediction");
+    
+    @Schema(description = "Entering a trade to recover previous losses")
     public static final EntryPsychology REVENGE_TRADING = new EntryPsychology("REVENGE_TRADING", "Entering a trade to recover previous losses");
+    
+    @Schema(description = "Overthinking leading to delayed entry")
     public static final EntryPsychology ANALYSIS_PARALYSIS = new EntryPsychology("ANALYSIS_PARALYSIS", "Overthinking leading to delayed entry");
+    
+    @Schema(description = "Disciplined entry according to trading plan")
     public static final EntryPsychology FOLLOWING_THE_PLAN = new EntryPsychology("FOLLOWING_THE_PLAN", "Disciplined entry according to trading plan");
+    
+    @Schema(description = "Gut feeling or market intuition")
     public static final EntryPsychology INTUITION = new EntryPsychology("INTUITION", "Gut feeling or market intuition");
+    
+    @Schema(description = "Influenced by others' opinions or actions")
     public static final EntryPsychology PEER_PRESSURE = new EntryPsychology("PEER_PRESSURE", "Influenced by others' opinions or actions");
+    
+    @Schema(description = "Disciplined entry according to trading plan")
     public static final EntryPsychology DISCIPLINED = new EntryPsychology("DISCIPLINED", "Disciplined entry according to trading plan");
     
     private static final Map<String, EntryPsychology> VALUES = new HashMap<>();
@@ -39,6 +67,34 @@ public class EntryPsychology {
     private EntryPsychology(String code, String description) {
         this.code = code;
         this.description = description;
+    }
+    
+    /**
+     * JSON serialization - returns object with code and description
+     * This ensures proper JSON structure when serializing to MongoDB or REST responses
+     */
+    @JsonValue
+    public Map<String, String> toJson() {
+        Map<String, String> json = new HashMap<>();
+        json.put("code", code);
+        json.put("description", description);
+        return json;
+    }
+    
+    /**
+     * JSON deserialization constructor - handles both string code and object with code/description
+     * 
+     * @param code The code for the entry psychology
+     * @param description Optional description for new custom values
+     */
+    @JsonCreator
+    public static EntryPsychology fromJson(
+            @JsonProperty("code") String code, 
+            @JsonProperty("description") String description) {
+        if (code == null || code.trim().isEmpty()) {
+            throw new IllegalArgumentException("Entry psychology code cannot be null or empty");
+        }
+        return fromCode(code, description);
     }
     
     /**

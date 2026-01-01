@@ -11,6 +11,11 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.Arrays;
+import org.springframework.security.config.Customizer;
 
 /**
  * Spring Security Configuration for Trade Management Service
@@ -30,6 +35,8 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                 http
+                                // Enable CORS with custom configuration
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                                 // Disable CSRF (stateless REST API with JWT)
                                 .csrf(csrf -> csrf.disable())
 
@@ -51,9 +58,7 @@ public class SecurityConfig {
 
                                                 // ✅ PROTECTED ENDPOINTS - Require valid JWT
                                                 .requestMatchers(
-                                                                "/api/v1/trades/**", // All trade operations
-                                                                "/api/v1/portfolio-summary/**" // Portfolio summary
-                                                                                               // operations
+                                                                "**" // Allow all API endpoints if authenticated
                                                 ).authenticated()
 
                                                 // ❌ Deny all other endpoints (fail secure)
@@ -79,5 +84,22 @@ public class SecurityConfig {
                 // Use HS256 (Symmetric Key) to match Auth Service
                 SecretKey key = new SecretKeySpec(jwtSecret.getBytes(), "HmacSHA256");
                 return NimbusJwtDecoder.withSecretKey(key).build();
+        }
+
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
+                configuration.setAllowedOriginPatterns(Arrays.asList("*")); // Allow all origins for development
+                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+                configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With",
+                                "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+                configuration.setExposedHeaders(
+                                Arrays.asList("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
+                configuration.setAllowCredentials(true);
+                configuration.setMaxAge(3600L);
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration);
+                return source;
         }
 }

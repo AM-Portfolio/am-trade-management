@@ -32,26 +32,26 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     @Override
     public TradeJournalEntryResponse createJournalEntry(TradeJournalEntryRequest request) {
         log.debug("Creating journal entry for user: {}", request.getUserId());
-        
+
         validateRequest(request);
-        
+
         TradeJournalEntry entry = convertToEntity(request);
         entry.setId(UUID.randomUUID().toString());
-        
+
         LocalDateTime now = LocalDateTime.now();
         entry.setCreatedAt(now);
         entry.setUpdatedAt(now);
-        
+
         TradeJournalEntry savedEntry = tradeJournalRepository.save(entry);
         log.info("Journal entry created with ID: {}", savedEntry.getId());
-        
+
         return convertToResponse(savedEntry);
     }
 
     @Override
     public TradeJournalEntryResponse getJournalEntry(String entryId) {
         log.debug("Getting journal entry with ID: {}", entryId);
-        
+
         TradeJournalEntry entry = findEntryById(entryId);
         return convertToResponse(entry);
     }
@@ -59,7 +59,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     @Override
     public Page<TradeJournalEntryResponse> getJournalEntriesByUser(String userId, Pageable pageable) {
         log.debug("Getting journal entries for user: {}", userId);
-        
+
         Page<TradeJournalEntry> entries = tradeJournalRepository.findByUserIdOrderByEntryDateDesc(userId, pageable);
         return entries.map(this::convertToResponse);
     }
@@ -67,7 +67,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     @Override
     public List<TradeJournalEntryResponse> getJournalEntriesByTrade(String tradeId) {
         log.debug("Getting journal entries for trade: {}", tradeId);
-        
+
         List<TradeJournalEntry> entries = tradeJournalRepository.findByTradeIdOrderByEntryDateDesc(tradeId);
         return entries.stream()
                 .map(this::convertToResponse)
@@ -77,63 +77,62 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     @Override
     public Page<TradeJournalEntryResponse> getJournalEntriesByDateRange(
             String userId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        
+
         log.debug("Getting journal entries for user: {} between {} and {}", userId, startDate, endDate);
-        
+
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
-        
+
         Page<TradeJournalEntry> entries = tradeJournalRepository.findByUserIdAndEntryDateBetweenOrderByEntryDateDesc(
                 userId, startDateTime, endDateTime, pageable);
-        
+
         return entries.map(this::convertToResponse);
     }
 
     @Override
     public TradeJournalEntryResponse updateJournalEntry(String entryId, TradeJournalEntryRequest request) {
         log.debug("Updating journal entry with ID: {}", entryId);
-        
+
         validateRequest(request);
-        
+
         TradeJournalEntry existingEntry = findEntryById(entryId);
-        
+
         // Check if user ID matches
         if (!existingEntry.getUserId().equals(request.getUserId())) {
             throw new IllegalArgumentException("Cannot update journal entry that belongs to another user");
         }
-        
+
         // Update fields
         existingEntry.setTitle(request.getTitle());
         existingEntry.setContent(request.getContent());
-        existingEntry.setMood(request.getMood());
-        existingEntry.setMarketSentiment(request.getMarketSentiment());
-        existingEntry.setTags(request.getTags());
         existingEntry.setCustomFields(request.getCustomFields());
         existingEntry.setEntryDate(request.getEntryDate());
         existingEntry.setImageUrls(request.getImageUrls());
         existingEntry.setRelatedTradeIds(request.getRelatedTradeIds());
+        existingEntry.setTagIds(request.getTagIds());
+        existingEntry.setBehaviorPatternSummaries(request.getBehaviorPatternSummaries());
         existingEntry.setUpdatedAt(LocalDateTime.now());
-        
+
         // Don't update tradeId as it's a key relationship
         // Don't update userId as it's the owner
-        
+
         TradeJournalEntry updatedEntry = tradeJournalRepository.save(existingEntry);
         log.info("Journal entry updated with ID: {}", updatedEntry.getId());
-        
+
         return convertToResponse(updatedEntry);
     }
 
     @Override
     public void deleteJournalEntry(String entryId) {
         log.debug("Deleting journal entry with ID: {}", entryId);
-        
+
         // Check if entry exists
         findEntryById(entryId);
-        
+
         tradeJournalRepository.deleteById(entryId);
         log.info("Journal entry deleted with ID: {}", entryId);
     }
-    
+
     /**
      * Find a journal entry by ID
      * 
@@ -148,7 +147,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         }
         return entryOpt.get();
     }
-    
+
     /**
      * Validate journal entry request
      * 
@@ -159,25 +158,20 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("Title is required");
         }
-        
+
         if (request.getContent() == null || request.getContent().trim().isEmpty()) {
             throw new IllegalArgumentException("Content is required");
         }
-        
+
         if (request.getUserId() == null || request.getUserId().trim().isEmpty()) {
             throw new IllegalArgumentException("User ID is required");
         }
-        
+
         if (request.getEntryDate() == null) {
             throw new IllegalArgumentException("Entry date is required");
         }
-        
-        if (request.getMarketSentiment() != null && 
-                (request.getMarketSentiment() < 1 || request.getMarketSentiment() > 10)) {
-            throw new IllegalArgumentException("Market sentiment must be between 1 and 10");
-        }
     }
-    
+
     /**
      * Convert request DTO to entity
      * 
@@ -190,16 +184,16 @@ public class TradeJournalServiceImpl implements TradeJournalService {
                 .tradeId(request.getTradeId())
                 .title(request.getTitle())
                 .content(request.getContent())
-                .mood(request.getMood())
-                .marketSentiment(request.getMarketSentiment())
-                .tags(request.getTags())
                 .customFields(request.getCustomFields())
                 .entryDate(request.getEntryDate())
                 .imageUrls(request.getImageUrls())
+                .imageUrls(request.getImageUrls())
                 .relatedTradeIds(request.getRelatedTradeIds())
+                .tagIds(request.getTagIds())
+                .behaviorPatternSummaries(request.getBehaviorPatternSummaries())
                 .build();
     }
-    
+
     /**
      * Convert entity to response DTO
      * 
@@ -213,13 +207,13 @@ public class TradeJournalServiceImpl implements TradeJournalService {
                 .tradeId(entry.getTradeId())
                 .title(entry.getTitle())
                 .content(entry.getContent())
-                .mood(entry.getMood())
-                .marketSentiment(entry.getMarketSentiment())
-                .tags(entry.getTags())
                 .customFields(entry.getCustomFields())
                 .entryDate(entry.getEntryDate())
                 .imageUrls(entry.getImageUrls())
+                .imageUrls(entry.getImageUrls())
                 .relatedTradeIds(entry.getRelatedTradeIds())
+                .tagIds(entry.getTagIds())
+                .behaviorPatternSummaries(entry.getBehaviorPatternSummaries())
                 .createdAt(entry.getCreatedAt())
                 .updatedAt(entry.getUpdatedAt())
                 .build();

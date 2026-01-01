@@ -1,5 +1,5 @@
-MONGODB_URI: mongodb://admin:password123@localhost:27017/am-trade?authSource=admin
-MONGODB_DATABASE: am-trade
+MONGODB_URI: mongodb://admin:password123@localhost:27017/trade_management?authSource=admin
+MONGODB_DATABASE: trade_management
 
 KAFKA_BOOTSTRAP_SERVERS: localhost:9092
 KAFKA_SECURITY_PROTOCOL: PLAINTEXT
@@ -111,6 +111,7 @@ management:
 logging:
   level:
     root: INFO
-    am.trade: INFO
+    am.trade: DEBUG
     org.springframework.data.mongodb: INFO
-    org.springframework.web: INFO
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG

@@ -39,11 +39,6 @@ services:
       - "host.docker.internal:host-gateway"
     networks:
       - am-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.am-trade-service.rule=Host(`am.munish.org`) && (PathPrefix(`/api/v1/portfolio-summary`) || PathPrefix(`/api/v1/trades`))"
-      - "traefik.http.routers.am-trade-service.entrypoints=web"
-      - "traefik.http.services.am-trade-service.loadbalancer.server.port=8073"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8073/actuator/health"]

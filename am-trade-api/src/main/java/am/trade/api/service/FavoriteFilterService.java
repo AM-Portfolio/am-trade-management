@@ -56,6 +56,15 @@ public interface FavoriteFilterService {
     boolean deleteFilter(String userId, String filterId);
     
     /**
+     * Delete multiple favorite filters
+     * 
+     * @param userId The user ID
+     * @param filterIds The list of filter IDs to delete
+     * @return Number of filters successfully deleted
+     */
+    int deleteMultipleFilters(String userId, List<String> filterIds);
+    
+    /**
      * Get the user's default filter if exists
      * 
      * @param userId The user ID

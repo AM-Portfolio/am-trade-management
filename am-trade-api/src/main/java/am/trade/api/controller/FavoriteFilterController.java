@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import am.trade.api.dto.BulkDeleteRequest;
+import am.trade.api.dto.BulkDeleteResponse;
 import am.trade.api.dto.ErrorResponse;
 import am.trade.api.dto.FavoriteFilterRequest;
 import am.trade.api.dto.FavoriteFilterResponse;
@@ -141,6 +143,33 @@ public class FavoriteFilterController {
         } catch (IllegalArgumentException e) {
             log.error("Filter not found: {}", e.getMessage());
             return ResponseEntity.notFound().build();
+        }
+    }
+    
+    @Operation(summary = "Delete multiple favorite filters")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Filters deleted successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @DeleteMapping("/bulk")
+    public ResponseEntity<BulkDeleteResponse> deleteMultipleFilters(
+            @Valid @RequestBody BulkDeleteRequest request) {
+        
+        log.info("Deleting {} filters for user: {}", request.getFilterIds().size(), request.getUserId());
+        try {
+            int deletedCount = favoriteFilterService.deleteMultipleFilters(request.getUserId(), request.getFilterIds());
+            
+            BulkDeleteResponse response = BulkDeleteResponse.builder()
+                    .deletedCount(deletedCount)
+                    .totalRequested(request.getFilterIds().size())
+                    .message(String.format("Successfully deleted %d out of %d filters", deletedCount, request.getFilterIds().size()))
+                    .build();
+            
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid request parameters: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
 

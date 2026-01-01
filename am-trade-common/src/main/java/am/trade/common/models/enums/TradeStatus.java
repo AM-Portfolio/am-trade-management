@@ -1,11 +1,21 @@
 package am.trade.common.models.enums;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Enum representing the status of a trade
  */
+@Schema(description = "Trade status indicating the outcome or current state of the trade")
 public enum TradeStatus {
-    WIN,    // Trade resulted in profit
-    LOSS,   // Trade resulted in loss
-    OPEN,   // Position is still open
-    BREAK_EVEN  // Trade resulted in no profit or loss
+    @Schema(description = "Trade resulted in profit")
+    WIN,
+    
+    @Schema(description = "Trade resulted in loss")
+    LOSS,
+    
+    @Schema(description = "Position is still open")
+    OPEN,
+    
+    @Schema(description = "Trade resulted in no profit or loss")
+    BREAK_EVEN
 }

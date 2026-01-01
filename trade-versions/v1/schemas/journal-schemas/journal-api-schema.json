@@ -1,0 +1,650 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Trade Journal API Schema",
+    "description": "Complete JSON Schema for TradeJournalController API with enhanced attachment support",
+    "version": "2.0.0",
+    "definitions": {
+        "BehaviorPatternSummary": {
+            "type": "object",
+            "description": "Behavior pattern summary for a trading day",
+            "properties": {
+                "summary": {
+                    "type": "string",
+                    "description": "Brief summary of the day's trading activities and observations",
+                    "example": "Active trading day with 3 positions. Strong bullish momentum in IT sector."
+                },
+                "mood": {
+                    "type": "string",
+                    "description": "Overall mood for the day (e.g., CONFIDENT, ANXIOUS, NEUTRAL, OPTIMISTIC, CAUTIOUS)",
+                    "example": "CONFIDENT"
+                },
+                "marketSentiment": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10,
+                    "description": "Market sentiment for the day (1-10: 1=bearish, 10=bullish)",
+                    "example": 7
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Tags categorizing the day's activities or themes",
+                    "example": ["high-volatility", "options-trading", "profit-day"]
+                }
+            }
+        },
+        "Attachment": {
+            "type": "object",
+            "required": [
+                "fileName",
+                "fileUrl"
+            ],
+            "properties": {
+                "fileName": {
+                    "type": "string",
+                    "description": "Name of the attached file"
+                },
+                "fileUrl": {
+                    "type": "string",
+                    "description": "URL to access the file"
+                },
+                "fileType": {
+                    "type": "string",
+                    "description": "MIME type or file extension (e.g., image/png, application/pdf)"
+                },
+                "uploadedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when file was uploaded"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Optional description or notes about the file"
+                }
+            }
+        },
+        "TradeJournalEntryRequest": {
+            "type": "object",
+            "required": [
+                "userId",
+                "title",
+                "content",
+                "entryDate"
+            ],
+            "properties": {
+                "userId": {
+                    "type": "string",
+                    "description": "User ID is required"
+                },
+                "tradeId": {
+                    "type": "string",
+                    "description": "Optional, can be null for general journal entries"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Title is required"
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Content is required"
+                },
+                "customFields": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "entryDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Entry date is required"
+                },
+                "imageUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "DEPRECATED: URLs to attached images (use attachments instead)",
+                    "deprecated": true
+                },
+                "attachments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Attachment"
+                    },
+                    "description": "List of attachments with metadata (fileName, fileUrl, fileType, uploadedAt, description)"
+                },
+                "chartUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "URLs to chart analysis images"
+                },
+                "documentUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "URLs to PDF documents, notes, etc."
+                },
+                "videoUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "URLs to video analysis or recordings"
+                },
+                "externalUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "External reference URLs (news articles, etc.)"
+                },
+                "relatedTradeIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Other related trades"
+                },
+                "behaviorPatternSummaries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/BehaviorPatternSummary"
+                    },
+                    "description": "List of daily behavior pattern summaries"
+                }
+            }
+        },
+        "TradeJournalEntryResponse": {
+            "type": "object",
+            "required": [
+                "id",
+                "userId",
+                "title",
+                "content",
+                "entryDate",
+                "createdAt",
+                "updatedAt"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Unique identifier for the journal entry"
+                },
+                "userId": {
+                    "type": "string",
+                    "description": "User ID who created the journal entry"
+                },
+                "tradeId": {
+                    "type": "string",
+                    "description": "Associated trade ID (optional)"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Journal entry title"
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Journal entry content/body"
+                },
+                "customFields": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Custom fields for extensibility"
+                },
+                "entryDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Date of the journal entry"
+                },
+                "imageUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "DEPRECATED: Legacy image URLs (use attachments instead)",
+                    "deprecated": true
+                },
+                "attachments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Attachment"
+                    },
+                    "description": "List of attachments with metadata (fileName, fileUrl, fileType, uploadedAt, description)"
+                },
+                "chartUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "URLs to chart analysis images"
+                },
+                "documentUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "URLs to PDF documents, notes, etc."
+                },
+                "videoUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "URLs to video analysis or recordings"
+                },
+                "externalUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "External reference URLs (news articles, etc.)"
+                },
+                "relatedTradeIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "IDs of related trades"
+                },
+                "behaviorPatternSummaries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/BehaviorPatternSummary"
+                    },
+                    "description": "List of daily behavior pattern summaries"
+                },
+                "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the entry was created"
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the entry was last updated"
+                }
+            }
+        },
+        "ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "description": "HTTP status string"
+                },
+                "code": {
+                    "type": "integer",
+                    "description": "HTTP status code"
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Error message"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp of the error"
+                },
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of error details"
+                },
+                "path": {
+                    "type": "string",
+                    "description": "API path"
+                }
+            }
+        }
+    },
+    "paths": {
+        "/api/v1/journal": {
+            "post": {
+                "summary": "Create a new journal entry",
+                "operationId": "createJournalEntry",
+                "tags": [
+                    "Trade Journal"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/TradeJournalEntryRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Journal entry created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/TradeJournalEntryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/api/v1/journal/{entryId}": {
+            "get": {
+                "summary": "Get journal entry by ID",
+                "operationId": "getJournalEntry",
+                "tags": [
+                    "Trade Journal"
+                ],
+                "parameters": [
+                    {
+                        "name": "entryId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Entry ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Journal entry retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/TradeJournalEntryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Journal entry not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update a journal entry",
+                "operationId": "updateJournalEntry",
+                "tags": [
+                    "Trade Journal"
+                ],
+                "parameters": [
+                    {
+                        "name": "entryId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Entry ID"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/TradeJournalEntryRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Journal entry updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/TradeJournalEntryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Journal entry not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete a journal entry",
+                "operationId": "deleteJournalEntry",
+                "tags": [
+                    "Trade Journal"
+                ],
+                "parameters": [
+                    {
+                        "name": "entryId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Entry ID"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Journal entry deleted successfully"
+                    },
+                    "404": {
+                        "description": "Journal entry not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/api/v1/journal/user/{userId}": {
+            "get": {
+                "summary": "Get journal entries for a user",
+                "operationId": "getJournalEntriesByUser",
+                "tags": [
+                    "Trade Journal"
+                ],
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "User ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Journal entries retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "content": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/TradeJournalEntryResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/api/v1/journal/trade/{tradeId}": {
+            "get": {
+                "summary": "Get journal entries for a specific trade",
+                "operationId": "getJournalEntriesByTrade",
+                "tags": [
+                    "Trade Journal"
+                ],
+                "parameters": [
+                    {
+                        "name": "tradeId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Trade ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Journal entries retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/TradeJournalEntryResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/api/v1/journal/date-range": {
+            "get": {
+                "summary": "Get journal entries by date range",
+                "operationId": "getJournalEntriesByDateRange",
+                "tags": [
+                    "Trade Journal"
+                ],
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "User ID"
+                    },
+                    {
+                        "name": "startDate",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "description": "Start Date (ISO)"
+                    },
+                    {
+                        "name": "endDate",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "description": "End Date (ISO)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Journal entries retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "content": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/TradeJournalEntryResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid date range",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        }
+    }
+}
