@@ -27,12 +27,19 @@ class TradeManagementServiceImplTest {
 
     @Mock
     private TradeDetailsService tradeDetailsService;
+    @Mock
+    private am.trade.persistence.repository.PortfolioRepository portfolioRepository;
+    @Mock
+    private am.trade.persistence.mapper.TradeDetailsMapper tradeDetailsMapper;
+    @Mock
+    private am.trade.common.logger.AppLogger appLogger;
 
     private TradeManagementServiceImpl tradeManagementService;
 
     @BeforeEach
     void setUp() {
-        tradeManagementService = new TradeManagementServiceImpl(tradeDetailsService);
+        tradeManagementService = new TradeManagementServiceImpl(tradeDetailsService, portfolioRepository,
+                tradeDetailsMapper, appLogger);
     }
 
     @Test
@@ -57,6 +64,7 @@ class TradeManagementServiceImplTest {
         // Trade 5: Outside (August)
         TradeDetails trade5 = createTrade("t5", portfolioId, LocalDateTime.of(2020, 8, 1, 0, 0));
 
+        when(portfolioRepository.findByPortfolioId(portfolioId)).thenReturn(java.util.Optional.empty());
         when(tradeDetailsService.findModelsByPortfolioId(portfolioId))
                 .thenReturn(Arrays.asList(trade1, trade2, trade3, trade4, trade5));
 

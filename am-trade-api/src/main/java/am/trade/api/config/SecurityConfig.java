@@ -53,6 +53,7 @@ public class SecurityConfig {
                                                                 "/actuator/health/ready", // Kubernetes readiness probe
                                                                 "/swagger-ui/**", // Swagger API documentation
                                                                 "/v3/api-docs/**", // OpenAPI specification
+                                                                "/v3/api-docs/**", // OpenAPI specification
                                                                 "/v3/api-docs.yaml" // OpenAPI YAML
                                                 ).permitAll()
 

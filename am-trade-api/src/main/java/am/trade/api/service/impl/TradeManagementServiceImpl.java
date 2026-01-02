@@ -104,7 +104,7 @@ public class TradeManagementServiceImpl implements TradeManagementService {
         // If portfolio ID is provided, filter by it
         if (portfolioId != null && !portfolioId.isEmpty()) {
             // Fetch embedded trades directly from PortfolioEntity
-            Optional<PortfolioEntity> portfolioOpt = portfolioRepository.findById(portfolioId);
+            Optional<PortfolioEntity> portfolioOpt = portfolioRepository.findByPortfolioId(portfolioId);
 
             if (portfolioOpt.isPresent()) {
                 PortfolioEntity portfolio = portfolioOpt.get();
