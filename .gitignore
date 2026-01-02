@@ -116,3 +116,4 @@ k8s/
 .docker/
 !docker-compose*.yml
 !Dockerfile
+.env.docker

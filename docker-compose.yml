@@ -10,28 +10,12 @@ services:
       args:
         - GITHUB_PACKAGES_USERNAME=${GITHUB_PACKAGES_USERNAME}
         - GITHUB_PACKAGES_TOKEN=${GITHUB_PACKAGES_TOKEN}
+    env_file:
+      - .env
+      - .env.docker
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      
-      # Database
-      - MONGODB_URI=${MONGODB_URL}
-      - MONGODB_DATABASE=${MONGODB_DATABASE}
-      - MONGODB_USERNAME=${MONGODB_USERNAME}
-      - MONGODB_PASSWORD=${MONGODB_PASSWORD} Mereba
       - MONGODB_AUTHENTICATION_DATABASE=admin
-      
-      # Kafka
-      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
-      - SPRING_KAFKA_CONSUMER_GROUP_ID=${KAFKA_CONSUMER_GROUP_ID}
-      
-      # Redis
-      - REDIS_HOSTNAME=${REDIS_HOSTNAME}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_PORT=${REDIS_PORT}
-      
-      # JWT
-      - JWT_SECRET=${JWT_SECRET}
-      - INTERNAL_JWT_SECRET=${INTERNAL_JWT_SECRET}
 
     ports:
       - "8040:8073"
