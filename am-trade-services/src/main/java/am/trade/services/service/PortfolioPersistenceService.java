@@ -152,13 +152,13 @@ public class PortfolioPersistenceService {
         if (portfolioOpt.isPresent()) {
             PortfolioEntity portfolio = portfolioOpt.get();
 
-            // Convert trade details to entities
-            List<TradeDetailsEntity> tradeEntities = tradeDetails.stream()
-                    .map(tradeDetailsMapper::toTradeEntity)
+            // Convert trade details to IDs
+            List<String> tradeIds = tradeDetails.stream()
+                    .map(TradeDetails::getTradeId)
                     .collect(Collectors.toList());
 
             // Update trades
-            portfolio.setTrades(tradeEntities);
+            portfolio.setTrades(tradeIds);
 
             // Save updated portfolio
             PortfolioEntity savedEntity = portfolioRepository.save(portfolio);

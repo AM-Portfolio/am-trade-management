@@ -79,7 +79,11 @@ public class PortfolioService {
     public List<PortfolioModel> findByOwnerId(String ownerId) {
         log.info("Finding portfolios for owner: {}", ownerId);
 
-        return portfolioRepository.findByOwnerId(ownerId).stream()
+        java.util.List<am.trade.persistence.entity.PortfolioEntity> entities = portfolioRepository
+                .findByOwnerId(ownerId);
+        log.info("Repository found {} portfolios for owner: {}", entities.size(), ownerId);
+
+        return entities.stream()
                 .map(portfolioMapper::toModel)
                 .collect(Collectors.toList());
     }
@@ -152,13 +156,13 @@ public class PortfolioService {
         if (portfolioOpt.isPresent()) {
             PortfolioEntity portfolio = portfolioOpt.get();
 
-            // Convert trade details to entities
-            List<TradeDetailsEntity> tradeEntities = tradeDetails.stream()
-                    .map(tradeDetailsMapper::toTradeEntity)
+            // Convert trade details to IDs
+            List<String> tradeIds = tradeDetails.stream()
+                    .map(TradeDetails::getTradeId)
                     .collect(Collectors.toList());
 
             // Update trades
-            portfolio.setTrades(tradeEntities);
+            portfolio.setTrades(tradeIds);
 
             // Save updated portfolio
             PortfolioEntity savedEntity = portfolioRepository.save(portfolio);

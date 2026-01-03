@@ -46,8 +46,8 @@ public class PortfolioEntity {
     // Portfolio metrics
     private PortfolioMetrics metrics;
 
-    // List of trades in this portfolio
-    private List<TradeDetailsEntity> trades;
+    // List of trade IDs in this portfolio
+    private List<String> trades;
 
     // List of winning trades in this portfolio
     private List<String> winningTrades;

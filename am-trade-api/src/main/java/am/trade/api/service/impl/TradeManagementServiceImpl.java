@@ -108,15 +108,14 @@ public class TradeManagementServiceImpl implements TradeManagementService {
 
             if (portfolioOpt.isPresent()) {
                 PortfolioEntity portfolio = portfolioOpt.get();
-                List<TradeDetailsEntity> tradeEntities = portfolio.getTrades();
+                List<String> tradeIds = portfolio.getTrades();
 
-                if (tradeEntities != null) {
-                    log.info("Found {} embedded trades in portfolio {}", tradeEntities.size(), portfolioId);
-                    trades = tradeEntities.stream()
-                            .map(tradeDetailsMapper::toTradeDetails)
-                            .collect(Collectors.toList());
+                if (tradeIds != null && !tradeIds.isEmpty()) {
+                    log.info("Found {} trade IDs in portfolio {}", tradeIds.size(), portfolioId);
+                    // Fetch trades by ID
+                    trades = tradeDetailsService.findModelsByTradeIds(tradeIds);
                 } else {
-                    log.warn("Portfolio {} has null trades list", portfolioId);
+                    log.warn("Portfolio {} has null or empty trades list", portfolioId);
                 }
             } else {
                 log.warn("Portfolio {} not found in database", portfolioId);

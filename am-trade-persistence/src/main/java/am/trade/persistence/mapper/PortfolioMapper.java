@@ -39,11 +39,10 @@ public class PortfolioMapper {
         // access.
         // For now, valid use cases typically flow from Entity -> Model for reading,
         // or Model -> Entity for creation where trades might be added separately.
-        List<am.trade.persistence.entity.TradeDetailsEntity> tradeEntities = null;
+        // Map trades (IDs)
+        List<String> tradeIds = null;
         if (model.getTradeIds() != null) {
-            // Create placeholder entities with just ID if needed, or leave null/empty
-            // This avoids the compilation error but doesn't populate full trade data
-            tradeEntities = new java.util.ArrayList<>();
+            tradeIds = new java.util.ArrayList<>(model.getTradeIds());
         }
 
         // Map metrics if present
@@ -100,7 +99,7 @@ public class PortfolioMapper {
                 .createdDate(model.getCreatedDate())
                 .lastUpdatedDate(model.getLastUpdatedDate())
                 .metrics(metricsEntity)
-                .trades(tradeEntities)
+                .trades(tradeIds)
                 .winningTrades(winningTradeIds)
                 .losingTrades(losingTradeIds)
                 .assetAllocations(assetAllocations)
@@ -121,9 +120,7 @@ public class PortfolioMapper {
         // Map trades if present
         List<String> tradeIds = null;
         if (entity.getTrades() != null) {
-            tradeIds = entity.getTrades().stream()
-                    .map(am.trade.persistence.entity.TradeDetailsEntity::getTradeId)
-                    .collect(Collectors.toList());
+            tradeIds = new java.util.ArrayList<>(entity.getTrades());
         }
 
         // Map winning trades if present
