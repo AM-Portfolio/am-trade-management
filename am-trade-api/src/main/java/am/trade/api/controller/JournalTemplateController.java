@@ -24,7 +24,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/journal-templates")
+@RequestMapping("/v1/journal-templates")
 @RequiredArgsConstructor
 @Tag(name = "Journal Templates", description = "API for managing journal templates with favorites and recommendations")
 public class JournalTemplateController {

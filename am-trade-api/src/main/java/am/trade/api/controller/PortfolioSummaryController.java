@@ -26,7 +26,7 @@ import java.util.Map;
  * REST controller for portfolio summary operations
  */
 @RestController
-@RequestMapping("/api/v1/portfolio-summary")
+@RequestMapping("/v1/portfolio-summary")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Portfolio Summary", description = "Portfolio summary and analytics operations")
@@ -36,16 +36,15 @@ public class PortfolioSummaryController {
 
     @Operation(summary = "Get portfolio summary by ID")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Portfolio summary retrieved successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid portfolio ID"),
-        @ApiResponse(responseCode = "404", description = "Portfolio not found"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "Portfolio summary retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid portfolio ID"),
+            @ApiResponse(responseCode = "404", description = "Portfolio not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/{portfolioId}")
     public ResponseEntity<PortfolioModel> getPortfolioSummary(
-            @Parameter(description = "Portfolio ID") 
-            @PathVariable String portfolioId) {
-        
+            @Parameter(description = "Portfolio ID") @PathVariable String portfolioId) {
+
         try {
             log.info("Fetching portfolio summary for portfolioId: {}", portfolioId);
             PortfolioModel portfolioSummary = portfolioSummaryService.getPortfolioSummary(portfolioId);
@@ -61,16 +60,15 @@ public class PortfolioSummaryController {
 
     @Operation(summary = "Get asset allocation for a portfolio")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Asset allocation retrieved successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid portfolio ID"),
-        @ApiResponse(responseCode = "404", description = "Portfolio not found"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "Asset allocation retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid portfolio ID"),
+            @ApiResponse(responseCode = "404", description = "Portfolio not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/{portfolioId}/asset-allocation")
     public ResponseEntity<List<AssetAllocation>> getAssetAllocation(
-            @Parameter(description = "Portfolio ID") 
-            @PathVariable String portfolioId) {
-        
+            @Parameter(description = "Portfolio ID") @PathVariable String portfolioId) {
+
         try {
             log.info("Fetching asset allocation for portfolioId: {}", portfolioId);
             List<AssetAllocation> assetAllocation = portfolioSummaryService.getAssetAllocation(portfolioId);
@@ -86,24 +84,21 @@ public class PortfolioSummaryController {
 
     @Operation(summary = "Get portfolio performance over time")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Portfolio performance retrieved successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "Portfolio performance retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/{portfolioId}/performance")
     public ResponseEntity<Map<LocalDate, Double>> getPortfolioPerformance(
-            @Parameter(description = "Portfolio ID") 
-            @PathVariable String portfolioId,
-            @Parameter(description = "Start date in ISO format (YYYY-MM-DD)") 
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @Parameter(description = "End date in ISO format (YYYY-MM-DD)") 
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        
+            @Parameter(description = "Portfolio ID") @PathVariable String portfolioId,
+            @Parameter(description = "Start date in ISO format (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @Parameter(description = "End date in ISO format (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
         try {
-            log.info("Fetching portfolio performance for portfolioId: {} from {} to {}", 
-                     portfolioId, startDate, endDate);
+            log.info("Fetching portfolio performance for portfolioId: {} from {} to {}",
+                    portfolioId, startDate, endDate);
             Map<LocalDate, Double> performance = portfolioSummaryService.getPortfolioPerformance(
-                portfolioId, startDate, endDate);
+                    portfolioId, startDate, endDate);
             return ResponseEntity.ok(performance);
         } catch (IllegalArgumentException e) {
             log.error("Invalid request parameters: {}", e.getMessage());
@@ -116,19 +111,17 @@ public class PortfolioSummaryController {
 
     @Operation(summary = "Compare multiple portfolios")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Portfolio comparison retrieved successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "Portfolio comparison retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/compare")
     public ResponseEntity<Map<String, PortfolioModel>> comparePortfolios(
-            @Parameter(description = "List of portfolio IDs to compare") 
-            @RequestParam List<String> portfolioIds) {
-        
+            @Parameter(description = "List of portfolio IDs to compare") @RequestParam List<String> portfolioIds) {
+
         try {
             log.info("Comparing portfolios: {}", portfolioIds);
-            Map<String, PortfolioModel> comparisonResult = 
-                portfolioSummaryService.comparePortfolios(portfolioIds);
+            Map<String, PortfolioModel> comparisonResult = portfolioSummaryService.comparePortfolios(portfolioIds);
             return ResponseEntity.ok(comparisonResult);
         } catch (IllegalArgumentException e) {
             log.error("Invalid request parameters: {}", e.getMessage());
@@ -138,21 +131,21 @@ public class PortfolioSummaryController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @Operation(summary = "Get portfolio summaries by owner ID")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Portfolio summaries retrieved successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid owner ID"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "Portfolio summaries retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid owner ID"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/by-owner/{ownerId}")
     public ResponseEntity<List<PortfolioSummaryDTO>> getPortfolioSummariesByOwnerId(
-            @Parameter(description = "Owner ID") 
-            @PathVariable String ownerId) {
-        
+            @Parameter(description = "Owner ID") @PathVariable String ownerId) {
+
         try {
             log.info("Fetching portfolio summaries for ownerId: {}", ownerId);
-            List<PortfolioSummaryDTO> portfolioSummaries = portfolioSummaryService.getPortfolioSummariesByOwnerId(ownerId);
+            List<PortfolioSummaryDTO> portfolioSummaries = portfolioSummaryService
+                    .getPortfolioSummariesByOwnerId(ownerId);
             return ResponseEntity.ok(portfolioSummaries);
         } catch (IllegalArgumentException e) {
             log.error("Invalid owner ID: {}", e.getMessage());

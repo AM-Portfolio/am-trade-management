@@ -1,9 +1,9 @@
-MONGODB_URI: mongodb://admin:password123@localhost:27017/trade_management?authSource=admin
-MONGODB_DATABASE: trade_management
+# MONGODB_URI: 
+# MONGODB_DATABASE: trade_management
 
-KAFKA_BOOTSTRAP_SERVERS: localhost:9092
-KAFKA_SECURITY_PROTOCOL: PLAINTEXT
-KAFKA_SASL_MECHANISM: PLAIN
+# KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+# KAFKA_SECURITY_PROTOCOL: PLAINTEXT
+# KAFKA_SASL_MECHANISM: PLAIN
 KAFKA_SASL_JAAS_CONFIG: #org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
 
 # Application specific common settings
@@ -46,8 +46,8 @@ spring:
       - classpath:application-market-data-client.yml
   data:
     mongodb:
-      uri: ${MONGODB_URI}
-      database: ${MONGODB_DATABASE}
+      uri: ${MONGODB_URI:mongodb://admin:password123@localhost:27017/trade_management?authSource=admin}
+      database: ${MONGODB_DATABASE:trade_management}
       field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy
       # ssl:
       #   enabled: true 
@@ -57,10 +57,10 @@ spring:
       fail-on-unknown-properties: false
     date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     properties:
-      security.protocol: ${KAFKA_SECURITY_PROTOCOL}
-      sasl.mechanism: ${KAFKA_SASL_MECHANISM}
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
       sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG}
       session.timeout.ms: 60000
       heartbeat.interval.ms: 20000

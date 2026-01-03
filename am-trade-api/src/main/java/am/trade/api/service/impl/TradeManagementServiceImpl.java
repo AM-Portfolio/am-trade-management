@@ -112,47 +112,46 @@ public class TradeManagementServiceImpl implements TradeManagementService {
 
                 if (tradeEntities != null) {
                     log.info("Found {} embedded trades in portfolio {}", tradeEntities.size(), portfolioId);
-
                     trades = tradeEntities.stream()
                             .map(tradeDetailsMapper::toTradeDetails)
-                            .filter(trade -> {
-                                LocalDateTime tradeDate = trade.getEntryInfo() != null
-                                        ? trade.getEntryInfo().getTimestamp()
-                                        : null;
-
-                                if (tradeDate != null) {
-                                    boolean inRange = !tradeDate.isBefore(startDateTime)
-                                            && !tradeDate.isAfter(endDateTime);
-                                    if (!inRange) {
-                                        log.debug("Trade {} skipped. Date: {} is outside range [{}, {}]",
-                                                trade.getTradeId(), tradeDate, startDateTime, endDateTime);
-                                    }
-                                    return inRange;
-                                } else {
-                                    log.debug("Trade {} skipped. No entry timestamp.", trade.getTradeId());
-                                    return false;
-                                }
-                            })
                             .collect(Collectors.toList());
-
-                    log.info("Retained {} trades after date filtering", trades.size());
                 } else {
                     log.warn("Portfolio {} has null trades list", portfolioId);
                 }
             } else {
                 log.warn("Portfolio {} not found in database", portfolioId);
-                // Fallback attempt: try standard service (in case legacy data exists in
-                // separate collection)
+                // Fallback attempt: try standard service
                 log.info("Attempting fallback to TradeDetailsService for portfolio {}", portfolioId);
                 trades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
             }
         } else {
-            // Get all trades in the date range
+            // Get all trades in the date range - this service method likely handles
+            // filtering already?
+            // If findModelsByEntryDateBetween handles it, we might double filter, but
+            // that's safe.
             trades = tradeDetailsService.findModelsByEntryDateBetween(startDateTime, endDateTime);
         }
 
+        // Apply date filtering to the collected trades
+        List<TradeDetails> filteredTrades = trades.stream()
+                .filter(trade -> {
+                    LocalDateTime tradeDate = trade.getEntryInfo() != null
+                            ? trade.getEntryInfo().getTimestamp()
+                            : null;
+
+                    if (tradeDate != null) {
+                        return !tradeDate.isBefore(startDateTime) && !tradeDate.isAfter(endDateTime);
+                    } else {
+                        log.debug("Trade {} skipped. No entry timestamp.", trade.getTradeId());
+                        return false;
+                    }
+                })
+                .collect(Collectors.toList());
+
+        log.info("Retained {} trades after date filtering", filteredTrades.size());
+
         // Group trades by portfolio ID
-        return trades.stream()
+        return filteredTrades.stream()
                 .collect(Collectors.groupingBy(
                         TradeDetails::getPortfolioId,
                         Collectors.toList()));
