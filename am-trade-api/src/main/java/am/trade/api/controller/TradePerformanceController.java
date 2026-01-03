@@ -24,54 +24,55 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/performance")
+@RequestMapping("/v1/performance")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Trade Performance Analysis", description = "API for analyzing trade performance, identifying best days, and timing analysis")
 public class TradePerformanceController {
 
-    private final TradePerformanceService tradePerformanceService;
+        private final TradePerformanceService tradePerformanceService;
 
-    @Operation(summary = "Get general performance summary")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Performance summary retrieved successfully", content = @Content(schema = @Schema(implementation = TradePerformanceSummary.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    @GetMapping("/summary")
-    public ResponseEntity<TradePerformanceSummary> getPerformanceSummary(
-            @Parameter(description = "Portfolio ID") @RequestParam String portfolioId,
-            @Parameter(description = "Start date (optional)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @Parameter(description = "End date (optional)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        @Operation(summary = "Get general performance summary")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Performance summary retrieved successfully", content = @Content(schema = @Schema(implementation = TradePerformanceSummary.class))),
+                        @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+                        @ApiResponse(responseCode = "500", description = "Internal server error")
+        })
+        @GetMapping("/summary")
+        public ResponseEntity<TradePerformanceSummary> getPerformanceSummary(
+                        @Parameter(description = "Portfolio ID") @RequestParam String portfolioId,
+                        @Parameter(description = "Start date (optional)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                        @Parameter(description = "End date (optional)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
-        log.info("Fetching performance summary for portfolio: {}", portfolioId);
-        return ResponseEntity.ok(tradePerformanceService.getPerformanceSummary(portfolioId, startDate, endDate));
-    }
+                log.info("Fetching performance summary for portfolio: {}", portfolioId);
+                return ResponseEntity
+                                .ok(tradePerformanceService.getPerformanceSummary(portfolioId, startDate, endDate));
+        }
 
-    @Operation(summary = "Get daily performance ranking (best/worst days)")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Daily performance retrieved successfully", content = @Content(schema = @Schema(implementation = DailyPerformance.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    @GetMapping("/daily")
-    public ResponseEntity<List<DailyPerformance>> getDailyPerformance(
-            @Parameter(description = "Portfolio ID") @RequestParam String portfolioId,
-            @Parameter(description = "Limit number of days to return (default 10)") @RequestParam(required = false, defaultValue = "10") int limit) {
+        @Operation(summary = "Get daily performance ranking (best/worst days)")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Daily performance retrieved successfully", content = @Content(schema = @Schema(implementation = DailyPerformance.class))),
+                        @ApiResponse(responseCode = "500", description = "Internal server error")
+        })
+        @GetMapping("/daily")
+        public ResponseEntity<List<DailyPerformance>> getDailyPerformance(
+                        @Parameter(description = "Portfolio ID") @RequestParam String portfolioId,
+                        @Parameter(description = "Limit number of days to return (default 10)") @RequestParam(required = false, defaultValue = "10") int limit) {
 
-        log.info("Fetching daily performance for portfolio: {}, limit: {}", portfolioId, limit);
-        return ResponseEntity.ok(tradePerformanceService.getDailyPerformance(portfolioId, limit));
-    }
+                log.info("Fetching daily performance for portfolio: {}, limit: {}", portfolioId, limit);
+                return ResponseEntity.ok(tradePerformanceService.getDailyPerformance(portfolioId, limit));
+        }
 
-    @Operation(summary = "Get timing analysis (performance by hour of day)")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Timing analysis retrieved successfully", content = @Content(schema = @Schema(implementation = TimingAnalysis.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    @GetMapping("/timing")
-    public ResponseEntity<TimingAnalysis> getTimingAnalysis(
-            @Parameter(description = "Portfolio ID") @RequestParam String portfolioId) {
+        @Operation(summary = "Get timing analysis (performance by hour of day)")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Timing analysis retrieved successfully", content = @Content(schema = @Schema(implementation = TimingAnalysis.class))),
+                        @ApiResponse(responseCode = "500", description = "Internal server error")
+        })
+        @GetMapping("/timing")
+        public ResponseEntity<TimingAnalysis> getTimingAnalysis(
+                        @Parameter(description = "Portfolio ID") @RequestParam String portfolioId) {
 
-        log.info("Fetching timing analysis for portfolio: {}", portfolioId);
-        return ResponseEntity.ok(tradePerformanceService.getTimingAnalysis(portfolioId));
-    }
+                log.info("Fetching timing analysis for portfolio: {}", portfolioId);
+                return ResponseEntity.ok(tradePerformanceService.getTimingAnalysis(portfolioId));
+        }
 }

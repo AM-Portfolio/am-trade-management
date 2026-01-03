@@ -28,7 +28,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/notebook")
+@RequestMapping("/v1/notebook")
 @RequiredArgsConstructor
 @Tag(name = "Notebook", description = "API for managing notebook items (folders, notes, goals) and tags")
 public class NotebookController {

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/preferences")
+@RequestMapping("/v1/preferences")
 @RequiredArgsConstructor
 @Tag(name = "User Preferences", description = "API for managing user preferences for dashboard and trade views")
 public class UserPreferencesController {
@@ -31,11 +31,9 @@ public class UserPreferencesController {
 
     @Operation(summary = "Get user dashboard preferences")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Preferences retrieved successfully",
-                content = @Content(schema = @Schema(implementation = DashboardPreferencesResponse.class))),
-        @ApiResponse(responseCode = "404", description = "Preferences not found",
-                content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "Preferences retrieved successfully", content = @Content(schema = @Schema(implementation = DashboardPreferencesResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Preferences not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/dashboard")
     public ResponseEntity<Object> getDashboardPreferences(@RequestParam String userId) {
@@ -46,7 +44,7 @@ public class UserPreferencesController {
         } catch (IllegalArgumentException e) {
             log.error("Preferences not found: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.notFound(
-                    "Dashboard preferences not found", 
+                    "Dashboard preferences not found",
                     "/api/v1/preferences/dashboard")
                     .addDetail("No preferences found for user: " + userId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
@@ -55,17 +53,15 @@ public class UserPreferencesController {
 
     @Operation(summary = "Save user dashboard preferences")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Preferences saved successfully",
-                content = @Content(schema = @Schema(implementation = DashboardPreferencesResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid request parameters",
-                content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "Preferences saved successfully", content = @Content(schema = @Schema(implementation = DashboardPreferencesResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/dashboard")
     public ResponseEntity<Object> saveDashboardPreferences(
             @RequestParam String userId,
             @Valid @RequestBody DashboardPreferencesRequest request) {
-        
+
         log.info("Saving dashboard preferences for user: {}", userId);
         try {
             DashboardPreferencesResponse preferences = userPreferencesService.saveDashboardPreferences(userId, request);
@@ -73,7 +69,7 @@ public class UserPreferencesController {
         } catch (IllegalArgumentException e) {
             log.error("Invalid preferences data: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
-                    e.getMessage(), 
+                    e.getMessage(),
                     "/api/v1/preferences/dashboard");
             return ResponseEntity.badRequest().body(errorResponse);
         }
@@ -81,11 +77,9 @@ public class UserPreferencesController {
 
     @Operation(summary = "Reset user dashboard preferences to default")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Preferences reset successfully",
-                content = @Content(schema = @Schema(implementation = DashboardPreferencesResponse.class))),
-        @ApiResponse(responseCode = "404", description = "User not found",
-                content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "Preferences reset successfully", content = @Content(schema = @Schema(implementation = DashboardPreferencesResponse.class))),
+            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/dashboard/reset")
     public ResponseEntity<Object> resetDashboardPreferences(@RequestParam String userId) {
@@ -96,7 +90,7 @@ public class UserPreferencesController {
         } catch (IllegalArgumentException e) {
             log.error("User not found: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.notFound(
-                    e.getMessage(), 
+                    e.getMessage(),
                     "/api/v1/preferences/dashboard/reset");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }

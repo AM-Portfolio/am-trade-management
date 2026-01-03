@@ -48,7 +48,7 @@ spring:
       - classpath:application-market-data-client.yml
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://ssd2658:ssd2658@localhost:27017/am-trade?authSource=admin}
+      uri: ${MONGODB_URI:mongodb://admin:password123@localhost:27017/am-trade?authSource=admin}
       database: ${MONGODB_DATABASE:am-trade}
       # ssl:
       #   enabled: true 

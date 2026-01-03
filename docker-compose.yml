@@ -40,9 +40,9 @@ services:
         echo "=== Starting AM Trade Service ==="
         java -jar app.jar
     ports:
-      - "8077:8080"
+      - "8040:8080"
     networks:
-      - am-network
+      - am-infra_am-net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
@@ -56,6 +56,5 @@ volumes:
   grafana_data:
 
 networks:
-  am-network:
-    driver: bridge
-    name: am-network
+  am-infra_am-net:
+    external: true

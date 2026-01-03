@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/comparison")
+@RequestMapping("/v1/comparison")
 @RequiredArgsConstructor
 @Tag(name = "Trade Comparison", description = "API for comparing trade performance across different dimensions")
 public class TradeComparisonController {
@@ -30,11 +30,9 @@ public class TradeComparisonController {
 
     @Operation(summary = "Compare trade performance across time periods, portfolios, or strategies")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Comparison completed successfully",
-                content = @Content(schema = @Schema(implementation = ComparisonResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid request parameters",
-                content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "Comparison completed successfully", content = @Content(schema = @Schema(implementation = ComparisonResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping
     public ResponseEntity<Object> compareTradePerformance(@Valid @RequestBody ComparisonRequest request) {
@@ -45,7 +43,7 @@ public class TradeComparisonController {
         } catch (IllegalArgumentException e) {
             log.error("Invalid comparison request: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
-                    e.getMessage(), 
+                    e.getMessage(),
                     "/api/v1/comparison");
             return ResponseEntity.badRequest().body(errorResponse);
         }
@@ -53,11 +51,9 @@ public class TradeComparisonController {
 
     @Operation(summary = "Compare performance between two specific portfolios")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Comparison completed successfully",
-                content = @Content(schema = @Schema(implementation = ComparisonResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid request parameters",
-                content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "Comparison completed successfully", content = @Content(schema = @Schema(implementation = ComparisonResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/portfolios")
     public ResponseEntity<Object> comparePortfolios(
@@ -66,7 +62,7 @@ public class TradeComparisonController {
             @RequestParam String portfolioId2,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
-        
+
         log.info("Comparing portfolios {} and {} for user: {}", portfolioId1, portfolioId2, userId);
         try {
             ComparisonResponse response = tradeComparisonService.comparePortfolios(
@@ -75,7 +71,7 @@ public class TradeComparisonController {
         } catch (IllegalArgumentException e) {
             log.error("Invalid portfolio comparison request: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
-                    e.getMessage(), 
+                    e.getMessage(),
                     "/api/v1/comparison/portfolios");
             return ResponseEntity.badRequest().body(errorResponse);
         }
@@ -83,11 +79,9 @@ public class TradeComparisonController {
 
     @Operation(summary = "Compare performance between two time periods")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Comparison completed successfully",
-                content = @Content(schema = @Schema(implementation = ComparisonResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid request parameters",
-                content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "Comparison completed successfully", content = @Content(schema = @Schema(implementation = ComparisonResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/time-periods")
     public ResponseEntity<Object> compareTimePeriods(
@@ -97,7 +91,7 @@ public class TradeComparisonController {
             @RequestParam String period2Start,
             @RequestParam String period2End,
             @RequestParam(required = false) String portfolioId) {
-        
+
         log.info("Comparing time periods for user: {}", userId);
         try {
             ComparisonResponse response = tradeComparisonService.compareTimePeriods(
@@ -106,7 +100,7 @@ public class TradeComparisonController {
         } catch (IllegalArgumentException e) {
             log.error("Invalid time period comparison request: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
-                    e.getMessage(), 
+                    e.getMessage(),
                     "/api/v1/comparison/time-periods");
             return ResponseEntity.badRequest().body(errorResponse);
         }
@@ -114,11 +108,9 @@ public class TradeComparisonController {
 
     @Operation(summary = "Compare performance between strategies")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Comparison completed successfully",
-                content = @Content(schema = @Schema(implementation = ComparisonResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid request parameters",
-                content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "Comparison completed successfully", content = @Content(schema = @Schema(implementation = ComparisonResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/strategies")
     public ResponseEntity<Object> compareStrategies(
@@ -127,7 +119,7 @@ public class TradeComparisonController {
             @RequestParam String strategy2,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
-        
+
         log.info("Comparing strategies {} and {} for user: {}", strategy1, strategy2, userId);
         try {
             ComparisonResponse response = tradeComparisonService.compareStrategies(
@@ -136,7 +128,7 @@ public class TradeComparisonController {
         } catch (IllegalArgumentException e) {
             log.error("Invalid strategy comparison request: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
-                    e.getMessage(), 
+                    e.getMessage(),
                     "/api/v1/comparison/strategies");
             return ResponseEntity.badRequest().body(errorResponse);
         }

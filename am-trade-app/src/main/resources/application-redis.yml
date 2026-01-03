@@ -1,14 +1,14 @@
 # Redis
-REDIS_HOSTNAME: localhost
-REDIS_PASSWORD: RedisPassword123!
-REDIS_PORT: 6379
+# REDIS_HOSTNAME: localhost
+# REDIS_PASSWORD: password123
+# REDIS_PORT: 6379
 
 spring:
   data:
     redis:
-      host: ${REDIS_HOSTNAME}
-      port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD} # Uncomment and set if your Redis instance requires authentication
+      host: ${REDIS_HOSTNAME:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:password123} # Uncomment and set if your Redis instance requires authentication
       # database: 0 # Default is 0
       # timeout: 2000 # Connection timeout in milliseconds
       # ssl: false # Enable SSL support
