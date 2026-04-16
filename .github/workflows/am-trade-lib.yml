@@ -2,7 +2,7 @@ name: AM Trade Management Lib Publish
 
 on:
   push:
-    branches: ["main", "develop", "test/**", "trade-managemnet-study"]
+    branches: ["main", "develop", "test/**", "trade-managemnet-study", "TM-features/**"]
     paths:
       - '**/*.java'
       - '**/pom.xml'

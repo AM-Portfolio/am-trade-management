@@ -2,7 +2,7 @@ name: AM Trade Management App Deploy
 
 on:
   push:
-    branches: ["main", "develop", "test/**", "trade-managemnet-study"]
+    branches: ["main", "develop", "test/**", "trade-managemnet-study", "TM-features/**"]
     paths:
       - '**/*.java'
       - '**/pom.xml'
