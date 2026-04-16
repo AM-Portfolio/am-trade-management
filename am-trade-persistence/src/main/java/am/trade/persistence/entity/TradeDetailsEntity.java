@@ -8,13 +8,13 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import am.trade.common.models.Attachment;
-import am.trade.common.models.EntryExitInfo;
-import am.trade.common.models.InstrumentInfo;
-import am.trade.common.models.TradeMetrics;
-import am.trade.common.models.TradeModel;
-import am.trade.common.models.enums.TradePositionType;
-import am.trade.common.models.enums.TradeStatus;
+import am.trade.models.shared.Attachment;
+import am.trade.models.shared.EntryExitInfo;
+import am.trade.models.shared.InstrumentInfo;
+import am.trade.models.shared.TradeMetrics;
+import am.trade.models.shared.TradeModel;
+import am.trade.models.shared.enums.TradePositionType;
+import am.trade.models.shared.enums.TradeStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

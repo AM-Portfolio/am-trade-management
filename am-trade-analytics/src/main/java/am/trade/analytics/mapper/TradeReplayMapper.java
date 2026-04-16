@@ -3,7 +3,7 @@ package am.trade.analytics.mapper;
 import am.trade.analytics.model.TradeReplay;
 import am.trade.analytics.model.dto.TradeReplayResponse;
 import am.trade.analytics.model.dto.TradeReplayRequest;
-import am.trade.common.models.PriceDataPoint;
+import am.trade.models.shared.PriceDataPoint;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

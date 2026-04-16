@@ -24,10 +24,10 @@
 // import org.springframework.data.domain.PageImpl;
 // import org.springframework.data.domain.Pageable;
 
-// import am.trade.common.models.PortfolioModel;
-// import am.trade.common.models.TradeDetails;
-// import am.trade.common.models.enums.TradePositionType;
-// import am.trade.common.models.enums.TradeStatus;
+// import am.trade.models.shared.PortfolioModel;
+// import am.trade.models.shared.TradeDetails;
+// import am.trade.models.shared.enums.TradePositionType;
+// import am.trade.models.shared.enums.TradeStatus;
 // import am.trade.persistence.entity.PortfolioEntity;
 // import am.trade.persistence.mapper.PortfolioMapper;
 // import am.trade.persistence.repository.PortfolioRepository;

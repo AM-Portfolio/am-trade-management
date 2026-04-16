@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import am.trade.common.models.TradeSummaryBasic;
+import am.trade.models.shared.TradeSummaryBasic;
 
 /**
  * Repository interface for TradeSummaryBasic document

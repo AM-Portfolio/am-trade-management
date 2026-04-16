@@ -1,6 +1,6 @@
 package am.trade.dashboard.service;
 
-import am.trade.common.models.*;
+import am.trade.models.shared.*;
 import am.trade.dashboard.service.metrics.*;
 // Removed unused import
 import am.trade.persistence.entity.TradeDetailsEntity;

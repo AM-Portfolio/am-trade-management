@@ -3,7 +3,7 @@ package am.trade.api.service.impl;
 import am.trade.api.dto.TradeJournalEntryRequest;
 import am.trade.api.dto.TradeJournalEntryResponse;
 import am.trade.api.service.TradeJournalService;
-import am.trade.common.models.TradeJournalEntry;
+import am.trade.models.shared.TradeJournalEntry;
 import am.trade.persistence.repository.TradeJournalRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

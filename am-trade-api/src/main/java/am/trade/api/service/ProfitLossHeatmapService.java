@@ -1,7 +1,7 @@
 package am.trade.api.service;
 
-import am.trade.common.models.HeatmapRequest;
-import am.trade.common.models.ProfitLossHeatmapData;
+import am.trade.models.shared.HeatmapRequest;
+import am.trade.models.shared.ProfitLossHeatmapData;
 
 /**
  * Service for generating profit/loss heatmap data

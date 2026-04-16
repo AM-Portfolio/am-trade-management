@@ -1,7 +1,7 @@
 package am.trade.persistence.mapper;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeEntryExistReasoning;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.TradeEntryExistReasoning;
 import am.trade.common.util.JsonConverter;
 import am.trade.persistence.entity.TradeEntryExistReasoningEntity;
 import org.junit.jupiter.api.BeforeEach;

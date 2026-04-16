@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import am.trade.api.dto.FavoriteFilterRequest;
 import am.trade.api.dto.FavoriteFilterResponse;
 import am.trade.api.service.FavoriteFilterService;
-import am.trade.common.models.FavoriteFilter;
+import am.trade.models.shared.FavoriteFilter;
 import am.trade.persistence.repository.FavoriteFilterRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

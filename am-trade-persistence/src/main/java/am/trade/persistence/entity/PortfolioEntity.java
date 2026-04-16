@@ -8,8 +8,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import am.trade.common.models.AssetAllocation;
-import am.trade.common.models.PortfolioMetrics;
+import am.trade.models.shared.AssetAllocation;
+import am.trade.models.shared.PortfolioMetrics;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

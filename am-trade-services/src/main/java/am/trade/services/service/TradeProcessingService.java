@@ -1,7 +1,7 @@
 package am.trade.services.service;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeModel;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.TradeModel;
 
 import java.util.List;
 

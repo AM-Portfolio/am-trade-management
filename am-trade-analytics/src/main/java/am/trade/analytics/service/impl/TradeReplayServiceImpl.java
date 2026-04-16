@@ -6,7 +6,7 @@ import am.trade.analytics.model.dto.TradeReplayResponse;
 import am.trade.analytics.service.TradeReplayService;
 import am.trade.analytics.service.TradeSamplingService;
 import am.trade.analytics.util.TradeAnalyticsUtils;
-import am.trade.common.models.PriceDataPoint;
+import am.trade.models.shared.PriceDataPoint;
 import am.trade.analytics.mapper.TradeReplayMapper;
 import am.trade.analytics.mapper.PersistenceModelMapper;
 import lombok.RequiredArgsConstructor;

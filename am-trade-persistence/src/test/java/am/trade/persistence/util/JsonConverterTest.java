@@ -1,6 +1,6 @@
 // package am.trade.persistence.util;
 
-// import am.trade.common.models.TradeDetails;
+// import am.trade.models.shared.TradeDetails;
 // import am.trade.common.util.JsonConverter;
 // import org.junit.jupiter.api.Test;
 

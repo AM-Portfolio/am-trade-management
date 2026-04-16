@@ -3,7 +3,7 @@ package am.trade.api.service.impl;
 import am.trade.api.dto.DashboardPreferencesRequest;
 import am.trade.api.dto.DashboardPreferencesResponse;
 import am.trade.api.service.UserPreferencesService;
-import am.trade.common.models.DashboardPreferences;
+import am.trade.models.shared.DashboardPreferences;
 import am.trade.persistence.repository.DashboardPreferencesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

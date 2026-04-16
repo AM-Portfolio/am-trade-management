@@ -1,6 +1,6 @@
 package am.trade.kafka.mapper;
 
-import am.trade.common.models.TradeModel;
+import am.trade.models.shared.TradeModel;
 import am.trade.models.document.Trade;
 import am.trade.models.dto.TradeDTO;
 import am.trade.models.enums.OrderSide;
@@ -189,10 +189,10 @@ public class TradeEventMapper {
         return date;
     }
 
-    public OrderSide mapTradeTypeToOrderSide(am.trade.common.models.enums.TradeType tradeType) {
+    public OrderSide mapTradeTypeToOrderSide(am.trade.models.shared.enums.TradeType tradeType) {
         if (tradeType == null) {
             return OrderSide.BUY; // Default to BUY if not specified
         }
-        return tradeType == am.trade.common.models.enums.TradeType.BUY ? OrderSide.BUY : OrderSide.SELL;
+        return tradeType == am.trade.models.shared.enums.TradeType.BUY ? OrderSide.BUY : OrderSide.SELL;
     }
 }

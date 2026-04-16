@@ -1,11 +1,11 @@
 package am.trade.services.service.impl;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeEntryExistReasoning;
-import am.trade.common.models.TradePsychologyData;
-import am.trade.common.models.enums.FundamentalEntryReason;
-import am.trade.common.models.enums.TechnicalEntryReason;
-import am.trade.common.models.enums.TradeBehaviorPattern;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.TradeEntryExistReasoning;
+import am.trade.models.shared.TradePsychologyData;
+import am.trade.models.shared.enums.FundamentalEntryReason;
+import am.trade.models.shared.enums.TechnicalEntryReason;
+import am.trade.models.shared.enums.TradeBehaviorPattern;
 import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.mapper.TradeDetailsMapper;
 import am.trade.persistence.repository.TradeDetailsRepository;

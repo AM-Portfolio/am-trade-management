@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import am.trade.kafka.model.TradeUpdateEvent;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.TradeDetails;
 import am.trade.common.util.JsonConverter;
 
 @Slf4j

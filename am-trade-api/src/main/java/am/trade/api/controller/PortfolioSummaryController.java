@@ -1,9 +1,9 @@
 package am.trade.api.controller;
 
 import am.trade.api.service.PortfolioSummaryService;
-import am.trade.common.models.PortfolioModel;
-import am.trade.common.models.PortfolioSummaryDTO;
-import am.trade.common.models.AssetAllocation;
+import am.trade.models.shared.PortfolioModel;
+import am.trade.models.shared.PortfolioSummaryDTO;
+import am.trade.models.shared.AssetAllocation;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

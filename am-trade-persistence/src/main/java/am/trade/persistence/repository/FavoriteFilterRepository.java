@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import am.trade.common.models.FavoriteFilter;
+import am.trade.models.shared.FavoriteFilter;
 
 @Repository
 public interface FavoriteFilterRepository extends MongoRepository<FavoriteFilter, String> {

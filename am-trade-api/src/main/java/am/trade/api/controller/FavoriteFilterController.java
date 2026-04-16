@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import am.trade.api.dto.ErrorResponse;
 import am.trade.api.dto.FavoriteFilterRequest;
 import am.trade.api.dto.FavoriteFilterResponse;
-import am.trade.api.dto.MetricsFilterRequest;
-import am.trade.api.dto.MetricsResponse;
+import am.trade.models.dto.MetricsFilterRequest;
+import am.trade.models.dto.MetricsResponse;
 import am.trade.api.service.FavoriteFilterService;
 import am.trade.api.service.UserTradeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -254,9 +254,9 @@ public class FavoriteFilterController {
     /**
      * Convert a MetricsFilterRequest to MetricsFilterConfig
      */
-    private am.trade.common.models.MetricsFilterConfig convertToFilterConfig(MetricsFilterRequest request) {
-        am.trade.common.models.MetricsFilterConfig.MetricsFilterConfigBuilder builder = 
-                am.trade.common.models.MetricsFilterConfig.builder();
+    private am.trade.models.shared.MetricsFilterConfig convertToFilterConfig(MetricsFilterRequest request) {
+        am.trade.models.shared.MetricsFilterConfig.MetricsFilterConfigBuilder builder = 
+                am.trade.models.shared.MetricsFilterConfig.builder();
         
         if (request.getPortfolioIds() != null) {
             builder.portfolioIds(new java.util.ArrayList<>(request.getPortfolioIds()));

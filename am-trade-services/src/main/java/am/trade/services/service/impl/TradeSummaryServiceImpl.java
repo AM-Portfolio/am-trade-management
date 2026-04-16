@@ -11,9 +11,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import am.trade.common.models.TradeSummary;
-import am.trade.common.models.TradeSummaryBasic;
-import am.trade.common.models.TradeSummaryDetailed;
+import am.trade.models.shared.TradeSummary;
+import am.trade.models.shared.TradeSummaryBasic;
+import am.trade.models.shared.TradeSummaryDetailed;
 import am.trade.persistence.repository.TradeSummaryBasicRepository;
 import am.trade.persistence.repository.TradeSummaryDetailedRepository;
 import am.trade.services.service.TradeSummaryService;

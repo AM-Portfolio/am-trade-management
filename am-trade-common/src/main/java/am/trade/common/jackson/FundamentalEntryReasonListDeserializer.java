@@ -1,6 +1,6 @@
 package am.trade.common.jackson;
 
-import am.trade.common.models.enums.FundamentalEntryReason;
+import am.trade.models.shared.enums.FundamentalEntryReason;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;

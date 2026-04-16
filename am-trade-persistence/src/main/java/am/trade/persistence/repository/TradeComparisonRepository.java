@@ -1,6 +1,6 @@
 package am.trade.persistence.repository;
 
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.TradeDetails;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;

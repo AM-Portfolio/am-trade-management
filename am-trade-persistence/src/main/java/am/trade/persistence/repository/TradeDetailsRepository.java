@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import am.trade.common.models.enums.TradeStatus;
+import am.trade.models.shared.enums.TradeStatus;
 import am.trade.persistence.entity.TradeDetailsEntity;
 
 /**

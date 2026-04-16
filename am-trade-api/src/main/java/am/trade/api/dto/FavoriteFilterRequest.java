@@ -2,7 +2,7 @@ package am.trade.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import am.trade.common.models.MetricsFilterConfig;
+import am.trade.models.shared.MetricsFilterConfig;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

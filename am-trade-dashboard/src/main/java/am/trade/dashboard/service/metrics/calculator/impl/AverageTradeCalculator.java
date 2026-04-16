@@ -1,7 +1,7 @@
 package am.trade.dashboard.service.metrics.calculator.impl;
 
-import am.trade.common.models.PerformanceMetrics;
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.PerformanceMetrics;
+import am.trade.models.shared.TradeDetails;
 import am.trade.dashboard.service.metrics.calculator.AbstractBigDecimalMetricCalculator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

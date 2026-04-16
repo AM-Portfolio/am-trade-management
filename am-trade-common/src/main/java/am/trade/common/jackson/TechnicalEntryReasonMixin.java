@@ -1,6 +1,6 @@
 package am.trade.common.jackson;
 
-import am.trade.common.models.enums.TechnicalEntryReason;
+import am.trade.models.shared.enums.TechnicalEntryReason;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**

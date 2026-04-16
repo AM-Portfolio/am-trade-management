@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.TradeDetails;
 
 @FeignClient(name = "am-trade-management-service", url = "${am.trade.management.url:http://am-trade-management-service:8080}", path = "/api/v1/trades")
 public interface TradeCalendarClient {

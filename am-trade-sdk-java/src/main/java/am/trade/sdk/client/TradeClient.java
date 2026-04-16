@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.enums.TradeStatus;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.enums.TradeStatus;
 
 @FeignClient(name = "am-trade-management-service", url = "${am.trade.management.url:http://am-trade-management-service:8080}", path = "/api/v1/trades")
 public interface TradeClient {

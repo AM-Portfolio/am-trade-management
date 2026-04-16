@@ -1,7 +1,7 @@
 package am.trade.services.service;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.enums.TradeStatus;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.enums.TradeStatus;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

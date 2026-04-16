@@ -1,6 +1,6 @@
-package am.trade.common.models;
+package am.trade.models.shared;
 
-import am.trade.common.models.enums.MarketSegment;
+import am.trade.models.shared.enums.MarketSegment;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

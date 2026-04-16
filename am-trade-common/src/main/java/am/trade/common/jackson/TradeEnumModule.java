@@ -1,6 +1,6 @@
 package am.trade.common.jackson;
 
-import am.trade.common.models.enums.*;
+import am.trade.models.shared.enums.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 /**

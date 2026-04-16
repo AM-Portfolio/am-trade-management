@@ -1,9 +1,9 @@
 package am.trade.dashboard.service.metrics.feedback.impl;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.enums.EntryPsychology;
-import am.trade.common.models.enums.ExitPsychology;
-import am.trade.common.models.enums.TradeBehaviorPattern;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.enums.EntryPsychology;
+import am.trade.models.shared.enums.ExitPsychology;
+import am.trade.models.shared.enums.TradeBehaviorPattern;
 import am.trade.dashboard.model.feeback.PsychologyAnalysis;
 import am.trade.dashboard.service.metrics.feedback.PsychologyAnalyzer;
 import lombok.RequiredArgsConstructor;

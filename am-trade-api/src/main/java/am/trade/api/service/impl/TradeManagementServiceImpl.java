@@ -1,8 +1,8 @@
 package am.trade.api.service.impl;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeSummary;
-import am.trade.common.models.enums.TradeStatus;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.TradeSummary;
+import am.trade.models.shared.enums.TradeStatus;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.api.service.TradeManagementService;
 

@@ -1,6 +1,6 @@
 package am.trade.services.service.impl;
 
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.TradeDetails;
 import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.mapper.TradeDetailsMapper;
 import am.trade.persistence.repository.TradeDetailsRepository;

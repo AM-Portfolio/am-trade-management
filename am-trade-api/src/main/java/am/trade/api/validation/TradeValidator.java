@@ -1,9 +1,9 @@
 package am.trade.api.validation;
 
-import am.trade.common.models.Attachment;
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeEntryExistReasoning;
-import am.trade.common.models.TradePsychologyData;
+import am.trade.models.shared.Attachment;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.TradeEntryExistReasoning;
+import am.trade.models.shared.TradePsychologyData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

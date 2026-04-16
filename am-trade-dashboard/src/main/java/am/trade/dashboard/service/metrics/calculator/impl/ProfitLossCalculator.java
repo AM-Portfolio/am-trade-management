@@ -1,6 +1,6 @@
 package am.trade.dashboard.service.metrics.calculator.impl;
 
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.TradeDetails;
 import am.trade.dashboard.service.metrics.calculator.AbstractBigDecimalMetricCalculator;
 
 import java.math.BigDecimal;

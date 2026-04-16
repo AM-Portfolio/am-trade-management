@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import am.trade.common.models.TradeSummaryDetailed;
+import am.trade.models.shared.TradeSummaryDetailed;
 
 /**
  * Repository interface for TradeSummaryDetailed document

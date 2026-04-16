@@ -14,11 +14,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import am.trade.common.models.enums.TradeStatus;
-import am.trade.common.models.HeatmapRequest;
-import am.trade.common.models.PeriodProfitLossData;
-import am.trade.common.models.ProfitLossHeatmapData;
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.enums.TradeStatus;
+import am.trade.models.shared.HeatmapRequest;
+import am.trade.models.shared.PeriodProfitLossData;
+import am.trade.models.shared.ProfitLossHeatmapData;
+import am.trade.models.shared.TradeDetails;
 import am.trade.api.service.ProfitLossHeatmapService;
 import am.trade.api.service.TradeManagementService;
 import lombok.extern.slf4j.Slf4j;

@@ -1,9 +1,9 @@
 package am.trade.persistence.mapper;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradePsychologyData;
-import am.trade.common.models.enums.EntryPsychology;
-import am.trade.common.models.enums.ExitPsychology;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.TradePsychologyData;
+import am.trade.models.shared.enums.EntryPsychology;
+import am.trade.models.shared.enums.ExitPsychology;
 import am.trade.common.util.JsonConverter;
 import am.trade.persistence.entity.PsychologyFactorEntity;
 import am.trade.persistence.entity.TradePsychologyDataEntity;

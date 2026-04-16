@@ -1,8 +1,8 @@
 package am.trade.persistence.mapper;
 
-import am.trade.common.models.TradeEntryExistReasoning;
-import am.trade.common.models.enums.FundamentalEntryReason;
-import am.trade.common.models.enums.TechnicalEntryReason;
+import am.trade.models.shared.TradeEntryExistReasoning;
+import am.trade.models.shared.enums.FundamentalEntryReason;
+import am.trade.models.shared.enums.TechnicalEntryReason;
 import am.trade.persistence.entity.TradeEntryExistReasoningEntity;
 import org.springframework.stereotype.Component;
 

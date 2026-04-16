@@ -1,12 +1,12 @@
 package am.trade.models.dto;
 
-import am.trade.common.models.PerformanceMetrics;
-import am.trade.common.models.RiskMetrics;
-import am.trade.common.models.StrategyPerformanceMetrics;
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeDistributionMetrics;
-import am.trade.common.models.TradePatternMetrics;
-import am.trade.common.models.TradeTimingMetrics;
+import am.trade.models.shared.PerformanceMetrics;
+import am.trade.models.shared.RiskMetrics;
+import am.trade.models.shared.StrategyPerformanceMetrics;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.TradeDistributionMetrics;
+import am.trade.models.shared.TradePatternMetrics;
+import am.trade.models.shared.TradeTimingMetrics;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

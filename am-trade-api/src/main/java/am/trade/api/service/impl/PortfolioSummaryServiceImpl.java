@@ -1,10 +1,10 @@
 package am.trade.api.service.impl;
 
 import am.trade.api.service.PortfolioSummaryService;
-import am.trade.common.models.PortfolioModel;
-import am.trade.common.models.PortfolioSummaryDTO;
-import am.trade.common.models.AssetAllocation;
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.PortfolioModel;
+import am.trade.models.shared.PortfolioSummaryDTO;
+import am.trade.models.shared.AssetAllocation;
+import am.trade.models.shared.TradeDetails;
 import am.trade.services.service.PortfolioService;
 import am.trade.services.service.TradeDetailsService;
 import lombok.RequiredArgsConstructor;

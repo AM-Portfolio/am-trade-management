@@ -1,8 +1,8 @@
 package am.trade.api.service;
 
-import am.trade.common.models.PortfolioModel;
-import am.trade.common.models.PortfolioSummaryDTO;
-import am.trade.common.models.AssetAllocation;
+import am.trade.models.shared.PortfolioModel;
+import am.trade.models.shared.PortfolioSummaryDTO;
+import am.trade.models.shared.AssetAllocation;
 
 import java.time.LocalDate;
 import java.util.List;

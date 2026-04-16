@@ -1,7 +1,7 @@
 package am.trade.dashboard.service.metrics.feedback;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradingFeedback;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.TradingFeedback;
 import am.trade.dashboard.exception.FeedbackGenerationException;
 import am.trade.dashboard.model.feeback.DecisionAnalysis;
 import am.trade.dashboard.model.feeback.PatternAnalysis;

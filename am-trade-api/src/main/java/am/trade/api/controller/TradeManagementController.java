@@ -1,6 +1,6 @@
 package am.trade.api.controller;
 
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.TradeDetails;
 
 import am.trade.api.service.TradeManagementService;
 

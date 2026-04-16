@@ -1,6 +1,6 @@
 package am.trade.persistence.mapper;
 
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.TradeDetails;
 import am.trade.persistence.entity.TradeDetailsEntity;
 import org.springframework.stereotype.Component;
 

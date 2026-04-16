@@ -1,6 +1,6 @@
 package am.trade.persistence.repository;
 
-import am.trade.common.models.TradeJournalEntry;
+import am.trade.models.shared.TradeJournalEntry;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;

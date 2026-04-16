@@ -1,8 +1,8 @@
 package am.trade.dashboard.service;
 
-import am.trade.common.models.TradeSummary;
-import am.trade.common.models.TradeSummaryBasic;
-import am.trade.common.models.TradeSummaryDetailed;
+import am.trade.models.shared.TradeSummary;
+import am.trade.models.shared.TradeSummaryBasic;
+import am.trade.models.shared.TradeSummaryDetailed;
 
 /**
  * Service interface for calculating and caching trade metrics

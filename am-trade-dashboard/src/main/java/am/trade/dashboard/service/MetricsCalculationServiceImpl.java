@@ -1,8 +1,8 @@
 package am.trade.dashboard.service;
 
-import am.trade.common.models.TradeSummary;
-import am.trade.common.models.TradeSummaryBasic;
-import am.trade.common.models.TradeSummaryDetailed;
+import am.trade.models.shared.TradeSummary;
+import am.trade.models.shared.TradeSummaryBasic;
+import am.trade.models.shared.TradeSummaryDetailed;
 import am.trade.dashboard.service.TradeMetricsCalculationService;
 import am.trade.services.service.impl.TradeSummaryServiceImpl;
 import lombok.extern.slf4j.Slf4j;

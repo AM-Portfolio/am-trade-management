@@ -1,6 +1,6 @@
 package am.trade.common.jackson;
 
-import am.trade.common.models.enums.EntryPsychology;
+import am.trade.models.shared.enums.EntryPsychology;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;

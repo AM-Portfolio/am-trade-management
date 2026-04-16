@@ -6,8 +6,8 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.enums.TradeStatus;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.enums.TradeStatus;
 
 /**
  * Service interface for handling trade API operations

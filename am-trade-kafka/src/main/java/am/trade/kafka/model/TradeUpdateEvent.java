@@ -4,9 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import am.trade.common.models.TradeModel;
-import am.trade.common.models.enums.BrokerType;
-import am.trade.common.models.enums.FNOTradeType;
+import am.trade.models.shared.TradeModel;
+import am.trade.models.shared.enums.BrokerType;
+import am.trade.models.shared.enums.FNOTradeType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

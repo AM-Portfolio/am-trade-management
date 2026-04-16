@@ -1,7 +1,7 @@
 package am.trade.dashboard.service.metrics.feedback.impl;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.enums.TradeBehaviorPattern;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.enums.TradeBehaviorPattern;
 import am.trade.dashboard.model.feeback.PatternAnalysis;
 import am.trade.dashboard.service.metrics.feedback.PatternAnalyzer;
 import lombok.extern.slf4j.Slf4j;

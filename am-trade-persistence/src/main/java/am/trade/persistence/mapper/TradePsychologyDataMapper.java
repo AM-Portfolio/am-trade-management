@@ -1,9 +1,9 @@
 package am.trade.persistence.mapper;
 
-import am.trade.common.models.TradePsychologyData;
-import am.trade.common.models.enums.EntryPsychology;
-import am.trade.common.models.enums.ExitPsychology;
-import am.trade.common.models.enums.TradeBehaviorPattern;
+import am.trade.models.shared.TradePsychologyData;
+import am.trade.models.shared.enums.EntryPsychology;
+import am.trade.models.shared.enums.ExitPsychology;
+import am.trade.models.shared.enums.TradeBehaviorPattern;
 import am.trade.persistence.entity.PsychologyFactorEntity;
 import am.trade.persistence.entity.TradePsychologyDataEntity;
 import org.springframework.stereotype.Component;

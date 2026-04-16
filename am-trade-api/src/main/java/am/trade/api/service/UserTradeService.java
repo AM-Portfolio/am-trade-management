@@ -1,8 +1,8 @@
 package am.trade.api.service;
 
-import am.trade.api.dto.MetricsFilterRequest;
-import am.trade.api.dto.MetricsResponse;
-import am.trade.common.models.MetricsFilterConfig;
+import am.trade.models.dto.MetricsFilterRequest;
+import am.trade.models.dto.MetricsResponse;
+import am.trade.models.shared.MetricsFilterConfig;
 
 import java.util.List;
 

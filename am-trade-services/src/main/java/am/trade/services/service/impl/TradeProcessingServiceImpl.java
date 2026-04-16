@@ -1,15 +1,15 @@
 package am.trade.services.service.impl;
 
-import am.trade.common.models.EntryExitInfo;
-import am.trade.common.models.InstrumentInfo;
-import am.trade.common.models.PortfolioMetrics;
-import am.trade.common.models.PortfolioModel;
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeMetrics;
-import am.trade.common.models.TradeModel;
-import am.trade.common.models.enums.TradePositionType;
-import am.trade.common.models.enums.TradeStatus;
-import am.trade.common.models.enums.TradeType;
+import am.trade.models.shared.EntryExitInfo;
+import am.trade.models.shared.InstrumentInfo;
+import am.trade.models.shared.PortfolioMetrics;
+import am.trade.models.shared.PortfolioModel;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.TradeMetrics;
+import am.trade.models.shared.TradeModel;
+import am.trade.models.shared.enums.TradePositionType;
+import am.trade.models.shared.enums.TradeStatus;
+import am.trade.models.shared.enums.TradeType;
 import am.trade.services.service.PortfolioPersistenceService;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;

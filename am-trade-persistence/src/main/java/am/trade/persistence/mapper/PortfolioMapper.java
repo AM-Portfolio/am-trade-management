@@ -5,9 +5,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
-import am.trade.common.models.AssetAllocation;
-import am.trade.common.models.PortfolioMetrics;
-import am.trade.common.models.PortfolioModel;
+import am.trade.models.shared.AssetAllocation;
+import am.trade.models.shared.PortfolioMetrics;
+import am.trade.models.shared.PortfolioModel;
 import am.trade.persistence.entity.PortfolioEntity;
 
 import lombok.RequiredArgsConstructor;

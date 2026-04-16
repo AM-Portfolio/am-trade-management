@@ -1,6 +1,6 @@
 package am.trade.dashboard.service.metrics.preprocessor.impl;
 
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.TradeDetails;
 import am.trade.dashboard.service.metrics.preprocessor.TradeDataPreprocessor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

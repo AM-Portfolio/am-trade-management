@@ -9,8 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import am.trade.common.models.PortfolioModel;
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.PortfolioModel;
+import am.trade.models.shared.TradeDetails;
 import am.trade.persistence.entity.PortfolioEntity;
 import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.mapper.PortfolioMapper;

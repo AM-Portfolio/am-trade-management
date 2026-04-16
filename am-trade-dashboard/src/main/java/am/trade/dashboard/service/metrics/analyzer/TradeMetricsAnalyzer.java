@@ -1,6 +1,6 @@
 package am.trade.dashboard.service.metrics.analyzer;
 
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.TradeDetails;
 import am.trade.dashboard.service.metrics.grouping.TradeGroupingResult;
 
 import java.math.BigDecimal;

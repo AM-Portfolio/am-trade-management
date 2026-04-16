@@ -1,9 +1,9 @@
 package am.trade.api.service;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeSummary;
-import am.trade.common.models.TradeSummaryBasic;
-import am.trade.common.models.TradeSummaryDetailed;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.TradeSummary;
+import am.trade.models.shared.TradeSummaryBasic;
+import am.trade.models.shared.TradeSummaryDetailed;
 
 import java.time.LocalDate;
 import java.util.List;

@@ -1,6 +1,6 @@
 package am.trade.persistence.repository;
 
-import am.trade.common.models.DashboardPreferences;
+import am.trade.models.shared.DashboardPreferences;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

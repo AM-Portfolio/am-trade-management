@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import am.trade.common.models.MetricsFilterConfig;
+import am.trade.models.shared.MetricsFilterConfig;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

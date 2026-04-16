@@ -1,10 +1,10 @@
 package am.trade.api.service.impl;
 
 import am.trade.api.service.TradeSummaryService;
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeSummary;
-import am.trade.common.models.TradeSummaryBasic;
-import am.trade.common.models.TradeSummaryDetailed;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.TradeSummary;
+import am.trade.models.shared.TradeSummaryBasic;
+import am.trade.models.shared.TradeSummaryDetailed;
 import am.trade.api.service.TradeManagementService;
 // Using fully qualified name for service layer TradeSummaryService to avoid collision
 

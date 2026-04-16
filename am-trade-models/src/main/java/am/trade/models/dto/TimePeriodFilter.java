@@ -6,8 +6,6 @@ import lombok.Getter;
 /**
  * Enum representing common time periods for filtering trade metrics
  */
-@Getter
-@AllArgsConstructor
 public enum TimePeriodFilter {
     TODAY("Today", 0, 0),
     YESTERDAY("Yesterday", 1, 1),
@@ -33,4 +31,22 @@ public enum TimePeriodFilter {
     private final String displayName;
     private final int daysBack;
     private final int daysOffset;
+
+    TimePeriodFilter(String displayName, int daysBack, int daysOffset) {
+        this.displayName = displayName;
+        this.daysBack = daysBack;
+        this.daysOffset = daysOffset;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public int getDaysBack() {
+        return daysBack;
+    }
+
+    public int getDaysOffset() {
+        return daysOffset;
+    }
 }

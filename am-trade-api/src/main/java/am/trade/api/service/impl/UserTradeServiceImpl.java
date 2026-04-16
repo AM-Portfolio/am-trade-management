@@ -1,11 +1,12 @@
 package am.trade.api.service.impl;
 
 import am.trade.api.dto.*;
+import am.trade.models.dto.*;
 import am.trade.api.service.FavoriteFilterService;
 import am.trade.api.service.TradeMetricsService;
 import am.trade.api.service.UserTradeService;
-import am.trade.common.models.FavoriteFilter;
-import am.trade.common.models.MetricsFilterConfig;
+import am.trade.models.shared.FavoriteFilter;
+import am.trade.models.shared.MetricsFilterConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

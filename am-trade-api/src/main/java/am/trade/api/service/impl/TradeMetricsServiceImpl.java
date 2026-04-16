@@ -1,14 +1,14 @@
 package am.trade.api.service.impl;
 
-import am.trade.api.dto.DateRangeFilter;
-import am.trade.api.dto.InstrumentFilterCriteria;
-import am.trade.api.dto.MetricsFilterRequest;
-import am.trade.api.dto.MetricsResponse;
-import am.trade.api.dto.ProfitLossFilter;
-import am.trade.api.dto.TimePeriodFilter;
-import am.trade.api.dto.TradeCharacteristicsFilter;
+import am.trade.models.dto.DateRangeFilter;
+import am.trade.models.dto.InstrumentFilterCriteria;
+import am.trade.models.dto.MetricsFilterRequest;
+import am.trade.models.dto.MetricsResponse;
+import am.trade.models.dto.ProfitLossFilter;
+import am.trade.models.dto.TimePeriodFilter;
+import am.trade.models.dto.TradeCharacteristicsFilter;
 import am.trade.api.service.TradeMetricsService;
-import am.trade.common.models.*;
+import am.trade.models.shared.*;
 import am.trade.dashboard.service.metrics.*;
 import am.trade.services.service.TradeDetailsService;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
 package am.trade.dashboard.service.metrics.analyzer.impl;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.enums.EntryPsychology;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.enums.EntryPsychology;
 import am.trade.dashboard.service.metrics.analyzer.TradeMetricsAnalyzer;
 import am.trade.dashboard.service.metrics.grouping.TradeGroupingResult;
 import org.springframework.stereotype.Component;

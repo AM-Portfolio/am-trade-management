@@ -1,6 +1,6 @@
 package am.trade.dashboard.service.metrics.feedback.util;
 
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.TradeDetails;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 

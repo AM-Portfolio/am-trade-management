@@ -1,7 +1,7 @@
 package am.trade.dashboard.service.metrics;
 
-import am.trade.common.models.TradeDetails;
-import am.trade.common.models.TradeTimingMetrics;
+import am.trade.models.shared.TradeDetails;
+import am.trade.models.shared.TradeTimingMetrics;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

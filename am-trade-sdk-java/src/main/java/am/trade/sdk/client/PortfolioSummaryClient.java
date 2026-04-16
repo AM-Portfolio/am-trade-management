@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import am.trade.common.models.AssetAllocation;
-import am.trade.common.models.PortfolioModel;
-import am.trade.common.models.PortfolioSummaryDTO;
+import am.trade.models.shared.AssetAllocation;
+import am.trade.models.shared.PortfolioModel;
+import am.trade.models.shared.PortfolioSummaryDTO;
 
 @FeignClient(name = "am-trade-management-service", url = "${am.trade.management.url:http://am-trade-management-service:8080}", path = "/api/v1/portfolio-summary")
 public interface PortfolioSummaryClient {

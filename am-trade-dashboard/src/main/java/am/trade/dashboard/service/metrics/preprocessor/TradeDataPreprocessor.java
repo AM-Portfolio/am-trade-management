@@ -1,6 +1,6 @@
 package am.trade.dashboard.service.metrics.preprocessor;
 
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.TradeDetails;
 
 import java.util.List;
 

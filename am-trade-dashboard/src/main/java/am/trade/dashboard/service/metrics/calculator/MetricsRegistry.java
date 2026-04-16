@@ -1,7 +1,7 @@
 package am.trade.dashboard.service.metrics.calculator;
 
-import am.trade.common.models.PerformanceMetrics;
-import am.trade.common.models.TradeDetails;
+import am.trade.models.shared.PerformanceMetrics;
+import am.trade.models.shared.TradeDetails;
 import am.trade.dashboard.service.metrics.calculator.impl.AverageTradeCalculator;
 import am.trade.dashboard.service.metrics.calculator.impl.BestWorstDayCalculator;
 import am.trade.dashboard.service.metrics.calculator.impl.ConsistencyMetricsCalculator;
