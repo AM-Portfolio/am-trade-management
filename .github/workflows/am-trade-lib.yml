@@ -6,6 +6,7 @@ on:
     paths:
       - '**/*.java'
       - '**/pom.xml'
+      - '.github/workflows/*.yml'
   pull_request:
     branches: ["main", "develop", "test/**"]
     paths:

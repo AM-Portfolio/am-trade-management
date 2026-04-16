@@ -8,6 +8,7 @@ on:
       - '**/pom.xml'
       - 'Dockerfile'
       - 'helm/**'
+      - '.github/workflows/*.yml'
   pull_request:
     branches: ["main", "develop", "test/**"]
     paths:
