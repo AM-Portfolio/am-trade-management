@@ -44,6 +44,7 @@
 		<module>am-trade-persistence</module>
 		<module>am-trade-exceptions</module>
 		<module>am-trade-analytics</module>
+		<module>am-trade-sdk-java</module>
 	</modules>
 
 	<dependencyManagement>
@@ -126,6 +127,7 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
+							<version>1.18.30</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>

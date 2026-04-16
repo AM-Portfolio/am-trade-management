@@ -1,4 +1,4 @@
-package am.trade.api.dto;
+package am.trade.models.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

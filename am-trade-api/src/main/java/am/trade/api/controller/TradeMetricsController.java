@@ -1,7 +1,7 @@
 package am.trade.api.controller;
 
-import am.trade.api.dto.MetricsFilterRequest;
-import am.trade.api.dto.MetricsResponse;
+import am.trade.models.dto.MetricsFilterRequest;
+import am.trade.models.dto.MetricsResponse;
 import am.trade.api.service.TradeMetricsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

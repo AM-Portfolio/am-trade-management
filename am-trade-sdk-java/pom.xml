@@ -9,41 +9,43 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>am-trade-models</artifactId>
-    <name>AM Trade Models</name>
-    <description>MongoDB document models for AM Trade Management System</description>
+    <artifactId>am-trade-sdk-java</artifactId>
+    <name>AM Trade Java SDK</name>
+    <description>Java client library for AM Trade Management System</description>
+
+    <properties>
+        <spring-cloud.version>2023.0.0</spring-cloud.version>
+    </properties>
 
     <dependencies>
+        <!-- Dependency on shared models for DTOs -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+            <groupId>am.trade</groupId>
+            <artifactId>am-trade-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
+        
+        <dependency>
+            <groupId>am.trade</groupId>
+            <artifactId>am-trade-models</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
     </dependencies>
-    
+
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.18.30</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
