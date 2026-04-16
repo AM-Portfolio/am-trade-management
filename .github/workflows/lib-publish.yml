@@ -1,0 +1,46 @@
+name: Publish Maven Libraries
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - '**/pom.xml'
+      - 'am-trade-common/**'
+      - 'am-trade-models/**'
+      - 'am-trade-services/**'
+      - 'am-trade-api/**'
+      - 'am-trade-exceptions/**'
+      - 'am-trade-kafka/**'
+      - 'am-trade-persistence/**'
+      - 'am-trade-analytics/**'
+      - 'am-trade-dashboard/**'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Setup Maven settings.xml
+        run: |
+          mkdir -p ~/.m2
+          cp settings.xml ~/.m2/settings.xml
+
+      - name: Publish to GitHub Packages
+        run: mvn clean deploy -DskipTests
+        env:
+          GITHUB_PACKAGES_USERNAME: ${{ github.actor }}
+          GITHUB_PACKAGES_TOKEN: ${{ github.token }}

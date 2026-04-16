@@ -80,6 +80,14 @@
         </repository>
     </repositories>
 
+    <distributionManagement>
+        <repository>
+            <id>github-am-trade-management</id>
+            <name>GitHub AM Portfolio Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/AM-Portfolio/am-trade-management</url>
+        </repository>
+    </distributionManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

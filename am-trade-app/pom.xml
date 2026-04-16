@@ -14,6 +14,10 @@
     <description>Main application module for AM Trade Management System</description>
     <packaging>jar</packaging>
 
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>am.trade</groupId>
