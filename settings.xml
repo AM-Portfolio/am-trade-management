@@ -15,7 +15,7 @@
             <password>${env.GITHUB_PACKAGES_TOKEN}</password>
         </server>
         <server>
-            <id>github-am-trade-management</id>
+            <id>github</id>
             <username>${env.GITHUB_PACKAGES_USERNAME}</username>
             <password>${env.GITHUB_PACKAGES_TOKEN}</password>
         </server>

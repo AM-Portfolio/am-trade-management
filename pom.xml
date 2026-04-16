@@ -83,7 +83,7 @@
 
     <distributionManagement>
         <repository>
-            <id>github-am-trade-management</id>
+            <id>github</id>
             <name>GitHub AM Portfolio Apache Maven Packages</name>
             <url>https://maven.pkg.github.com/AM-Portfolio/am-trade-management</url>
         </repository>
