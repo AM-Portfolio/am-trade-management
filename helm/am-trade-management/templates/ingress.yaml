@@ -1,22 +1,41 @@
 {{- if .Values.ingress.enabled -}}
-{{- $fullName := printf "%s-ingress" (include "am-trade-management.fullname" .) -}}
-{{- $svcPort := .Values.service.port -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ include "am-trade-management.fullname" . }}
   labels:
-        {{- include "am-trade-management.labels" . | nindent 4 }}
+    {{- include "am-trade-management.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
-  ingressClassName: nginx
+  {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
   rules:
-    - http:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
         paths:
-          - path: /
-            pathType: Prefix
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ $fullName }}
+                name: {{ include "am-trade-management.fullname" $ }}
                 port:
-                  number: {{ $svcPort }}
+                  number: {{ $.Values.service.port }}
+          {{- end }}
+    {{- end }}
 {{- end }}

@@ -1,58 +1,28 @@
-# Pre-production Environment Configuration
-environment: preprod
+replicaCount: 2
 
-# Application Configuration
-config:
-  marketData:
-    maxRetries: 3
-    retryDelayMs: 1000
-    threadPoolSize: 5
-    threadQueueCapacity: 10
-    maxAgeMinutes: 15
+spring:
+  profiles:
+    active: preprod
+  mongodb:
+    uri: "mongodb://trade-db-user:T0kenS3cr3t@mongodb-cluster.am-apps-preprod.svc.cluster.local:27017/portfolio"
+  kafka:
+    bootstrapServers: "kafka-cluster.am-apps-preprod.svc.cluster.local:9092"
 
-# Service Configuration
-service:
-  type: ClusterIP
-  port: 8080
-
-# Ingress Configuration
 ingress:
   enabled: true
-  ipAddress: 20.59.109.241
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  hosts:
+    - host: trade-preprod.amportfolio.com
+      paths:
+        - path: /
+          pathType: Prefix
 
-# Resource Configuration
 resources:
   limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
     cpu: 500m
     memory: 512Mi
-  requests:
-    cpu: 250m
-    memory: 256Mi
-
-postgresql:
-  enabled: true
-  fullname: host.docker.internal
-  auth:
-    database: portfolio
-    username: postgres
-    password: password
-  primary:
-    service:
-      port: 5456
-
-
-# Vault Configuration
-vault:
-  enabled: true
-  secretPaths:
-    database: "vault:kv/data/preprod/database"
-    api: "vault:kv/data/preprod/api"
-    basepath: "vault:kv/data/preprod"
-
-# Monitoring Configuration
-monitoring:
-  enabled: true
-  prometheus:
-    scrape: true
-    port: "8080"
-    path: "/actuator/prometheus"

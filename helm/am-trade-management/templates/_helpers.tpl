@@ -9,16 +9,27 @@ Expand the name of the chart.
 Create a default fully qualified app name.
 */}}
 {{- define "am-trade-management.fullname" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
 {{- end }}
 
 {{/*
-Common labels
+Chart labels
 */}}
 {{- define "am-trade-management.labels" -}}
-app.kubernetes.io/name: {{ include "am-trade-management.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+helm.sh/chart: {{ include "am-trade-management.chart" . }}
+{{ include "am-trade-management.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
@@ -31,20 +42,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Infrastructure service names
+Create chart name and version as used by the chart label.
 */}}
-{{- define "am-trade-management.postgresql.fullname" -}}
-{{- .Values.postgresql.fullname }}
-{{- end }}
-
-{{- define "am-trade-management.influxdb.fullname" -}}
-{{- .Values.influxdb.url }}
-{{- end }}
-
-{{- define "am-trade-management.kafka.fullname" -}}
-{{- .Values.kafka.bootstrapServers }}
-{{- end }}
-
-{{- define "am-trade-management.zookeeper.fullname" -}}
-{{- .Values.kafka.zookeeper.connect }}
+{{- define "am-trade-management.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
