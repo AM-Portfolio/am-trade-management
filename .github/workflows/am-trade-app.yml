@@ -50,10 +50,6 @@ jobs:
 
   deploy-dev:
     name: Deploy to Dev (Parallel)
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
     environment: dev
     uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish.yml@main
     with:
