@@ -15,6 +15,21 @@ on:
       - '**/*.java'
       - '**/pom.xml'
   workflow_dispatch:
+    inputs:
+      deployment_approval:
+        description: 'Set to true to approve deployment'
+        required: true
+        type: boolean
+        default: false
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - preprod
+          - prod
+          - all
+        default: preprod
 
 jobs:
   publish:

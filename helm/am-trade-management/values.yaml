@@ -47,5 +47,7 @@ spring:
     active: default
   mongodb:
     uri: ""
+    database: "am-trade"
   kafka:
     bootstrapServers: ""
+    tradeTopic: "am-trade"

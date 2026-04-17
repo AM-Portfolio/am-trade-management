@@ -5,8 +5,10 @@ spring:
     active: preprod
   mongodb:
     uri: "mongodb://trade-db-user:T0kenS3cr3t@mongodb-cluster.am-apps-preprod.svc.cluster.local:27017/portfolio"
+    database: "portfolio"
   kafka:
     bootstrapServers: "kafka-cluster.am-apps-preprod.svc.cluster.local:9092"
+    tradeTopic: "am-trade"
 
 ingress:
   enabled: true

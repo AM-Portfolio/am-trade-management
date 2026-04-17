@@ -21,10 +21,14 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: {{ .Values.spring.profiles.active | quote }}
-            - name: SPRING_DATA_MONGODB_URI
+            - name: MONGODB_URI
               value: {{ .Values.spring.mongodb.uri | quote }}
-            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+            - name: MONGODB_DATABASE
+              value: {{ .Values.spring.mongodb.database | default "am-trade" | quote }}
+            - name: KAFKA_BOOTSTRAP_SERVERS
               value: {{ .Values.spring.kafka.bootstrapServers | quote }}
+            - name: KAFKA_TOPICS_TRADE_EVENTS
+              value: {{ .Values.spring.kafka.tradeTopic | default "am-trade" | quote }}
           ports:
             - name: http
               containerPort: 8080

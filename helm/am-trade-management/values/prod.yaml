@@ -5,8 +5,10 @@ spring:
     active: prod
   mongodb:
     uri: "mongodb://trade-db-user:P0WerFuLCr3ds@mongodb-cluster.am-apps-prod.svc.cluster.local:27017/portfolio"
+    database: "portfolio"
   kafka:
     bootstrapServers: "kafka-cluster.am-apps-prod.svc.cluster.local:9092"
+    tradeTopic: "am-trade"
 
 ingress:
   enabled: true
