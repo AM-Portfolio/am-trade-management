@@ -48,9 +48,16 @@ jobs:
       deploy_prod: true
     secrets: inherit
 
-  deploy-dev:
-    name: Deploy to Dev (Parallel)
+  approval-dev:
+    name: "Approval: Dev"
+    runs-on: ubuntu-latest
     environment: dev
+    steps:
+      - name: Approve Dev Deployment
+        run: echo "Deployment to Dev environment approved."
+
+  deploy-dev:
+    needs: [approval-dev]
     uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish.yml@main
     with:
       language: 'java'
