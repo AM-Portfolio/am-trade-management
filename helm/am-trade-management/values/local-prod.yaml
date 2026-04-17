@@ -1,0 +1,43 @@
+# Local Production configuration for am-trade-management.
+# This mirrors production settings but uses local endpoints.
+
+replicaCount: 1
+
+spring:
+  profiles:
+    active: prod
+  mongodb:
+    uri: "mongodb://localhost:27017/portfolio"
+    database: "portfolio"
+  kafka:
+    bootstrapServers: "localhost:9092"
+    tradeTopic: "am-trade"
+    security:
+      protocol: "SASL_PLAINTEXT"
+      saslMechanism: "PLAIN"
+      saslJaasConfig: "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"localProdUser\" password=\"localProdPass\";"
+  redis:
+    host: "localhost"
+    port: 6379
+    password: "localRedisPass"
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - host: trade.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi

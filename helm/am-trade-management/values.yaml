@@ -51,3 +51,11 @@ spring:
   kafka:
     bootstrapServers: ""
     tradeTopic: "am-trade"
+    security:
+      protocol: "SASL_PLAINTEXT"
+      saslMechanism: "PLAIN"
+      saslJaasConfig: ""
+  redis:
+    host: ""
+    port: 6379
+    password: ""

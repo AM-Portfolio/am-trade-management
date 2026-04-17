@@ -43,7 +43,10 @@ jobs:
       language: 'java'
       working_directory: '.'
       image_name: 'am-trade-management-service'
+      dev_namespace: 'am-apps-dev'
       preprod_namespace: 'am-apps-preprod'
       prod_namespace: 'am-apps-prod'
+      deploy_dev: true
+      deploy_preprod: true
       deploy_prod: true
     secrets: inherit

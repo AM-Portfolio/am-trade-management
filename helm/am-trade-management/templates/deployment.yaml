@@ -27,8 +27,20 @@ spec:
               value: {{ .Values.spring.mongodb.database | default "am-trade" | quote }}
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: {{ .Values.spring.kafka.bootstrapServers | quote }}
+            - name: KAFKA_SECURITY_PROTOCOL
+              value: {{ .Values.spring.kafka.security.protocol | quote }}
+            - name: KAFKA_SASL_MECHANISM
+              value: {{ .Values.spring.kafka.security.saslMechanism | quote }}
+            - name: KAFKA_SASL_JAAS_CONFIG
+              value: {{ .Values.spring.kafka.security.saslJaasConfig | quote }}
             - name: KAFKA_TOPICS_TRADE_EVENTS
               value: {{ .Values.spring.kafka.tradeTopic | default "am-trade" | quote }}
+            - name: REDIS_HOSTNAME
+              value: {{ .Values.spring.redis.host | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.spring.redis.port | default "6379" | quote }}
+            - name: REDIS_PASSWORD
+              value: {{ .Values.spring.redis.password | quote }}
           ports:
             - name: http
               containerPort: 8080

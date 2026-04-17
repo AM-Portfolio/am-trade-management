@@ -9,6 +9,14 @@ spring:
   kafka:
     bootstrapServers: "kafka-cluster.am-apps-preprod.svc.cluster.local:9092"
     tradeTopic: "am-trade"
+    security:
+      protocol: "SASL_PLAINTEXT"
+      saslMechanism: "PLAIN"
+      saslJaasConfig: "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"preprodUser\" password=\"preprodPass\";"
+  redis:
+    host: "redis-cluster.am-apps-preprod.svc.cluster.local"
+    port: 6379
+    password: "preprodRedisPass"
 
 ingress:
   enabled: true
