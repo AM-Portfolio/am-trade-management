@@ -2,7 +2,7 @@ name: AM Trade Management App Deploy
 
 on:
   push:
-    branches: ["main", "develop", "test/**", "trade-managemnet-study", "TM-features/**", "features/**"]
+    branches: ["main", "develop", "test/**", "trade-managemnet-study", "TM-features/**", "features/**", "dev"]
     paths:
       - '**/*.java'
       - '**/pom.xml'
@@ -10,7 +10,7 @@ on:
       - 'helm/**'
       - '.github/workflows/*.yml'
   pull_request:
-    branches: ["main", "develop", "test/**", "features/**"]
+    branches: ["main", "develop", "test/**", "features/**", "dev"]
     paths:
       - '**/*.java'
       - '**/pom.xml'
@@ -27,10 +27,11 @@ on:
         type: choice
         options:
           - local
+          - dev
           - preprod
           - prod
           - all
-        default: local
+        default: dev
 
 jobs:
   publish:
@@ -39,58 +40,33 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish.yml@main
+    uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish.yml@develop
     with:
       language: 'java'
       working_directory: '.'
       image_name: 'am-trade-management-service'
+      dev_namespace: 'am-apps-dev'
       preprod_namespace: 'am-apps-preprod'
       prod_namespace: 'am-apps-prod'
+      deploy_dev: true
       deploy_prod: true
     secrets: inherit
 
-  approval-dev:
-    name: "Approval: Dev"
-    runs-on: ubuntu-latest
-    environment: dev
-    steps:
-      - name: Approve Dev Deployment
-        run: echo "Deployment to Dev environment approved."
-
-  deploy-dev:
-    needs: [approval-dev]
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish.yml@main
-    with:
-      language: 'java'
-      working_directory: '.'
-      image_name: 'am-trade-management-service'
-      preprod_namespace: 'am-apps-dev'
-      deploy_prod: false
-    secrets: inherit
-
-  approval-local:
-    name: "Approval: Local"
-    runs-on: ubuntu-latest
-    environment: local
-    steps:
-      - name: Approve Local Deployment
-        run: echo "Deployment to Local environment approved."
-
+  # Standalone Local Deployment (as requested for the 'local' cluster environment)
   deploy-local:
-    needs: [approval-local]
+    name: Deploy to Local Cluster
+    needs: [publish] # Runs after the build/publish stage
     permissions:
       contents: read
       packages: write
       id-token: write
-    uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish.yml@main
+    environment: local
+    uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish.yml@develop
     with:
       language: 'java'
       working_directory: '.'
       image_name: 'am-trade-management-service'
       preprod_namespace: 'am-apps-local'
+      deploy_dev: false
       deploy_prod: false
     secrets: inherit
