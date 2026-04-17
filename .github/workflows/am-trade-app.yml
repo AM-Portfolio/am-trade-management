@@ -2,7 +2,7 @@ name: AM Trade Management App Deploy
 
 on:
   push:
-    branches: ["main", "develop", "test/**", "trade-managemnet-study", "TM-features/**"]
+    branches: ["main", "develop", "test/**", "trade-managemnet-study", "TM-features/**", "features/**"]
     paths:
       - '**/*.java'
       - '**/pom.xml'
@@ -10,7 +10,7 @@ on:
       - 'helm/**'
       - '.github/workflows/*.yml'
   pull_request:
-    branches: ["main", "develop", "test/**"]
+    branches: ["main", "develop", "test/**", "features/**"]
     paths:
       - '**/*.java'
       - '**/pom.xml'
