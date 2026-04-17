@@ -1,8 +1,8 @@
-name: AM Trade Management App Deploy
+name: AM Trade Management CI/Dev
 
 on:
   push:
-    branches: ["main", "develop", "test/**", "trade-managemnet-study", "TM-features/**", "features/**", "dev"]
+    branches: ["main", "develop", "dev", "features/**"]
     paths:
       - '**/*.java'
       - '**/pom.xml'
@@ -10,31 +10,14 @@ on:
       - 'helm/**'
       - '.github/workflows/*.yml'
   pull_request:
-    branches: ["main", "develop", "test/**", "features/**", "dev"]
+    branches: ["main", "develop", "dev"]
     paths:
       - '**/*.java'
       - '**/pom.xml'
-  workflow_dispatch:
-    inputs:
-      deployment_approval:
-        description: 'Set to true to approve deployment'
-        required: true
-        type: boolean
-        default: false
-      environment:
-        description: 'Target environment'
-        required: true
-        type: choice
-        options:
-          - dev
-          - preprod
-          - prod
-          - all
-        default: dev
 
 jobs:
   publish:
-    name: Build, Publish and Deploy App
+    name: Build, Publish and Deploy to Dev
     permissions:
       contents: read
       packages: write
@@ -48,5 +31,5 @@ jobs:
       preprod_namespace: 'am-apps-preprod'
       prod_namespace: 'am-apps-prod'
       deploy_dev: true
-      deploy_prod: true
+      deploy_prod: false  # DECOUPLED: Prod deployment is moved to a manual promotion workflow
     secrets: inherit

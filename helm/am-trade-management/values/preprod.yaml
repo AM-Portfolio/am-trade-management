@@ -1,4 +1,7 @@
-replicaCount: 2
+# Pre-production environment configuration for am-trade-management.
+# Aligned with am-market industry standards.
+
+environment: preprod
 
 spring:
   profiles:
@@ -24,15 +27,22 @@ ingress:
   annotations:
     kubernetes.io/ingress.class: nginx
   hosts:
-    - host: trade-preprod.amportfolio.com
+    - host: trade.preprod.amportfolio.com
       paths:
         - path: /
           pathType: Prefix
 
+vault:
+  enabled: true
+  secretPaths:
+    database: "kv/preprod/database/mongo"
+    kafka: "kv/preprod/kafka"
+    redis: "kv/preprod/redis"
+
 resources:
   limits:
-    cpu: 1000m
-    memory: 1024Mi
-  requests:
     cpu: 500m
     memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
