@@ -52,15 +52,20 @@ jobs:
       deploy_prod: true
     secrets: inherit
 
-  # Standalone Local Deployment (as requested for the 'local' cluster environment)
+  approval-local:
+    name: "Approval: Local"
+    runs-on: ubuntu-latest
+    environment: local
+    steps:
+      - name: Approve Local Deployment
+        run: echo "Local deployment approved."
+
   deploy-local:
-    name: Deploy to Local Cluster
-    needs: [publish] # Runs after the build/publish stage
+    needs: [approval-local]
     permissions:
       contents: read
       packages: write
       id-token: write
-    environment: local
     uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish.yml@develop
     with:
       language: 'java'
