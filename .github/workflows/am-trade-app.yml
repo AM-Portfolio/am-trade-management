@@ -43,10 +43,23 @@ jobs:
       language: 'java'
       working_directory: '.'
       image_name: 'am-trade-management-service'
-      dev_namespace: 'am-apps-dev'
       preprod_namespace: 'am-apps-preprod'
       prod_namespace: 'am-apps-prod'
-      deploy_dev: true
-      deploy_preprod: true
       deploy_prod: true
+    secrets: inherit
+
+  deploy-dev:
+    name: Deploy to Dev (Parallel)
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    environment: dev
+    uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish.yml@main
+    with:
+      language: 'java'
+      working_directory: '.'
+      image_name: 'am-trade-management-service'
+      preprod_namespace: 'am-apps-dev'
+      deploy_prod: false
     secrets: inherit
