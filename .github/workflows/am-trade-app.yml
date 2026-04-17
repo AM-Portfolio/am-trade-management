@@ -26,10 +26,11 @@ on:
         required: true
         type: choice
         options:
+          - local
           - preprod
           - prod
           - all
-        default: preprod
+        default: local
 
 jobs:
   publish:
@@ -68,5 +69,28 @@ jobs:
       working_directory: '.'
       image_name: 'am-trade-management-service'
       preprod_namespace: 'am-apps-dev'
+      deploy_prod: false
+    secrets: inherit
+
+  approval-local:
+    name: "Approval: Local"
+    runs-on: ubuntu-latest
+    environment: local
+    steps:
+      - name: Approve Local Deployment
+        run: echo "Deployment to Local environment approved."
+
+  deploy-local:
+    needs: [approval-local]
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish.yml@main
+    with:
+      language: 'java'
+      working_directory: '.'
+      image_name: 'am-trade-management-service'
+      preprod_namespace: 'am-apps-local'
       deploy_prod: false
     secrets: inherit
