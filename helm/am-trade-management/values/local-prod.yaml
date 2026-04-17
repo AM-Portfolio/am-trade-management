@@ -1,5 +1,5 @@
 # Local Production configuration for am-trade-management.
-# This mirrors production settings but uses local endpoints.
+# This mirrors production settings but uses local endpoints..
 
 replicaCount: 1
 
