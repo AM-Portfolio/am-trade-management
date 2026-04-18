@@ -2,9 +2,22 @@ import requests
 import json
 import os
 
+# --- LOAD ENVIRONMENT VARIABLES ---
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # Manual fallback if python-dotenv is not installed
+    if os.path.exists(".env"):
+        with open(".env") as f:
+            for line in f:
+                if line.strip() and not line.startswith("#"):
+                    key, value = line.strip().split("=", 1)
+                    os.environ[key] = value
+
 # --- CONFIGURATION ---
 VAULT_ADDR = "http://vault-local.munish.org"
-VAULT_TOKEN = os.environ.get("VAULT_TOKEN") # Set this in your terminal or .env
+VAULT_TOKEN = os.environ.get("VAULT_TOKEN")
 SECRET_PATH = "local/app/am-trade-management"
 ENGINE_NAME = "secret"
 
