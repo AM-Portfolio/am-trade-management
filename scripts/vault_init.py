@@ -1,9 +1,10 @@
 import requests
 import json
+import os
 
 # --- CONFIGURATION ---
 VAULT_ADDR = "http://vault-local.munish.org"
-VAULT_TOKEN = "Phvs.qFn8pwxmls72lb3MQXSifMW7"  # Replace with your actual token
+VAULT_TOKEN = os.environ.get("VAULT_TOKEN") # Set this in your terminal or .env
 SECRET_PATH = "local/app/am-trade-management"
 ENGINE_NAME = "secret"
 
