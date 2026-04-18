@@ -1,49 +1,31 @@
-# Default values for am-trade-management.
+# Base values for am-trade-management service
 # Aligned with am-market industry standards.
 # Reference: am-core-services/am-gateway
 
 replicaCount: 1
+port: 8080
+language: java
 
 image:
   repository: am-trade-management-service
-  pullPolicy: IfNotPresent
-  tag: ""
-
-# imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
-
-serviceAccount:
-  create: true
-  annotations: {}
-  name: ""
-
-podAnnotations: {}
 
 service:
   type: ClusterIP
   port: 8080
 
-livenessProbe:
-  httpGet:
+# Health probe configuration (Spring Boot Actuator)
+probes:
+  port: 8080
+  liveness:
     path: /actuator/health/liveness
-    port: 8080
-  initialDelaySeconds: 60
-  periodSeconds: 20
-  timeoutSeconds: 5
-  failureThreshold: 3
-
-readinessProbe:
-  httpGet:
+    initialDelaySeconds: 60
+  readiness:
     path: /actuator/health/readiness
-    port: 8080
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
+    initialDelaySeconds: 30
 
+# Ingress configuration
 ingress:
-  enabled: false
+  enabled: true
   className: "nginx"
   annotations:
     kubernetes.io/ingress.class: nginx
@@ -54,6 +36,7 @@ ingress:
           pathType: Prefix
   tls: []
 
+# Default resource limits
 resources:
   limits:
     cpu: 500m
@@ -62,6 +45,7 @@ resources:
     cpu: 200m
     memory: 256Mi
 
+# Vault (enabled per environment)
 vault:
   enabled: false
 
