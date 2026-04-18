@@ -1,0 +1,30 @@
+# Development configuration for am-trade-management.
+# Aligned with am-market industry standards.
+
+replicaCount: 1
+
+environment: "dev"
+
+env:
+  SPRING_PROFILES_ACTIVE: "dev"
+  MONGODB_URI: "mongodb://trade-db-user:T0kenS3cr3t@mongodb-cluster.am-apps-dev.svc.cluster.local:27017/am-trade"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka-cluster.am-apps-dev.svc.cluster.local:9092"
+  KAFKA_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"devUser\" password=\"devPass\";"
+  REDIS_HOST: "redis-cluster.am-apps-dev.svc.cluster.local"
+  REDIS_PASSWORD: "devRedisPass"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: trade-dev.amportfolio.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi
