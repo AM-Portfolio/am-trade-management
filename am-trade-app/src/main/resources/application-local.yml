@@ -1,0 +1,23 @@
+MONGODB_URI: mongodb://admin:password123@100.72.208.15/?authSource=admin&directConnection=true
+KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+KAFKA_SECURITY_PROTOCOL: PLAINTEXT
+KAFKA_SASL_MECHANISM: GSSAPI
+KAFKA_SASL_JAAS_CONFIG: null
+
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    properties:
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG}
+
+# Disable mongo health check for readiness since we want the app to start fast locally
+management:
+  health:
+    mongo:
+      enabled: false
+    kafka:
+      enabled: false
