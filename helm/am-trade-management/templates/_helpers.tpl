@@ -7,6 +7,8 @@ Expand the name of the chart.
 
 {{/*
 Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
 */}}
 {{- define "am-trade-management.fullname" -}}
 {{- if .Values.fullnameOverride }}
@@ -22,7 +24,14 @@ Create a default fully qualified app name.
 {{- end }}
 
 {{/*
-Chart labels
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "am-trade-management.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Common labels
 */}}
 {{- define "am-trade-management.labels" -}}
 helm.sh/chart: {{ include "am-trade-management.chart" . }}
@@ -39,11 +48,4 @@ Selector labels
 {{- define "am-trade-management.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "am-trade-management.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
-{{/*
-Create chart name and version as used by the chart label.
-*/}}
-{{- define "am-trade-management.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}

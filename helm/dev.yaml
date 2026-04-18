@@ -1,3 +1,5 @@
+# Development environment configuration for am-trade-management.
+
 replicaCount: 1
 
 spring:

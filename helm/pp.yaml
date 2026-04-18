@@ -1,4 +1,4 @@
-# Pre-production environment configuration for am-trade-management.
+# Pre-production (PP) environment configuration for am-trade-management.
 # Aligned with am-market industry standards.
 
 environment: preprod
