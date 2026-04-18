@@ -6,6 +6,19 @@ replicaCount: 1
 port: 8080
 language: java
 
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
 image:
   repository: am-trade-management-service
 
