@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/am-portfolio/am-trade-management-service
+  repository: am-trade-management-service
   pullPolicy: IfNotPresent
   tag: ""
 
