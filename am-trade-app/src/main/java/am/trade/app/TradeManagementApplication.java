@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import io.github.cdimascio.dotenv.Dotenv;
 
 import am.trade.api.config.ApiAutoConfiguration;
 import am.trade.analytics.config.TradeAnalyticsAutoConfiguration;
@@ -28,6 +29,11 @@ import am.trade.services.config.TradeServicesAutoConfiguration;
 public class TradeManagementApplication {
 
     public static void main(String[] args) {
+        Dotenv dotenv = Dotenv.configure()
+                .ignoreIfMissing()
+                .load();
+        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+        
         SpringApplication.run(TradeManagementApplication.class, args);
     }
 }
