@@ -32,6 +32,10 @@
 		<java.version>17</java.version>
 		<spring-web.version>6.1.5</spring-web.version>
 		<spring-kafka.version>3.1.3</spring-kafka.version>
+		
+		<!-- Credentials Fallbacks (Reads from shell environment if .env is missing) -->
+		<GITHUB_PACKAGES_USERNAME>${env.GITHUB_PACKAGES_USERNAME}</GITHUB_PACKAGES_USERNAME>
+		<GITHUB_PACKAGES_TOKEN>${env.GITHUB_PACKAGES_TOKEN}</GITHUB_PACKAGES_TOKEN>
 	</properties>
 	<modules>
 		<module>am-trade-common</module>
@@ -155,6 +159,7 @@
 							<files>
 								<file>${maven.multiModuleProjectDirectory}/.env</file>
 							</files>
+							<quiet>true</quiet>
 						</configuration>
 					</execution>
 				</executions>
