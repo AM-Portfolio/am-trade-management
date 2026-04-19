@@ -5,18 +5,16 @@ environment: "preprod"
 
 vault:
   enabled: true
+  role: "am-trade-management"
   secretPaths:
-    database: "kv/preprod/database/mongo"
-    kafka: "kv/preprod/kafka"
-    redis: "kv/preprod/redis"
+    infra: "kv/data/preprod/infra"
+    mongo: "kv/data/preprod/apps/trade/database/mongo"
+    kafka: "kv/data/preprod/apps/trade/kafka"
+    redis: "kv/data/preprod/apps/trade/database/redis"
+    app: "kv/data/preprod/apps/trade"
 
 env:
   SPRING_PROFILES_ACTIVE: "preprod"
-  MONGODB_URI: "mongodb://trade-db-user:T0kenS3cr3t@mongodb-cluster.am-apps-preprod.svc.cluster.local:27017/am-trade"
-  KAFKA_BOOTSTRAP_SERVERS: "kafka-cluster.am-apps-preprod.svc.cluster.local:9092"
-  KAFKA_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"preprodUser\" password=\"preprodPass\";"
-  REDIS_HOST: "redis-cluster.am-apps-preprod.svc.cluster.local"
-  REDIS_PASSWORD: "preprodRedisPass"
 
 ingress:
   enabled: true

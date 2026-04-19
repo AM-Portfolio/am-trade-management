@@ -7,11 +7,16 @@ environment: "dev"
 
 env:
   SPRING_PROFILES_ACTIVE: "dev"
-  MONGODB_URI: "mongodb://trade-db-user:T0kenS3cr3t@mongodb-cluster.am-apps-dev.svc.cluster.local:27017/am-trade"
-  KAFKA_BOOTSTRAP_SERVERS: "kafka-cluster.am-apps-dev.svc.cluster.local:9092"
-  KAFKA_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"devUser\" password=\"devPass\";"
-  REDIS_HOST: "redis-cluster.am-apps-dev.svc.cluster.local"
-  REDIS_PASSWORD: "devRedisPass"
+
+vault:
+  enabled: true
+  role: "am-trade-management"
+  secretPaths:
+    infra: "kv/data/dev/infra"
+    mongo: "kv/data/dev/apps/trade/database/mongo"
+    kafka: "kv/data/dev/apps/trade/kafka"
+    redis: "kv/data/dev/apps/trade/database/redis"
+    app: "kv/data/dev/apps/trade"
 
 ingress:
   enabled: true

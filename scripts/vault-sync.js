@@ -21,7 +21,11 @@ const VAULT_SUBPATHS = [
     'local/apps/database',
     'local/apps/paas',
     'local/apps/security',
-    'local/app/am-trade-management' // Service-specific path
+    'local/apps/trade/database/mongo',
+    'local/apps/trade/database/redis',
+    'local/apps/trade/kafka',
+    'local/apps/trade',
+    'local/infra'
 ];
 
 async function loadEnv() {

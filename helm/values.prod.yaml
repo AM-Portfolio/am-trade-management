@@ -7,20 +7,18 @@ environment: "prod"
 
 vault:
   enabled: true
+  role: "am-trade-management"
   secretPaths:
-    database: "kv/prod/database/mongo"
-    kafka: "kv/prod/kafka"
-    redis: "kv/prod/redis"
+    infra: "kv/data/prod/infra"
+    mongo: "kv/data/prod/apps/trade/database/mongo"
+    kafka: "kv/data/prod/apps/trade/kafka"
+    redis: "kv/data/prod/apps/trade/database/redis"
+    app: "kv/data/prod/apps/trade"
 
 env:
   SPRING_PROFILES_ACTIVE: "prod"
-  MONGODB_URI: "mongodb://trade-db-user:T0kenS3cr3t@mongodb-cluster.am-apps-prod.svc.cluster.local:27017/am-trade"
-  KAFKA_BOOTSTRAP_SERVERS: "kafka-cluster.am-apps-prod.svc.cluster.local:9092"
   KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
   KAFKA_SASL_MECHANISM: "SCRAM-SHA-512"
-  KAFKA_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"prodUser\" password=\"prodPass\";"
-  REDIS_HOST: "redis-cluster.am-apps-prod.svc.cluster.local"
-  REDIS_PASSWORD: "prodRedisPass"
 
 ingress:
   enabled: true

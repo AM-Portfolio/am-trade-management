@@ -60,6 +60,12 @@ resources:
 # Vault (enabled per environment)
 vault:
   enabled: false
+  secretPaths:
+    infra: "kv/data/dev/infra"
+    mongo: "kv/data/dev/apps/trade/database/mongo"
+    kafka: "kv/data/dev/apps/trade/kafka"
+    redis: "kv/data/dev/apps/trade/database/redis"
+    app: "kv/data/dev/apps/trade"
 
 # Environment label
 environment: "default"
