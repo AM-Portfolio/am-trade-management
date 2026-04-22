@@ -1,0 +1,319 @@
+{
+    "samplePayloads": {
+        "createIntradayCheckinTemplate": {
+            "name": "Intra-day Check-in",
+            "description": "This template is used to check-in with yourself throughout the trading day. Checking yourself throughout the day helps you in several ways such as: Keeping you from having a strong bias because you're sharing what is truly happening in the market, Holds you accountable to what you've previously said in your check-ins, Makes your EOD journaling easier since all your intra-day thoughts and executions are in your check-ins",
+            "category": "DAILY_CHECKIN",
+            "fields": [
+                {
+                    "fieldId": "market_observation",
+                    "fieldLabel": "What you're currently seeing in the market",
+                    "fieldType": "TEXTAREA",
+                    "placeholder": "Write down what you're currently seeing in the market, if you're thinking of entering anything, did enter anything & why",
+                    "required": false,
+                    "order": 1,
+                    "helpText": "Describe current market conditions and your observations"
+                },
+                {
+                    "fieldId": "chart_screenshot",
+                    "fieldLabel": "Chart Screenshot",
+                    "fieldType": "IMAGE_UPLOAD",
+                    "placeholder": "Include a picture of the chart from the moment in time",
+                    "required": false,
+                    "order": 2,
+                    "helpText": "Upload a screenshot of your chart at this moment"
+                },
+                {
+                    "fieldId": "bias_check",
+                    "fieldLabel": "Bias Prevention",
+                    "fieldType": "CHECKBOX",
+                    "defaultValue": "true",
+                    "required": false,
+                    "order": 3,
+                    "helpText": "Keeping you from having a strong bias because you're sharing what is truly happening in the market"
+                },
+                {
+                    "fieldId": "accountability",
+                    "fieldLabel": "Accountability Check",
+                    "fieldType": "CHECKBOX",
+                    "defaultValue": "true",
+                    "required": false,
+                    "order": 4,
+                    "helpText": "Holds you accountable to what you've previously said in your check-ins"
+                },
+                {
+                    "fieldId": "eod_helper",
+                    "fieldLabel": "EOD Journaling Helper",
+                    "fieldType": "CHECKBOX",
+                    "defaultValue": "true",
+                    "required": false,
+                    "order": 5,
+                    "helpText": "Makes your EOD journaling easier since all your intra-day thoughts and executions are in your check-ins"
+                }
+            ],
+            "isSystemTemplate": true,
+            "isRecommended": true,
+            "createdBy": "system",
+            "tags": [
+                "daily",
+                "check-in",
+                "tradezella"
+            ],
+            "thumbnailUrl": "https://example.com/thumbnails/intraday-checkin.png"
+        },
+        "createPreMarketTemplate": {
+            "name": "Pre-Market Prep",
+            "description": "Prepare for the trading day by analyzing pre-market conditions and setting up your watchlist",
+            "category": "PRE_MARKET",
+            "fields": [
+                {
+                    "fieldId": "market_sentiment",
+                    "fieldLabel": "Overall Market Sentiment",
+                    "fieldType": "DROPDOWN",
+                    "options": [
+                        "Bullish",
+                        "Bearish",
+                        "Neutral",
+                        "Uncertain"
+                    ],
+                    "required": true,
+                    "order": 1
+                },
+                {
+                    "fieldId": "key_levels",
+                    "fieldLabel": "Key Support/Resistance Levels",
+                    "fieldType": "TEXTAREA",
+                    "placeholder": "List important price levels to watch",
+                    "required": false,
+                    "order": 2
+                },
+                {
+                    "fieldId": "watchlist",
+                    "fieldLabel": "Today's Watchlist",
+                    "fieldType": "TEXTAREA",
+                    "placeholder": "Stocks/instruments you're watching today",
+                    "required": true,
+                    "order": 3
+                },
+                {
+                    "fieldId": "news_events",
+                    "fieldLabel": "Important News/Events",
+                    "fieldType": "TEXTAREA",
+                    "placeholder": "Economic calendar, earnings, etc.",
+                    "required": false,
+                    "order": 4
+                }
+            ],
+            "isSystemTemplate": true,
+            "isRecommended": true,
+            "createdBy": "system",
+            "tags": [
+                "pre-market",
+                "preparation",
+                "planning"
+            ]
+        },
+        "createTradeRecapTemplate": {
+            "name": "Trade Recap: Basic",
+            "description": "Quick recap of a completed trade",
+            "category": "TRADE_RECAP",
+            "fields": [
+                {
+                    "fieldId": "trade_outcome",
+                    "fieldLabel": "Trade Outcome",
+                    "fieldType": "DROPDOWN",
+                    "options": [
+                        "Win",
+                        "Loss",
+                        "Breakeven"
+                    ],
+                    "required": true,
+                    "order": 1
+                },
+                {
+                    "fieldId": "what_went_well",
+                    "fieldLabel": "What Went Well",
+                    "fieldType": "TEXTAREA",
+                    "placeholder": "Positive aspects of this trade",
+                    "required": false,
+                    "order": 2
+                },
+                {
+                    "fieldId": "what_to_improve",
+                    "fieldLabel": "What Could Be Improved",
+                    "fieldType": "TEXTAREA",
+                    "placeholder": "Areas for improvement",
+                    "required": false,
+                    "order": 3
+                },
+                {
+                    "fieldId": "lessons_learned",
+                    "fieldLabel": "Key Lessons",
+                    "fieldType": "TEXTAREA",
+                    "placeholder": "Main takeaways from this trade",
+                    "required": false,
+                    "order": 4
+                },
+                {
+                    "fieldId": "emotional_state",
+                    "fieldLabel": "Emotional State During Trade",
+                    "fieldType": "CHECKBOX_LIST",
+                    "options": [
+                        "Calm",
+                        "Anxious",
+                        "Confident",
+                        "Fearful",
+                        "Greedy",
+                        "Disciplined"
+                    ],
+                    "required": false,
+                    "order": 5
+                }
+            ],
+            "isSystemTemplate": true,
+            "isRecommended": false,
+            "createdBy": "system",
+            "tags": [
+                "trade-recap",
+                "reflection"
+            ]
+        },
+        "createCustomTemplate": {
+            "name": "My Custom Weekly Review",
+            "description": "Personal weekly review template",
+            "category": "CUSTOM",
+            "fields": [
+                {
+                    "fieldId": "week_summary",
+                    "fieldLabel": "Week Summary",
+                    "fieldType": "TEXTAREA",
+                    "placeholder": "Overall summary of the week",
+                    "required": true,
+                    "order": 1
+                },
+                {
+                    "fieldId": "total_trades",
+                    "fieldLabel": "Total Trades",
+                    "fieldType": "NUMBER",
+                    "required": false,
+                    "order": 2
+                },
+                {
+                    "fieldId": "win_rate",
+                    "fieldLabel": "Win Rate (%)",
+                    "fieldType": "NUMBER",
+                    "required": false,
+                    "order": 3
+                }
+            ],
+            "isSystemTemplate": false,
+            "isRecommended": false,
+            "createdBy": "user123",
+            "tags": [
+                "weekly",
+                "custom",
+                "review"
+            ]
+        },
+        "updateTemplate": {
+            "name": "Intra-day Check-in (Updated)",
+            "description": "Updated description for the template",
+            "category": "DAILY_CHECKIN",
+            "fields": [
+                {
+                    "fieldId": "market_observation",
+                    "fieldLabel": "Market Observations",
+                    "fieldType": "TEXTAREA",
+                    "placeholder": "Describe what you see in the market",
+                    "required": true,
+                    "order": 1
+                }
+            ],
+            "isSystemTemplate": true,
+            "isRecommended": true,
+            "createdBy": "system",
+            "tags": [
+                "daily",
+                "check-in",
+                "updated"
+            ]
+        },
+        "useTemplateRequest": {
+            "userId": "user123",
+            "templateId": "template-uuid-here",
+            "fieldValues": {
+                "market_observation": "Market is showing strong bullish momentum. Nifty broke above 19500 resistance.",
+                "bias_check": true,
+                "accountability": true,
+                "eod_helper": true
+            },
+            "tradeId": "trade-uuid-here",
+            "customTitle": "Morning Check-in - 10:30 AM"
+        },
+        "useTemplateWithoutTrade": {
+            "userId": "user123",
+            "templateId": "template-uuid-here",
+            "fieldValues": {
+                "market_sentiment": "Bullish",
+                "key_levels": "Support: 19400, Resistance: 19600",
+                "watchlist": "RELIANCE, TCS, INFY",
+                "news_events": "RBI policy announcement at 10 AM"
+            },
+            "customTitle": "Pre-Market Analysis - Dec 4, 2025"
+        }
+    },
+    "sampleResponses": {
+        "templateResponse": {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "name": "Intra-day Check-in",
+            "description": "This template is used to check-in with yourself throughout the trading day...",
+            "category": "DAILY_CHECKIN",
+            "fields": [
+                {
+                    "fieldId": "market_observation",
+                    "fieldLabel": "What you're currently seeing in the market",
+                    "fieldType": "TEXTAREA",
+                    "placeholder": "Write down what you're currently seeing in the market...",
+                    "required": false,
+                    "order": 1,
+                    "helpText": "Describe current market conditions and your observations"
+                }
+            ],
+            "isSystemTemplate": true,
+            "isRecommended": true,
+            "usageCount": 42,
+            "createdBy": "system",
+            "isFavorite": true,
+            "tags": [
+                "daily",
+                "check-in",
+                "tradezella"
+            ],
+            "thumbnailUrl": "https://example.com/thumbnails/intraday-checkin.png",
+            "createdAt": "2025-12-01T10:00:00Z",
+            "updatedAt": "2025-12-04T09:00:00Z"
+        },
+        "templateListResponse": [
+            {
+                "id": "template-1",
+                "name": "Intra-day Check-in",
+                "category": "DAILY_CHECKIN",
+                "isSystemTemplate": true,
+                "isRecommended": true,
+                "usageCount": 42,
+                "isFavorite": true,
+                "createdAt": "2025-12-01T10:00:00Z"
+            },
+            {
+                "id": "template-2",
+                "name": "Pre-Market Prep",
+                "category": "PRE_MARKET",
+                "isSystemTemplate": true,
+                "isRecommended": true,
+                "usageCount": 28,
+                "isFavorite": false,
+                "createdAt": "2025-12-01T10:00:00Z"
+            }
+        ]
+    }
+}

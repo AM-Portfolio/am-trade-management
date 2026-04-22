@@ -17,6 +17,22 @@ build/
 bin/
 out/
 
+# Python build artifacts
+dist/
+*.egg-info/
+*.whl
+*.tar.gz
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# JAR files (explicit)
+*.jar
+!**/wrapper/maven-wrapper.jar
+
 # IDE specific files
 .idea/
 *.iws
@@ -42,6 +58,9 @@ nbdist/
 
 # Logs and databases
 *.log
+*_error.log
+error.txt
+hs_err_pid*.log
 *.sql
 *.sqlite
 *.h2.db
@@ -61,7 +80,7 @@ ehthumbs.db
 Thumbs.db
 
 # Environment files
-.env
+#.env
 .env.local
 .env.development.local
 .env.test.local
@@ -97,3 +116,4 @@ k8s/
 .docker/
 !docker-compose*.yml
 !Dockerfile
+.env.docker

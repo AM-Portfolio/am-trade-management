@@ -1,0 +1,28 @@
+{
+  "userId": "user123",
+  "metricsConfig": {
+    "portfolioIds": ["163d0143-4fcb-480c-ac20-622f14e0e293"],
+    "instruments": ["NIFTY", "BANKNIFTY"],
+    "dateRange": {
+      "startDate": "2025-01-01",
+      "endDate": "2025-11-30"
+    },
+    "tradeCharacteristics": {
+      "statuses": ["WIN", "LOSS"],
+      "strategies": ["Momentum Trading", "Scalping"],
+      "positionTypes": ["LONG"],
+      "tags": ["high-confidence", "trend-following"],
+      "minHoldingTimeHours": 1,
+      "maxHoldingTimeHours": 24
+    },
+    "profitLossFilters": {
+      "minProfitLoss": 100.0,
+      "maxProfitLoss": 5000.0
+    },
+    "instrumentFilters": {
+      "optionType": "CE",
+      "minStrike": 20000,
+      "maxStrike": 25000
+    }
+  }
+}

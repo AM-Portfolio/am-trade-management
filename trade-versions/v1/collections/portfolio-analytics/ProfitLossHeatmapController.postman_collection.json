@@ -1,0 +1,299 @@
+{
+	"info": {
+		"_postman_id": "profitlossheatmapcontroller-{{$randomUUID}}",
+		"name": "ProfitLossHeatmapController Collection",
+		"description": "API collection for ProfitLossHeatmapController - Profit & Loss visualization data with yearly, monthly, and daily granularity",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Heatmap Data",
+			"item": [
+				{
+					"name": "Get Yearly P&L Heatmap",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Heatmap data has required structure\", function () {",
+									"    const heatmap = pm.response.json();",
+									"    pm.expect(heatmap).to.have.property('granularityType');",
+									"    pm.expect(heatmap).to.have.property('periodData');",
+									"    pm.expect(heatmap.granularityType).to.eql('YEARLY');",
+									"});",
+									"",
+									"if (pm.response.json().periodData && pm.response.json().periodData.length > 0) {",
+									"    pm.test(\"Period data has P&L metrics\", function () {",
+									"        const period = pm.response.json().periodData[0];",
+									"        pm.expect(period).to.have.property('periodId');",
+									"        pm.expect(period).to.have.property('profitLoss');",
+									"        pm.expect(period).to.have.property('winCount');",
+									"        pm.expect(period).to.have.property('lossCount');",
+									"        pm.expect(period).to.have.property('winRate');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/heatmap/yearly?portfolioId={{portfolioId}}&year=2020&includeTradeDetails=false",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"heatmap",
+								"yearly"
+							],
+							"query": [
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}"
+								},
+								{
+									"key": "year",
+									"value": "2020",
+									"description": "Year for heatmap data"
+								},
+								{
+									"key": "includeTradeDetails",
+									"value": "false",
+									"description": "Whether to include trade details"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Yearly P&L Heatmap with Trade Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response includes trade details\", function () {",
+									"    const heatmap = pm.response.json();",
+									"    pm.expect(heatmap).to.have.property('granularityType');",
+									"    pm.expect(heatmap.granularityType).to.eql('YEARLY');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/heatmap/yearly?portfolioId={{portfolioId}}&year=2020&includeTradeDetails=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"heatmap",
+								"yearly"
+							],
+							"query": [
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}"
+								},
+								{
+									"key": "year",
+									"value": "2020"
+								},
+								{
+									"key": "includeTradeDetails",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Monthly P&L Heatmap",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Heatmap data has monthly structure\", function () {",
+									"    const heatmap = pm.response.json();",
+									"    pm.expect(heatmap).to.have.property('granularityType');",
+									"    pm.expect(heatmap).to.have.property('periodData');",
+									"    pm.expect(heatmap.granularityType).to.eql('MONTHLY');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/heatmap/monthly?portfolioId={{portfolioId}}&financialYear=2020&includeTradeDetails=false",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"heatmap",
+								"monthly"
+							],
+							"query": [
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}"
+								},
+								{
+									"key": "financialYear",
+									"value": "2020",
+									"description": "Financial year (e.g., 2020 for FY 2020-21)"
+								},
+								{
+									"key": "includeTradeDetails",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Daily P&L Heatmap",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Heatmap data has daily structure\", function () {",
+									"    const heatmap = pm.response.json();",
+									"    pm.expect(heatmap).to.have.property('granularityType');",
+									"    pm.expect(heatmap).to.have.property('periodData');",
+									"    pm.expect(heatmap.granularityType).to.eql('DAILY');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/heatmap/daily?portfolioId={{portfolioId}}&year=2020&month=12&includeTradeDetails=false",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"heatmap",
+								"daily"
+							],
+							"query": [
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}"
+								},
+								{
+									"key": "year",
+									"value": "2020"
+								},
+								{
+									"key": "month",
+									"value": "12",
+									"description": "Month (1-12)"
+								},
+								{
+									"key": "includeTradeDetails",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8073"
+		},
+		{
+			"key": "portfolioId",
+			"value": "8a57024c-05c2-475b-a2c4-0545865efa4a"
+		}
+	]
+}

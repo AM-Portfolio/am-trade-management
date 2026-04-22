@@ -15,16 +15,16 @@ import am.trade.services.config.TradeServicesAutoConfiguration;
 /**
  * Main application class for Trade Management System
  */
-@SpringBootApplication(scanBasePackages = {"am.trade"})
+@SpringBootApplication(scanBasePackages = { "am.trade" })
 @Import({
-    KafkaConfig.class,
-    TradeServicesAutoConfiguration.class,
-    DashboardAutoConfiguration.class,
-    ApiAutoConfiguration.class,
-    ExceptionsAutoConfiguration.class,  
-    TradeAnalyticsAutoConfiguration.class
+        KafkaConfig.class,
+        TradeServicesAutoConfiguration.class,
+        DashboardAutoConfiguration.class,
+        ApiAutoConfiguration.class,
+        ExceptionsAutoConfiguration.class,
+        TradeAnalyticsAutoConfiguration.class
 })
-@EnableMongoRepositories(basePackages = "am.trade.models.repository")
+
 public class TradeManagementApplication {
 
     public static void main(String[] args) {

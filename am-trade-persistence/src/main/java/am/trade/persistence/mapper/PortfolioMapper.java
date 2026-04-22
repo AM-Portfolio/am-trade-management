@@ -23,6 +23,7 @@ public class PortfolioMapper {
 
     /**
      * Convert a PortfolioModel to a PortfolioEntity
+     * 
      * @param model The domain model to convert
      * @return The corresponding persistence entity
      */
@@ -30,15 +31,20 @@ public class PortfolioMapper {
         if (model == null) {
             return null;
         }
-        
-        
-        // Map trades if present    
-        List<String> tradeEntities = null;
+
+        // Map trades if present
+        // Note: PortfolioEntity now stores full TradeDetailsEntity objects, but
+        // PortfolioModel only has IDs.
+        // We cannot easily reconstruct full entities from IDs here without repository
+        // access.
+        // For now, valid use cases typically flow from Entity -> Model for reading,
+        // or Model -> Entity for creation where trades might be added separately.
+        // Map trades (IDs)
+        List<String> tradeIds = null;
         if (model.getTradeIds() != null) {
-            tradeEntities = model.getTradeIds().stream()
-                    .collect(Collectors.toList());
+            tradeIds = new java.util.ArrayList<>(model.getTradeIds());
         }
-        
+
         // Map metrics if present
         PortfolioMetrics metricsEntity = null;
         if (model.getMetrics() != null) {
@@ -58,7 +64,7 @@ public class PortfolioMapper {
                     .sortinoRatio(model.getMetrics().getSortinoRatio())
                     .build();
         }
-        
+
         // Map asset allocations if present
         List<AssetAllocation> assetAllocations = null;
         if (model.getAssetAllocations() != null) {
@@ -66,21 +72,21 @@ public class PortfolioMapper {
                     .map(this::toAssetAllocationEntity)
                     .collect(Collectors.toList());
         }
-        
+
         // Map winning trades if present
         List<String> winningTradeIds = null;
         if (model.getWinningTradeIds() != null) {
             winningTradeIds = model.getWinningTradeIds().stream()
                     .collect(Collectors.toList());
         }
-        
+
         // Map losing trades if present
         List<String> losingTradeIds = null;
         if (model.getLosingTradeIds() != null) {
             losingTradeIds = model.getLosingTradeIds().stream()
                     .collect(Collectors.toList());
         }
-        
+
         return PortfolioEntity.builder()
                 .portfolioId(model.getPortfolioId())
                 .name(model.getName())
@@ -93,15 +99,16 @@ public class PortfolioMapper {
                 .createdDate(model.getCreatedDate())
                 .lastUpdatedDate(model.getLastUpdatedDate())
                 .metrics(metricsEntity)
-                .trades(tradeEntities)
+                .trades(tradeIds)
                 .winningTrades(winningTradeIds)
                 .losingTrades(losingTradeIds)
                 .assetAllocations(assetAllocations)
                 .build();
     }
-    
+
     /**
      * Convert a PortfolioEntity to a PortfolioModel
+     * 
      * @param entity The persistence entity to convert
      * @return The corresponding domain model
      */
@@ -109,28 +116,27 @@ public class PortfolioMapper {
         if (entity == null) {
             return null;
         }
-        
+
         // Map trades if present
         List<String> tradeIds = null;
         if (entity.getTrades() != null) {
-            tradeIds = entity.getTrades().stream()
-                    .collect(Collectors.toList());
+            tradeIds = new java.util.ArrayList<>(entity.getTrades());
         }
-        
+
         // Map winning trades if present
         List<String> winningTradeIds = null;
         if (entity.getWinningTrades() != null) {
             winningTradeIds = entity.getWinningTrades().stream()
                     .collect(Collectors.toList());
         }
-        
+
         // Map losing trades if present
         List<String> losingTradeIds = null;
         if (entity.getLosingTrades() != null) {
             losingTradeIds = entity.getLosingTrades().stream()
                     .collect(Collectors.toList());
         }
-        
+
         // Map asset allocations if present
         List<AssetAllocation> assetAllocations = null;
         if (entity.getAssetAllocations() != null) {
@@ -138,7 +144,7 @@ public class PortfolioMapper {
                     .map(this::toAssetAllocationModel)
                     .collect(Collectors.toList());
         }
-        
+
         return PortfolioModel.builder()
                 .portfolioId(entity.getPortfolioId())
                 .name(entity.getName())
@@ -157,9 +163,10 @@ public class PortfolioMapper {
                 .assetAllocations(assetAllocations)
                 .build();
     }
-    
+
     /**
      * Convert an AssetAllocation to an AssetAllocation entity
+     * 
      * @param model The domain model to convert
      * @return The corresponding persistence entity
      */
@@ -167,7 +174,7 @@ public class PortfolioMapper {
         if (model == null) {
             return null;
         }
-        
+
         return AssetAllocation.builder()
                 .assetClass(model.getAssetClass())
                 .currentPercentage(model.getCurrentPercentage())
@@ -175,9 +182,10 @@ public class PortfolioMapper {
                 .variance(model.getVariance())
                 .build();
     }
-    
+
     /**
      * Convert an AssetAllocation entity to an AssetAllocation model
+     * 
      * @param entity The persistence entity to convert
      * @return The corresponding domain model
      */
@@ -185,7 +193,7 @@ public class PortfolioMapper {
         if (entity == null) {
             return null;
         }
-        
+
         return AssetAllocation.builder()
                 .assetClass(entity.getAssetClass())
                 .currentPercentage(entity.getCurrentPercentage())

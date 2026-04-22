@@ -76,10 +76,7 @@
         </dependency>
         
         <!-- Redis for sampling strategy -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
+
         
         <!-- Testing dependencies -->
         <dependency>

@@ -1,0 +1,407 @@
+{
+	"info": {
+		"_postman_id": "trademanagementcontroller-{{$randomUUID}}",
+		"name": "TradeManagementController Collection",
+		"description": "API collection for TradeManagementController - Calendar-based trade queries and portfolio management operations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Calendar Operations",
+			"item": [
+				{
+					"name": "Get Trades by Day",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an object\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trades/calendar/day?date=2020-12-15&portfolioId={{portfolioId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trades",
+								"calendar",
+								"day"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "2020-12-15",
+									"description": "Date in YYYY-MM-DD format"
+								},
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}",
+									"description": "Optional portfolio filter"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trades by Month",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an object\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trades/calendar/month?portfolioId={{portfolioId}}&year=2020&month=12",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trades",
+								"calendar",
+								"month"
+							],
+							"query": [
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}"
+								},
+								{
+									"key": "year",
+									"value": "2020"
+								},
+								{
+									"key": "month",
+									"value": "12"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trades by Quarter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an object\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trades/calendar/quarter?portfolioId={{portfolioId}}&year=2020&quarter=4",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trades",
+								"calendar",
+								"quarter"
+							],
+							"query": [
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}"
+								},
+								{
+									"key": "year",
+									"value": "2020"
+								},
+								{
+									"key": "quarter",
+									"value": "4"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trades by Financial Year",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an object\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trades/calendar/financial-year?portfolioId={{portfolioId}}&financialYear=2020&countryCode=US",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trades",
+								"calendar",
+								"financial-year"
+							],
+							"query": [
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}"
+								},
+								{
+									"key": "financialYear",
+									"value": "2020"
+								},
+								{
+									"key": "countryCode",
+									"value": "US",
+									"description": "Country code for financial year calculation"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trades by Custom Date Range",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination structure\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('content');",
+									"    pm.expect(response).to.have.property('pageable');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trades/calendar/custom?portfolioId={{portfolioId}}&startDate=2020-01-01&endDate=2020-12-31&page=0&size=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trades",
+								"calendar",
+								"custom"
+							],
+							"query": [
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}"
+								},
+								{
+									"key": "startDate",
+									"value": "2020-01-01",
+									"description": "Start date in YYYY-MM-DD format"
+								},
+								{
+									"key": "endDate",
+									"value": "2020-12-31",
+									"description": "End date in YYYY-MM-DD format"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Portfolio Operations",
+			"item": [
+				{
+					"name": "Get Portfolio Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination structure\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('content');",
+									"    pm.expect(response).to.have.property('pageable');",
+									"    pm.expect(response).to.have.property('totalElements');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trades/portfolio-details/{{portfolioId}}?page=0&size=20&sort=tradeDate,desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trades",
+								"portfolio-details",
+								"{{portfolioId}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								},
+								{
+									"key": "sort",
+									"value": "tradeDate,desc",
+									"description": "Sort by trade date descending"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8073"
+		},
+		{
+			"key": "portfolioId",
+			"value": "8a57024c-05c2-475b-a2c4-0545865efa4a"
+		}
+	]
+}

@@ -21,6 +21,14 @@
             <optional>true</optional>
         </dependency>
         
+        <!-- SpringDoc OpenAPI for Swagger documentation -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        
         <!-- Apache Commons -->
         <dependency>
             <groupId>org.apache.commons</groupId>

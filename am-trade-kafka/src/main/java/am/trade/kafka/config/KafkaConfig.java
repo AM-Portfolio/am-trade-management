@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = false)
 public class KafkaConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")
@@ -29,10 +30,10 @@ public class KafkaConfig {
 
     @Value("${spring.kafka.properties.security.protocol}")
     private String securityProtocol;
-    
+
     @Value("${spring.kafka.properties.sasl.mechanism}")
     private String saslMechanism;
-    
+
     @Value("${spring.kafka.properties.sasl.jaas.config}")
     private String jaasConfig;
 
@@ -85,7 +86,8 @@ public class KafkaConfig {
     public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
-        factory.getContainerProperties().setAckMode(org.springframework.kafka.listener.ContainerProperties.AckMode.MANUAL);
+        factory.getContainerProperties()
+                .setAckMode(org.springframework.kafka.listener.ContainerProperties.AckMode.MANUAL);
         return factory;
     }
 }

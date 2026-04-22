@@ -1,6 +1,7 @@
 package am.trade.analytics.client;
 
 import am.trade.analytics.client.model.HistoricalMarketDataResponse;
+import am.trade.analytics.model.historicaldata.HistoricalDataRequest;
 
 import java.time.LocalDateTime;
 
@@ -25,4 +26,12 @@ public interface MarketDataClient {
             LocalDateTime to, 
             String interval, 
             boolean continuous);
+            
+    /**
+     * Fetch historical market data using a request object
+     * 
+     * @param request The historical data request object
+     * @return Historical market data response
+     */
+    HistoricalMarketDataResponse fetchHistoricalData(HistoricalDataRequest request);
 }

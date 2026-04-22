@@ -21,28 +21,25 @@ import am.trade.common.util.JsonConverter;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "am.trade.kafka.enabled", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = false)
 public class TradeConsumerService {
 
-    
     private final JsonConverter jsonConverter;
     private final TradeProcessingService tradeProcessingService;
     private final TradeDetailsService tradeDetailsService;
 
-    @KafkaListener(topics = "${spring.kafka.trade-topic}", 
-                  groupId = "${spring.kafka.consumer.group-id}",
-                  containerFactory = "kafkaListenerContainerFactory")
+    @KafkaListener(topics = "${spring.kafka.trade-topic}", groupId = "${spring.kafka.consumer.group-id}", containerFactory = "kafkaListenerContainerFactory")
     public void consume(String message, Acknowledgment acknowledgment) {
         try {
             log.info("Received message: {}", message);
-            
+
             // Convert JSON string to PortfolioUpdateEvent
             TradeUpdateEvent event = jsonConverter.fromJson(message, TradeUpdateEvent.class);
             log.info("Converted to event: {}", event);
-              
+
             // Process the event
             processMessage(event);
-            
+
             // If processing was successful, acknowledge the message
             acknowledgment.acknowledge();
             log.info("Message processed and acknowledged successfully");
@@ -53,11 +50,14 @@ public class TradeConsumerService {
 
     private void processMessage(TradeUpdateEvent event) {
         log.info("Processing trade update event with {} trades", event.getTrades().size());
-        
-        List<TradeDetails> tradeDetails = tradeProcessingService.processTradeModels(event.getTrades(), event.getPortfolioId());
+
+        List<TradeDetails> tradeDetails = tradeProcessingService.processTradeModels(event.getTrades(),
+                event.getPortfolioId());
         tradeDetailsService.saveAllTradeDetails(tradeDetails);
-        tradeProcessingService.processTradeDetails(tradeDetails.stream().map(TradeDetails::getTradeId).collect(Collectors.toList()), event.getPortfolioId(), event.getUserId());
-    
+        tradeProcessingService.processTradeDetails(
+                tradeDetails.stream().map(TradeDetails::getTradeId).collect(Collectors.toList()),
+                event.getPortfolioId(), event.getUserId());
+
         log.info("Successfully processed trades for portfolioId: {}", event.getPortfolioId());
-    }   
+    }
 }

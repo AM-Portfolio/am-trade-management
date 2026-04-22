@@ -1,0 +1,742 @@
+{
+  "info": {
+    "name": "AM Trade API",
+    "description": "Complete collection for AM Trade Management API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Trade Metrics",
+      "description": "Endpoints for trade metrics operations with flexible filtering",
+      "item": [
+        {
+          "name": "Get Trade Metrics",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"portfolioIds\": [\"portfolio-001\", \"portfolio-002\"],\n  \"dateRange\": {\n    \"startDate\": \"2025-01-01\",\n    \"endDate\": \"2025-09-01\"\n  },\n  \"metricTypes\": [\"PERFORMANCE\", \"RISK\", \"DISTRIBUTION\"],\n  \"instruments\": [\"AAPL\", \"MSFT\", \"GOOGL\"],\n  \"instrumentFilters\": {\n    \"sectors\": [\"TECHNOLOGY\", \"HEALTHCARE\"],\n    \"marketCap\": \"LARGE\"\n  },\n  \"tradeCharacteristics\": {\n    \"minDuration\": 1,\n    \"maxDuration\": 30,\n    \"direction\": \"LONG\"\n  },\n  \"profitLossFilters\": {\n    \"minProfitLoss\": 1000,\n    \"maxProfitLoss\": 50000,\n    \"minPositionSize\": 5000,\n    \"maxPositionSize\": 100000\n  },\n  \"groupBy\": [\"STRATEGY\", \"SYMBOL\"],\n  \"includeTradeDetails\": true,\n  \"customFilters\": {\n    \"excludeWeekends\": true,\n    \"onlyRegularHours\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "metrics"]
+            },
+            "description": "Get trade metrics with flexible filtering options"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Metric Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/metrics/types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "metrics", "types"]
+            },
+            "description": "Get available metric types"
+          },
+          "response": []
+        },
+        {
+          "name": "Compare Metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/metrics/compare?portfolioIds=portfolio-001,portfolio-002&metricTypes=PERFORMANCE,RISK&firstPeriodStart=2025-01-01&firstPeriodEnd=2025-03-31&secondPeriodStart=2025-04-01&secondPeriodEnd=2025-06-30",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "metrics", "compare"],
+              "query": [
+                {
+                  "key": "portfolioIds",
+                  "value": "portfolio-001,portfolio-002"
+                },
+                {
+                  "key": "metricTypes",
+                  "value": "PERFORMANCE,RISK"
+                },
+                {
+                  "key": "firstPeriodStart",
+                  "value": "2025-01-01"
+                },
+                {
+                  "key": "firstPeriodEnd",
+                  "value": "2025-03-31"
+                },
+                {
+                  "key": "secondPeriodStart",
+                  "value": "2025-04-01"
+                },
+                {
+                  "key": "secondPeriodEnd",
+                  "value": "2025-06-30"
+                }
+              ]
+            },
+            "description": "Get metrics comparison between two time periods"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Metrics Trends",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/metrics/trends?portfolioIds=portfolio-001,portfolio-002&metricTypes=PERFORMANCE,RISK&startDate=2025-01-01&endDate=2025-09-01&interval=MONTH",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "metrics", "trends"],
+              "query": [
+                {
+                  "key": "portfolioIds",
+                  "value": "portfolio-001,portfolio-002"
+                },
+                {
+                  "key": "metricTypes",
+                  "value": "PERFORMANCE,RISK"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2025-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2025-09-01"
+                },
+                {
+                  "key": "interval",
+                  "value": "MONTH"
+                }
+              ]
+            },
+            "description": "Get metrics trends over time"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Trade Management",
+      "description": "Endpoints for trade management operations by time periods and portfolios",
+      "item": [
+        {
+          "name": "Get Trade Details By Day",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/trades/calendar/day?date=2025-09-01&portfolioId=portfolio-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "trades", "calendar", "day"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2025-09-01"
+                },
+                {
+                  "key": "portfolioId",
+                  "value": "portfolio-001",
+                  "description": "Optional"
+                }
+              ]
+            },
+            "description": "Get trade details for a specific day"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trade Details By Month",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/trades/calendar/month?year=2025&month=9&portfolioId=portfolio-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "trades", "calendar", "month"],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2025"
+                },
+                {
+                  "key": "month",
+                  "value": "9"
+                },
+                {
+                  "key": "portfolioId",
+                  "value": "portfolio-001",
+                  "description": "Optional"
+                }
+              ]
+            },
+            "description": "Get trade details for a specific month"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trade Details By Quarter",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/trades/calendar/quarter?year=2025&quarter=3&portfolioId=portfolio-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "trades", "calendar", "quarter"],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2025"
+                },
+                {
+                  "key": "quarter",
+                  "value": "3"
+                },
+                {
+                  "key": "portfolioId",
+                  "value": "portfolio-001",
+                  "description": "Optional"
+                }
+              ]
+            },
+            "description": "Get trade details for a specific quarter"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trade Details By Financial Year",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/trades/calendar/financial-year?financialYear=2025&portfolioId=portfolio-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "trades", "calendar", "financial-year"],
+              "query": [
+                {
+                  "key": "financialYear",
+                  "value": "2025"
+                },
+                {
+                  "key": "portfolioId",
+                  "value": "portfolio-001",
+                  "description": "Optional"
+                }
+              ]
+            },
+            "description": "Get trade details for a specific financial year"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trade Details By Date Range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/trades/calendar/custom?startDate=2025-01-01&endDate=2025-09-01&portfolioId=portfolio-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "trades", "calendar", "custom"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2025-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2025-09-01"
+                },
+                {
+                  "key": "portfolioId",
+                  "value": "portfolio-001",
+                  "description": "Optional"
+                }
+              ]
+            },
+            "description": "Get trade details for a custom date range"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trade Details By Portfolio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/trades/portfolio-details/portfolio-001?page=0&size=20&sort=tradeDate,desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "trades", "portfolio-details", "portfolio-001"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "sort",
+                  "value": "tradeDate,desc"
+                }
+              ]
+            },
+            "description": "Get paginated trade details for a specific portfolio"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Trade API",
+      "description": "Endpoints for trade operations",
+      "item": [
+        {
+          "name": "Get Trade Details By Portfolio And Symbols",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/trades/details/portfolio/portfolio-001?symbols=AAPL,MSFT,GOOGL",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "trades", "details", "portfolio", "portfolio-001"],
+              "query": [
+                {
+                  "key": "symbols",
+                  "value": "AAPL,MSFT,GOOGL",
+                  "description": "Optional"
+                }
+              ]
+            },
+            "description": "Get trade details by portfolio ID and symbols"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Trade",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tradeId\": null,\n  \"userId\": \"user-001\",\n  \"portfolioId\": \"portfolio-001\",\n  \"symbol\": \"AAPL\",\n  \"quantity\": 100,\n  \"price\": 180.50,\n  \"tradeDate\": \"2025-09-01T10:30:00\",\n  \"direction\": \"BUY\",\n  \"status\": \"EXECUTED\",\n  \"strategy\": \"SWING\",\n  \"notes\": \"Apple earnings play\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/trades/details",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "trades", "details"]
+            },
+            "description": "Add a new trade"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Trade",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tradeId\": \"trade-001\",\n  \"userId\": \"user-001\",\n  \"portfolioId\": \"portfolio-001\",\n  \"symbol\": \"AAPL\",\n  \"quantity\": 150,\n  \"price\": 182.75,\n  \"tradeDate\": \"2025-09-01T10:30:00\",\n  \"direction\": \"BUY\",\n  \"status\": \"EXECUTED\",\n  \"strategy\": \"SWING\",\n  \"notes\": \"Updated Apple earnings play\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/trades/details/trade-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "trades", "details", "trade-001"]
+            },
+            "description": "Update an existing trade"
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Trades",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/trades/filter?portfolioIds=portfolio-001,portfolio-002&symbols=AAPL,MSFT&statuses=EXECUTED,PENDING&startDate=2025-01-01&endDate=2025-09-01&strategies=SWING,DAY_TRADE&page=0&size=20&sort=tradeDate,desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "trades", "filter"],
+              "query": [
+                {
+                  "key": "portfolioIds",
+                  "value": "portfolio-001,portfolio-002"
+                },
+                {
+                  "key": "symbols",
+                  "value": "AAPL,MSFT"
+                },
+                {
+                  "key": "statuses",
+                  "value": "EXECUTED,PENDING"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2025-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2025-09-01"
+                },
+                {
+                  "key": "strategies",
+                  "value": "SWING,DAY_TRADE"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "sort",
+                  "value": "tradeDate,desc"
+                }
+              ]
+            },
+            "description": "Filter trades by multiple criteria"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Or Update Trades Batch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"tradeId\": \"trade-001\",\n    \"userId\": \"user-001\",\n    \"portfolioId\": \"portfolio-001\",\n    \"symbol\": \"AAPL\",\n    \"quantity\": 150,\n    \"price\": 182.75,\n    \"tradeDate\": \"2025-09-01T10:30:00\",\n    \"direction\": \"BUY\",\n    \"status\": \"EXECUTED\",\n    \"strategy\": \"SWING\",\n    \"notes\": \"Apple earnings play\"\n  },\n  {\n    \"tradeId\": null,\n    \"userId\": \"user-001\",\n    \"portfolioId\": \"portfolio-001\",\n    \"symbol\": \"MSFT\",\n    \"quantity\": 75,\n    \"price\": 350.25,\n    \"tradeDate\": \"2025-09-01T11:15:00\",\n    \"direction\": \"BUY\",\n    \"status\": \"EXECUTED\",\n    \"strategy\": \"SWING\",\n    \"notes\": \"Microsoft earnings play\"\n  }\n]"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/trades/details/batch",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "trades", "details", "batch"]
+            },
+            "description": "Add or update multiple trades"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trade Details By Trade IDs",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\"trade-001\", \"trade-002\", \"trade-003\"]"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/trades/details/by-ids",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "trades", "details", "by-ids"]
+            },
+            "description": "Get trade details by trade IDs"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Trade Journal",
+      "description": "Endpoints for managing trade journal entries",
+      "item": [
+        {
+          "name": "Create Journal Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user-001\",\n  \"tradeId\": \"trade-001\",\n  \"entryDate\": \"2025-09-01\",\n  \"title\": \"Apple Earnings Analysis\",\n  \"content\": \"Apple reported strong earnings, beating expectations. The stock moved up 5% after hours.\",\n  \"sentiment\": \"POSITIVE\",\n  \"tags\": [\"earnings\", \"tech\", \"swing-trade\"],\n  \"learningPoints\": \"Wait for the market to digest earnings before entering a position.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/journal",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "journal"]
+            },
+            "description": "Create a new journal entry"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Journal Entry",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/journal/entry-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "journal", "entry-001"]
+            },
+            "description": "Get journal entry by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Journal Entries By User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/journal/user/user-001?page=0&size=20&sort=entryDate,desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "journal", "user", "user-001"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "sort",
+                  "value": "entryDate,desc"
+                }
+              ]
+            },
+            "description": "Get journal entries for a user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Journal Entries By Trade",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/journal/trade/trade-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "journal", "trade", "trade-001"]
+            },
+            "description": "Get journal entries for a specific trade"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Journal Entries By Date Range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/journal/date-range?userId=user-001&startDate=2025-01-01&endDate=2025-09-01&page=0&size=20&sort=entryDate,desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "journal", "date-range"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "user-001"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2025-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2025-09-01"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "sort",
+                  "value": "entryDate,desc"
+                }
+              ]
+            },
+            "description": "Get journal entries by date range"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Journal Entry",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user-001\",\n  \"tradeId\": \"trade-001\",\n  \"entryDate\": \"2025-09-01\",\n  \"title\": \"Updated: Apple Earnings Analysis\",\n  \"content\": \"Apple reported strong earnings, beating expectations on both revenue and EPS. The stock moved up 5% after hours and continued to rise the next day.\",\n  \"sentiment\": \"POSITIVE\",\n  \"tags\": [\"earnings\", \"tech\", \"swing-trade\", \"success\"],\n  \"learningPoints\": \"Wait for the market to digest earnings before entering a position. Consider holding longer when the trend is strong.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/journal/entry-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "journal", "entry-001"]
+            },
+            "description": "Update a journal entry"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Journal Entry",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/journal/entry-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "journal", "entry-001"]
+            },
+            "description": "Delete a journal entry"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8083",
+      "type": "string"
+    }
+  ]
+}

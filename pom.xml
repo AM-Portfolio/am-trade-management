@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.0</version>
+		<version>3.2.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	
@@ -30,8 +30,7 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
-		<spring-web.version>6.1.5</spring-web.version>
-		<spring-kafka.version>3.1.3</spring-kafka.version>
+		<lombok.version>1.18.30</lombok.version>
 	</properties>
 	<modules>
 		<module>am-trade-common</module>
@@ -48,21 +47,7 @@
 
 	<dependencyManagement>
 		<dependencies>
-			<dependency>
-				<groupId>org.springframework.kafka</groupId>
-				<artifactId>spring-kafka</artifactId>
-				<version>${spring-kafka.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-web</artifactId>
-				<version>${spring-web.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-webmvc</artifactId>
-				<version>${spring-web.version}</version>
-			</dependency>
+			<!-- Removed manual spring-kafka and spring-web versions to use Spring Boot parent management -->
 		</dependencies>
 	</dependencyManagement>
 
@@ -118,6 +103,7 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>

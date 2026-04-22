@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import am.trade.persistence.entity.TradeDetailsEntity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -25,35 +26,35 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Document(collection = "portfolio_trades")
 public class PortfolioEntity {
-    
+
     @Id
     private String portfolioId;
-    
+
     private String name;
     private String description;
-    
+
     @Indexed
     private String ownerId;
-    
+
     private boolean active;
     private String currency;
     private BigDecimal initialCapital;
     private BigDecimal currentCapital;
     private LocalDateTime createdDate;
     private LocalDateTime lastUpdatedDate;
-    
+
     // Portfolio metrics
     private PortfolioMetrics metrics;
-    
-    // List of trades in this portfolio
+
+    // List of trade IDs in this portfolio
     private List<String> trades;
-    
+
     // List of winning trades in this portfolio
     private List<String> winningTrades;
-    
+
     // List of losing trades in this portfolio
     private List<String> losingTrades;
-    
+
     // Asset allocation
     private List<AssetAllocation> assetAllocations;
 }

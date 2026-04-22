@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # --- Trade Management Backend (Spring Boot) ---
+  am-trade-service:
+    container_name: am-trade-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - GITHUB_PACKAGES_USERNAME=${GITHUB_PACKAGES_USERNAME}
+        - GITHUB_PACKAGES_TOKEN=${GITHUB_PACKAGES_TOKEN}
+    env_file:
+      - .env
+      - .env.docker
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - MONGODB_AUTHENTICATION_DATABASE=admin
+
+    ports:
+      - "8040:8073"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - am-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8073/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # --- Trade Dashboard (Flutter) ---
+  # am-trade-dashboard:
+  #   container_name: am-trade-dashboard
+  #   build:
+  #     context: ./am-trade-dashboard
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "9003:80"
+  #   networks:
+  #     - am-network
+  #   restart: unless-stopped
+
+networks:
+  am-network:
+    external: true
+    name: am-infra_am-net

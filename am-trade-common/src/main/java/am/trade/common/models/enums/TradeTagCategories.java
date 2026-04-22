@@ -1,5 +1,6 @@
 package am.trade.common.models.enums;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,17 +11,45 @@ import java.util.Map;
  * Supports both predefined values and custom user-defined values
  */
 @Getter
+@Schema(
+    description = "Category for organizing trade tags. Supports both predefined and custom values.",
+    example = "STRATEGY",
+    allowableValues = {
+        "STRATEGY", "MARKET_CONDITION", "SETUP_TYPE", "TIME_FRAME",
+        "RISK_LEVEL", "SECTOR", "TECHNICAL_PATTERN", 
+        "FUNDAMENTAL_FACTOR", "SENTIMENT", "PERFORMANCE"
+    }
+)
 public class TradeTagCategories {
     // Predefined common trade tag categories
+    @Schema(description = "Trading strategy used")
     public static final TradeTagCategories STRATEGY = new TradeTagCategories("STRATEGY", "Trading strategy used");
+    
+    @Schema(description = "Market conditions during trade")
     public static final TradeTagCategories MARKET_CONDITION = new TradeTagCategories("MARKET_CONDITION", "Market conditions during trade");
+    
+    @Schema(description = "Type of trade setup")
     public static final TradeTagCategories SETUP_TYPE = new TradeTagCategories("SETUP_TYPE", "Type of trade setup");
+    
+    @Schema(description = "Time frame of analysis")
     public static final TradeTagCategories TIME_FRAME = new TradeTagCategories("TIME_FRAME", "Time frame of analysis");
+    
+    @Schema(description = "Level of risk taken")
     public static final TradeTagCategories RISK_LEVEL = new TradeTagCategories("RISK_LEVEL", "Level of risk taken");
+    
+    @Schema(description = "Market sector")
     public static final TradeTagCategories SECTOR = new TradeTagCategories("SECTOR", "Market sector");
+    
+    @Schema(description = "Technical analysis pattern")
     public static final TradeTagCategories TECHNICAL_PATTERN = new TradeTagCategories("TECHNICAL_PATTERN", "Technical analysis pattern");
+    
+    @Schema(description = "Fundamental analysis factor")
     public static final TradeTagCategories FUNDAMENTAL_FACTOR = new TradeTagCategories("FUNDAMENTAL_FACTOR", "Fundamental analysis factor");
+    
+    @Schema(description = "Market sentiment")
     public static final TradeTagCategories SENTIMENT = new TradeTagCategories("SENTIMENT", "Market sentiment");
+    
+    @Schema(description = "Trade performance category")
     public static final TradeTagCategories PERFORMANCE = new TradeTagCategories("PERFORMANCE", "Trade performance category");
     
     private static final Map<String, TradeTagCategories> VALUES = new HashMap<>();
