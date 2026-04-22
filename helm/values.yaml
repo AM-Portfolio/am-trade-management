@@ -10,9 +10,9 @@ global:
       - name: regcred
   vault:
     enabled: false
-    role: "am-trade-management"
+    role: "am-backend-role"
     authPath: "auth/kubernetes"
-    serviceAccountName: "am-trade-management-sa"
+    serviceAccountName: "am-backend-sa"
 
 replicaCount: 1
 port: 8080
@@ -21,10 +21,7 @@ language: java
 nameOverride: ""
 fullnameOverride: ""
 
-serviceAccount:
-  create: true
-  annotations: {}
-  name: "am-trade-management-sa"
+
 
 security:
   automountServiceAccountToken: true
