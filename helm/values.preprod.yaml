@@ -5,19 +5,15 @@ environment: "preprod"
 
 
 
-vault:
-  enabled: true
-  role: "am-trade-management"
-  annotations:
-    vault.hashicorp.com/role: "am-trade-management"
-    vault.hashicorp.com/agent-inject: "true"
-  secretPaths:
-    infra: "apps/data/preprod/infra"
-    mongo: "apps/data/preprod/infra/mongodb"
-    kafka: "apps/data/preprod/infra/kafka"
-    redis: "apps/data/preprod/infra/redis"
-    app: "apps/data/preprod/services/am-trade-management"
-
+global:
+  vault:
+    enabled: true
+    secrets:
+      infra: "apps/data/preprod/infra"
+      mongo: "apps/data/preprod/infra/mongodb"
+      kafka: "apps/data/preprod/infra/kafka"
+      redis: "apps/data/preprod/infra/redis"
+      app: "apps/data/preprod/services/am-trade-management"
 env:
   SPRING_PROFILES_ACTIVE: "preprod"
 

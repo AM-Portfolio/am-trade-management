@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "vault:sync": "node scripts/vault-sync.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "set SPRING_PROFILES_ACTIVE=local && mvnw.cmd spring-boot:run -pl am-trade-app -s settings.xml",
+    "build": "mvnw.cmd clean install -DskipTests -s settings.xml",
+    "test": "mvnw.cmd test -s settings.xml"
   },
   "author": "AM-Portfolio",
   "license": "UNLICENSED"
