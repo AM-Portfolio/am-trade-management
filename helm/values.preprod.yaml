@@ -9,7 +9,7 @@ global:
   vault:
     enabled: true
     secrets:
-      infra: "apps/data/preprod/infra"
+      infra: "apps/data/preprod/infra/shared-api"
       mongo: "apps/data/preprod/infra/mongodb"
       kafka: "apps/data/preprod/infra/kafka"
       redis: "apps/data/preprod/infra/redis"
