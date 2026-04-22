@@ -3,9 +3,16 @@
 
 environment: "preprod"
 
+serviceAccount:
+  create: true
+  name: "am-trade-management"
+
 vault:
   enabled: true
   role: "am-trade-management"
+  annotations:
+    vault.hashicorp.com/role: "am-trade-management"
+    vault.hashicorp.com/agent-inject: "true"
   secretPaths:
     infra: "apps/data/preprod/infra"
     mongo: "apps/data/preprod/infra/mongodb"
