@@ -6,9 +6,10 @@ on:
     paths:
       - '**/*.java'
       - '**/pom.xml'
+      - '**/*.yml'
+      - '**/*.properties'
       - 'Dockerfile'
       - 'helm/**'
-      - '.github/workflows/*.yml'
   pull_request:
     branches: ["main", "develop", "dev"]
     paths:
