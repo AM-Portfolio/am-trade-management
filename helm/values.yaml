@@ -1,6 +1,11 @@
 # Base values for am-trade-management service
 # Aligned with am-market industry standards.
-# Reference: am-core-services/am-gateway
+# Reference: am-portfolio/helm/values.yaml
+
+replicaCount: 1
+port: 8080
+language: java
+environment: preprod
 
 global:
   image:
@@ -9,24 +14,11 @@ global:
     imagePullSecrets:
       - name: regcred
   vault:
-    enabled: false
+    enabled: true
     role: "am-backend-role"
     authPath: "auth/kubernetes"
     serviceAccountName: "am-backend-sa"
 
-replicaCount: 1
-port: 8080
-language: java
-
-nameOverride: ""
-fullnameOverride: ""
-
-
-
-security:
-  automountServiceAccountToken: true
-
-podAnnotations: {}
 image:
   repository: am-trade-management-service
 
@@ -34,44 +26,100 @@ service:
   type: ClusterIP
   port: 8080
 
+security:
+  automountServiceAccountToken: true
+
+# Vault Secret Injection Configuration
+vault:
+  enabled: true
+  serviceAccountName: am-backend-sa
+  role: am-backend-role
+  secretPaths:
+    app:
+      path: apps/data/preprod/services/am-auth
+      template: |
+        {{- range $sk, $sv := .Data.data }}
+        {{- if eq $sk "JWT_SECRET_KEY" }}
+        JWT_SECRET={{ $sv }}
+        INTERNAL_JWT_SECRET={{ $sv }}
+        spring.security.oauth2.resourceserver.jwt.secret-key={{ $sv }}
+        {{- else }}
+        {{ $sk }}={{ $sv }}
+        {{- end }}
+        {{- end }}
+        spring.security.oauth2.resourceserver.jwt.jws-algorithms=HS256
+    mongo:
+      path: apps/data/preprod/infra/mongodb
+      template: |
+        {{- with secret "apps/data/preprod/infra/mongodb" -}}
+        spring.data.mongodb.uri={{ .Data.data.url }}/trade?authSource=admin
+        {{- end }}
+    kafka:
+      path: apps/data/preprod/infra/kafka
+      template: |
+        {{- range $sk, $sv := .Data.data }}
+        {{- if eq $sk "bootstrap_servers" }}
+        spring.kafka.bootstrap-servers={{ $sv }}
+        {{- else if eq $sk "username" }}
+        KAFKA_USERNAME={{ $sv }}
+        {{- else if eq $sk "password" }}
+        KAFKA_PASSWORD={{ $sv }}
+        {{- end }}
+        {{- end }}
+        spring.kafka.properties.security.protocol=SASL_PLAINTEXT
+        spring.kafka.properties.sasl.mechanism=SCRAM-SHA-256
+        spring.kafka.properties.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="$KAFKA_USERNAME" password="$KAFKA_PASSWORD";
+
 # Health probe configuration (Spring Boot Actuator)
 probes:
   port: 8080
   liveness:
     path: /actuator/health/liveness
-    initialDelaySeconds: 60
+    initialDelaySeconds: 180
+    periodSeconds: 20
   readiness:
     path: /actuator/health/readiness
-    initialDelaySeconds: 30
+    initialDelaySeconds: 150
+    periodSeconds: 20
+
+# Default resource limits
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Environment label
+# Key application environment variables
+env:
+  SPRING_PROFILES_ACTIVE: "preprod"
+  LOG_FORMAT: "json"
+  LOG_LEVEL: "INFO"
+  TZ: "UTC"
+  # Hardcoded Fallbacks for critical properties to ensure valid placeholder resolution
+  MONGODB_URI: "mongodb://admin:sGwaiRdoaYtBiaqq4n9qaRkr@mongodb.infra.svc.cluster.local:27017/trade?authSource=admin"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.infra.svc.cluster.local:9092"
+  # Canonical fallbacks for Spring Boot 3.4+
+  SPRING_DATA_MONGODB_URI: "mongodb://admin:sGwaiRdoaYtBiaqq4n9qaRkr@mongodb.infra.svc.cluster.local:27017/trade?authSource=admin"
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka.infra.svc.cluster.local:9092"
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_SECRET_KEY: "3ced460bdc463104a2081d79f915ac4f"
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWS_ALGORITHMS: "HS256"
 
 # Ingress configuration
 ingress:
   enabled: true
   className: "nginx"
   annotations:
-    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
   hosts:
-    - host: trade.local
+    - host: trade.preprod.am-portfolio.com
       paths:
         - path: /
           pathType: Prefix
-  tls: []
-
-# Default resource limits
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 200m
-    memory: 256Mi
-
-# Environment label
-environment: "default"
-
-# Key application environment variables
-env:
-  SPRING_PROFILES_ACTIVE: "default"
-  LOG_FORMAT: "json"
-  LOG_LEVEL: "INFO"
-  TZ: "UTC"
+  tls:
+    - secretName: trade-tls
+      hosts:
+        - trade.preprod.am-portfolio.com
