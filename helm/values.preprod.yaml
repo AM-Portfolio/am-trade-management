@@ -7,11 +7,11 @@ vault:
   enabled: true
   role: "am-trade-management"
   secretPaths:
-    infra: "kv/data/preprod/infra"
-    mongo: "apps/data/preprod/apps/trade/database/mongo"
-    kafka: "apps/data/preprod/apps/trade/kafka"
-    redis: "apps/data/preprod/apps/trade/database/redis"
-    app: "apps/data/preprod/apps/trade"
+    infra: "apps/data/preprod/infra"
+    mongo: "apps/data/preprod/infra/mongodb"
+    kafka: "apps/data/preprod/infra/kafka"
+    redis: "apps/data/preprod/infra/redis"
+    app: "apps/data/preprod/services/am-trade-management"
 
 env:
   SPRING_PROFILES_ACTIVE: "preprod"

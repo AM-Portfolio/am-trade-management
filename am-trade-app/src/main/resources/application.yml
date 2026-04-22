@@ -30,9 +30,10 @@ am:
         collection-interval-seconds: 60
         retention-days: 30
 
+server:
+  port: 8080
+
 spring:
-  server:
-    port: 8080
   application:
     name: am-trade-management
   config:
