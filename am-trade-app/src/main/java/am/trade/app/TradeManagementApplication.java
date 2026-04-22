@@ -2,6 +2,8 @@ package am.trade.app;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import io.github.cdimascio.dotenv.Dotenv;
@@ -10,15 +12,23 @@ import am.trade.api.config.ApiAutoConfiguration;
 import am.trade.analytics.config.TradeAnalyticsAutoConfiguration;
 import am.trade.dashboard.config.DashboardAutoConfiguration;
 import am.trade.exceptions.config.ExceptionsAutoConfiguration;
-import am.trade.kafka.config.KafkaConfig;
+// import am.trade.kafka.config.KafkaConfig;
 import am.trade.services.config.TradeServicesAutoConfiguration;
 
 /**
  * Main application class for Trade Management System
  */
-@SpringBootApplication(scanBasePackages = { "am.trade" })
+@SpringBootApplication(scanBasePackages = {
+        "am.trade.api",
+        "am.trade.analytics",
+        "am.trade.dashboard",
+        "am.trade.exceptions",
+        "am.trade.services",
+        "am.trade.persistence",
+        "am.trade.app"
+})
 @Import({
-        KafkaConfig.class,
+        // KafkaConfig.class,
         TradeServicesAutoConfiguration.class,
         DashboardAutoConfiguration.class,
         ApiAutoConfiguration.class,

@@ -31,5 +31,6 @@ jobs:
       preprod_namespace: 'am-apps-preprod'
       prod_namespace: 'am-apps-prod'
       deploy_dev: true
+      deploy_preprod: true
       deploy_prod: false  # DECOUPLED: Prod deployment is moved to a manual promotion workflow
     secrets: inherit

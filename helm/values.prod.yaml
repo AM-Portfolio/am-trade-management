@@ -10,10 +10,10 @@ vault:
   role: "am-trade-management"
   secretPaths:
     infra: "kv/data/prod/infra"
-    mongo: "kv/data/prod/apps/trade/database/mongo"
-    kafka: "kv/data/prod/apps/trade/kafka"
-    redis: "kv/data/prod/apps/trade/database/redis"
-    app: "kv/data/prod/apps/trade"
+    mongo: "apps/data/prod/apps/trade/database/mongo"
+    kafka: "apps/data/prod/apps/trade/kafka"
+    redis: "apps/data/prod/apps/trade/database/redis"
+    app: "apps/data/prod/apps/trade"
 
 env:
   SPRING_PROFILES_ACTIVE: "prod"

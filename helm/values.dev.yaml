@@ -13,10 +13,10 @@ vault:
   role: "am-trade-management"
   secretPaths:
     infra: "kv/data/dev/infra"
-    mongo: "kv/data/dev/apps/trade/database/mongo"
-    kafka: "kv/data/dev/apps/trade/kafka"
-    redis: "kv/data/dev/apps/trade/database/redis"
-    app: "kv/data/dev/apps/trade"
+    mongo: "apps/data/dev/apps/trade/database/mongo"
+    kafka: "apps/data/dev/apps/trade/kafka"
+    redis: "apps/data/dev/apps/trade/database/redis"
+    app: "apps/data/dev/apps/trade"
 
 ingress:
   enabled: true

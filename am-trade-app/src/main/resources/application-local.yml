@@ -4,6 +4,8 @@ KAFKA_SASL_MECHANISM: GSSAPI
 KAFKA_SASL_JAAS_CONFIG: null
 
 spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
   data:
     mongodb:
       uri: ${MONGODB_URI}
@@ -18,5 +20,11 @@ management:
   health:
     mongo:
       enabled: false
+    kafka:
+      enabled: false
+
+# Application specific settings
+am:
+  trade:
     kafka:
       enabled: false
