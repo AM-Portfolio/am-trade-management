@@ -6,6 +6,7 @@ environment: "preprod"
 serviceAccount:
   create: true
   name: "am-trade-management"
+  automountServiceAccountToken: true
 
 vault:
   enabled: true
