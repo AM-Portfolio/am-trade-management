@@ -28,19 +28,19 @@ public class RestMarketDataClient implements MarketDataClient {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final RequestResponseLoggingInterceptor loggingInterceptor;
     
-    @Value("${market-data.api.base-url}")
+    @Value("${market-data.api.base-url:http://localhost:8084}")
     private String baseUrl;
     
-    @Value("${market-data.api.historical-data-path}")
+    @Value("${market-data.api.historical-data-path:/api/v1/market-data/historical-data}")
     private String historicalDataPath;
     
-    @Value("${market-data.api.retry.max-attempts}")
+    @Value("${market-data.api.retry.max-attempts:3}")
     private int maxRetryAttempts;
     
-    @Value("${market-data.api.retry.initial-backoff-ms}")
+    @Value("${market-data.api.retry.initial-backoff-ms:1000}")
     private long initialBackoffMs;
 
-    @Value("${market-data.api.retry.multiplier}")
+    @Value("${market-data.api.retry.multiplier:2.0}")
     private double backoffMultiplier;
     
 
