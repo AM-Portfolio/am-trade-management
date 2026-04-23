@@ -1,16 +1,12 @@
-# MONGODB_URI: 
-# MONGODB_DATABASE: trade_management
+# MongoDB URI and Database name should be provided via environment variables or .env file
 
-# KAFKA_BOOTSTRAP_SERVERS: localhost:9092
-# KAFKA_SECURITY_PROTOCOL: PLAINTEXT
-# KAFKA_SASL_MECHANISM: PLAIN
-KAFKA_SASL_JAAS_CONFIG: #org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
+
+KAFKA_BOOTSTRAP_SERVERS: kafka.dev.svc.cluster.local:9092     
+KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+KAFKA_SASL_MECHANISM: PLAIN
+KAFKA_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
 
 # Application specific common settings
-app:
-  kafka:
-    enabled: false
-
 am:
   trade:
     kafka:
@@ -33,8 +29,9 @@ am:
       metrics:
         collection-interval-seconds: 60
         retention-days: 30
+
 server:
-  port: 8073
+  port: 8080
 
 spring:
   application:
@@ -42,45 +39,34 @@ spring:
   config:
     import:
       - classpath:application-common.yml
-      - classpath:application-redis.yml
-      - classpath:application-market-data-client.yml
+      - optional:file:/vault/secrets/app
+      - optional:file:/vault/secrets/mongo
+      - optional:file:/vault/secrets/kafka
+      - optional:file:/vault/secrets/redis
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://admin:password123@localhost:27017/trade_management?authSource=admin}
-      database: ${MONGODB_DATABASE:trade_management}
-      field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy
+      uri: ${MONGODB_URI}
+      auto-index-creation: true
       # ssl:
       #   enabled: true 
       #   invalid-hostname-allowed: false
-  jackson:
-    deserialization:
-      fail-on-unknown-properties: false
-    date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
+    jackson:
+      default-property-inclusion: non_null
+      serialization:
+        write-dates-as-timestamps: false
+      deserialization:
+        fail-on-unknown-properties: false
+      date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     properties:
-      security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
-      sasl.mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
-      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG}
-      session.timeout.ms: 60000
-      heartbeat.interval.ms: 20000
-      max.poll.interval.ms: 300000
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG} 
     consumer:
       group-id: am-trade-management
       auto-offset-reset: latest
     trade-topic: ${KAFKA_TOPICS_TRADE_EVENTS:am-trade}
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          # TODO: Replace with your Identity Provider's JWK Set URI
-          # Example: https://idp.example.com/.well-known/jwks.json
-          jwk-set-uri: ${JWT_JWK_SET_URI:https://your-idp-url/.well-known/jwks.json}
-          # Or use issuer-uri if you want Spring to discover the JWK Set URI
-          # issuer-uri: ${JWT_ISSUER_URI:https://your-idp-url}
-
-jwt:
-  secret: ${JWT_SECRET:internal-service-super-secret-key-32chars-minimum-change-in-prod}
 
 # Management/Actuator Configuration
 management:
@@ -109,7 +95,6 @@ management:
 logging:
   level:
     root: INFO
-    am.trade: DEBUG
+    am.trade: INFO
     org.springframework.data.mongodb: INFO
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.web: INFO

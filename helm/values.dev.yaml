@@ -8,15 +8,15 @@ environment: "dev"
 env:
   SPRING_PROFILES_ACTIVE: "dev"
 
-vault:
-  enabled: true
-  role: "am-trade-management"
-  secretPaths:
-    infra: "kv/data/dev/infra"
-    mongo: "apps/data/dev/apps/trade/database/mongo"
-    kafka: "apps/data/dev/apps/trade/kafka"
-    redis: "apps/data/dev/apps/trade/database/redis"
-    app: "apps/data/dev/apps/trade"
+global:
+  vault:
+    enabled: true
+    secrets:
+      infra: "kv/data/dev/infra"
+      mongo: "apps/data/dev/apps/trade/database/mongo"
+      kafka: "apps/data/dev/apps/trade/kafka"
+      redis: "apps/data/dev/apps/trade/database/redis"
+      app: "apps/data/dev/apps/trade"
 
 ingress:
   enabled: true

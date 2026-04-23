@@ -5,15 +5,15 @@ replicaCount: 2
 
 environment: "prod"
 
-vault:
-  enabled: true
-  role: "am-trade-management"
-  secretPaths:
-    infra: "kv/data/prod/infra"
-    mongo: "apps/data/prod/apps/trade/database/mongo"
-    kafka: "apps/data/prod/apps/trade/kafka"
-    redis: "apps/data/prod/apps/trade/database/redis"
-    app: "apps/data/prod/apps/trade"
+global:
+  vault:
+    enabled: true
+    secrets:
+      infra: "kv/data/prod/infra"
+      mongo: "apps/data/prod/apps/trade/database/mongo"
+      kafka: "apps/data/prod/apps/trade/kafka"
+      redis: "apps/data/prod/apps/trade/database/redis"
+      app: "apps/data/prod/apps/trade"
 
 env:
   SPRING_PROFILES_ACTIVE: "prod"

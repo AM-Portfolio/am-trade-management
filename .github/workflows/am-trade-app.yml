@@ -2,7 +2,7 @@ name: AM Trade Management CI/Dev
 
 on:
   push:
-    branches: ["main", "develop", "dev", "features/**", "feature/**"]
+    branches: ["main", "develop", "dev", "feature/**"]
     paths:
       - '**/*.java'
       - '**/pom.xml'
