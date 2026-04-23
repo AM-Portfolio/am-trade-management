@@ -1,0 +1,12 @@
+{
+  "name": "am-trade-management",
+  "version": "1.0.0",
+  "description": "AM Trade Management System",
+  "private": true,
+  "scripts": {
+    "vault:sync": "node scripts/vault-sync.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "AM-Portfolio",
+  "license": "UNLICENSED"
+}

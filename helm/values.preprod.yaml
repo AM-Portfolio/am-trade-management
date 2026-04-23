@@ -1,0 +1,38 @@
+# Pre-production configuration for am-trade-management.
+# Aligned with am-market industry standards.
+
+environment: "preprod"
+
+
+
+vault:
+  enabled: true
+  role: "am-trade-management"
+  annotations:
+    vault.hashicorp.com/role: "am-trade-management"
+    vault.hashicorp.com/agent-inject: "true"
+  secretPaths:
+    infra: "apps/data/preprod/infra"
+    mongo: "apps/data/preprod/infra/mongodb"
+    kafka: "apps/data/preprod/infra/kafka"
+    redis: "apps/data/preprod/infra/redis"
+    app: "apps/data/preprod/services/am-trade-management"
+
+env:
+  SPRING_PROFILES_ACTIVE: "preprod"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: trade.preprod.amportfolio.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi

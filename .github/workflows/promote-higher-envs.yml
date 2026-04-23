@@ -1,0 +1,50 @@
+name: Promote to Higher Envs (PP/PROD)
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to promote (e.g., commit SHA)'
+        required: true
+        type: string
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - preprod
+          - prod
+          - all
+        default: preprod
+
+jobs:
+  promote-to-preprod:
+    name: Promote to Preprod
+    if: github.event.inputs.environment == 'preprod' || github.event.inputs.environment == 'all'
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: AM-Portfolio/am-pipelines/.github/workflows/central-deploy.yml@develop
+    with:
+      image_name: 'am-trade-management-service'
+      image_tag: ${{ github.event.inputs.image_tag }}
+      namespace: 'am-apps-preprod'
+      environment: 'preprod-am-trade-management-service'
+    secrets: inherit
+
+  promote-to-prod:
+    name: Promote to Production
+    needs: [promote-to-preprod]
+    if: always() && (github.event.inputs.environment == 'prod' || (github.event.inputs.environment == 'all' && needs.promote-to-preprod.result == 'success'))
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: AM-Portfolio/am-pipelines/.github/workflows/central-deploy.yml@develop
+    with:
+      image_name: 'am-trade-management-service'
+      image_tag: ${{ github.event.inputs.image_tag }}
+      namespace: 'am-apps-prod'
+      environment: 'prod-am-trade-management-service'
+    secrets: inherit

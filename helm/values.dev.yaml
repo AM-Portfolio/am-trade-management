@@ -1,0 +1,35 @@
+# Development configuration for am-trade-management.
+# Aligned with am-market industry standards.
+
+replicaCount: 1
+
+environment: "dev"
+
+env:
+  SPRING_PROFILES_ACTIVE: "dev"
+
+vault:
+  enabled: true
+  role: "am-trade-management"
+  secretPaths:
+    infra: "kv/data/dev/infra"
+    mongo: "apps/data/dev/apps/trade/database/mongo"
+    kafka: "apps/data/dev/apps/trade/kafka"
+    redis: "apps/data/dev/apps/trade/database/redis"
+    app: "apps/data/dev/apps/trade"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: trade-dev.amportfolio.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi

@@ -1,0 +1,30 @@
+name: AM Trade Management Lib Publish
+
+on:
+  push:
+    branches: ["main", "develop", "test/**", "trade-managemnet-study", "TM-features/**"]
+    paths:
+      - '**/*.java'
+      - '**/pom.xml'
+      - '.github/workflows/*.yml'
+  pull_request:
+    branches: ["main", "develop", "test/**"]
+    paths:
+      - '**/*.java'
+      - '**/pom.xml'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish AM Trade Libraries
+    permissions:
+      contents: write
+      packages: write
+    uses: AM-Portfolio/am-pipelines/.github/workflows/publish-library.yml@main
+    with:
+      language: 'java'
+      working_directory: '.'
+      sdk_name: 'am-trade-management-lib'
+      maven_repo_id: 'github'
+      maven_repo_url: 'https://maven.pkg.github.com/AM-Portfolio/am-trade-management'
+    secrets: inherit

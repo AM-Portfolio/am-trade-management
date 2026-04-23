@@ -1,0 +1,84 @@
+# Base values for am-trade-management service
+# Aligned with am-market industry standards.
+# Reference: am-core-services/am-gateway
+
+replicaCount: 1
+port: 8080
+language: java
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+image:
+  repository: am-trade-management-service
+  pullPolicy: IfNotPresent
+  tag: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+# Health probe configuration (Spring Boot Actuator)
+probes:
+  port: 8080
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 60
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 30
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  hosts:
+    - host: trade.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Default resource limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+# Vault (enabled per environment)
+vault:
+  enabled: false
+  secretPaths:
+    infra: "kv/data/dev/infra"
+    mongo: "apps/data/dev/apps/trade/database/mongo"
+    kafka: "apps/data/dev/apps/trade/kafka"
+    redis: "apps/data/dev/apps/trade/database/redis"
+    app: "apps/data/dev/apps/trade"
+
+# Environment label
+environment: "default"
+
+# Key application environment variables
+env:
+  SPRING_PROFILES_ACTIVE: "default"
+  MONGODB_URI: "mongodb://ssd2658:ssd2658@mongodb.dev.svc.cluster.local:27017/am-trade?authSource=admin"
+  MONGODB_DATABASE: "am-trade"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.dev.svc.cluster.local:9092"
+  KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
+  KAFKA_SASL_MECHANISM: "PLAIN"
+  KAFKA_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"kafkaUser\" password=\"kafkaPassword123!\";"
+  REDIS_HOST: "localhost"
+  REDIS_PORT: "6379"
+  REDIS_PASSWORD: ""
