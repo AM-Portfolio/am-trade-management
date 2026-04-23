@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 /**
  * Document model for trades
  */
-@Document(collection = "trades")
+@Document(collection = "trade")
 @CompoundIndex(name = "idx_symbol_trade_date", def = "{'symbol': 1, 'trade_date': 1}")
 @Data
 @EqualsAndHashCode(callSuper = true)
