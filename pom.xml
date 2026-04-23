@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.3</version>
+		<version>3.4.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	
@@ -30,7 +30,10 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
-		<lombok.version>1.18.30</lombok.version>
+		
+		<!-- Credentials Fallbacks (Reads from shell environment if .env is missing) -->
+		<GITHUB_PACKAGES_USERNAME>${env.GITHUB_PACKAGES_USERNAME}</GITHUB_PACKAGES_USERNAME>
+		<GITHUB_PACKAGES_TOKEN>${env.GITHUB_PACKAGES_TOKEN}</GITHUB_PACKAGES_TOKEN>
 	</properties>
 	<modules>
 		<module>am-trade-common</module>
@@ -43,15 +46,10 @@
 		<module>am-trade-persistence</module>
 		<module>am-trade-exceptions</module>
 		<module>am-trade-analytics</module>
+		<module>am-trade-sdk-java</module>
 	</modules>
 
-	<dependencyManagement>
-		<dependencies>
-			<!-- Removed manual spring-kafka and spring-web versions to use Spring Boot parent management -->
-		</dependencies>
-	</dependencyManagement>
-
-	 <repositories>
+	<repositories>
         <repository>
             <id>github-investment</id>
             <name>GitHub AM Common Investment Service Apache Maven Packages</name>
@@ -64,6 +62,14 @@
             <url>https://maven.pkg.github.com/AM-Portfolio/am-common-data-parent</url>
         </repository>
     </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub AM Portfolio Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/AM-Portfolio/am-trade-management</url>
+        </repository>
+    </distributionManagement>
 
 	<dependencies>
 		<dependency>
@@ -91,6 +97,15 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Environment variable management -->
+		<dependency>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>java-dotenv</artifactId>
+			<version>5.2.2</version>
+		</dependency>
+
+
 	</dependencies>
 
 	<build>
@@ -103,10 +118,29 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-							<version>${lombok.version}</version>
+							<version>1.18.30</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>properties-maven-plugin</artifactId>
+				<version>1.2.1</version>
+				<executions>
+					<execution>
+						<phase>initialize</phase>
+						<goals>
+							<goal>read-project-properties</goal>
+						</goals>
+						<configuration>
+							<files>
+								<file>${maven.multiModuleProjectDirectory}/.env</file>
+							</files>
+							<quiet>true</quiet>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

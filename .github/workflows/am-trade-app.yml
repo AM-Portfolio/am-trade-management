@@ -1,0 +1,34 @@
+name: AM Trade Management CI/Dev
+
+on:
+  push:
+    branches: ["main", "develop", "dev", "feature/**"]
+    paths:
+      - '**/*.java'
+      - '**/pom.xml'
+      - 'Dockerfile'
+      - 'helm/**'
+      - '.github/workflows/*.yml'
+  pull_request:
+    branches: ["main", "develop", "dev"]
+    paths:
+      - '**/*.java'
+      - '**/pom.xml'
+
+jobs:
+  publish:
+    name: Build, Publish and Deploy to Dev
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish.yml@develop
+    with:
+      language: 'java'
+      working_directory: '.'
+      image_name: 'am-trade-management-service'
+      preprod_namespace: 'am-apps-preprod'
+      prod_namespace: 'am-apps-prod'
+      deploy_dev: false
+      deploy_prod: false  # DECOUPLED: Prod deployment is moved to a manual promotion workflow
+    secrets: inherit

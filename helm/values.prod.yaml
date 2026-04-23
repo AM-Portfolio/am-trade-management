@@ -1,0 +1,40 @@
+# Production configuration for am-trade-management.
+# Aligned with am-market industry standards.
+
+replicaCount: 2
+
+environment: "prod"
+
+global:
+  vault:
+    enabled: true
+    secrets:
+      infra: "kv/data/prod/infra"
+      mongo: "apps/data/prod/apps/trade/database/mongo"
+      kafka: "apps/data/prod/apps/trade/kafka"
+      redis: "apps/data/prod/apps/trade/database/redis"
+      app: "apps/data/prod/apps/trade"
+
+env:
+  SPRING_PROFILES_ACTIVE: "prod"
+  KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
+  KAFKA_SASL_MECHANISM: "SCRAM-SHA-512"
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: trade.amportfolio.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi
