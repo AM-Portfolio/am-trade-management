@@ -72,13 +72,10 @@ env:
   LOG_FORMAT: "json"
   LOG_LEVEL: "INFO"
   TZ: "UTC"
-  # Hardcoded Fallbacks for critical properties to ensure valid placeholder resolution
-  MONGODB_URI: "mongodb://admin:sGwaiRdoaYtBiaqq4n9qaRkr@mongodb.infra.svc.cluster.local:27017/trade?authSource=admin"
-  KAFKA_BOOTSTRAP_SERVERS: "kafka.infra.svc.cluster.local:9092"
-  # Canonical fallbacks for Spring Boot 3.4+
-  SPRING_DATA_MONGODB_URI: "mongodb://admin:sGwaiRdoaYtBiaqq4n9qaRkr@mongodb.infra.svc.cluster.local:27017/trade?authSource=admin"
-  SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka.infra.svc.cluster.local:9092"
-  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_SECRET_KEY: "3ced460bdc463104a2081d79f915ac4f"
+  # NOTE: MONGODB_URI, KAFKA_BOOTSTRAP_SERVERS are injected by Vault agent — do NOT hardcode here
+  # Non-secret defaults (Vault will override at runtime)
+  SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
+  SPRING_KAFKA_PROPERTIES_SASL_MECHANISM: "SCRAM-SHA-256"
   SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWS_ALGORITHMS: "HS256"
 
 # Ingress configuration
