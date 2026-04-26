@@ -1,5 +1,10 @@
 vault:
   secretPaths:
+    app:
+      mappings:
+        JWT_SECRET: "JWT_SECRET_KEY"
+        INTERNAL_JWT_SECRET: "JWT_SECRET_KEY"
+        SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_SECRET_KEY: "JWT_SECRET_KEY"
     mongo:
       mappings:
         MONGODB_URI: "url"

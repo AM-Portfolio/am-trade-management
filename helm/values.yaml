@@ -37,38 +37,12 @@ vault:
   secretPaths:
     app:
       path: apps/data/preprod/services/am-auth
-      template: |
-        {{- range $sk, $sv := .Data.data }}
-        {{- if eq $sk "JWT_SECRET_KEY" }}
-        JWT_SECRET={{ $sv }}
-        INTERNAL_JWT_SECRET={{ $sv }}
-        spring.security.oauth2.resourceserver.jwt.secret-key={{ $sv }}
-        {{- else }}
-        {{ $sk }}={{ $sv }}
-        {{- end }}
-        {{- end }}
-        spring.security.oauth2.resourceserver.jwt.jws-algorithms=HS256
     mongo:
       path: apps/data/preprod/infra/mongodb
-      template: |
-        {{- with secret "apps/data/preprod/infra/mongodb" -}}
-        spring.data.mongodb.uri={{ .Data.data.url }}/trade?authSource=admin
-        {{- end }}
     kafka:
       path: apps/data/preprod/infra/kafka
-      template: |
-        {{- range $sk, $sv := .Data.data }}
-        {{- if eq $sk "bootstrap_servers" }}
-        spring.kafka.bootstrap-servers={{ $sv }}
-        {{- else if eq $sk "username" }}
-        KAFKA_USERNAME={{ $sv }}
-        {{- else if eq $sk "password" }}
-        KAFKA_PASSWORD={{ $sv }}
-        {{- end }}
-        {{- end }}
-        spring.kafka.properties.security.protocol=SASL_PLAINTEXT
-        spring.kafka.properties.sasl.mechanism=SCRAM-SHA-256
-        spring.kafka.properties.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="$KAFKA_USERNAME" password="$KAFKA_PASSWORD";
+    redis:
+      path: apps/data/preprod/infra/redis
 
 # Health probe configuration (Spring Boot Actuator)
 probes:
