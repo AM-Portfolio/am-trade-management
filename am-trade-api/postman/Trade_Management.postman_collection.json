@@ -1,0 +1,85 @@
+{
+    "info": {
+        "_postman_id": "am-trade-management-collection",
+        "name": "AM Trade Management",
+        "description": "API collection for AM Trade Management service. Supports Prod, Preprod, Dev, and Local environments.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Get Trade Details (Portfolio)",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v1/trades/details/portfolio/:portfolioId",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "trades",
+                        "details",
+                        "portfolio",
+                        ":portfolioId"
+                    ],
+                    "variable": [
+                        {
+                            "key": "portfolioId",
+                            "value": "123e4567-e89b-12d3-a456-426614174000"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Add Trade",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"portfolioId\": \"12345\",\n    \"symbol\": \"RELIANCE\",\n    \"quantity\": 10,\n    \"price\": 2500.0,\n    \"tradeDate\": \"2024-01-01\",\n    \"tradeType\": \"BUY\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/trades/details",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "trades",
+                        "details"
+                    ]
+                }
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8040",
+            "description": "Environment base URL: \nLocal: http://localhost:8040\nDev: https://dev.am.munish.org/trades\nPreprod: https://am.asrax.in/trades\nProd: https://am.munish.org/trades"
+        },
+        {
+            "key": "jwt_token",
+            "value": "paste-your-token-here"
+        }
+    ]
+}

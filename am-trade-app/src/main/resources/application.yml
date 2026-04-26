@@ -46,6 +46,7 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URI}
+      database: ${MONGODB_DATABASE:trade}
       auto-index-creation: true
       # ssl:
       #   enabled: true 
@@ -82,14 +83,18 @@ management:
       validate-group-membership: false
       group:
         readiness:
-          include: mongodb,kafka,diskSpace
+          include: mongo,redis,kafka,readinessState,diskSpace
   health:
     livenessstate:
       enabled: true
     readinessstate:
       enabled: true
     mongo:
-      enabled: false
+      enabled: true
+    redis:
+      enabled: true
+    kafka:
+      enabled: true
 
 # Logging configuration
 logging:

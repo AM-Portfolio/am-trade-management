@@ -9,11 +9,16 @@ global:
   vault:
     enabled: true
     secrets:
-      infra: "kv/data/prod/infra"
-      mongo: "apps/data/prod/apps/trade/database/mongo"
-      kafka: "apps/data/prod/apps/trade/kafka"
-      redis: "apps/data/prod/apps/trade/database/redis"
-      app: "apps/data/prod/apps/trade"
+      infra:
+        path: "kv/data/prod/infra"
+      mongo:
+        path: "apps/data/prod/apps/trade/database/mongo"
+      kafka:
+        path: "apps/data/prod/apps/trade/kafka"
+      redis:
+        path: "apps/data/prod/apps/trade/database/redis"
+      app:
+        path: "apps/data/prod/apps/trade"
 
 env:
   SPRING_PROFILES_ACTIVE: "prod"

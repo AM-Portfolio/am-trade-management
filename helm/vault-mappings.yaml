@@ -1,0 +1,16 @@
+vault:
+  secretPaths:
+    mongo:
+      mappings:
+        MONGODB_URI: "url"
+    kafka:
+      mappings:
+        KAFKA_BOOTSTRAP_SERVERS: "bootstrap_servers"
+        KAFKA_SASL_JAAS_CONFIG: "__jaas__"
+        KAFKA_SASL_USERNAME: "username"
+        KAFKA_SASL_PASSWORD: "password"
+    redis:
+      mappings:
+        REDIS_HOSTNAME: "host"
+        REDIS_PASSWORD: "password"
+        REDIS_PORT: "port"
