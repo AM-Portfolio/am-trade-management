@@ -134,14 +134,12 @@ public class TradeManagementServiceImpl implements TradeManagementService {
         // Apply date filtering to the collected trades
         List<TradeDetails> filteredTrades = trades.stream()
                 .filter(trade -> {
-                    LocalDateTime tradeDate = trade.getEntryInfo() != null
-                            ? trade.getEntryInfo().getTimestamp()
-                            : null;
+                    LocalDate tradeDate = trade.getTradeDate();
 
                     if (tradeDate != null) {
-                        return !tradeDate.isBefore(startDateTime) && !tradeDate.isAfter(endDateTime);
+                        return !tradeDate.isBefore(startDateTime.toLocalDate()) && !tradeDate.isAfter(endDateTime.toLocalDate());
                     } else {
-                        log.debug("Trade {} skipped. No entry timestamp.", trade.getTradeId());
+                        log.debug("Trade {} skipped. No valid trade date found.", trade.getTradeId());
                         return false;
                     }
                 })
@@ -149,10 +147,10 @@ public class TradeManagementServiceImpl implements TradeManagementService {
 
         log.info("Retained {} trades after date filtering", filteredTrades.size());
 
-        // Group trades by portfolio ID
+        // Group trades by portfolio ID - use a safe getter or default to "Unknown"
         return filteredTrades.stream()
                 .collect(Collectors.groupingBy(
-                        TradeDetails::getPortfolioId,
+                        trade -> trade.getPortfolioId() != null ? trade.getPortfolioId() : "Unknown",
                         Collectors.toList()));
     }
 

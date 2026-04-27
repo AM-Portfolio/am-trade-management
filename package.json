@@ -5,6 +5,9 @@
   "private": true,
   "scripts": {
     "vault:sync": "node scripts/vault-sync.js",
+    "build": "mvnw clean install -DskipTests",
+    "build:module": "powershell -ExecutionPolicy Bypass -Command \"param([string]$m); if(!$m){Write-Host 'Usage: npm run build:module -- -m am-trade-api'; exit 1}; mvnw install -DskipTests --projects $m --also-make\"",
+    "dev": "powershell -ExecutionPolicy Bypass -File scripts/run-local.ps1",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "AM-Portfolio",

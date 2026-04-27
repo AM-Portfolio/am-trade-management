@@ -1,7 +1,3 @@
-# Redis
-REDIS_HOSTNAME: localhost
-REDIS_PASSWORD: password123
-REDIS_PORT: 6379
 
 spring:
   data:

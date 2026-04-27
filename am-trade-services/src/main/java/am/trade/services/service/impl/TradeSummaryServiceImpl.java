@@ -52,7 +52,6 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
     }
 
     @Override
-    @Transactional
     public TradeSummary saveTradeSummary(TradeSummaryBasic basic, TradeSummaryDetailed detailed) {
         // Save basic summary first
         TradeSummaryBasic savedBasic = saveTradeSummaryBasic(basic);
@@ -72,7 +71,6 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
     }
 
     @Override
-    @Transactional
     public TradeSummary saveTradeSummary(TradeSummary tradeSummary) {
         // Split the composite object into basic and detailed components
         TradeSummaryBasic basic = tradeSummary.toBasicSummary();
@@ -147,7 +145,6 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
     }
 
     @Override
-    @Transactional
     public void deleteTradeSummary(String id) {
         // Find the basic summary to get the reference to detailed summary
         Optional<TradeSummaryBasic> basicOpt = findBasicById(id);
@@ -184,7 +181,6 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
     }
 
     @Override
-    @Transactional
     public TradeSummary updateTradeSummary(TradeSummary tradeSummary) {
         // Split the composite object into basic and detailed components
         TradeSummaryBasic basic = tradeSummary.toBasicSummary();
