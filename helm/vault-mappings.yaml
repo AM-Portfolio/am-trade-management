@@ -7,7 +7,7 @@ vault:
         SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_SECRET_KEY: "JWT_SECRET"
     market-data:
       mappings:
-        AM_MARKET_DATA_API_URL: "url"
+        AM_MARKET_DATA_API_URL: "URL"
     mongo:
       mappings:
         MONGODB_URI: "url"
