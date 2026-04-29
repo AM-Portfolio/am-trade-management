@@ -20,7 +20,7 @@ import java.util.List;
  * Provides endpoints for creating and retrieving trade replay analyses
  */
 @RestController
-@RequestMapping("/api/v1/analytics/trade-replays")
+@RequestMapping("/v1/analytics/trade-replays")
 @RequiredArgsConstructor
 @Slf4j
 public class TradeReplayController {
