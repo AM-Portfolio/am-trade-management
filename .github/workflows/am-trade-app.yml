@@ -2,7 +2,7 @@ name: AM Trade Management CI/Dev
 
 on:
   push:
-    branches: ["main", "develop", "dev", "feature/**"]
+    branches: ["main", "develop", "dev", "feature/**", "hotfix/**", "fix/**"]
     paths:
       - "**/*.java"
       - "**/pom.xml"
@@ -10,7 +10,7 @@ on:
       - "helm/**"
       - ".github/workflows/*.yml"
   pull_request:
-    branches: ["main", "develop", "dev"]
+    branches: ["main", "develop", "dev", "feature/**", "hotfix/**", "fix/**"]
     paths:
       - "**/*.java"
       - "**/pom.xml"
