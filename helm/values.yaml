@@ -35,8 +35,10 @@ vault:
   serviceAccountName: am-backend-sa
   role: am-backend-role
   secretPaths:
-    app:
+    auth:
       path: apps/data/preprod/services/am-auth
+    market-data:
+      path: apps/data/preprod/services/am-market-data
     mongo:
       path: apps/data/preprod/infra/mongodb
     kafka:
@@ -72,7 +74,6 @@ env:
   LOG_FORMAT: "json"
   LOG_LEVEL: "INFO"
   TZ: "UTC"
-  # NOTE: MONGODB_URI, KAFKA_BOOTSTRAP_SERVERS are injected by Vault agent — do NOT hardcode here
   # Non-secret defaults (Vault will override at runtime)
   SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
   SPRING_KAFKA_PROPERTIES_SASL_MECHANISM: "SCRAM-SHA-256"

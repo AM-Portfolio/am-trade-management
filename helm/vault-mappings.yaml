@@ -5,6 +5,9 @@ vault:
         JWT_SECRET: "JWT_SECRET"
         INTERNAL_SECRET_KEY: "SECRET_KEY"
         SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_SECRET_KEY: "JWT_SECRET"
+    market-data:
+      mappings:
+        AM_MARKET_DATA_API_URL: "url"
     mongo:
       mappings:
         MONGODB_URI: "url"
