@@ -21,7 +21,7 @@ import am.trade.common.util.JsonConverter;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "app.kafka.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(name = "am.trade.kafka.enabled", havingValue = "true", matchIfMissing = false)
 public class TradeConsumerService {
 
     private final JsonConverter jsonConverter;

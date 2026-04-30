@@ -3,12 +3,12 @@
 
 environment: "preprod"
 
-
-
 global:
   vault:
     enabled: true
     secrets:
+      auth:
+        path: "apps/data/preprod/services/am-auth"
       infra:
         path: "apps/data/preprod/infra/shared-api"
       mongo:

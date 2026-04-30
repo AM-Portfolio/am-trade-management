@@ -263,7 +263,7 @@ public class FavoriteFilterController {
 
             ErrorResponse errorResponse = ErrorResponse.badRequest(
                     e.getMessage(),
-                    "/api/v1/filters/apply/" + filterId)
+                    "/v1/filters/apply/" + filterId)
                     .addDetail("The requested filter ID '" + filterId + "' was not found")
                     .addDetail("No default filter exists for user '" + userId + "'")
                     .addDetail("No portfolioIds were provided as fallback")

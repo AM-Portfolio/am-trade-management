@@ -1,11 +1,3 @@
-# MongoDB URI and Database name should be provided via environment variables or .env file
-
-
-KAFKA_BOOTSTRAP_SERVERS: kafka.dev.svc.cluster.local:9092     
-KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
-KAFKA_SASL_MECHANISM: PLAIN
-KAFKA_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafkaUser" password="kafkaPassword123!";
-
 # Application specific common settings
 am:
   trade:
@@ -49,7 +41,7 @@ spring:
       database: ${MONGODB_DATABASE:trade}
       auto-index-creation: false
       # ssl:
-      #   enabled: true 
+      #   enabled: true
       #   invalid-hostname-allowed: false
     jackson:
       default-property-inclusion: non_null
@@ -59,11 +51,11 @@ spring:
         fail-on-unknown-properties: false
       date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka.dev.svc.cluster.local:9092}
     properties:
       security.protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_PLAINTEXT}
       sasl.mechanism: ${KAFKA_SASL_MECHANISM:SCRAM-SHA-256}
-      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG} 
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_SASL_USERNAME:kafkaUser}" password="${KAFKA_SASL_PASSWORD:kafkaPassword123!}";}
     consumer:
       group-id: am-trade-management
       auto-offset-reset: latest
