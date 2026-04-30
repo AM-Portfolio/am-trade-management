@@ -15,7 +15,6 @@ vault:
     kafka:
       mappings:
         KAFKA_BOOTSTRAP_SERVERS: "bootstrap_servers"
-        SPRING_KAFKA_BOOTSTRAP_SERVERS: "bootstrap_servers"
         KAFKA_SASL_JAAS_CONFIG: "__jaas__"
         KAFKA_SASL_USERNAME: "username"
         KAFKA_SASL_PASSWORD: "password"
