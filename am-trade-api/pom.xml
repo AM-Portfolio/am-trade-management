@@ -13,6 +13,7 @@
     <name>AM Trade API</name>
     <description>REST API layer for AM Trade Management System</description>
 
+
     <dependencies>
         <dependency>
             <groupId>am.trade</groupId>

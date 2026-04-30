@@ -1,0 +1,23 @@
+vault:
+  secretPaths:
+    app:
+      mappings:
+        JWT_SECRET: "JWT_SECRET_KEY"
+        INTERNAL_JWT_SECRET: "JWT_SECRET_KEY"
+        SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_SECRET_KEY: "JWT_SECRET_KEY"
+    mongo:
+      mappings:
+        MONGODB_URI: "url"
+        SPRING_DATA_MONGODB_URI: "url"
+    kafka:
+      mappings:
+        KAFKA_BOOTSTRAP_SERVERS: "bootstrap_servers"
+        SPRING_KAFKA_BOOTSTRAP_SERVERS: "bootstrap_servers"
+        KAFKA_SASL_JAAS_CONFIG: "__jaas__"
+        KAFKA_SASL_USERNAME: "username"
+        KAFKA_SASL_PASSWORD: "password"
+    redis:
+      mappings:
+        SPRING_DATA_REDIS_HOST: "host"
+        SPRING_DATA_REDIS_PASSWORD: "password"
+        SPRING_DATA_REDIS_PORT: "port"

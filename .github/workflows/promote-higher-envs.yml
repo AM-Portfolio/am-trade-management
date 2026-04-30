@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: 'Image tag to promote (e.g., commit SHA)'
+        description: "Image tag to promote (e.g., commit SHA)"
         required: true
         type: string
       environment:
-        description: 'Target environment'
+        description: "Target environment"
         required: true
         type: choice
         options:
@@ -25,12 +25,12 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: AM-Portfolio/am-pipelines/.github/workflows/central-deploy.yml@develop
+    uses: AM-Portfolio/am-pipelines/.github/workflows/central-deploy.yml@main
     with:
-      image_name: 'am-trade-management-service'
+      image_name: "am-trade-management-service"
       image_tag: ${{ github.event.inputs.image_tag }}
-      namespace: 'am-apps-preprod'
-      environment: 'preprod-am-trade-management-service'
+      namespace: "am-apps-preprod"
+      environment: "preprod-am-trade-management-service"
     secrets: inherit
 
   promote-to-prod:
@@ -41,10 +41,10 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: AM-Portfolio/am-pipelines/.github/workflows/central-deploy.yml@develop
+    uses: AM-Portfolio/am-pipelines/.github/workflows/central-deploy.yml@main
     with:
-      image_name: 'am-trade-management-service'
+      image_name: "am-trade-management-service"
       image_tag: ${{ github.event.inputs.image_tag }}
-      namespace: 'am-apps-prod'
-      environment: 'prod-am-trade-management-service'
+      namespace: "am-apps-prod"
+      environment: "prod-am-trade-management-service"
     secrets: inherit
