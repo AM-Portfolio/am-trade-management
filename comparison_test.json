@@ -1,0 +1,8 @@
+{
+  "userId": "user_gyaan",
+  "comparisonType": "PORTFOLIO",
+  "portfolioIds": ["portfolio_alpha", "1001"],
+  "startDate": "2024-01-01",
+  "endDate": "2024-12-31",
+  "includedMetrics": ["WIN_RATE", "PROFIT_LOSS"]
+}
