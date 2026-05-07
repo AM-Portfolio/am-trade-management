@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AM Trade Management - API Audit Log</title>
+    <title>AM Trade Management - API Audit Log (Gyaan)</title>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -24,7 +24,7 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
             background: #fff;
             padding: 50px;
@@ -90,6 +90,15 @@
             margin: 15px 0;
         }
 
+        ul { padding-left: 20px; }
+        li { margin-bottom: 10px; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         @media print {
             body { background: white; padding: 0; }
             .container { box-shadow: none; max-width: 100%; padding: 0; }
@@ -100,76 +109,131 @@
 <body>
     <div class="container">
         <header>
-            <h1>📊 AM Trade Management API Audit Log</h1>
+            <h1>📊 AM Trade Management: Professional API Audit Log</h1>
             <div class="meta-info">
-                <span><strong>Auditor:</strong> Dheeraj (AI Assisted)</span>
+                <span><strong>Auditor/Developer:</strong> Gyaan (AI Assisted)</span>
                 <span><strong>Date:</strong> 2026-05-07</span>
-                <span><strong>Environment:</strong> Local Dev (8080)</span>
+                <span><strong>Environment:</strong> Local Development (Port 8080)</span>
             </div>
         </header>
 
         <section>
-            <h2>📝 Developer Implementation & Bug Log</h2>
+            <h2 class="section-header">📝 Developer Implementation & Bug Log (May 07)</h2>
+            
             <div class="block">
                 <h3>Task: Stabilizing Portfolio Asset Allocation Pipeline</h3>
-                <p><strong>1. Issue: Asset Allocation returning null or OTHER</strong></p>
+                
+                <p><strong>1. Issue: Asset Allocation returning <code>null</code> or <code>OTHER</code></strong></p>
                 <ul>
-                    <li><strong>Bug:</strong> Recalculate endpoint returned null allocations or categorized all as "OTHER".</li>
-                    <li><strong>Root Cause:</strong> Logic wasn't integrated into synchronous pipeline; historical trades lacked InstrumentInfo.</li>
-                    <li><strong>Solution:</strong> Injected <code>calculateAssetAllocation</code> into <code>processTradeDetailsWithObjects</code>; enhanced refresher to auto-populate InstrumentInfo from raw symbols.</li>
+                    <li><strong>Bug/Error Faced:</strong> When triggering the <code>POST /v1/portfolio-summary/{id}/recalculate</code> endpoint, the <code>assetAllocations</code> field in the response was completely <code>null</code>. After initial fixes, it populated but categorized all stocks as <code>OTHER</code> (Unknown segment).</li>
+                    <li><strong>Root Cause:</strong>
+                        <ol>
+                            <li>The asset allocation logic wasn't fully integrated into the synchronous processing pipeline.</li>
+                            <li>Historical trade objects in the database were missing their <code>InstrumentInfo</code> (or it was set to <code>UNKNOWN</code>). Because of this, the calculation engine didn't know if a symbol like "TCS" was a stock, option, or future.</li>
+                        </ol>
+                    </li>
+                    <li><strong>How We Tackled It:</strong>
+                        <ul>
+                            <li>Injected the <code>calculateAssetAllocation</code> method directly into the <code>processTradeDetailsWithObjects</code> pipeline so it fires during every recalculation.</li>
+                            <li>Enhanced the trade metrics refresher to actively look for missing <code>InstrumentInfo</code> and auto-populate it.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Files Changed:</strong> <code>TradeProcessingServiceImpl.java</code></li>
+                    <li><strong>Logic Behind Change:</strong> We used the <code>InstrumentInfo.fromRawSymbol(trade.getSymbol())</code> factory method to generate proper instrument details based purely on the ticker symbol.</li>
+                    <li><strong>Crucial Fix:</strong> We had to move this population logic <em>outside</em> of the <code>if (metrics == null)</code> block. Initially, trades that already had basic P/L metrics were skipping the instrument check. Moving it outside ensures <em>every</em> trade is evaluated and assigned a proper market segment (like <code>EQUITY</code>).</li>
+                    <li><strong>Code Impact:</strong> The system now accurately parses symbols and groups them. The API response now correctly outputs <code>100.00% STOCK</code> for equity trades instead of dumping them into the <code>OTHER</code> category.</li>
                 </ul>
             </div>
 
             <div class="block">
-                <h3>2. Compilation Type Mismatch Fix</h3>
+                <h3>2. Issue: Compilation Type Mismatch in Tests</h3>
                 <ul>
-                    <li><strong>Bug:</strong> Hardcoded strings in tests caused <code>AssetClass</code> enum conversion errors.</li>
-                    <li><strong>Solution:</strong> Refactored <code>PortfolioMapperTest.java</code> to use type-safe Enum references.</li>
+                    <li><strong>Bug/Error Faced:</strong> <code>[ERROR] incompatible types: java.lang.String cannot be converted to am.trade.common.models.enums.AssetClass</code> during <code>mvn install</code>.</li>
+                    <li><strong>Root Cause:</strong> The core data model was recently refactored to use a strict <code>AssetClass</code> Enum, but the persistence layer tests (<code>PortfolioMapperTest.java</code>) were still using legacy hardcoded strings like <code>"Equity"</code>.</li>
+                    <li><strong>How We Tackled It:</strong> We audited the test file and replaced all instances of string literals with proper enum references (e.g., <code>AssetClass.STOCK</code>).</li>
+                    <li><strong>Files Changed:</strong> <code>PortfolioMapperTest.java</code></li>
+                    <li><strong>Logic Behind Change:</strong> Aligning the test suite's mock data with the updated, type-safe domain models to ensure a clean, green build process.</li>
+                </ul>
+            </div>
+
+            <div class="block">
+                <h3>3. Issue: Stale Code Executing (Phantom Bugs)</h3>
+                <ul>
+                    <li><strong>Bug/Error Faced:</strong> We added <code>log.info</code> statements to debug the pipeline, but the logs never appeared in the console, and our code changes had no effect on the API.</li>
+                    <li><strong>Root Cause:</strong> The monorepo structure. <code>spring-boot-devtools</code> was running from the <code>am-trade-app</code> module and failed to automatically detect and recompile changes made in the <code>am-trade-services</code> module.</li>
+                    <li><strong>How We Tackled It:</strong> Stopped relying on auto-reloads for cross-module changes. We ran <code>mvn install -DskipTests</code> from the root directory to force a full project sync before restarting the application.</li>
                 </ul>
             </div>
         </section>
 
         <section>
-            <h2>📂 Phase 1: Core Trade Operations</h2>
+            <h2 class="section-header">📂 Phase 1: Core Trade Operations</h2>
             <table>
-                <tr><th>Endpoint</th><th>Description</th><th>Status</th></tr>
-                <tr><td><code>POST /v1/trades/details</code></td><td>Add New Trade</td><td><span class="status-badge">VERIFIED</span></td></tr>
-                <tr><td><code>GET /v1/trades/filter</code></td><td>Multi-criteria filtering</td><td><span class="status-badge">VERIFIED</span></td></tr>
-                <tr><td><code>PUT /v1/trades/details/{id}</code></td><td>Update Status (Open -> Win)</td><td><span class="status-badge">VERIFIED</span></td></tr>
+                <tr><th>Endpoint</th><th>Description / Params</th><th>Status</th></tr>
+                <tr><td><code>POST /v1/trades/details</code></td><td>Creates a new trade entry in the system.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
+                <tr><td><code>GET /v1/trades/filter</code></td><td><code>portfolioIds=portfolio_main_001</code>, <code>statuses=OPEN</code></td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
+                <tr><td><code>PUT /v1/trades/details/{id}</code></td><td>Updates status from <code>OPEN</code> to <code>WIN</code>.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
             </table>
         </section>
 
         <section>
-            <h2>📂 Phase 2: Portfolio Analytics</h2>
+            <h2 class="section-header">📂 Phase 2: Portfolio Analytics</h2>
             <table>
-                <tr><th>Endpoint</th><th>Verification Result</th><th>Status</th></tr>
-                <tr><td><code>POST /.../recalculate</code></td><td>Accurate P/L + 100% STOCK mapping</td><td><span class="status-badge">VERIFIED</span></td></tr>
-                <tr><td><code>GET /.../asset-allocation</code></td><td>Correct retrieval of STOCK classes</td><td><span class="status-badge">VERIFIED</span></td></tr>
+                <tr><th>Endpoint</th><th>Verification Details</th><th>Status</th></tr>
+                <tr><td><code>POST /.../recalculate</code></td><td>Successfully recalculated 7 trades, accurate P/L (3500.00) & STOCK allocation.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
+                <tr><td><code>GET /.../asset-allocation</code></td><td>Verified retrieval of the newly calculated STOCK allocation directly from the API.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
+                <tr><td><code>GET /.../by-owner/{id}</code></td><td>Correctly fetched the list of portfolios belonging to the requested owner.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
             </table>
         </section>
 
         <section>
-            <h2>📂 Phase 5: P/L Heatmap Data</h2>
-            <p>Verified daily, monthly, and yearly aggregation mappings for frontend rendering.</p>
+            <h2 class="section-header">📂 Phase 3: Trade Metrics & Analysis</h2>
+            <table>
+                <tr><th>Endpoint</th><th>Verification Details</th><th>Status</th></tr>
+                <tr><td><code>GET /v1/metrics/types</code></td><td>Verified retrieval of supported statistical metric types (PERFORMANCE, RISK, etc.).</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
+                <tr><td><code>POST /v1/metrics</code></td><td>Successfully fetched detailed portfolio statistical breakdown using custom filters.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2 class="section-header">📂 Phase 4: Trade Summary</h2>
+            <table>
+                <tr><th>Endpoint</th><th>Verification Details</th><th>Status</th></tr>
+                <tr><td><code>GET /.../basic/by-owner</code></td><td>Returned <code>[]</code> (Empty List). Correct and expected behavior for fresh accounts.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
+                <tr><td><code>GET /v1/trade-summary/trades</code></td><td>Retrieved mapped JSON object grouping raw trade details by time period.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2 class="section-header">📂 Phase 5: P/L Heatmap</h2>
+            <p><strong>Endpoints Verified:</strong> <code>yearly</code>, <code>monthly</code>, <code>daily</code>, and Unified <code>POST</code>.</p>
+            <div class="block">
+                Confirmed successful retrieval of daily, monthly, and yearly aggregated profit/loss mappings, providing the necessary data structures for frontend GitHub-style contribution graphs.
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-header">📂 Phase 6: Trade Journal (Full CRUD)</h2>
             <ul>
-                <li><code>GET /v1/heatmap/yearly</code> - Verified</li>
-                <li><code>GET /v1/heatmap/monthly</code> - Verified</li>
-                <li><code>GET /v1/heatmap/daily</code> - Verified</li>
+                <li><strong>POST Create:</strong> Successfully saved a new journal entry. ID: <code>4049afa7-cc35-495a-bab0-554501dbb34c</code></li>
+                <li><strong>GET Retrieval:</strong> Successfully retrieved entries by User ID and specific Entry ID.</li>
+                <li><strong>PUT Update:</strong> Modified title/content and confirmed updates in the response.</li>
+                <li><strong>DELETE Entry:</strong> Purged entry from DB; confirmed 404 handling after deletion.</li>
+                <li><strong>Filters:</strong> Verified <code>by Trade</code> and <code>by Date Range</code> correctly handle empty states.</li>
             </ul>
         </section>
 
         <section>
-            <h2>📂 Phase 6: Trade Journal (Full CRUD)</h2>
-            <p>Verified complete lifecycle (Create -> Read -> Update -> Delete).</p>
-            <ul>
-                <li><strong>Journal Entry ID:</strong> <code>4049afa7-cc35-495a-bab0-554501dbb34c</code></li>
-                <li>Validated 404 handling after deletion.</li>
-            </ul>
+            <h2 class="section-header">📂 Phase 7: Trade Management</h2>
+            <p><strong>Endpoints Verified:</strong> Portfolio Details and Custom Calendar Views.</p>
+            <div class="block">
+                Successfully verified retrieval of paginated portfolio trade details and successfully grouped trade details via precise custom date range filters.
+            </div>
         </section>
 
-        <section style="text-align: center; margin-top: 50px; border-top: 2px solid var(--border-color); padding-top: 30px;">
+        <section style="text-align: center; margin-top: 50px; border-top: 2px solid var(--primary-color); padding-top: 30px;">
             <h2 style="border:none; color: var(--success-color);">🎉 API Audit 100% Complete</h2>
-            <p>All core backend services and analytical engines have been fully verified via Postman. The data pipeline is stable and ready for UI integration.</p>
+            <p style="font-size: 1.1rem;">All core backend services and analytical engines have been 100% verified via Postman. The data pipeline is fully stable and ready for dashboard UI integration!</p>
         </section>
 
         <div class="no-print" style="margin-top: 40px; text-align: center; color: #64748b; font-size: 0.8rem;">
