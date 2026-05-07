@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AM Trade Management - API Audit Log (Gyaan)</title>
+    <title>AM Trade Management - API Audit Log</title>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -32,47 +32,19 @@
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
 
-        header {
-            border-bottom: 2px solid var(--primary-color);
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-        }
-
-        h1 { color: var(--primary-color); font-size: 2.2rem; margin: 0; }
-        h2 { color: #334155; border-left: 5px solid var(--primary-color); padding-left: 15px; margin-top: 40px; }
+        h1 { color: var(--primary-color); font-size: 2.2rem; margin-top: 0; }
+        h2 { color: #334155; border-bottom: 2px solid var(--border-color); padding-bottom: 5px; margin-top: 40px; }
         h3 { color: #475569; margin-top: 25px; }
-        h4 { color: #64748b; font-style: italic; }
+        h4 { color: #64748b; }
 
         .meta-info {
-            display: flex;
-            gap: 20px;
             color: #64748b;
-            font-size: 0.9rem;
-            margin-top: 10px;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
         }
 
-        .status-badge {
-            background-color: var(--success-color);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-
-        th, td {
-            text-align: left;
-            padding: 12px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        th { background-color: #f1f5f9; color: #475569; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 8px; }
 
         code {
             background: #f1f5f9;
@@ -80,23 +52,16 @@
             border-radius: 4px;
             font-family: 'Fira Code', monospace;
             font-size: 0.9rem;
+            color: #d926a9;
         }
-
-        .block {
-            background: #f8fafc;
-            padding: 20px;
+        
+        .code-block {
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 15px;
             border-radius: 8px;
-            border: 1px solid var(--border-color);
-            margin: 15px 0;
-        }
-
-        ul { padding-left: 20px; }
-        li { margin-bottom: 10px; }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-family: 'Fira Code', monospace;
+            overflow-x: auto;
         }
 
         @media print {
@@ -108,133 +73,204 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>📊 AM Trade Management: Professional API Audit Log</h1>
-            <div class="meta-info">
-                <span><strong>Auditor/Developer:</strong> Gyaan (AI Assisted)</span>
-                <span><strong>Date:</strong> 2026-05-07</span>
-                <span><strong>Environment:</strong> Local Development (Port 8080)</span>
-            </div>
-        </header>
+        <h1>📊 AM Trade Management: Professional API Audit Log & Developer Notes</h1>
+        <div class="meta-info">
+            <strong>Auditor/Developer:</strong> Gyaan (AI Assisted)<br>
+            <strong>Date:</strong> 2026-05-07<br>
+            <strong>Environment:</strong> Local Development (Port 8080)
+        </div>
 
-        <section>
-            <h2 class="section-header">📝 Developer Implementation & Bug Log (May 07)</h2>
-            
-            <div class="block">
-                <h3>Task: Stabilizing Portfolio Asset Allocation Pipeline</h3>
-                
-                <p><strong>1. Issue: Asset Allocation returning <code>null</code> or <code>OTHER</code></strong></p>
+        <hr>
+
+        <h2>📝 Developer Implementation & Bug Log (May 07)</h2>
+
+        <h3>Task: Stabilizing Portfolio Asset Allocation Pipeline</h3>
+
+        <h4>1. Issue: Asset Allocation returning <code>null</code> or <code>OTHER</code></h4>
+        <ul>
+            <li><strong>Bug/Error Faced</strong>: When triggering the <code>POST /v1/portfolio-summary/{id}/recalculate</code> endpoint, the <code>assetAllocations</code> field in the response was completely <code>null</code>. After initial fixes, it populated but categorized all stocks as <code>OTHER</code> (Unknown segment).</li>
+            <li><strong>Root Cause</strong>:
+                <ol>
+                    <li>The asset allocation logic wasn't fully integrated into the synchronous processing pipeline.</li>
+                    <li>Historical trade objects in the database were missing their <code>InstrumentInfo</code> (or it was set to <code>UNKNOWN</code>). Because of this, the calculation engine didn't know if a symbol like "TCS" was a stock, option, or future.</li>
+                </ol>
+            </li>
+            <li><strong>How We Tackled It</strong>:
                 <ul>
-                    <li><strong>Bug/Error Faced:</strong> When triggering the <code>POST /v1/portfolio-summary/{id}/recalculate</code> endpoint, the <code>assetAllocations</code> field in the response was completely <code>null</code>. After initial fixes, it populated but categorized all stocks as <code>OTHER</code> (Unknown segment).</li>
-                    <li><strong>Root Cause:</strong>
-                        <ol>
-                            <li>The asset allocation logic wasn't fully integrated into the synchronous processing pipeline.</li>
-                            <li>Historical trade objects in the database were missing their <code>InstrumentInfo</code> (or it was set to <code>UNKNOWN</code>). Because of this, the calculation engine didn't know if a symbol like "TCS" was a stock, option, or future.</li>
-                        </ol>
-                    </li>
-                    <li><strong>How We Tackled It:</strong>
-                        <ul>
-                            <li>Injected the <code>calculateAssetAllocation</code> method directly into the <code>processTradeDetailsWithObjects</code> pipeline so it fires during every recalculation.</li>
-                            <li>Enhanced the trade metrics refresher to actively look for missing <code>InstrumentInfo</code> and auto-populate it.</li>
-                        </ul>
-                    </li>
-                    <li><strong>Files Changed:</strong> <code>TradeProcessingServiceImpl.java</code></li>
-                    <li><strong>Logic Behind Change:</strong> We used the <code>InstrumentInfo.fromRawSymbol(trade.getSymbol())</code> factory method to generate proper instrument details based purely on the ticker symbol.</li>
-                    <li><strong>Crucial Fix:</strong> We had to move this population logic <em>outside</em> of the <code>if (metrics == null)</code> block. Initially, trades that already had basic P/L metrics were skipping the instrument check. Moving it outside ensures <em>every</em> trade is evaluated and assigned a proper market segment (like <code>EQUITY</code>).</li>
-                    <li><strong>Code Impact:</strong> The system now accurately parses symbols and groups them. The API response now correctly outputs <code>100.00% STOCK</code> for equity trades instead of dumping them into the <code>OTHER</code> category.</li>
+                    <li>Injected the <code>calculateAssetAllocation</code> method directly into the <code>processTradeDetailsWithObjects</code> pipeline so it fires during every recalculation.</li>
+                    <li>Enhanced the trade metrics refresher to actively look for missing <code>InstrumentInfo</code> and auto-populate it.</li>
                 </ul>
-            </div>
-
-            <div class="block">
-                <h3>2. Issue: Compilation Type Mismatch in Tests</h3>
+            </li>
+            <li><strong>Files Changed</strong>: <code>TradeProcessingServiceImpl.java</code>
                 <ul>
-                    <li><strong>Bug/Error Faced:</strong> <code>[ERROR] incompatible types: java.lang.String cannot be converted to am.trade.common.models.enums.AssetClass</code> during <code>mvn install</code>.</li>
-                    <li><strong>Root Cause:</strong> The core data model was recently refactored to use a strict <code>AssetClass</code> Enum, but the persistence layer tests (<code>PortfolioMapperTest.java</code>) were still using legacy hardcoded strings like <code>"Equity"</code>.</li>
-                    <li><strong>How We Tackled It:</strong> We audited the test file and replaced all instances of string literals with proper enum references (e.g., <code>AssetClass.STOCK</code>).</li>
-                    <li><strong>Files Changed:</strong> <code>PortfolioMapperTest.java</code></li>
-                    <li><strong>Logic Behind Change:</strong> Aligning the test suite's mock data with the updated, type-safe domain models to ensure a clean, green build process.</li>
+                    <li><strong>Logic Behind Change</strong>: We used the <code>InstrumentInfo.fromRawSymbol(trade.getSymbol())</code> factory method to generate proper instrument details based purely on the ticker symbol.</li>
+                    <li><strong>Crucial Fix</strong>: We had to move this population logic <em>outside</em> of the <code>if (metrics == null)</code> block. Initially, trades that already had basic P/L metrics were skipping the instrument check. Moving it outside ensures <em>every</em> trade is evaluated and assigned a proper market segment (like <code>EQUITY</code>).</li>
+                    <li><strong>Code Impact</strong>: The system now accurately parses symbols and groups them. The API response now correctly outputs <code>100.00% STOCK</code> for equity trades instead of dumping them into the <code>OTHER</code> category.</li>
                 </ul>
-            </div>
+            </li>
+        </ul>
 
-            <div class="block">
-                <h3>3. Issue: Stale Code Executing (Phantom Bugs)</h3>
+        <h4>2. Issue: Compilation Type Mismatch in Tests</h4>
+        <ul>
+            <li><strong>Bug/Error Faced</strong>: <code>[ERROR] incompatible types: java.lang.String cannot be converted to am.trade.common.models.enums.AssetClass</code> during <code>mvn install</code>.</li>
+            <li><strong>Root Cause</strong>: The core data model was recently refactored to use a strict <code>AssetClass</code> Enum, but the persistence layer tests (<code>PortfolioMapperTest.java</code>) were still using legacy hardcoded strings like <code>"Equity"</code>.</li>
+            <li><strong>How We Tackled It</strong>:
                 <ul>
-                    <li><strong>Bug/Error Faced:</strong> We added <code>log.info</code> statements to debug the pipeline, but the logs never appeared in the console, and our code changes had no effect on the API.</li>
-                    <li><strong>Root Cause:</strong> The monorepo structure. <code>spring-boot-devtools</code> was running from the <code>am-trade-app</code> module and failed to automatically detect and recompile changes made in the <code>am-trade-services</code> module.</li>
-                    <li><strong>How We Tackled It:</strong> Stopped relying on auto-reloads for cross-module changes. We ran <code>mvn install -DskipTests</code> from the root directory to force a full project sync before restarting the application.</li>
+                    <li>We audited the test file and replaced all instances of string literals with proper enum references (e.g., <code>AssetClass.STOCK</code>).</li>
                 </ul>
-            </div>
-        </section>
+            </li>
+            <li><strong>Files Changed</strong>: <code>PortfolioMapperTest.java</code>
+                <ul>
+                    <li><strong>Logic Behind Change</strong>: Aligning the test suite's mock data with the updated, type-safe domain models to ensure a clean, green build process.</li>
+                </ul>
+            </li>
+        </ul>
 
-        <section>
-            <h2 class="section-header">📂 Phase 1: Core Trade Operations</h2>
-            <table>
-                <tr><th>Endpoint</th><th>Description / Params</th><th>Status</th></tr>
-                <tr><td><code>POST /v1/trades/details</code></td><td>Creates a new trade entry in the system.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
-                <tr><td><code>GET /v1/trades/filter</code></td><td><code>portfolioIds=portfolio_main_001</code>, <code>statuses=OPEN</code></td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
-                <tr><td><code>PUT /v1/trades/details/{id}</code></td><td>Updates status from <code>OPEN</code> to <code>WIN</code>.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
-            </table>
-        </section>
+        <h4>3. Issue: Stale Code Executing (Phantom Bugs)</h4>
+        <ul>
+            <li><strong>Bug/Error Faced</strong>: We added <code>log.info</code> statements to debug the pipeline, but the logs never appeared in the console, and our code changes had no effect on the API.</li>
+            <li><strong>Root Cause</strong>: The monorepo structure. <code>spring-boot-devtools</code> was running from the <code>am-trade-app</code> module and failed to automatically detect and recompile changes made in the <code>am-trade-services</code> module. It was continuously running stale <code>.jar</code> files from the local <code>.m2</code> repository.</li>
+            <li><strong>How We Tackled It</strong>:
+                <ul>
+                    <li>Stopped relying on auto-reloads for cross-module changes. We ran <code>mvn install -DskipTests</code> from the root directory to force a full project sync before restarting the application.</li>
+                </ul>
+            </li>
+        </ul>
 
-        <section>
-            <h2 class="section-header">📂 Phase 2: Portfolio Analytics</h2>
-            <table>
-                <tr><th>Endpoint</th><th>Verification Details</th><th>Status</th></tr>
-                <tr><td><code>POST /.../recalculate</code></td><td>Successfully recalculated 7 trades, accurate P/L (3500.00) & STOCK allocation.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
-                <tr><td><code>GET /.../asset-allocation</code></td><td>Verified retrieval of the newly calculated STOCK allocation directly from the API.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
-                <tr><td><code>GET /.../by-owner/{id}</code></td><td>Correctly fetched the list of portfolios belonging to the requested owner.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
-            </table>
-        </section>
+        <hr>
 
-        <section>
-            <h2 class="section-header">📂 Phase 3: Trade Metrics & Analysis</h2>
-            <table>
-                <tr><th>Endpoint</th><th>Verification Details</th><th>Status</th></tr>
-                <tr><td><code>GET /v1/metrics/types</code></td><td>Verified retrieval of supported statistical metric types (PERFORMANCE, RISK, etc.).</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
-                <tr><td><code>POST /v1/metrics</code></td><td>Successfully fetched detailed portfolio statistical breakdown using custom filters.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
-            </table>
-        </section>
+        <h2>📂 Phase 1: Core Trade Operations (Audit Progress)</h2>
 
-        <section>
-            <h2 class="section-header">📂 Phase 4: Trade Summary</h2>
-            <table>
-                <tr><th>Endpoint</th><th>Verification Details</th><th>Status</th></tr>
-                <tr><td><code>GET /.../basic/by-owner</code></td><td>Returned <code>[]</code> (Empty List). Correct and expected behavior for fresh accounts.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
-                <tr><td><code>GET /v1/trade-summary/trades</code></td><td>Retrieved mapped JSON object grouping raw trade details by time period.</td><td><span class="status-badge">VERIFIED ✅</span></td></tr>
-            </table>
-        </section>
+        <h3>1. [POST] Add New Trade</h3>
+        <p><strong>Endpoint</strong>: <code>{{baseUrl}}/v1/trades/details</code></p>
+        <p><strong>Description</strong>: Creates a new trade entry in the system.</p>
+        <p><strong>Response Status</strong>: <code>201 Created</code> ✅</p>
 
-        <section>
-            <h2 class="section-header">📂 Phase 5: P/L Heatmap</h2>
-            <p><strong>Endpoints Verified:</strong> <code>yearly</code>, <code>monthly</code>, <code>daily</code>, and Unified <code>POST</code>.</p>
-            <div class="block">
-                Confirmed successful retrieval of daily, monthly, and yearly aggregated profit/loss mappings, providing the necessary data structures for frontend GitHub-style contribution graphs.
-            </div>
-        </section>
+        <h3>2. [GET] Filter Trades by Multiple Criteria</h3>
+        <p><strong>Endpoint</strong>: <code>{{baseUrl}}/v1/trades/filter</code></p>
+        <p><strong>Query Parameters</strong>: <code>portfolioIds=portfolio_main_001</code>, <code>statuses=OPEN</code></p>
+        <p><strong>Response Status</strong>: <code>200 OK</code> ✅</p>
 
-        <section>
-            <h2 class="section-header">📂 Phase 6: Trade Journal (Full CRUD)</h2>
-            <ul>
-                <li><strong>POST Create:</strong> Successfully saved a new journal entry. ID: <code>4049afa7-cc35-495a-bab0-554501dbb34c</code></li>
-                <li><strong>GET Retrieval:</strong> Successfully retrieved entries by User ID and specific Entry ID.</li>
-                <li><strong>PUT Update:</strong> Modified title/content and confirmed updates in the response.</li>
-                <li><strong>DELETE Entry:</strong> Purged entry from DB; confirmed 404 handling after deletion.</li>
-                <li><strong>Filters:</strong> Verified <code>by Trade</code> and <code>by Date Range</code> correctly handle empty states.</li>
-            </ul>
-        </section>
+        <h3>3. [PUT] Update Existing Trade</h3>
+        <p><strong>Endpoint</strong>: <code>{{baseUrl}}/v1/trades/details/{tradeId}</code></p>
+        <p><strong>Description</strong>: Updates status from <code>OPEN</code> to <code>WIN</code>.</p>
+        <p><strong>Response Status</strong>: <code>200 OK</code> ✅</p>
 
-        <section>
-            <h2 class="section-header">📂 Phase 7: Trade Management</h2>
-            <p><strong>Endpoints Verified:</strong> Portfolio Details and Custom Calendar Views.</p>
-            <div class="block">
-                Successfully verified retrieval of paginated portfolio trade details and successfully grouped trade details via precise custom date range filters.
-            </div>
-        </section>
+        <hr>
 
-        <section style="text-align: center; margin-top: 50px; border-top: 2px solid var(--primary-color); padding-top: 30px;">
-            <h2 style="border:none; color: var(--success-color);">🎉 API Audit 100% Complete</h2>
-            <p style="font-size: 1.1rem;">All core backend services and analytical engines have been 100% verified via Postman. The data pipeline is fully stable and ready for dashboard UI integration!</p>
-        </section>
+        <h2>📂 Phase 2: Portfolio Analytics (Audit Progress)</h2>
+
+        <h3>1. [POST] Recalculate Portfolio</h3>
+        <p><strong>Endpoint</strong>: <code>{{baseUrl}}/v1/portfolio-summary/{portfolioId}/recalculate</code></p>
+        <p><strong>Query Parameters</strong>: <code>userId=user_fresh_tester</code></p>
+        <p><strong>Response Status</strong>: <code>200 OK</code> ✅</p>
+        <p><strong>Verification</strong>: Successfully recalculated 7 trades, returning accurate P/L metrics (Net Profit: 3500.00) and an updated 100% STOCK asset allocation array.</p>
+
+        <h3>2. [GET] Get Asset Allocation</h3>
+        <p><strong>Endpoint</strong>: <code>{{baseUrl}}/v1/portfolio-summary/{portfolioId}/asset-allocation</code></p>
+        <p><strong>Response Status</strong>: <code>200 OK</code> ✅</p>
+        <p><strong>Verification</strong>: Verified retrieval of the newly calculated STOCK allocation directly from the API.</p>
+
+        <h3>3. [GET] Get Portfolios by Owner</h3>
+        <p><strong>Endpoint</strong>: <code>{{baseUrl}}/v1/portfolio-summary/by-owner/{traderId}</code></p>
+        <p><strong>Response Status</strong>: <code>200 OK</code> ✅</p>
+        <p><strong>Verification</strong>: Correctly fetched the list of portfolios belonging to the requested owner.</p>
+
+        <h2>📂 Phase 3: Trade Metrics & Analysis (Audit Progress)</h2>
+
+        <h3>1. [GET] Get Available Metric Types</h3>
+        <p><strong>Endpoint</strong>: <code>{{baseUrl}}/v1/metrics/types</code></p>
+        <p><strong>Response Status</strong>: <code>200 OK</code> ✅</p>
+        <p><strong>Verification</strong>: Verified retrieval of supported statistical metric types (PERFORMANCE, RISK, etc.).</p>
+
+        <h3>2. [POST] Get Trade Metrics with Filters</h3>
+        <p><strong>Endpoint</strong>: <code>{{baseUrl}}/v1/metrics</code></p>
+        <p><strong>Payload</strong>: <code>{"portfolioIds": ["portfolio_main_001"], "includeTradeDetails": true}</code></p>
+        <p><strong>Response Status</strong>: <code>200 OK</code> ✅</p>
+        <p><strong>Verification</strong>: Successfully fetched detailed portfolio statistical breakdown using custom filters.</p>
+
+        <h2>📂 Phase 4: Trade Summary (Audit Progress)</h2>
+
+        <h3>1. [GET] Get Active Basic Summaries by Owner</h3>
+        <p><strong>Endpoint</strong>: <code>{{baseUrl}}/v1/trade-summary/basic/by-owner/{ownerId}</code></p>
+        <p><strong>Response Status</strong>: <code>200 OK</code> ✅</p>
+        <p><strong>Verification</strong>: Returned <code>[]</code> (Empty List). This is the <strong>correct and expected behavior</strong> since the <code>user_fresh_tester</code> account has not manually generated or saved any static summary reports yet. The database was successfully queried without errors.</p>
+
+        <hr>
+
+        <h3>2. [GET] Get Trade Details by Time Period</h3>
+        <p><strong>Endpoint</strong>: <code>{{baseUrl}}/v1/trade-summary/trades?periodType=MONTH&year=2024&month=5&portfolioId=portfolio_main_001</code></p>
+        <p><strong>Response Status</strong>: <code>200 OK</code> ✅</p>
+        <p><strong>Verification</strong>: Successfully retrieved the mapped JSON object containing all raw trade details grouped neatly by the requested time period.</p>
+
+        <h2>📂 Phase 5: P/L Heatmap (Audit Progress)</h2>
+
+        <h3>1. [GET/POST] Heatmap Data Operations</h3>
+        <p><strong>Endpoints Verified</strong>:</p>
+        <ul>
+            <li><code>GET /v1/heatmap/yearly</code></li>
+            <li><code>GET /v1/heatmap/monthly</code></li>
+            <li><code>GET /v1/heatmap/daily</code></li>
+            <li><code>POST /v1/heatmap</code> (Unified Request)</li>
+        </ul>
+        <p><strong>Response Status</strong>: All <code>200 OK</code> ✅</p>
+        <p><strong>Verification</strong>: Confirmed successful retrieval of daily, monthly, and yearly aggregated profit/loss mappings, providing the necessary data structures for frontend GitHub-style contribution graphs.</p>
+
+        <h2>📂 Phase 6: Trade Journal (Audit Progress)</h2>
+
+        <h3>1. [POST] Create Journal Entry</h3>
+        <p><strong>Endpoint</strong>: <code>{{baseUrl}}/v1/journal</code></p>
+        <p><strong>Response Status</strong>: <code>201 Created</code> ✅</p>
+        <p><strong>Verification</strong>: Successfully saved a new journal entry to the database.</p>
+        <p><strong>Saved Credentials/IDs</strong>:</p>
+        <ul>
+            <li><strong>Journal Entry ID</strong>: <code>4049afa7-cc35-495a-bab0-554501dbb34c</code></li>
+        </ul>
+
+        <h3>2. [GET] Get Journal Entries</h3>
+        <p><strong>Endpoints Verified</strong>:</p>
+        <ul>
+            <li><code>GET /v1/journal/user/{userId}</code></li>
+            <li><code>GET /v1/journal/{entryId}</code></li>
+        </ul>
+        <p><strong>Response Status</strong>: All <code>200 OK</code> ✅</p>
+        <p><strong>Verification</strong>: Successfully retrieved the paginated list of journal entries by user, and successfully pulled the specific "Mastering The Breakout" document by its exact ID.</p>
+
+        <h3>3. [PUT] Update Journal Entry</h3>
+        <p><strong>Endpoint</strong>: <code>{{baseUrl}}/v1/journal/{entryId}</code></p>
+        <p><strong>Payload</strong>: <code>{"title": "Mastering The Breakout (Updated!)", ...}</code></p>
+        <p><strong>Response Status</strong>: <code>200 OK</code> ✅</p>
+        <p><strong>Verification</strong>: Successfully modified the existing journal entry and confirmed the updated fields in the response body.</p>
+
+        <h3>4. [DELETE] Delete Journal Entry</h3>
+        <p><strong>Endpoint</strong>: <code>{{baseUrl}}/v1/journal/{entryId}</code></p>
+        <p><strong>Response Status</strong>: <code>204 No Content</code> ✅</p>
+        <p><strong>Verification</strong>: Successfully purged the journal entry from the database. A subsequent GET request confirms it no longer exists (Returns 404).</p>
+
+        <h3>5. [GET] Trade Journal Filters</h3>
+        <p><strong>Endpoints Verified</strong>:</p>
+        <ul>
+            <li><code>GET /v1/journal/trade/{tradeId}</code></li>
+            <li><code>GET /v1/journal/date-range</code></li>
+        </ul>
+        <p><strong>Response Status</strong>: All <code>200 OK</code> ✅</p>
+        <p><strong>Verification</strong>: Both endpoints successfully returned <code>[]</code> (Empty List). Verified that the database handles queries for non-existent journals without throwing exceptions.</p>
+
+        <h2>📂 Phase 7: Trade Management (Audit Progress)</h2>
+
+        <h3>1. [GET] Trade Management Calendar & Portfolio Views</h3>
+        <p><strong>Endpoints Verified</strong>:</p>
+        <ul>
+            <li><code>GET /v1/trades/portfolio-details/{portfolioId}</code></li>
+            <li><code>GET /v1/trades/calendar/custom</code></li>
+        </ul>
+        <p><strong>Response Status</strong>: All <code>200 OK</code> ✅</p>
+        <p><strong>Verification</strong>: Successfully verified retrieval of paginated portfolio trade details and successfully grouped trade details via precise custom date range filters.</p>
+
+        <hr>
+
+        <h2>🎉 API Audit Complete</h2>
+        <p>All core backend services and analytical engines (Trade Operations, Portfolio Summary, Asset Allocation, Trade Metrics, Heatmaps, Journals, and Trade Management views) have been 100% verified via Postman. The data pipeline is fully stable and ready for dashboard UI integration!</p>
 
         <div class="no-print" style="margin-top: 40px; text-align: center; color: #64748b; font-size: 0.8rem;">
             <em>Open this file in your browser and press Ctrl+P to "Save as PDF"</em>
