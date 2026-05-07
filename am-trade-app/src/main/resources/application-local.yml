@@ -1,21 +1,15 @@
-KAFKA_BOOTSTRAP_SERVERS: localhost:9092
-KAFKA_SECURITY_PROTOCOL: PLAINTEXT
-KAFKA_SASL_MECHANISM: GSSAPI
-KAFKA_SASL_JAAS_CONFIG: null
-
 spring:
-  autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
   data:
     mongodb:
-      uri: ${MONGODB_URI}
+      uri: ${MONGODB_URI:mongodb://admin:password123@localhost:27017/trade_management?authSource=admin&directConnection=true}
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers: localhost:9092
     properties:
-      security.protocol: ${KAFKA_SECURITY_PROTOCOL}
-      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG}
+      security:
+        protocol: PLAINTEXT  # <--- THIS IS THE MAGIC LINE
+    consumer:
+      auto-offset-reset: earliest
 
-# Disable mongo health check for readiness since we want the app to start fast locally
 management:
   health:
     mongo:
@@ -23,8 +17,6 @@ management:
     kafka:
       enabled: false
 
-# Application specific settings
-am:
-  trade:
-    kafka:
-      enabled: false
+app:
+  kafka:
+    enabled: true

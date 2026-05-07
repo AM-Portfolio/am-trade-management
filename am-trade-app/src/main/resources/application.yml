@@ -39,6 +39,7 @@ spring:
   config:
     import:
       - classpath:application-common.yml
+      - classpath:application-redis.yml
       - optional:file:/vault/secrets/app
       - optional:file:/vault/secrets/mongo
       - optional:file:/vault/secrets/kafka
@@ -46,7 +47,7 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URI}
-      database: ${MONGODB_DATABASE:trade}
+      database: ${MONGODB_DATABASE:trade_management}
       auto-index-creation: false
       # ssl:
       #   enabled: true 

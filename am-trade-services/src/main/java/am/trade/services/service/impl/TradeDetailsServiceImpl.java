@@ -21,9 +21,9 @@ import java.util.stream.Collectors;
  * Implementation of TradeDetailsService that converts repository entities to domain models
  */
 @Service
-// Constructor injection is used instead of @RequiredArgsConstructor
-@Slf4j
 public class TradeDetailsServiceImpl implements TradeDetailsService {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeDetailsServiceImpl.class);
 
     private final TradeDetailsRepository tradeDetailsRepository;
     private final TradeDetailsMapper tradeDetailsMapper;

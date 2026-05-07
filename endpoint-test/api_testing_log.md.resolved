@@ -13,8 +13,9 @@
 
 ## 📂 Group 2: Portfolio Summary
 - [x] **GET /v1/portfolio-summary/by-owner/{ownerId}** ✅
-- [ ] **GET /v1/portfolio-summary/{portfolioId}/performance**
-- [ ] **GET /v1/portfolio-summary/{portfolioId}/allocation**
+- [x] **POST /v1/portfolio-summary/{portfolioId}/recalculate** ✅
+- [x] **GET /v1/portfolio-summary/{portfolioId}/performance** ✅
+- [ ] **GET /v1/portfolio-summary/{portfolioId}/asset-allocation**
 
 ## 📂 Group 3: Journal Templates
 - [x] **POST /v1/journal-templates** ✅

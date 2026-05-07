@@ -26,8 +26,8 @@ if (-not (Test-Path $AppDir)) {
 
 if (Test-Path $AppDir) {
     Push-Location $AppDir
-    ./../mvnw spring-boot:run "-Dspring-boot.run.profiles=local" "-Dspring-boot.run.jvmArguments=-Xmx512m" "-Dspring-boot.run.arguments=--server.port=8082"
+    ./../mvnw spring-boot:run "-Dspring-boot.run.profiles=local" "-Dspring-boot.run.jvmArguments=-Xmx512m" "-Dspring-boot.run.arguments=--server.port=8080"
     Pop-Location
 } else {
-    ./mvnw spring-boot:run "-Dspring-boot.run.profiles=local" "-Dspring-boot.run.jvmArguments=-Xmx512m" "-Dspring-boot.run.arguments=--server.port=8082"
+    ./mvnw spring-boot:run "-Dspring-boot.run.profiles=local" "-Dspring-boot.run.jvmArguments=-Xmx512m" "-Dspring-boot.run.arguments=--server.port=8080"
 }

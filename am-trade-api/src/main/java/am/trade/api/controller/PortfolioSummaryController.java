@@ -1,6 +1,7 @@
 package am.trade.api.controller;
 
 import am.trade.api.service.PortfolioSummaryService;
+import am.trade.api.service.TradeApiService;
 import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.PortfolioSummaryDTO;
 import am.trade.common.models.AssetAllocation;
@@ -33,6 +34,7 @@ import java.util.Map;
 public class PortfolioSummaryController {
 
     private final PortfolioSummaryService portfolioSummaryService;
+    private final TradeApiService tradeApiService;
 
     @Operation(summary = "Get portfolio summary by ID")
     @ApiResponses(value = {
@@ -152,6 +154,27 @@ public class PortfolioSummaryController {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             log.error("Error fetching portfolio summaries", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @Operation(summary = "Recalculate portfolio metrics")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Portfolio metrics recalculated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/{portfolioId}/recalculate")
+    public ResponseEntity<PortfolioModel> recalculatePortfolio(
+            @Parameter(description = "Portfolio ID") @PathVariable String portfolioId,
+            @Parameter(description = "User ID") @RequestParam String userId) {
+
+        try {
+            log.info("Request to recalculate metrics for portfolioId: {} by userId: {}", portfolioId, userId);
+            PortfolioModel updatedPortfolio = tradeApiService.recalculatePortfolio(portfolioId, userId);
+            return ResponseEntity.ok(updatedPortfolio);
+        } catch (Exception e) {
+            log.error("Error recalculating portfolio metrics", e);
             return ResponseEntity.internalServerError().build();
         }
     }

@@ -121,8 +121,8 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             // Add current day's profit/loss to cumulative performance
             List<TradeDetails> dailyTrades = tradesByDate.getOrDefault(currentDate, new ArrayList<>());
             Double dailyProfitLoss = dailyTrades.stream()
-                .mapToDouble(trade -> (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) 
-                    ? trade.getMetrics().getProfitLoss().doubleValue() : 0.0)
+                .filter(trade -> trade != null && trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null)
+                .mapToDouble(trade -> trade.getMetrics().getProfitLoss().doubleValue())
                 .sum();
             
             cumulativePerformance += dailyProfitLoss;

@@ -2,11 +2,14 @@ package am.trade.services.service.impl;
 
 import am.trade.common.models.EntryExitInfo;
 import am.trade.common.models.InstrumentInfo;
+import am.trade.common.models.AssetAllocation;
 import am.trade.common.models.PortfolioMetrics;
 import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.TradeMetrics;
 import am.trade.common.models.TradeModel;
+import am.trade.common.models.enums.AssetClass;
+import am.trade.common.models.enums.MarketSegment;
 import am.trade.common.models.enums.TradePositionType;
 import am.trade.common.models.enums.TradeStatus;
 import am.trade.common.models.enums.TradeType;
@@ -36,8 +39,9 @@ import java.util.stream.Collectors;
  * with proper handling of long/short positions, average pricing, and square-offs
  */
 @Service
-@Slf4j
 public class TradeProcessingServiceImpl implements TradeProcessingService {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeProcessingServiceImpl.class);
 
     private final TradeDetailsService tradeDetailsService;
     private final PortfolioPersistenceService portfolioPersistenceService;
@@ -140,14 +144,33 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                 
         // Convert back to list for further processing
         List<String> allTradeIds = new ArrayList<>(uniqueTradeIds);
-        
         processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId, userId);
     }
 
-    private PortfolioModel processTradeDetailsAndGetPortfolio(List<String> tradeIds, String portfolioId, String userId) {
+    public void processTradeDetailsWithObjects(List<TradeDetails> trades, String portfolioId, String userId) {
+        if (trades == null || trades.isEmpty()) {
+            return;
+        }
+        
+        List<String> tradeIds = trades.stream().map(TradeDetails::getTradeId).collect(Collectors.toList());
+        log.info("Processing {} trade objects for portfolio {}", trades.size(), portfolioId);
+        
+        processTradeDetailsWithObjects(trades, tradeIds, portfolioId, userId);
+    }
 
-        // Calculate portfolio-level metrics
-        PortfolioMetrics portfolioMetrics = calculatePortfolioMetrics(tradeIds);
+    private PortfolioModel processTradeDetailsAndGetPortfolio(List<String> tradeIds, String portfolioId, String userId) {
+        // Fallback for ID-only processing
+        List<TradeDetails> trades = tradeDetailsService.findModelsByTradeIds(tradeIds);
+        return processTradeDetailsWithObjects(trades, tradeIds, portfolioId, userId);
+    }
+
+    private PortfolioModel processTradeDetailsWithObjects(List<TradeDetails> trades, List<String> tradeIds, String portfolioId, String userId) {
+
+        // Ensure all individual trades have calculated metrics and get the refreshed list
+        List<TradeDetails> refreshedTrades = refreshTradeMetricsWithList(trades);
+
+        // Calculate portfolio-level metrics using the refreshed list
+        PortfolioMetrics portfolioMetrics = calculatePortfolioMetrics(refreshedTrades, tradeIds);
         
         // Check if portfolio already exists
         Optional<PortfolioModel> existingPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId);
@@ -159,9 +182,10 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             log.info("Updating existing portfolio with ID: {}", portfolioId);
             portfolioModel = existingPortfolio.get();
             
-            // Update metrics and trades
+            // Update metrics, trades and allocations
             portfolioModel.setMetrics(portfolioMetrics);
             portfolioModel.setTradeIds(tradeIds);
+            portfolioModel.setAssetAllocations(calculateAssetAllocation(refreshedTrades));
             portfolioModel.setLastUpdatedDate(LocalDateTime.now());
         } else {
             // Create new portfolio
@@ -176,20 +200,70 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                 .lastUpdatedDate(LocalDateTime.now())
                 .tradeIds(tradeIds)
                 .metrics(portfolioMetrics)
+                .assetAllocations(calculateAssetAllocation(refreshedTrades))
                 .build();
         }
         
         // Save the portfolio model to the database
-        portfolioModel = portfolioPersistenceService.savePortfolio(portfolioModel);
+        return portfolioPersistenceService.savePortfolio(portfolioModel);
+    }
 
-        return portfolioModel;
+    /**
+     * Ensures all trades in a list have their metrics calculated.
+     * This acts as a synchronous fallback for the Kafka-based calculation pipeline.
+     */
+    private List<TradeDetails> refreshTradeMetricsWithList(List<TradeDetails> trades) {
+        if (trades == null) return new ArrayList<>();
+        
+        boolean anyUpdated = false;
+
+        for (TradeDetails trade : trades) {
+            // Recalculate if metrics are null OR if profitLoss is zero (might be stale/initial value)
+            if (trade.getMetrics() == null || trade.getMetrics().getProfitLoss() == null || 
+                trade.getMetrics().getProfitLoss().compareTo(BigDecimal.ZERO) == 0) {
+                
+                log.info("Refreshing metrics for trade: {} (Current P/L: {})", 
+                    trade.getTradeId(), 
+                    trade.getMetrics() != null ? trade.getMetrics().getProfitLoss() : "null");
+                
+                TradeMetrics metrics = calculateTradeMetrics(
+                    trade.getEntryInfo(), 
+                    trade.getExitInfo(), 
+                    trade.getTradePositionType()
+                );
+                
+                trade.setMetrics(metrics);
+                
+                // Determine and set status
+                TradeStatus status = determineTradeStatus(trade.getEntryInfo(), trade.getExitInfo(), metrics);
+                trade.setStatus(status);
+                
+                tradeDetailsService.saveTradeDetails(trade);
+                anyUpdated = true;
+            }
+
+            // Ensure InstrumentInfo is populated for allocation calculation (even if metrics were not refreshed)
+            if (trade.getInstrumentInfo() == null || trade.getInstrumentInfo().getSegment() == MarketSegment.UNKNOWN) {
+                // Use factory method to build proper InstrumentInfo
+                InstrumentInfo info = InstrumentInfo.fromRawSymbol(trade.getSymbol());
+                if (info != null) {
+                    trade.setInstrumentInfo(info);
+                    // We must save if we updated the instrument info
+                    tradeDetailsService.saveTradeDetails(trade);
+                }
+            }
+        }
+        
+        return trades;
     }
     
     /**
      * Calculate portfolio-level metrics from trade details
      */
-    private PortfolioMetrics calculatePortfolioMetrics(List<String> tradeIds) {
-        List<TradeDetails> tradeDetails = tradeDetailsService.findModelsByTradeIds(tradeIds);
+    private PortfolioMetrics calculatePortfolioMetrics(List<TradeDetails> tradeDetails, List<String> tradeIds) {
+        if (tradeDetails == null || tradeDetails.isEmpty()) {
+            return PortfolioMetrics.builder().build();
+        }
         // Initialize counters and accumulators
         int totalTrades = tradeIds.size();
         int winningTrades = 0;
@@ -561,6 +635,11 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                 ? weightedPriceSum.divide(totalQuantity, DECIMAL_SCALE, ROUNDING_MODE)
                 : BigDecimal.ZERO;
         
+        // Ensure totalValue is calculated if missing
+        if (totalValue.compareTo(BigDecimal.ZERO) == 0 && averageEntryPrice.compareTo(BigDecimal.ZERO) > 0) {
+            totalValue = averageEntryPrice.multiply(totalQuantity);
+        }
+        
         return EntryExitInfo.builder()
                 .timestamp(firstEntryTime)
                 .price(averageEntryPrice)
@@ -620,6 +699,11 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                 ? weightedPriceSum.divide(totalQuantity, DECIMAL_SCALE, ROUNDING_MODE)
                 : BigDecimal.ZERO;
         
+        // Ensure totalValue is calculated if missing
+        if (totalValue.compareTo(BigDecimal.ZERO) == 0 && averageExitPrice.compareTo(BigDecimal.ZERO) > 0) {
+            totalValue = averageExitPrice.multiply(totalQuantity);
+        }
+        
         return EntryExitInfo.builder()
                 .timestamp(lastExitTime)
                 .price(averageExitPrice)
@@ -648,7 +732,10 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         
         // Calculate profit/loss
         BigDecimal profitLoss;
-        if (tradePositionType == TradePositionType.LONG) {
+        // Default to LONG for calculation if position type is missing
+        TradePositionType positionType = tradePositionType != null ? tradePositionType : TradePositionType.LONG;
+        
+        if (positionType == TradePositionType.LONG) {
             // For LONG positions: (exitPrice - entryPrice) * quantity
             profitLoss = exitInfo.getPrice()
                     .subtract(entryInfo.getPrice())
@@ -660,12 +747,20 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                     .multiply(BigDecimal.valueOf(entryInfo.getQuantity()));
         }
         
-        // Subtract fees
-        BigDecimal totalFees = entryInfo.getFees().add(exitInfo.getFees());
+        // Subtract fees (safely handle nulls)
+        BigDecimal entryFees = entryInfo.getFees() != null ? entryInfo.getFees() : BigDecimal.ZERO;
+        BigDecimal exitFees = exitInfo.getFees() != null ? exitInfo.getFees() : BigDecimal.ZERO;
+        BigDecimal totalFees = entryFees.add(exitFees);
         profitLoss = profitLoss.subtract(totalFees);
         
         // Calculate profit/loss percentage
         BigDecimal initialInvestment = entryInfo.getTotalValue();
+        
+        // Safety fallback: If totalValue is null, calculate it from price * quantity
+        if (initialInvestment == null || initialInvestment.compareTo(BigDecimal.ZERO) == 0) {
+            initialInvestment = entryInfo.getPrice().multiply(BigDecimal.valueOf(entryInfo.getQuantity()));
+        }
+        
         BigDecimal profitLossPercentage = initialInvestment.compareTo(BigDecimal.ZERO) > 0
                 ? profitLoss.divide(initialInvestment, DECIMAL_SCALE, ROUNDING_MODE).multiply(BigDecimal.valueOf(100))
                 : BigDecimal.ZERO;
@@ -784,5 +879,51 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         } else {
             return TradeStatus.BREAK_EVEN;
         }
+    }
+
+    /**
+     * Calculates asset allocation based on trade counts across different asset classes
+     * 
+     * @param trades The list of trade details
+     * @return List of AssetAllocation objects
+     */
+    private List<AssetAllocation> calculateAssetAllocation(List<TradeDetails> trades) {
+        if (trades == null || trades.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        log.debug("Calculating asset allocation for {} trades", trades.size());
+
+        // Group trades by AssetClass
+        Map<AssetClass, Long> countsByClass = trades.stream()
+            .map(t -> {
+                MarketSegment segment = t.getInstrumentInfo() != null ? t.getInstrumentInfo().getSegment() : MarketSegment.UNKNOWN;
+                if (segment == MarketSegment.EQUITY || segment == MarketSegment.EQ) {
+                    return AssetClass.STOCK;
+                } else if (segment != null && segment.isDerivative()) {
+                    if (segment == MarketSegment.EQUITY_OPTIONS || segment == MarketSegment.INDEX_OPTIONS || segment == MarketSegment.OPT) {
+                        return AssetClass.OPTION;
+                    } else {
+                        return AssetClass.FUTURES;
+                    }
+                } else if (segment == MarketSegment.CURRENCY) {
+                    return AssetClass.FOREX;
+                } else if (segment == MarketSegment.COMMODITY) {
+                    return AssetClass.COMMODITY;
+                }
+                return AssetClass.OTHER;
+            })
+            .collect(Collectors.groupingBy(c -> c, Collectors.counting()));
+
+        long totalTrades = (long) trades.size();
+
+        return countsByClass.entrySet().stream()
+            .map(entry -> AssetAllocation.builder()
+                .assetClass(entry.getKey())
+                .currentPercentage(BigDecimal.valueOf(entry.getValue())
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(BigDecimal.valueOf(totalTrades), 2, RoundingMode.HALF_UP))
+                .build())
+            .collect(Collectors.toList());
     }
 }

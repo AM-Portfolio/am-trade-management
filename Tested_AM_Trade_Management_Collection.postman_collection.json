@@ -1,0 +1,398 @@
+{
+  "info": {
+    "name": "AM Trade Management - Verified Endpoints",
+    "description": "A collection of all API endpoints tested and verified during the backend audit. Includes exact payloads and paths.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Trade Operations",
+      "item": [
+        {
+          "name": "Add New Trade",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user_fresh_tester\",\n  \"portfolioId\": \"portfolio_main_001\",\n  \"symbol\": \"AAPL\",\n  \"quantity\": 10,\n  \"entryPrice\": 150.00,\n  \"tradeDate\": \"2024-05-15T10:00:00\",\n  \"status\": \"OPEN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/trades/details",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "trades", "details"]
+            }
+          }
+        },
+        {
+          "name": "Filter Trades by Criteria",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/trades/filter?portfolioIds=portfolio_main_001&statuses=OPEN",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "trades", "filter"],
+              "query": [
+                { "key": "portfolioIds", "value": "portfolio_main_001" },
+                { "key": "statuses", "value": "OPEN" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Existing Trade",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"WIN\",\n  \"exitPrice\": 160.00,\n  \"exitDate\": \"2024-05-15T15:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/trades/details/946710f3-03a7-48d4-9726-c2165f8f9269",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "trades", "details", "946710f3-03a7-48d4-9726-c2165f8f9269"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Portfolio Analytics",
+      "item": [
+        {
+          "name": "Recalculate Portfolio",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/portfolio-summary/portfolio_main_001/recalculate?userId=user_fresh_tester",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "portfolio-summary", "portfolio_main_001", "recalculate"],
+              "query": [
+                { "key": "userId", "value": "user_fresh_tester" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Asset Allocation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/portfolio-summary/portfolio_main_001/asset-allocation",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "portfolio-summary", "portfolio_main_001", "asset-allocation"]
+            }
+          }
+        },
+        {
+          "name": "Get Portfolios by Owner",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/portfolio-summary/by-owner/user_fresh_tester",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "portfolio-summary", "by-owner", "user_fresh_tester"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Trade Metrics & Analysis",
+      "item": [
+        {
+          "name": "Get Available Metric Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/metrics/types",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "metrics", "types"]
+            }
+          }
+        },
+        {
+          "name": "Get Trade Metrics with Filters",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"portfolioIds\": [\"portfolio_main_001\"],\n  \"includeTradeDetails\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "metrics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Trade Summary",
+      "item": [
+        {
+          "name": "Get Active Basic Summaries by Owner",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/trade-summary/basic/by-owner/user_fresh_tester",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "trade-summary", "basic", "by-owner", "user_fresh_tester"]
+            }
+          }
+        },
+        {
+          "name": "Get Trade Details by Time Period",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/trade-summary/trades?periodType=MONTH&year=2024&month=5&portfolioId=portfolio_main_001",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "trade-summary", "trades"],
+              "query": [
+                { "key": "periodType", "value": "MONTH" },
+                { "key": "year", "value": "2024" },
+                { "key": "month", "value": "5" },
+                { "key": "portfolioId", "value": "portfolio_main_001" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Profit/Loss Heatmap",
+      "item": [
+        {
+          "name": "Get Yearly Heatmap",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/heatmap/yearly?portfolioId=portfolio_main_001",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "heatmap", "yearly"],
+              "query": [
+                { "key": "portfolioId", "value": "portfolio_main_001" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Monthly Heatmap",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/heatmap/monthly?portfolioId=portfolio_main_001&financialYear=2024",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "heatmap", "monthly"],
+              "query": [
+                { "key": "portfolioId", "value": "portfolio_main_001" },
+                { "key": "financialYear", "value": "2024" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Daily Heatmap",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/heatmap/daily?portfolioId=portfolio_main_001&year=2024&month=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "heatmap", "daily"],
+              "query": [
+                { "key": "portfolioId", "value": "portfolio_main_001" },
+                { "key": "year", "value": "2024" },
+                { "key": "month", "value": "5" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unified Heatmap (POST)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"portfolioIds\": [\"portfolio_main_001\"],\n  \"granularity\": \"DAILY\",\n  \"year\": 2024,\n  \"month\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/heatmap",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "heatmap"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Trade Journal",
+      "item": [
+        {
+          "name": "Create Journal Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user_fresh_tester\",\n  \"title\": \"Mastering The Breakout\",\n  \"content\": \"Followed my trading plan perfectly today. Caught a massive breakout on AAPL.\",\n  \"entryDate\": \"2024-05-15T14:30:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/journal",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "journal"]
+            }
+          }
+        },
+        {
+          "name": "Get Journal Entries by User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/journal/user/user_fresh_tester",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "journal", "user", "user_fresh_tester"]
+            }
+          }
+        },
+        {
+          "name": "Get Journal Entry by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/journal/4049afa7-cc35-495a-bab0-554501dbb34c",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "journal", "4049afa7-cc35-495a-bab0-554501dbb34c"]
+            }
+          }
+        },
+        {
+          "name": "Update Journal Entry",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user_fresh_tester\",\n  \"title\": \"Mastering The Breakout (Updated!)\",\n  \"content\": \"Followed my trading plan. Caught a massive breakout on AAPL. Adding a note: It was actually a perfect Bull Flag setup.\",\n  \"entryDate\": \"2024-05-15T14:30:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/journal/4049afa7-cc35-495a-bab0-554501dbb34c",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "journal", "4049afa7-cc35-495a-bab0-554501dbb34c"]
+            }
+          }
+        },
+        {
+          "name": "Delete Journal Entry",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/journal/4049afa7-cc35-495a-bab0-554501dbb34c",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "journal", "4049afa7-cc35-495a-bab0-554501dbb34c"]
+            }
+          }
+        },
+        {
+          "name": "Get Journal Entries by Trade",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/journal/trade/946710f3-03a7-48d4-9726-c2165f8f9269",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "journal", "trade", "946710f3-03a7-48d4-9726-c2165f8f9269"]
+            }
+          }
+        },
+        {
+          "name": "Get Journal Entries by Date Range",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/journal/date-range?userId=user_fresh_tester&startDate=2024-05-01&endDate=2024-05-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "journal", "date-range"],
+              "query": [
+                { "key": "userId", "value": "user_fresh_tester" },
+                { "key": "startDate", "value": "2024-05-01" },
+                { "key": "endDate", "value": "2024-05-31" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Trade Management",
+      "item": [
+        {
+          "name": "Get Portfolio Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/trades/portfolio-details/portfolio_main_001",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "trades", "portfolio-details", "portfolio_main_001"]
+            }
+          }
+        },
+        {
+          "name": "Get Trades by Custom Date Range",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/trades/calendar/custom?startDate=2024-05-01&endDate=2024-05-31&portfolioId=portfolio_main_001",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "trades", "calendar", "custom"],
+              "query": [
+                { "key": "startDate", "value": "2024-05-01" },
+                { "key": "endDate", "value": "2024-05-31" },
+                { "key": "portfolioId", "value": "portfolio_main_001" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8080",
+      "type": "string"
+    }
+  ]
+}
