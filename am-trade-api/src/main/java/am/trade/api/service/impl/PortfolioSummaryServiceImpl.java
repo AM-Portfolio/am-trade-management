@@ -105,7 +105,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         List<TradeDetails> relevantTrades = trades.stream()
             .filter(trade -> {
                 LocalDate tradeDate = trade.getTradeDate();
-                return !tradeDate.isBefore(startDate) && !tradeDate.isAfter(endDate);
+                return tradeDate != null && !tradeDate.isBefore(startDate) && !tradeDate.isAfter(endDate);
             })
             .collect(Collectors.toList());
         
@@ -121,6 +121,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             // Add current day's profit/loss to cumulative performance
             List<TradeDetails> dailyTrades = tradesByDate.getOrDefault(currentDate, new ArrayList<>());
             Double dailyProfitLoss = dailyTrades.stream()
+                .filter(trade -> trade != null && trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null)
                 .mapToDouble(trade -> trade.getMetrics().getProfitLoss().doubleValue())
                 .sum();
             

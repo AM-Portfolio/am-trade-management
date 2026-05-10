@@ -87,4 +87,12 @@ public interface TradeApiService {
      * @return Filtered trade details response with pagination metadata
      */
     FilterTradeDetailsResponse filterTradeDetails(FilterTradeDetailsRequest request, org.springframework.data.domain.Pageable pageable);
+    
+    /**
+     * Recalculates all metrics for a portfolio by fetching all historical trades
+     * @param portfolioId The ID of the portfolio to recalculate
+     * @param userId The ID of the user who owns the portfolio
+     * @return The updated portfolio details
+     */
+    am.trade.common.models.PortfolioModel recalculatePortfolio(String portfolioId, String userId);
 }

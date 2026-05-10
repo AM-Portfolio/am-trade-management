@@ -26,9 +26,10 @@ import lombok.extern.slf4j.Slf4j;
  * Implementation of TradeService
  */
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class TradeServiceImpl implements TradeService {
+    
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeServiceImpl.class);
     
     private final TradeRepository tradeRepository;
     private final TradeMapper tradeMapper;

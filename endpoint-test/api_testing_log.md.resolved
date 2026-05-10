@@ -1,0 +1,98 @@
+# API Testing Log (Audit Verified)
+
+## 📂 Group 1: Trade API
+- [x] **POST /v1/trades/details** (Add Trade) ✅
+- [x] **GET /v1/trades/filter** (Search Trades) ✅
+- [x] **POST /v1/trades/details/by-ids** (Batch Fetch) ✅
+- [x] **GET /v1/trades/details/portfolio/{portfolioId}** ✅
+- [x] **PUT /v1/trades/details/{tradeId}** ✅
+- [x] **POST /v1/trades/details/batch** ✅
+- [x] **POST /v1/trades/details/filter** ✅
+- [ ] **DELETE /v1/trades/details/{tradeId}**
+- [ ] **POST /v1/trades/details/bulk-delete**
+
+## 📂 Group 2: Portfolio Summary
+- [x] **GET /v1/portfolio-summary/by-owner/{ownerId}** ✅
+- [x] **POST /v1/portfolio-summary/{portfolioId}/recalculate** ✅
+- [x] **GET /v1/portfolio-summary/{portfolioId}/performance** ✅
+- [ ] **GET /v1/portfolio-summary/{portfolioId}/asset-allocation**
+
+## 📂 Group 3: Journal Templates
+- [x] **POST /v1/journal-templates** ✅
+- [ ] **GET /v1/journal-templates**
+- [ ] **GET /v1/journal-templates/{templateId}**
+- [ ] **PUT /v1/journal-templates/{templateId}**
+- [ ] **DELETE /v1/journal-templates/{templateId}**
+- [ ] **POST /v1/journal-templates/use/{templateId}**
+
+## 📂 Group 4: Favorite Filters
+- [x] **POST /v1/filters** ✅
+- [ ] **GET /v1/filters**
+- [ ] **GET /v1/filters/{filterId}**
+- [ ] **PUT /v1/filters/{filterId}**
+- [ ] **DELETE /v1/filters/{filterId}**
+- [ ] **DELETE /v1/filters/bulk**
+- [ ] **GET /v1/filters/default**
+- [ ] **PUT /v1/filters/{filterId}/default**
+- [ ] **POST /v1/filters/save-current**
+- [ ] **GET /v1/filters/apply/{filterId}**
+
+## 📂 Group 5: Profit/Loss Heatmap
+- [x] **POST /v1/heatmap** ✅
+- [ ] **GET /v1/heatmap/yearly**
+- [ ] **GET /v1/heatmap/monthly**
+- [ ] **GET /v1/heatmap/daily**
+
+## 📂 Group 6: Trade Metrics
+- [x] **POST /v1/metrics** ✅
+- [x] **GET /v1/metrics/types** ✅
+- [x] **GET /v1/metrics/compare** ✅
+- [x] **GET /v1/metrics/trends** ✅
+
+## 📂 Group 7: Trade Management (Calendar)
+- [x] **GET /v1/trades/calendar/day** ✅
+- [x] **GET /v1/trades/calendar/month** ✅
+- [x] **GET /v1/trades/calendar/quarter** ✅
+- [x] **GET /v1/trades/calendar/financial-year** ✅
+- [x] **GET /v1/trades/calendar/custom** ✅
+- [x] **GET /v1/trades/portfolio-details/{portfolioId}** ✅
+
+## 📂 Group 8: Notebooks
+- [x] **GET /v1/notebook/items** ✅
+- [x] **POST /v1/notebook/items** ✅
+- [x] **GET /v1/notebook/items/{itemId}** ✅
+- [x] **PUT /v1/notebook/items/{itemId}** ✅
+- [x] **DELETE /v1/notebook/items/{itemId}** ✅
+- [x] **GET /v1/notebook/tags** ✅
+- [x] **POST /v1/notebook/tags** ✅
+- [ ] **PUT /v1/notebook/tags/{tagId}**
+- [x] **DELETE /v1/notebook/tags/{tagId}** ✅
+
+## 📂 Group 9: Trade Comparisons
+- [ ] **POST /v1/comparison**
+- [ ] **GET /v1/comparison/portfolios**
+- [ ] **GET /v1/comparison/time-periods**
+- [ ] **GET /v1/comparison/strategies**
+
+## 📂 Group 10: Trade Journals
+- [ ] **GET /v1/journals**
+- [ ] **POST /v1/journals**
+- [ ] **GET /v1/journals/{entryId}**
+- [ ] **PUT /v1/journals/{entryId}**
+- [ ] **DELETE /v1/journals/{entryId}**
+
+## 📂 Group 11: Trade Summary
+- [x] **GET /v1/trade-summary/trades** ✅
+- [ ] **GET /v1/trade-summary/basic/{id}**
+- [ ] **GET /v1/trade-summary/detailed/{id}**
+- [ ] **GET /v1/trade-summary/composite/{id}**
+- [ ] **POST /v1/trade-summary**
+- [ ] **DELETE /v1/trade-summary/{id}**
+
+## 📂 Group 12: User Preferences
+- [ ] **GET /v1/preferences/dashboard**
+- [ ] **POST /v1/preferences/dashboard**
+- [ ] **POST /v1/preferences/dashboard/reset**
+
+## 📂 Group 13: Health
+- [x] **GET /health** ✅
