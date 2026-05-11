@@ -1,6 +1,7 @@
 package am.trade.api.controller;
 
 import am.trade.api.service.PortfolioSummaryService;
+import am.trade.api.service.TradeApiService;
 import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.PortfolioSummaryDTO;
 import am.trade.common.models.AssetAllocation;
@@ -17,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import am.trade.api.dto.ErrorResponse;
+
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,6 +36,7 @@ import java.util.Map;
 public class PortfolioSummaryController {
 
     private final PortfolioSummaryService portfolioSummaryService;
+    private final TradeApiService tradeApiService;
 
     @Operation(summary = "Get portfolio summary by ID")
     @ApiResponses(value = {
@@ -42,7 +46,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/{portfolioId}")
-    public ResponseEntity<PortfolioModel> getPortfolioSummary(
+    public ResponseEntity<?> getPortfolioSummary(
             @Parameter(description = "Portfolio ID") @PathVariable String portfolioId) {
 
         try {
@@ -51,10 +55,15 @@ public class PortfolioSummaryController {
             return ResponseEntity.ok(portfolioSummary);
         } catch (IllegalArgumentException e) {
             log.error("Invalid portfolio ID: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/" + portfolioId));
         } catch (Exception e) {
             log.error("Error fetching portfolio summary", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/" + portfolioId)
+                    .build());
         }
     }
 
@@ -66,7 +75,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/{portfolioId}/asset-allocation")
-    public ResponseEntity<List<AssetAllocation>> getAssetAllocation(
+    public ResponseEntity<?> getAssetAllocation(
             @Parameter(description = "Portfolio ID") @PathVariable String portfolioId) {
 
         try {
@@ -75,10 +84,15 @@ public class PortfolioSummaryController {
             return ResponseEntity.ok(assetAllocation);
         } catch (IllegalArgumentException e) {
             log.error("Invalid portfolio ID: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/" + portfolioId + "/asset-allocation"));
         } catch (Exception e) {
             log.error("Error fetching asset allocation", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/" + portfolioId + "/asset-allocation")
+                    .build());
         }
     }
 
@@ -89,7 +103,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/{portfolioId}/performance")
-    public ResponseEntity<Map<LocalDate, Double>> getPortfolioPerformance(
+    public ResponseEntity<?> getPortfolioPerformance(
             @Parameter(description = "Portfolio ID") @PathVariable String portfolioId,
             @Parameter(description = "Start date in ISO format (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @Parameter(description = "End date in ISO format (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
@@ -102,10 +116,15 @@ public class PortfolioSummaryController {
             return ResponseEntity.ok(performance);
         } catch (IllegalArgumentException e) {
             log.error("Invalid request parameters: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/" + portfolioId + "/performance"));
         } catch (Exception e) {
             log.error("Error fetching portfolio performance", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/" + portfolioId + "/performance")
+                    .build());
         }
     }
 
@@ -116,7 +135,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/compare")
-    public ResponseEntity<Map<String, PortfolioModel>> comparePortfolios(
+    public ResponseEntity<?> comparePortfolios(
             @Parameter(description = "List of portfolio IDs to compare") @RequestParam List<String> portfolioIds) {
 
         try {
@@ -125,10 +144,15 @@ public class PortfolioSummaryController {
             return ResponseEntity.ok(comparisonResult);
         } catch (IllegalArgumentException e) {
             log.error("Invalid request parameters: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/compare"));
         } catch (Exception e) {
             log.error("Error comparing portfolios", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/compare")
+                    .build());
         }
     }
 
@@ -139,7 +163,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/by-owner/{ownerId}")
-    public ResponseEntity<List<PortfolioSummaryDTO>> getPortfolioSummariesByOwnerId(
+    public ResponseEntity<?> getPortfolioSummariesByOwnerId(
             @Parameter(description = "Owner ID") @PathVariable String ownerId) {
 
         try {
@@ -149,10 +173,41 @@ public class PortfolioSummaryController {
             return ResponseEntity.ok(portfolioSummaries);
         } catch (IllegalArgumentException e) {
             log.error("Invalid owner ID: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/by-owner/" + ownerId));
         } catch (Exception e) {
             log.error("Error fetching portfolio summaries", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/by-owner/" + ownerId)
+                    .build());
+        }
+    }
+
+    @Operation(summary = "Recalculate portfolio metrics")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Portfolio metrics recalculated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/{portfolioId}/recalculate")
+    public ResponseEntity<?> recalculatePortfolio(
+            @Parameter(description = "Portfolio ID") @PathVariable String portfolioId,
+            @Parameter(description = "User ID") @RequestParam String userId) {
+
+        try {
+            log.info("Request to recalculate metrics for portfolioId: {} by userId: {}", portfolioId, userId);
+            PortfolioModel updatedPortfolio = tradeApiService.recalculatePortfolio(portfolioId, userId);
+            return ResponseEntity.ok(updatedPortfolio);
+        } catch (Exception e) {
+            log.error("Error recalculating portfolio metrics", e);
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/" + portfolioId + "/recalculate")
+                    .build());
         }
     }
 }

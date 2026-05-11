@@ -12,9 +12,12 @@ import am.trade.exceptions.config.ExceptionsAutoConfiguration;
 import am.trade.kafka.config.KafkaConfig;
 import am.trade.services.config.TradeServicesAutoConfiguration;
 
+import org.springframework.kafka.annotation.EnableKafka;
+
 /**
  * Main application class for Trade Management System
  */
+@EnableKafka
 @SpringBootApplication(scanBasePackages = { "am.trade" })
 @Import({
         KafkaConfig.class,

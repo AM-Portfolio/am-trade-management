@@ -54,6 +54,15 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+
+        
+    <!-- Dashboard Module (for TradeMetricsCalculationService) -->
+        <dependency>
+            <groupId>am.trade</groupId>
+            <artifactId>am-trade-dashboard</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         
         <!-- Test -->
         <!-- MapStruct -->

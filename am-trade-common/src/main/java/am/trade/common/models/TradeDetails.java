@@ -73,17 +73,19 @@ public class TradeDetails {
     private TradeEntryExistReasoning exitReasoning;
 
     public LocalDate getTradeDate() {
-        return entryInfo.getTimestamp().toLocalDate();
+        return (entryInfo != null && entryInfo.getTimestamp() != null) ? entryInfo.getTimestamp().toLocalDate() : null;
     }
 
     public LocalDate getTradeEndDate() {
-        return exitInfo != null ? exitInfo.getTimestamp().toLocalDate() : null;
+        return (exitInfo != null && exitInfo.getTimestamp() != null) ? exitInfo.getTimestamp().toLocalDate() : null;
     }
     
 
-    @JsonIgnore
     public String getSymbol() {
-        return instrumentInfo.getSymbol();
+        if (instrumentInfo != null) {
+            return instrumentInfo.getSymbol();
+        }
+        return symbol;
     }
     /**
      * Calculate profit/loss based on position type (LONG or SHORT)

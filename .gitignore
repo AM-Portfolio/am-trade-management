@@ -1,7 +1,5 @@
 # Maven
 target/
-!**/src/main/**/target/
-!**/src/test/**/target/
 pom.xml.versionsBackup
 pom.xml.releaseBackup
 release.properties
