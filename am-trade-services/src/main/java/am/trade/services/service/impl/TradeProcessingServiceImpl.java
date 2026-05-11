@@ -432,7 +432,10 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
      */
     private List<TradeModel> sortTradesByExecutionTime(List<TradeModel> trades) {
         return trades.stream()
-                .sorted(Comparator.comparing(trade -> trade.getBasicInfo().getOrderExecutionTime()))
+                .sorted(Comparator.comparing(
+                        (TradeModel trade) -> getTradeTimestamp(trade),
+                        Comparator.nullsLast(Comparator.naturalOrder())
+                ))
                 .collect(Collectors.toList());
     }
     
@@ -611,17 +614,21 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         BigDecimal weightedPriceSum = BigDecimal.ZERO;
         BigDecimal totalValue = BigDecimal.ZERO;
         BigDecimal totalFees = BigDecimal.ZERO;
-        LocalDateTime firstEntryTime = entryTrades.get(0).getBasicInfo().getOrderExecutionTime();
+        LocalDateTime firstEntryTime = getTradeTimestamp(entryTrades.get(0));
         
         for (TradeModel trade : entryTrades) {
-            BigDecimal quantity = BigDecimal.valueOf(trade.getExecutionInfo().getQuantity());
-            BigDecimal price = trade.getExecutionInfo().getPrice();
+            BigDecimal quantityValue = trade.getExecutionInfo().getQuantity() != null 
+                    ? BigDecimal.valueOf(trade.getExecutionInfo().getQuantity()) 
+                    : BigDecimal.ZERO;
+            BigDecimal priceValue = trade.getExecutionInfo().getPrice() != null 
+                    ? trade.getExecutionInfo().getPrice() 
+                    : BigDecimal.ZERO;
             
-            totalQuantity = totalQuantity.add(quantity);
-            weightedPriceSum = weightedPriceSum.add(price.multiply(quantity));
+            totalQuantity = totalQuantity.add(quantityValue);
+            weightedPriceSum = weightedPriceSum.add(priceValue.multiply(quantityValue));
             
             // Calculate trade value
-            BigDecimal tradeValue = price.multiply(quantity);
+            BigDecimal tradeValue = priceValue.multiply(quantityValue);
             totalValue = totalValue.add(tradeValue);
             
             // Sum up fees if available
@@ -675,17 +682,21 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         BigDecimal weightedPriceSum = BigDecimal.ZERO;
         BigDecimal totalValue = BigDecimal.ZERO;
         BigDecimal totalFees = BigDecimal.ZERO;
-        LocalDateTime lastExitTime = exitTrades.get(exitTrades.size() - 1).getBasicInfo().getOrderExecutionTime();
+        LocalDateTime lastExitTime = getTradeTimestamp(exitTrades.get(exitTrades.size() - 1));
         
         for (TradeModel trade : exitTrades) {
-            BigDecimal quantity = BigDecimal.valueOf(trade.getExecutionInfo().getQuantity());
-            BigDecimal price = trade.getExecutionInfo().getPrice();
+            BigDecimal quantityValue = trade.getExecutionInfo().getQuantity() != null 
+                    ? BigDecimal.valueOf(trade.getExecutionInfo().getQuantity()) 
+                    : BigDecimal.ZERO;
+            BigDecimal priceValue = trade.getExecutionInfo().getPrice() != null 
+                    ? trade.getExecutionInfo().getPrice() 
+                    : BigDecimal.ZERO;
             
-            totalQuantity = totalQuantity.add(quantity);
-            weightedPriceSum = weightedPriceSum.add(price.multiply(quantity));
+            totalQuantity = totalQuantity.add(quantityValue);
+            weightedPriceSum = weightedPriceSum.add(priceValue.multiply(quantityValue));
             
             // Calculate trade value
-            BigDecimal tradeValue = price.multiply(quantity);
+            BigDecimal tradeValue = priceValue.multiply(quantityValue);
             totalValue = totalValue.add(tradeValue);
             
             // Sum up fees if available
@@ -925,5 +936,21 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                     .divide(BigDecimal.valueOf(totalTrades), 2, RoundingMode.HALF_UP))
                 .build())
             .collect(Collectors.toList());
+    }
+
+    /**
+     * Helper to get a reliable timestamp for a trade, falling back to tradeDate if executionTime is null.
+     */
+    private LocalDateTime getTradeTimestamp(TradeModel trade) {
+        if (trade.getBasicInfo() == null) {
+            return null;
+        }
+        if (trade.getBasicInfo().getOrderExecutionTime() != null) {
+            return trade.getBasicInfo().getOrderExecutionTime();
+        }
+        if (trade.getBasicInfo().getTradeDate() != null) {
+            return trade.getBasicInfo().getTradeDate().atStartOfDay();
+        }
+        return null;
     }
 }
