@@ -20,8 +20,12 @@ COPY am-trade-sdk-java am-trade-sdk-java
 RUN mvn clean package -DskipTests
 
 # Stage 2: Run the application
-FROM eclipse-temurin:17-jdk-alpine
+FROM eclipse-temurin:17.0.10_7-jdk-alpine
 WORKDIR /app
+
+# Create a non-root user for security hardening
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
 
 # Copy the built JAR from the build stage
 COPY --from=build /app/am-trade-app/target/*.jar app.jar
