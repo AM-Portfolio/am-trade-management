@@ -96,8 +96,6 @@ public class PortfolioSummaryController {
         }
     }
 
-    }
-
     @Operation(summary = "Get portfolio performance over time")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Portfolio performance retrieved successfully"),
