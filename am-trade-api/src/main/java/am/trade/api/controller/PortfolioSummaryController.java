@@ -46,7 +46,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/{portfolioId}")
-    public ResponseEntity<PortfolioModel> getPortfolioSummary(
+    public ResponseEntity<?> getPortfolioSummary(
             @Parameter(description = "Portfolio ID") @PathVariable String portfolioId) {
 
         try {
@@ -75,7 +75,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/{portfolioId}/asset-allocation")
-    public ResponseEntity<List<AssetAllocation>> getAssetAllocation(
+    public ResponseEntity<?> getAssetAllocation(
             @Parameter(description = "Portfolio ID") @PathVariable String portfolioId) {
 
         try {
@@ -103,7 +103,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/{portfolioId}/performance")
-    public ResponseEntity<Map<LocalDate, Double>> getPortfolioPerformance(
+    public ResponseEntity<?> getPortfolioPerformance(
             @Parameter(description = "Portfolio ID") @PathVariable String portfolioId,
             @Parameter(description = "Start date in ISO format (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @Parameter(description = "End date in ISO format (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
@@ -135,7 +135,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/compare")
-    public ResponseEntity<Map<String, PortfolioModel>> comparePortfolios(
+    public ResponseEntity<?> comparePortfolios(
             @Parameter(description = "List of portfolio IDs to compare") @RequestParam List<String> portfolioIds) {
 
         try {
@@ -163,7 +163,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/by-owner/{ownerId}")
-    public ResponseEntity<List<PortfolioSummaryDTO>> getPortfolioSummariesByOwnerId(
+    public ResponseEntity<?> getPortfolioSummariesByOwnerId(
             @Parameter(description = "Owner ID") @PathVariable String ownerId) {
 
         try {
@@ -192,7 +192,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/{portfolioId}/recalculate")
-    public ResponseEntity<PortfolioModel> recalculatePortfolio(
+    public ResponseEntity<?> recalculatePortfolio(
             @Parameter(description = "Portfolio ID") @PathVariable String portfolioId,
             @Parameter(description = "User ID") @RequestParam String userId) {
 
