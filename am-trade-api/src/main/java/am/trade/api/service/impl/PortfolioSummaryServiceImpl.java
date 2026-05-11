@@ -103,6 +103,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         
         // Get trades in the date range
         List<TradeDetails> relevantTrades = trades.stream()
+            .filter(java.util.Objects::nonNull)
             .filter(trade -> {
                 LocalDate tradeDate = trade.getTradeDate();
                 return tradeDate != null && !tradeDate.isBefore(startDate) && !tradeDate.isAfter(endDate);

@@ -32,6 +32,11 @@ public class TradeCalculationService {
             List<String> portfolioIds = Collections.singletonList(portfolioId);
             TradeSummary summary = metricsCalculationService.calculateAllMetrics(portfolioIds);
 
+            if (summary == null || summary.getTradeDetails().isEmpty()) {
+                log.warn("[TradeCalc] No trades found or calculation failed for User: {}, Portfolio: {}. Skipping Kafka update.", userId, portfolioId);
+                return;
+            }
+
             // 2. Wrap the data into a Map so the Gateway can easily read it
             // Important: The Gateway expects a "userId" field at the top level
             Map<String, Object> payload = new HashMap<>();

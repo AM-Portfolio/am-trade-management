@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import am.trade.api.dto.ErrorResponse;
+
 
 import java.time.LocalDate;
 import java.util.List;
@@ -53,10 +55,15 @@ public class PortfolioSummaryController {
             return ResponseEntity.ok(portfolioSummary);
         } catch (IllegalArgumentException e) {
             log.error("Invalid portfolio ID: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/" + portfolioId));
         } catch (Exception e) {
             log.error("Error fetching portfolio summary", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/" + portfolioId)
+                    .build());
         }
     }
 
@@ -77,11 +84,18 @@ public class PortfolioSummaryController {
             return ResponseEntity.ok(assetAllocation);
         } catch (IllegalArgumentException e) {
             log.error("Invalid portfolio ID: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/" + portfolioId + "/asset-allocation"));
         } catch (Exception e) {
             log.error("Error fetching asset allocation", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/" + portfolioId + "/asset-allocation")
+                    .build());
         }
+    }
+
     }
 
     @Operation(summary = "Get portfolio performance over time")
@@ -104,10 +118,15 @@ public class PortfolioSummaryController {
             return ResponseEntity.ok(performance);
         } catch (IllegalArgumentException e) {
             log.error("Invalid request parameters: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/" + portfolioId + "/performance"));
         } catch (Exception e) {
             log.error("Error fetching portfolio performance", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/" + portfolioId + "/performance")
+                    .build());
         }
     }
 
@@ -127,10 +146,15 @@ public class PortfolioSummaryController {
             return ResponseEntity.ok(comparisonResult);
         } catch (IllegalArgumentException e) {
             log.error("Invalid request parameters: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/compare"));
         } catch (Exception e) {
             log.error("Error comparing portfolios", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/compare")
+                    .build());
         }
     }
 
@@ -151,10 +175,15 @@ public class PortfolioSummaryController {
             return ResponseEntity.ok(portfolioSummaries);
         } catch (IllegalArgumentException e) {
             log.error("Invalid owner ID: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/by-owner/" + ownerId));
         } catch (Exception e) {
             log.error("Error fetching portfolio summaries", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/by-owner/" + ownerId)
+                    .build());
         }
     }
 
@@ -175,7 +204,12 @@ public class PortfolioSummaryController {
             return ResponseEntity.ok(updatedPortfolio);
         } catch (Exception e) {
             log.error("Error recalculating portfolio metrics", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/" + portfolioId + "/recalculate")
+                    .build());
         }
     }
 }

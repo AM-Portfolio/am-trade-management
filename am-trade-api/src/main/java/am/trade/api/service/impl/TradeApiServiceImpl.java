@@ -918,6 +918,7 @@ public class TradeApiServiceImpl implements TradeApiService {
         tradeProcessingService.processTradeDetailsWithObjects(allTrades, portfolioId, userId);
         
         // 3. Return the updated portfolio
-        return portfolioPersistenceService.findByPortfolioId(portfolioId).orElse(null);
+        return portfolioPersistenceService.findByPortfolioId(portfolioId)
+                .orElseThrow(() -> new am.trade.exceptions.TradeException("Portfolio not found with ID: " + portfolioId, org.springframework.http.HttpStatus.NOT_FOUND));
     }
 }

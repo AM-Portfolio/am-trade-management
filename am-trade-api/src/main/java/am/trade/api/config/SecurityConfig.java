@@ -31,7 +31,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/actuator/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**",
+                        .requestMatchers("/actuator/health", "/actuator/info","/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**",
                                 "/api-docs/**")
                         .permitAll()
                         .anyRequest().authenticated())
@@ -44,7 +44,7 @@ public class SecurityConfig {
     public JwtDecoder jwtDecoder() {
         SecretKeySpec secretKey = new SecretKeySpec(
                 jwtSecret.getBytes(StandardCharsets.UTF_8),
-                "HS256");
+                "HmacSHA256");
         return NimbusJwtDecoder.withSecretKey(secretKey).build();
     }
 }
