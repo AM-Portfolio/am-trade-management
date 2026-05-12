@@ -3,9 +3,6 @@ KAFKA_SECURITY_PROTOCOL: PLAINTEXT
 KAFKA_SASL_MECHANISM: GSSAPI
 KAFKA_SASL_JAAS_CONFIG: null
 
-spring:
-  autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
   data:
     mongodb:
       uri: ${MONGODB_URI}
@@ -27,4 +24,4 @@ management:
 am:
   trade:
     kafka:
-      enabled: false
+      enabled: true

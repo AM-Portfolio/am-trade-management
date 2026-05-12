@@ -37,7 +37,7 @@ spring:
       - optional:file:/vault/secrets/redis
   data:
     mongodb:
-      uri: ${MONGODB_URI}
+      uri: ${SPRING_DATA_MONGODB_URI:${MONGODB_URI}}
       database: ${MONGODB_DATABASE:trade}
       auto-index-creation: false
       # ssl:
