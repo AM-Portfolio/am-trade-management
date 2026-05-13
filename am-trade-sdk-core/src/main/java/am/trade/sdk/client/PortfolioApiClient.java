@@ -24,9 +24,10 @@ public class PortfolioApiClient extends BaseApiClient {
         return gson.fromJson(response, Map.class);
     }
 
-    public Map<String, Object> getAllPortfolios(int page, int pageSize) {
-        log.debug("Getting all portfolios");
-        return new HashMap<>();
+    public List<Map<String, Object>> getPortfoliosByOwner(String ownerId) {
+        log.debug("Getting portfolios for owner: {}", ownerId);
+        com.google.gson.JsonElement response = get("/api/v1/portfolio-summary/by-owner/" + ownerId);
+        return gson.fromJson(response, new com.google.gson.reflect.TypeToken<List<Map<String, Object>>>(){}.getType());
     }
 
     public Map<String, Object> createPortfolio(Map<String, Object> portfolioData) {

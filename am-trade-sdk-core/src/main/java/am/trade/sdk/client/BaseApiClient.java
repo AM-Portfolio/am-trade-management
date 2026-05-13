@@ -49,12 +49,12 @@ public abstract class BaseApiClient {
      * Make GET request
      *
      * @param endpoint API endpoint (without base URL)
-     * @return Response as JsonObject
+     * @return Response as JsonElement
      * @throws ApiException if API returns error
      * @throws NetworkException if network error occurs
      * @throws TimeoutException if request times out
      */
-    protected JsonObject get(String endpoint) {
+    protected com.google.gson.JsonElement get(String endpoint) {
         return request("GET", endpoint, null);
     }
 
@@ -63,9 +63,9 @@ public abstract class BaseApiClient {
      *
      * @param endpoint API endpoint
      * @param params Query parameters
-     * @return Response as JsonObject
+     * @return Response as JsonElement
      */
-    protected JsonObject get(String endpoint, java.util.Map<String, Object> params) {
+    protected com.google.gson.JsonElement get(String endpoint, java.util.Map<String, Object> params) {
         if (params == null || params.isEmpty()) {
             return get(endpoint);
         }
@@ -138,12 +138,12 @@ public abstract class BaseApiClient {
      * @param method HTTP method
      * @param endpoint API endpoint
      * @param body Request body (JSON string or null)
-     * @return Response as JsonObject
+     * @return Response as JsonElement
      * @throws ApiException if API returns error
      * @throws NetworkException if network error occurs
      * @throws TimeoutException if request times out
      */
-    private JsonObject request(String method, String endpoint, String body) {
+    private com.google.gson.JsonElement request(String method, String endpoint, String body) {
         String url = config.getApiUrl() + endpoint;
 
         try {
@@ -179,7 +179,7 @@ public abstract class BaseApiClient {
                 }
 
                 String responseBody = response.body() != null ? response.body().string() : "{}";
-                return gson.fromJson(responseBody, JsonObject.class);
+                return gson.fromJson(responseBody, com.google.gson.JsonElement.class);
             }
 
         } catch (ApiException e) {
