@@ -886,6 +886,52 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
      * 
      * @param trades The list of trade details
      * @return List of AssetAllocation objects
+<<<<<<< HEAD
+=======
+     */
+    private List<AssetAllocation> calculateAssetAllocation(List<TradeDetails> trades) {
+        if (trades == null || trades.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        log.debug("Calculating asset allocation for {} trades", trades.size());
+
+        // Group trades by AssetClass
+        Map<AssetClass, Long> countsByClass = trades.stream()
+            .map(t -> {
+                MarketSegment segment = t.getInstrumentInfo() != null ? t.getInstrumentInfo().getSegment() : MarketSegment.UNKNOWN;
+                if (segment == MarketSegment.EQUITY || segment == MarketSegment.EQ) {
+                    return AssetClass.STOCK;
+                } else if (segment != null && segment.isDerivative()) {
+                    if (segment == MarketSegment.EQUITY_OPTIONS || segment == MarketSegment.INDEX_OPTIONS || segment == MarketSegment.OPT) {
+                        return AssetClass.OPTION;
+                    } else {
+                        return AssetClass.FUTURES;
+                    }
+                } else if (segment == MarketSegment.CURRENCY) {
+                    return AssetClass.FOREX;
+                } else if (segment == MarketSegment.COMMODITY) {
+                    return AssetClass.COMMODITY;
+                }
+                return AssetClass.OTHER;
+            })
+            .collect(Collectors.groupingBy(c -> c, Collectors.counting()));
+
+        long totalTrades = (long) trades.size();
+
+        return countsByClass.entrySet().stream()
+            .map(entry -> AssetAllocation.builder()
+                .assetClass(entry.getKey())
+                .currentPercentage(BigDecimal.valueOf(entry.getValue())
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(BigDecimal.valueOf(totalTrades), 2, RoundingMode.HALF_UP))
+                .build())
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Helper to get a reliable timestamp for a trade, falling back to tradeDate if executionTime is null.
+>>>>>>> 6c5385cf07e073d9fadc1657da75894383d6da1f
      */
     private List<AssetAllocation> calculateAssetAllocation(List<TradeDetails> trades) {
         if (trades == null || trades.isEmpty()) {

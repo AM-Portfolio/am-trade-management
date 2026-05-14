@@ -61,6 +61,11 @@
             <name>GitHub AM Common Data Model Apache Maven Packages</name>
             <url>https://maven.pkg.github.com/AM-Portfolio/am-common-data-parent</url>
         </repository>
+        <repository>
+            <id>github-am-core-services</id>
+            <name>GitHub AM Core Services Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/AM-Portfolio/am-core-services</url>
+        </repository>
     </repositories>
 
     <distributionManagement>
@@ -96,6 +101,24 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+
+		<!-- Monitoring and Tracing -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-bridge-otel</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-exporter-otlp</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
 		</dependency>
 
 		<!-- Environment variable management -->

@@ -62,6 +62,22 @@ public class TradeMetricsCalculationService {
      */
     public TradeSummary calculateAllMetrics(List<String> portfolioIds) {
         List<TradeDetailsEntity> tradeEntities = tradeDetailsRepository.findByPortfolioIdIn(portfolioIds);
+        return calculateMetricsFromEntities(tradeEntities, portfolioIds);
+    }
+
+    /**
+     * Calculate all metrics for all portfolios belonging to a specific user
+     * 
+     * @param userId The user ID to calculate metrics for
+     * @return A complete trade summary with all metrics calculated
+     */
+    public TradeSummary calculateAllMetricsForUser(String userId) {
+        log.info("[TradeMetrics] Calculating global metrics for User: {}", userId);
+        List<TradeDetailsEntity> tradeEntities = tradeDetailsRepository.findByUserId(userId);
+        return calculateMetricsFromEntities(tradeEntities, Collections.singletonList("ALL"));
+    }
+
+    private TradeSummary calculateMetricsFromEntities(List<TradeDetailsEntity> tradeEntities, List<String> portfolioIds) {
         List<TradeDetails> trades = tradeEntities.stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());

@@ -19,6 +19,7 @@ import am.trade.services.service.TradeService;
 import am.trade.persistence.repository.TradeRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @RequiredArgsConstructor
+@Observed(name = "trade.service")
 public class TradeServiceImpl implements TradeService {
     
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeServiceImpl.class);

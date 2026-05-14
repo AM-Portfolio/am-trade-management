@@ -21,6 +21,13 @@ am:
       metrics:
         collection-interval-seconds: 60
         retention-days: 30
+  observability:
+    enabled: ${AM_OBSERVABILITY_ENABLED:true}
+    request-log:
+      enabled: ${AM_OBSERVABILITY_REQUEST_LOG_ENABLED:true}
+      ignore-paths: /actuator/**,/favicon.ico
+    sanitize:
+      preview-bytes: ${AM_OBSERVABILITY_SANITIZE_PREVIEW_BYTES:256}
 
 server:
   port: 8080
@@ -67,6 +74,15 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+  tracing:
+    enabled: true
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+    propagation:
+      type: w3c
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
   endpoint:
     health:
       probes:
@@ -87,6 +103,12 @@ management:
       enabled: true
     kafka:
       enabled: true
+
+# OpenTelemetry service metadata
+otel:
+  service:
+    name: ${spring.application.name}
+    namespace: am-trade-management
 
 # Logging configuration
 logging:

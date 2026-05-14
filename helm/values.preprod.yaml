@@ -21,6 +21,10 @@ global:
         path: "apps/data/preprod/services/am-trade-management"
 env:
   SPRING_PROFILES_ACTIVE: "preprod"
+  TRACING_SAMPLING_PROBABILITY: "1.0"
+  AM_OBSERVABILITY_ENABLED: "true"
+  AM_OBSERVABILITY_REQUEST_LOG_ENABLED: "true"
+  LOG_FILE: "/var/log/am-trade/application-preprod.log"
 
 ingress:
   enabled: true

@@ -7,6 +7,9 @@ environment: "dev"
 
 env:
   SPRING_PROFILES_ACTIVE: "dev"
+  TRACING_SAMPLING_PROBABILITY: "1.0"
+  AM_OBSERVABILITY_ENABLED: "true"
+  AM_OBSERVABILITY_REQUEST_LOG_ENABLED: "true"
 
 global:
   vault:

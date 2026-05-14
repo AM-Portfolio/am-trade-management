@@ -16,8 +16,6 @@ logging:
     org.springframework.web: INFO
   file:
     name: /var/log/am-trade/application-preprod.log
-  pattern:
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 # Pre-production server configuration
 server:
