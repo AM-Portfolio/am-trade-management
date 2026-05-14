@@ -16,15 +16,15 @@ import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.mapper.PortfolioMapper;
 import am.trade.persistence.mapper.TradeDetailsMapper;
 import am.trade.persistence.repository.PortfolioRepository;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service for persisting and retrieving portfolio data
  * Handles the mapping between domain models and persistence entities
  */
 @Service
-@Slf4j
 public class PortfolioService {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PortfolioService.class);
 
     private final PortfolioRepository portfolioRepository;
     private final PortfolioMapper portfolioMapper;
