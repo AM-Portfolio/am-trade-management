@@ -6,7 +6,6 @@ import am.trade.api.service.UserPreferencesService;
 import am.trade.common.models.DashboardPreferences;
 import am.trade.persistence.repository.DashboardPreferencesRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,9 +20,10 @@ import java.util.UUID;
  * Implementation of UserPreferencesService for managing user dashboard preferences
  */
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class UserPreferencesServiceImpl implements UserPreferencesService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserPreferencesServiceImpl.class);
+
 
     private final DashboardPreferencesRepository dashboardPreferencesRepository;
 

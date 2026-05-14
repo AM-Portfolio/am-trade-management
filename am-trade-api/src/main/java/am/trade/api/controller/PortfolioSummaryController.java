@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -31,9 +30,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/v1/portfolio-summary")
 @RequiredArgsConstructor
-@Slf4j
 @Tag(name = "Portfolio Summary", description = "Portfolio summary and analytics operations")
 public class PortfolioSummaryController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PortfolioSummaryController.class);
+
 
     private final PortfolioSummaryService portfolioSummaryService;
     private final TradeApiService tradeApiService;
@@ -211,24 +211,4 @@ public class PortfolioSummaryController {
         }
     }
 
-    @Operation(summary = "Recalculate portfolio metrics")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Portfolio metrics recalculated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid request"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    @PostMapping("/{portfolioId}/recalculate")
-    public ResponseEntity<PortfolioModel> recalculatePortfolio(
-            @Parameter(description = "Portfolio ID") @PathVariable String portfolioId,
-            @Parameter(description = "User ID") @RequestParam String userId) {
-
-        try {
-            log.info("Request to recalculate metrics for portfolioId: {} by userId: {}", portfolioId, userId);
-            PortfolioModel updatedPortfolio = tradeApiService.recalculatePortfolio(portfolioId, userId);
-            return ResponseEntity.ok(updatedPortfolio);
-        } catch (Exception e) {
-            log.error("Error recalculating portfolio metrics", e);
-            return ResponseEntity.internalServerError().build();
-        }
-    }
 }

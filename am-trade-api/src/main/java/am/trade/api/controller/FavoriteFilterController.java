@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RestController
 @RequestMapping("/v1/filters")
 @RequiredArgsConstructor
 @Tag(name = "Favorite Filters", description = "API for managing user's favorite metric filters")
 public class FavoriteFilterController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FavoriteFilterController.class);
+
 
     private final FavoriteFilterService favoriteFilterService;
     private final UserTradeService userTradeService;

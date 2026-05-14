@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,12 +21,13 @@ import java.util.List;
 /**
  * Controller for managing journal templates
  */
-@Slf4j
 @RestController
 @RequestMapping("/v1/journal-templates")
 @RequiredArgsConstructor
 @Tag(name = "Journal Templates", description = "API for managing journal templates with favorites and recommendations")
 public class JournalTemplateController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(JournalTemplateController.class);
+
 
     private final JournalTemplateService templateService;
 

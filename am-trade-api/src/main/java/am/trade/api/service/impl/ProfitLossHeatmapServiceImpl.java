@@ -21,11 +21,11 @@ import am.trade.common.models.ProfitLossHeatmapData;
 import am.trade.common.models.TradeDetails;
 import am.trade.api.service.ProfitLossHeatmapService;
 import am.trade.api.service.TradeManagementService;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Slf4j
 public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ProfitLossHeatmapServiceImpl.class);
+
 
     private final TradeManagementService tradeManagementService;
     

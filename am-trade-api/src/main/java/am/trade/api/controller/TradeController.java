@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/v1/trades")
 @Tag(name = "Trade API", description = "API for trade operations")
 @RequiredArgsConstructor
-@Slf4j
 @Validated
 @Observed(name = "trade.controller")
 public class TradeController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeController.class);
+
 
         private final TradeApiService tradeApiService;
 

@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +21,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/v1/heatmap")
 @RequiredArgsConstructor
-@Slf4j
 @Tag(name = "Profit/Loss Heatmap", description = "Profit/Loss heatmap operations with various granularities")
 public class ProfitLossHeatmapController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ProfitLossHeatmapController.class);
+
 
     private final ProfitLossHeatmapService profitLossHeatmapService;
 

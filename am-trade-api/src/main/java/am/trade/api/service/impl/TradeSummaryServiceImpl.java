@@ -9,7 +9,6 @@ import am.trade.api.service.TradeManagementService;
 // Using fully qualified name for service layer TradeSummaryService to avoid collision
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -24,8 +23,9 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class TradeSummaryServiceImpl implements TradeSummaryService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeSummaryServiceImpl.class);
+
 
     private final TradeManagementService tradeManagementService;
     private final am.trade.services.service.TradeSummaryService serviceLayerTradeSummaryService;

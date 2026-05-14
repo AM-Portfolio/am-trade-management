@@ -31,15 +31,15 @@ import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import am.trade.services.service.PortfolioPersistenceService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implementation of TradeApiService that handles trade API operations
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class TradeApiServiceImpl implements TradeApiService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeApiServiceImpl.class);
+
     
     private final TradeManagementService tradeManagementService;
     private final TradeProcessingService tradeProcessingService;
@@ -918,11 +918,7 @@ public class TradeApiServiceImpl implements TradeApiService {
         tradeProcessingService.processTradeDetailsWithObjects(allTrades, portfolioId, userId);
         
         // 3. Return the updated portfolio
-<<<<<<< HEAD
-        return portfolioPersistenceService.findByPortfolioId(portfolioId).orElse(null);
-=======
         return portfolioPersistenceService.findByPortfolioId(portfolioId)
                 .orElseThrow(() -> new am.trade.exceptions.TradeException("Portfolio not found with ID: " + portfolioId, org.springframework.http.HttpStatus.NOT_FOUND));
->>>>>>> 6c5385cf07e073d9fadc1657da75894383d6da1f
     }
 }

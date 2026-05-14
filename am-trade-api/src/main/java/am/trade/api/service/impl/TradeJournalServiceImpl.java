@@ -6,7 +6,6 @@ import am.trade.api.service.TradeJournalService;
 import am.trade.common.models.TradeJournalEntry;
 import am.trade.persistence.repository.TradeJournalRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,9 +22,10 @@ import java.util.stream.Collectors;
  * Implementation of TradeJournalService for managing trade journal entries
  */
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class TradeJournalServiceImpl implements TradeJournalService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeJournalServiceImpl.class);
+
 
     private final TradeJournalRepository tradeJournalRepository;
 

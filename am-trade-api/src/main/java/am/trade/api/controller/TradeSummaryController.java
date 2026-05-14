@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -34,9 +33,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/v1/trade-summary")
 @RequiredArgsConstructor
-@Slf4j
 @Tag(name = "Trade Summary", description = "Trade summary operations by calendar periods")
 public class TradeSummaryController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeSummaryController.class);
+
 
     private final TradeSummaryService tradeSummaryService;
     private final TradeMetricsCalculationService tradeMetricsCalculationService;
