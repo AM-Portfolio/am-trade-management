@@ -29,8 +29,11 @@ RUN mvn --settings settings.xml clean package -DskipTests -DGITHUB_PACKAGES_USER
 FROM eclipse-temurin:17.0.10_7-jdk-alpine
 WORKDIR /app
 
-# Create a non-root user for security hardening
-RUN addgroup -S spring && adduser -S spring -G spring
+# Create a non-root user for security hardening, and pre-create the required log directory
+RUN addgroup -S spring && adduser -S spring -G spring && \
+    mkdir -p /var/log/am-trade && \
+    chown -R spring:spring /var/log/am-trade
+
 USER spring:spring
 
 # Copy the built JAR from the build stage
