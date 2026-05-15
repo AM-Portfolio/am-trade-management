@@ -3,7 +3,7 @@ FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
-# Copy the pre-built JAR file from the correct am-trade-management module
+# Copy the pre-built JAR file from the correct am-trade-management
 COPY am-trade-app/target/*.jar app.jar
 
 # Set timezone
