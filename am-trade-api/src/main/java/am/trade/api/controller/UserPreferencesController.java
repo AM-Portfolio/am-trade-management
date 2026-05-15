@@ -46,8 +46,13 @@ public class UserPreferencesController {
         } catch (IllegalArgumentException e) {
             log.error("Preferences not found: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.notFound(
+<<<<<<< Updated upstream
                     "Dashboard preferences not found", 
                     "/api/v1/preferences/dashboard")
+=======
+                    "Dashboard preferences not found",
+                    "/v1/preferences/dashboard")
+>>>>>>> Stashed changes
                     .addDetail("No preferences found for user: " + userId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
@@ -73,8 +78,13 @@ public class UserPreferencesController {
         } catch (IllegalArgumentException e) {
             log.error("Invalid preferences data: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
+<<<<<<< Updated upstream
                     e.getMessage(), 
                     "/api/v1/preferences/dashboard");
+=======
+                    e.getMessage(),
+                    "/v1/preferences/dashboard");
+>>>>>>> Stashed changes
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
@@ -96,8 +106,13 @@ public class UserPreferencesController {
         } catch (IllegalArgumentException e) {
             log.error("User not found: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.notFound(
+<<<<<<< Updated upstream
                     e.getMessage(), 
                     "/api/v1/preferences/dashboard/reset");
+=======
+                    e.getMessage(),
+                    "/v1/preferences/dashboard/reset");
+>>>>>>> Stashed changes
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }

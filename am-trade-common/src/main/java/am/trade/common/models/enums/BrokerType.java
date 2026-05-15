@@ -1,0 +1,66 @@
+package am.trade.common.models.enums;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Broker platform used for executing trades")
+public enum BrokerType {
+    @Schema(description = "Dhan trading platform")
+    DHAN("Dhan"),
+    
+    @Schema(description = "Zerodha trading platform")
+    ZERODHA("Zerodha"),
+    
+    @Schema(description = "Mirae Asset MStock trading platform")
+    MSTOCK("MStock"),
+    
+    @Schema(description = "Grow trading platform")
+    GROW("Grow"),
+    
+    @Schema(description = "Kotak Securities trading platform")
+    KOTAK("Kotak");
+ 
+    private String brokerName;
+ 
+    private BrokerType(String brokerName) {
+       this.brokerName = brokerName;
+    }
+ 
+    public static BrokerType fromCode(String code) {
+       BrokerType[] var1 = values();
+       int var2 = var1.length;
+ 
+       for(int var3 = 0; var3 < var2; ++var3) {
+          BrokerType type = var1[var3];
+          if (type.getCode().equals(code)) {
+             return type;
+          }
+       }
+ 
+       return null;
+    }
+ 
+    public String getCode() {
+       return this.brokerName;
+    }
+ 
+    public boolean isDhan() {
+       return "Dhan".equals(this.brokerName);
+    }
+ 
+    public boolean isZerodha() {
+       return "Zerodha".equals(this.brokerName);
+    }
+ 
+    public boolean isMStock() {
+       return "MStock".equals(this.brokerName);
+    }
+ 
+    public boolean isGrow() {
+       return "Grow".equals(this.brokerName);
+    }
+ 
+    public boolean isKotak() {
+       return "Kotak".equals(this.brokerName);
+    }
+ }
+ 

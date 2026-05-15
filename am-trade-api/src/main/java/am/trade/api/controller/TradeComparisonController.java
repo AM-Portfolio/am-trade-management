@@ -45,8 +45,13 @@ public class TradeComparisonController {
         } catch (IllegalArgumentException e) {
             log.error("Invalid comparison request: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
+<<<<<<< Updated upstream
                     e.getMessage(), 
                     "/api/v1/comparison");
+=======
+                    e.getMessage(),
+                    "/v1/comparison");
+>>>>>>> Stashed changes
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
@@ -75,8 +80,13 @@ public class TradeComparisonController {
         } catch (IllegalArgumentException e) {
             log.error("Invalid portfolio comparison request: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
+<<<<<<< Updated upstream
                     e.getMessage(), 
                     "/api/v1/comparison/portfolios");
+=======
+                    e.getMessage(),
+                    "/v1/comparison/portfolios");
+>>>>>>> Stashed changes
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
@@ -106,8 +116,13 @@ public class TradeComparisonController {
         } catch (IllegalArgumentException e) {
             log.error("Invalid time period comparison request: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
+<<<<<<< Updated upstream
                     e.getMessage(), 
                     "/api/v1/comparison/time-periods");
+=======
+                    e.getMessage(),
+                    "/v1/comparison/time-periods");
+>>>>>>> Stashed changes
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
@@ -136,8 +151,13 @@ public class TradeComparisonController {
         } catch (IllegalArgumentException e) {
             log.error("Invalid strategy comparison request: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
+<<<<<<< Updated upstream
                     e.getMessage(), 
                     "/api/v1/comparison/strategies");
+=======
+                    e.getMessage(),
+                    "/v1/comparison/strategies");
+>>>>>>> Stashed changes
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }

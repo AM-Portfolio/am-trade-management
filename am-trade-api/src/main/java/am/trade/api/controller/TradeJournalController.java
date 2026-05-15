@@ -54,8 +54,13 @@ public class TradeJournalController {
         } catch (IllegalArgumentException e) {
             log.error("Invalid journal entry data: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
+<<<<<<< Updated upstream
                     e.getMessage(), 
                     "/api/v1/journal");
+=======
+                    e.getMessage(),
+                    "/v1/journal");
+>>>>>>> Stashed changes
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
@@ -77,8 +82,13 @@ public class TradeJournalController {
         } catch (IllegalArgumentException e) {
             log.error("Journal entry not found: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.notFound(
+<<<<<<< Updated upstream
                     "Journal entry not found", 
                     "/api/v1/journal/" + entryId)
+=======
+                    "Journal entry not found",
+                    "/v1/journal/" + entryId)
+>>>>>>> Stashed changes
                     .addDetail("No journal entry found with ID: " + entryId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
@@ -129,8 +139,13 @@ public class TradeJournalController {
         
         if (endDate.isBefore(startDate)) {
             ErrorResponse errorResponse = ErrorResponse.badRequest(
+<<<<<<< Updated upstream
                     "End date cannot be before start date", 
                     "/api/v1/journal/date-range");
+=======
+                    "End date cannot be before start date",
+                    "/v1/journal/date-range");
+>>>>>>> Stashed changes
             return ResponseEntity.badRequest().body(errorResponse);
         }
         
@@ -141,8 +156,13 @@ public class TradeJournalController {
         } catch (IllegalArgumentException e) {
             log.error("Error fetching journal entries: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
+<<<<<<< Updated upstream
                     e.getMessage(), 
                     "/api/v1/journal/date-range");
+=======
+                    e.getMessage(),
+                    "/v1/journal/date-range");
+>>>>>>> Stashed changes
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
@@ -171,6 +191,7 @@ public class TradeJournalController {
             
             if (e.getMessage().contains("not found")) {
                 ErrorResponse errorResponse = ErrorResponse.notFound(
+<<<<<<< Updated upstream
                         e.getMessage(), 
                         "/api/v1/journal/" + entryId);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
@@ -178,6 +199,15 @@ public class TradeJournalController {
                 ErrorResponse errorResponse = ErrorResponse.badRequest(
                         e.getMessage(), 
                         "/api/v1/journal/" + entryId);
+=======
+                        e.getMessage(),
+                        "/v1/journal/" + entryId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+            } else {
+                ErrorResponse errorResponse = ErrorResponse.badRequest(
+                        e.getMessage(),
+                        "/v1/journal/" + entryId);
+>>>>>>> Stashed changes
                 return ResponseEntity.badRequest().body(errorResponse);
             }
         }
@@ -199,8 +229,13 @@ public class TradeJournalController {
         } catch (IllegalArgumentException e) {
             log.error("Journal entry not found: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.notFound(
+<<<<<<< Updated upstream
                     e.getMessage(), 
                     "/api/v1/journal/" + entryId);
+=======
+                    e.getMessage(),
+                    "/v1/journal/" + entryId);
+>>>>>>> Stashed changes
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }

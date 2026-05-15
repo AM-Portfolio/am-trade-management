@@ -30,6 +30,7 @@ springdoc:
   packages-to-scan: am.trade.api.controller
 
 # Server configuration
+server:
   servlet:
     context-path: /
   compression:
