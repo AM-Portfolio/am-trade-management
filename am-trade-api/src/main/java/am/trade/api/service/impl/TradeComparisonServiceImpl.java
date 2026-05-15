@@ -9,7 +9,6 @@ import am.trade.dashboard.service.metrics.PerformanceMetricsService;
 import am.trade.persistence.repository.TradeComparisonRepository;
 import am.trade.services.service.TradeDetailsService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -24,9 +23,10 @@ import java.util.stream.Collectors;
  * Implementation of TradeComparisonService for comparing trade performance across different dimensions
  */
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class TradeComparisonServiceImpl implements TradeComparisonService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeComparisonServiceImpl.class);
+
 
     private final TradeDetailsService tradeDetailsService;
     private final PerformanceMetricsService performanceMetricsService;

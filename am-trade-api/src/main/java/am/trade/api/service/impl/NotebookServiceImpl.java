@@ -11,7 +11,6 @@ import am.trade.common.models.enums.NotebookItemType;
 import am.trade.persistence.repository.NotebookItemRepository;
 import am.trade.persistence.repository.NotebookTagRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,9 +19,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class NotebookServiceImpl implements NotebookService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(NotebookServiceImpl.class);
+
 
     private final NotebookItemRepository notebookItemRepository;
     private final NotebookTagRepository notebookTagRepository;

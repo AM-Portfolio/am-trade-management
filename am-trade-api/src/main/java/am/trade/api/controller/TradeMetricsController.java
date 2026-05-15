@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,9 +26,10 @@ import java.util.Set;
 @RestController
 @RequestMapping("/v1/metrics")
 @RequiredArgsConstructor
-@Slf4j
 @Tag(name = "Trade Metrics", description = "Flexible trade metrics API with customizable filters")
 public class TradeMetricsController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeMetricsController.class);
+
 
     private final TradeMetricsService tradeMetricsService;
 

@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,12 +25,13 @@ import java.util.List;
 /**
  * Controller for managing notebook items and tags
  */
-@Slf4j
 @RestController
 @RequestMapping("/v1/notebook")
 @RequiredArgsConstructor
 @Tag(name = "Notebook", description = "API for managing notebook items (folders, notes, goals) and tags")
 public class NotebookController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(NotebookController.class);
+
 
     private final NotebookService notebookService;
 

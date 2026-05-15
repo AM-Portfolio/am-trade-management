@@ -31,15 +31,15 @@ import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import am.trade.services.service.PortfolioPersistenceService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implementation of TradeApiService that handles trade API operations
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class TradeApiServiceImpl implements TradeApiService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeApiServiceImpl.class);
+
     
     private final TradeManagementService tradeManagementService;
     private final TradeProcessingService tradeProcessingService;

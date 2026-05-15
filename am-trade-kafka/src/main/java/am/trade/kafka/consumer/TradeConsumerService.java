@@ -4,9 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.am.observability.flow.FlowLogger;
+import com.am.observability.flow.FlowSpan;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -27,24 +28,34 @@ public class TradeConsumerService {
     private final JsonConverter jsonConverter;
     private final TradeProcessingService tradeProcessingService;
     private final TradeDetailsService tradeDetailsService;
+    private final FlowLogger flowLogger;
 
     @KafkaListener(topics = "${spring.kafka.trade-topic}", groupId = "${spring.kafka.consumer.group-id}", containerFactory = "kafkaListenerContainerFactory")
     public void consume(String message, Acknowledgment acknowledgment) {
-        try {
-            log.info("Received message: {}", message);
+        try (FlowSpan span = flowLogger.start("trade.kafka.consume.trade_update",
+                "payload_bytes", message == null ? 0 : message.length())) {
+            try {
+                log.info("Received message: {}", message);
 
-            // Convert JSON string to PortfolioUpdateEvent
-            TradeUpdateEvent event = jsonConverter.fromJson(message, TradeUpdateEvent.class);
-            log.info("Converted to event: {}", event);
+                // Convert JSON string to PortfolioUpdateEvent
+                TradeUpdateEvent event = jsonConverter.fromJson(message, TradeUpdateEvent.class);
+                log.info("Converted to event: {}", event);
 
-            // Process the event
-            processMessage(event);
+                // Process the event
+                processMessage(event);
 
-            // If processing was successful, acknowledge the message
-            acknowledgment.acknowledge();
-            log.info("Message processed and acknowledged successfully");
-        } catch (Exception e) {
-            log.error("Failed to process message: {}. Error: {}", message, e.getMessage(), e);
+                // If processing was successful, acknowledge the message
+                acknowledgment.acknowledge();
+                flowLogger.complete(span,
+                        "userId", event.getUserId(),
+                        "portfolioId", event.getPortfolioId(),
+                        "trade_count", event.getTrades().size());
+                log.info("Message processed and acknowledged successfully");
+            } catch (Exception e) {
+                flowLogger.fail(span, e);
+                // Keep the existing error-handling behavior while still emitting a failed flow log.
+                log.error("Failed to process message: {}. Error: {}", message, e.getMessage(), e);
+            }
         }
     }
 

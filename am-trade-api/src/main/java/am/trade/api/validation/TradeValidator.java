@@ -4,7 +4,6 @@ import am.trade.common.models.Attachment;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.TradeEntryExistReasoning;
 import am.trade.common.models.TradePsychologyData;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -14,8 +13,9 @@ import java.util.List;
  * Handles validation of trade details, psychology data, entry reasoning, and attachments
  */
 @Component
-@Slf4j
 public class TradeValidator {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeValidator.class);
+
 
     /**
      * Validates the basic required fields for a trade

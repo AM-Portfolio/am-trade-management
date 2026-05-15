@@ -12,19 +12,19 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * Controller for comparing trade performance across different dimensions
  */
-@Slf4j
 @RestController
 @RequestMapping("/v1/comparison")
 @RequiredArgsConstructor
 @Tag(name = "Trade Comparison", description = "API for comparing trade performance across different dimensions")
 public class TradeComparisonController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeComparisonController.class);
+
 
     private final TradeComparisonService tradeComparisonService;
 

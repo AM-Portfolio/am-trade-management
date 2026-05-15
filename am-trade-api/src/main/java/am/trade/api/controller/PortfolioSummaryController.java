@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -31,9 +30,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/v1/portfolio-summary")
 @RequiredArgsConstructor
-@Slf4j
 @Tag(name = "Portfolio Summary", description = "Portfolio summary and analytics operations")
 public class PortfolioSummaryController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PortfolioSummaryController.class);
+
 
     private final PortfolioSummaryService portfolioSummaryService;
     private final TradeApiService tradeApiService;
@@ -210,4 +210,5 @@ public class PortfolioSummaryController {
                     .build());
         }
     }
+
 }

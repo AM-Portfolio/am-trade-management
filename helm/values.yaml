@@ -74,6 +74,16 @@ env:
   LOG_FORMAT: "json"
   LOG_LEVEL: "INFO"
   TZ: "UTC"
+  # Micrometer tracing -> Grafana Alloy/OpenTelemetry Collector -> Tempo.
+  # Override this if your collector service name or namespace is different.
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://otel-collector.monitoring.svc.cluster.local:4318/v1/traces"
+  TRACING_SAMPLING_PROBABILITY: "1.0"
+  AM_OBSERVABILITY_ENABLED: "true"
+  AM_OBSERVABILITY_REQUEST_LOG_ENABLED: "true"
+  AM_OBSERVABILITY_SANITIZE_PREVIEW_BYTES: "256"
+  LOG_FILE: "/var/log/am-trade/application-preprod.log"
+  LOG_FILE_MAX_SIZE: "100MB"
+  LOG_FILE_MAX_HISTORY: "7"
   # Non-secret defaults (Vault will override at runtime)
   KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
   KAFKA_SASL_MECHANISM: "SCRAM-SHA-256"

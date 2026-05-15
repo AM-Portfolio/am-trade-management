@@ -8,7 +8,6 @@ import am.trade.common.models.TemplateField;
 import am.trade.common.models.enums.JournalTemplateCategory;
 import am.trade.persistence.repository.JournalTemplateRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,9 +18,10 @@ import java.util.stream.Collectors;
  * Implementation of JournalTemplateService for managing journal templates
  */
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class JournalTemplateServiceImpl implements JournalTemplateService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(JournalTemplateServiceImpl.class);
+
 
     private final JournalTemplateRepository templateRepository;
     private final TradeJournalService tradeJournalService;

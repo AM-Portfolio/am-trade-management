@@ -7,7 +7,6 @@ import am.trade.api.service.UserTradeService;
 import am.trade.common.models.FavoriteFilter;
 import am.trade.common.models.MetricsFilterConfig;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -21,8 +20,9 @@ import java.util.Set;
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class UserTradeServiceImpl implements UserTradeService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserTradeServiceImpl.class);
+
 
     private final FavoriteFilterService favoriteFilterService;
     private final TradeMetricsService tradeMetricsService;

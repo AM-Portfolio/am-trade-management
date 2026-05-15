@@ -16,16 +16,25 @@ COPY am-trade-exceptions am-trade-exceptions
 COPY am-trade-analytics am-trade-analytics
 COPY am-trade-sdk-java am-trade-sdk-java
 
-# Build the application
-RUN mvn clean package -DskipTests
+COPY settings.xml .
+
+# Accept build arguments passed by the GitHub Actions central pipeline
+ARG GITHUB_PACKAGES_USERNAME=am-portfolio-bot
+ARG GITHUB_PACKAGES_TOKEN
+
+# Build the application using the custom settings.xml for GitHub Packages authentication
+RUN mvn --settings settings.xml clean package -DskipTests -DGITHUB_PACKAGES_USERNAME=${GITHUB_PACKAGES_USERNAME} -DGITHUB_PACKAGES_TOKEN=${GITHUB_PACKAGES_TOKEN}
 
 # Stage 2: Run the application
 FROM eclipse-temurin:17.0.10_7-jdk-alpine
 WORKDIR /app
 
-# Create a non-root user for security hardening
-RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
+# Create a non-root user matching the Kubernetes securityContext (UID 1000)
+RUN addgroup -g 1000 spring && adduser -u 1000 -G spring -s /bin/sh -D spring && \
+    mkdir -p /var/log/am-trade && \
+    chown -R spring:spring /var/log/am-trade
+
+USER 1000:1000
 
 # Copy the built JAR from the build stage
 COPY --from=build /app/am-trade-app/target/*.jar app.jar

@@ -20,8 +20,6 @@ logging:
     org.springframework.web: WARN
   file:
     name: /var/log/am-trade/application-prod.log
-  pattern:
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   logback:
     rollingpolicy:
       max-file-size: 10MB
@@ -46,6 +44,9 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
   endpoint:
     health:
       show-details: never

@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -26,12 +25,13 @@ import java.util.List;
 /**
  * Controller for managing trade journal entries
  */
-@Slf4j
 @RestController
 @RequestMapping("/v1/journal")
 @RequiredArgsConstructor
 @Tag(name = "Trade Journal", description = "API for managing trade journal entries")
 public class TradeJournalController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeJournalController.class);
+
 
     private final TradeJournalService tradeJournalService;
 

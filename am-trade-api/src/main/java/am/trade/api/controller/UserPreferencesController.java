@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,12 +19,13 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Controller for managing user preferences for dashboard and trade views
  */
-@Slf4j
 @RestController
 @RequestMapping("/v1/preferences")
 @RequiredArgsConstructor
 @Tag(name = "User Preferences", description = "API for managing user preferences for dashboard and trade views")
 public class UserPreferencesController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserPreferencesController.class);
+
 
     private final UserPreferencesService userPreferencesService;
 

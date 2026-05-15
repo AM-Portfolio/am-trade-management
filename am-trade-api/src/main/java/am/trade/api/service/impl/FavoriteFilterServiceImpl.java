@@ -14,12 +14,12 @@ import am.trade.api.service.FavoriteFilterService;
 import am.trade.common.models.FavoriteFilter;
 import am.trade.persistence.repository.FavoriteFilterRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FavoriteFilterServiceImpl implements FavoriteFilterService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FavoriteFilterServiceImpl.class);
+
 
     private final FavoriteFilterRepository favoriteFilterRepository;
 

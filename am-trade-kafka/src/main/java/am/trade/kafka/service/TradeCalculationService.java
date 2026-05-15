@@ -23,14 +23,17 @@ public class TradeCalculationService {
     public void processCalculation(String userId, String portfolioId) {
         log.info("[TradeCalc] Starting calculation for User: {}, Portfolio: {}", userId, portfolioId);
         try {
-            if (portfolioId == null || portfolioId.isEmpty()) {
-                log.warn("[TradeCalc] No portfolioId provided for User: {}. Skipping.", userId);
-                return;
+            TradeSummary summary;
+            
+            if (portfolioId == null || portfolioId.isEmpty() || "ALL".equalsIgnoreCase(portfolioId)) {
+                log.info("[TradeCalc] Global calculation triggered for User: {}", userId);
+                summary = metricsCalculationService.calculateAllMetricsForUser(userId);
+                portfolioId = "ALL"; // Ensure consistency for payload
+            } else {
+                // 1. Calculate all metrics using the existing dashboard service
+                List<String> portfolioIds = Collections.singletonList(portfolioId);
+                summary = metricsCalculationService.calculateAllMetrics(portfolioIds);
             }
-
-            // 1. Calculate all metrics using the existing dashboard service
-            List<String> portfolioIds = Collections.singletonList(portfolioId);
-            TradeSummary summary = metricsCalculationService.calculateAllMetrics(portfolioIds);
 
             if (summary == null || summary.getTradeDetails().isEmpty()) {
                 log.warn("[TradeCalc] No trades found or calculation failed for User: {}, Portfolio: {}. Skipping Kafka update.", userId, portfolioId);

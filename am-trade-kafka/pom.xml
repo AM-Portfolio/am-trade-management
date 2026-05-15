@@ -19,6 +19,11 @@
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.am.libraries</groupId>
+            <artifactId>am-observability-lib</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         
         <!-- Common Module -->
         <dependency>
