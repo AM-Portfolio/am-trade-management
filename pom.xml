@@ -8,7 +8,7 @@
 		<version>3.4.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	
+
 	<groupId>am.trade</groupId>
 	<artifactId>am-trade-management</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
