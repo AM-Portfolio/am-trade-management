@@ -29,12 +29,12 @@ RUN mvn --settings settings.xml clean package -DskipTests -DGITHUB_PACKAGES_USER
 FROM eclipse-temurin:17.0.10_7-jdk-alpine
 WORKDIR /app
 
-# Create a non-root user for security hardening, and pre-create the required log directory
-RUN addgroup -S spring && adduser -S spring -G spring && \
+# Create a non-root user matching the Kubernetes securityContext (UID 1000)
+RUN addgroup -g 1000 spring && adduser -u 1000 -G spring -s /bin/sh -D spring && \
     mkdir -p /var/log/am-trade && \
     chown -R spring:spring /var/log/am-trade
 
-USER spring:spring
+USER 1000:1000
 
 # Copy the built JAR from the build stage
 COPY --from=build /app/am-trade-app/target/*.jar app.jar
