@@ -4,7 +4,7 @@
 
 ### curl Command
 ```bash
-curl -X DELETE "http://localhost:8050/api/v1/filters/bulk" \
+curl -X DELETE "http://localhost:8050/v1/filters/bulk" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -37,7 +37,7 @@ $body = @{
     )
 } | ConvertTo-Json
 
-Invoke-RestMethod -Uri "http://localhost:8050/api/v1/filters/bulk" `
+Invoke-RestMethod -Uri "http://localhost:8050/v1/filters/bulk" `
   -Method Delete `
   -ContentType "application/json" `
   -Body $body
@@ -47,26 +47,26 @@ Invoke-RestMethod -Uri "http://localhost:8050/api/v1/filters/bulk" `
 
 ### curl Command
 ```bash
-curl -X DELETE "http://localhost:8050/api/v1/filters/a1b2c3d4-e5f6-7890-abcd-ef1234567890?userId=user123" \
+curl -X DELETE "http://localhost:8050/v1/filters/a1b2c3d4-e5f6-7890-abcd-ef1234567890?userId=user123" \
   -H "Content-Type: application/json"
 ```
 
 ### PowerShell
 ```powershell
 $filterId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-Invoke-RestMethod -Uri "http://localhost:8050/api/v1/filters/$filterId?userId=user123" `
+Invoke-RestMethod -Uri "http://localhost:8050/v1/filters/$filterId?userId=user123" `
   -Method Delete `
   -ContentType "application/json"
 ```
 
 ## Notes
 
-- **Bulk Delete**: Use `/api/v1/filters/bulk` endpoint with DELETE method
+- **Bulk Delete**: Use `/v1/filters/bulk` endpoint with DELETE method
   - Pass `userId` and `filterIds` in the request body
   - Returns count of successfully deleted filters
   - Continues processing even if some filters fail (partial success)
 
-- **Single Delete**: Use `/api/v1/filters/{filterId}` endpoint with DELETE method
+- **Single Delete**: Use `/v1/filters/{filterId}` endpoint with DELETE method
   - Pass `userId` as query parameter
   - Returns 204 No Content on success, 404 if not found
 

@@ -283,7 +283,7 @@ Update environment variables as needed:
 
 ### Example 1: Create a New Trade
 ```http
-POST {{baseUrl}}/api/v1/trades/details
+POST {{baseUrl}}/v1/trades/details
 Content-Type: application/json
 
 {
@@ -302,12 +302,12 @@ Content-Type: application/json
 
 ### Example 2: Filter Trades by Multiple Criteria
 ```http
-GET {{baseUrl}}/api/v1/trades/filter?portfolioIds={{portfolioIds}}&symbols={{symbols}}&statuses={{statuses}}&startDate={{startDate}}&endDate={{endDate}}&strategies={{strategies}}&page={{page}}&size={{size}}
+GET {{baseUrl}}/v1/trades/filter?portfolioIds={{portfolioIds}}&symbols={{symbols}}&statuses={{statuses}}&startDate={{startDate}}&endDate={{endDate}}&strategies={{strategies}}&page={{page}}&size={{size}}
 ```
 
 ### Example 3: Get Portfolio Performance
 ```http
-GET {{baseUrl}}/api/v1/portfolio-summary/{{portfolioId}}/performance?startDate={{startDate}}&endDate={{endDate}}
+GET {{baseUrl}}/v1/portfolio-summary/{{portfolioId}}/performance?startDate={{startDate}}&endDate={{endDate}}
 ```
 
 ## 🔧 API Endpoints Summary
@@ -318,17 +318,17 @@ http://localhost:8073
 ```
 
 ### Main Endpoint Groups
-- `/api/v1/trades/*` - Core trade operations
-- `/api/v1/trades/calendar/*` - Calendar-based trade queries
-- `/api/v1/trade-summary/*` - Trade summary and aggregations
-- `/api/v1/analytics/*` - Trade analytics and replays
-- `/api/v1/metrics/*` - Trading metrics
-- `/api/v1/portfolio-summary/*` - Portfolio management
-- `/api/v1/preferences/*` - User preferences
-- `/api/v1/journal/*` - Trading journal
-- `/api/v1/comparison/*` - Trade/strategy comparisons
-- `/api/v1/heatmap/*` - P&L heatmaps
-- `/api/v1/filters/*` - Favorite filters
+- `/v1/trades/*` - Core trade operations
+- `/v1/trades/calendar/*` - Calendar-based trade queries
+- `/v1/trade-summary/*` - Trade summary and aggregations
+- `/v1/analytics/*` - Trade analytics and replays
+- `/v1/metrics/*` - Trading metrics
+- `/v1/portfolio-summary/*` - Portfolio management
+- `/v1/preferences/*` - User preferences
+- `/v1/journal/*` - Trading journal
+- `/v1/comparison/*` - Trade/strategy comparisons
+- `/v1/heatmap/*` - P&L heatmaps
+- `/v1/filters/*` - Favorite filters
 - `/actuator/*` - Spring Boot actuator endpoints
 
 ## 🐛 Troubleshooting

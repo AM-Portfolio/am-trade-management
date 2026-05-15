@@ -14,7 +14,7 @@ import am.trade.models.shared.AssetAllocation;
 import am.trade.models.shared.PortfolioModel;
 import am.trade.models.shared.PortfolioSummaryDTO;
 
-@FeignClient(name = "am-trade-management-service", url = "${am.trade.management.url:http://am-trade-management-service:8080}", path = "/api/v1/portfolio-summary")
+@FeignClient(name = "am-trade-management-service", url = "${am.trade.management.url:http://am-trade-management-service:8080}", path = "/v1/portfolio-summary")
 public interface PortfolioSummaryClient {
 
     @GetMapping("/{portfolioId}")

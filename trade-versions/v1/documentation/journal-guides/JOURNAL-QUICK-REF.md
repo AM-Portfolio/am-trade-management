@@ -51,7 +51,7 @@ The Trade Journal API has been enhanced with rich attachment support, allowing s
 ## 🔗 API Endpoints
 
 ### 1. Create Journal Entry
-**POST** `/api/v1/journal`
+**POST** `/v1/journal`
 
 #### Required Fields
 ```json
@@ -80,7 +80,7 @@ The Trade Journal API has been enhanced with rich attachment support, allowing s
 ---
 
 ### 2. Get Journal Entry by ID
-**GET** `/api/v1/journal/{entryId}`
+**GET** `/v1/journal/{entryId}`
 
 **Path Parameters:**
 - `entryId` (required) - Journal entry ID
@@ -90,7 +90,7 @@ The Trade Journal API has been enhanced with rich attachment support, allowing s
 ---
 
 ### 3. Update Journal Entry
-**PUT** `/api/v1/journal/{entryId}`
+**PUT** `/v1/journal/{entryId}`
 
 **Path Parameters:**
 - `entryId` (required) - Journal entry ID
@@ -100,7 +100,7 @@ The Trade Journal API has been enhanced with rich attachment support, allowing s
 ---
 
 ### 4. Delete Journal Entry
-**DELETE** `/api/v1/journal/{entryId}`
+**DELETE** `/v1/journal/{entryId}`
 
 **Path Parameters:**
 - `entryId` (required) - Journal entry ID
@@ -110,7 +110,7 @@ The Trade Journal API has been enhanced with rich attachment support, allowing s
 ---
 
 ### 5. Get Entries by User
-**GET** `/api/v1/journal/user/{userId}`
+**GET** `/v1/journal/user/{userId}`
 
 **Path Parameters:**
 - `userId` (required) - User ID
@@ -120,7 +120,7 @@ The Trade Journal API has been enhanced with rich attachment support, allowing s
 ---
 
 ### 6. Get Entries by Trade
-**GET** `/api/v1/journal/trade/{tradeId}`
+**GET** `/v1/journal/trade/{tradeId}`
 
 **Path Parameters:**
 - `tradeId` (required) - Trade ID
@@ -130,7 +130,7 @@ The Trade Journal API has been enhanced with rich attachment support, allowing s
 ---
 
 ### 7. Get Entries by Date Range
-**GET** `/api/v1/journal/date-range`
+**GET** `/v1/journal/date-range`
 
 **Query Parameters:**
 - `userId` (required) - User ID
@@ -145,7 +145,7 @@ The Trade Journal API has been enhanced with rich attachment support, allowing s
 
 ### Minimal Journal Entry
 ```bash
-curl -X POST http://localhost:8073/api/v1/journal \
+curl -X POST http://localhost:8073/v1/journal \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user_12345",
@@ -157,7 +157,7 @@ curl -X POST http://localhost:8073/api/v1/journal \
 
 ### Journal with Attachments (New Way)
 ```bash
-curl -X POST http://localhost:8073/api/v1/journal \
+curl -X POST http://localhost:8073/v1/journal \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user_12345",
@@ -185,7 +185,7 @@ curl -X POST http://localhost:8073/api/v1/journal \
 
 ### Journal with Categorized URLs
 ```bash
-curl -X POST http://localhost:8073/api/v1/journal \
+curl -X POST http://localhost:8073/v1/journal \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user_12345",
@@ -340,17 +340,17 @@ Always provide:
 
 ### Get All Entries for a User
 ```bash
-GET /api/v1/journal/user/{userId}
+GET /v1/journal/user/{userId}
 ```
 
 ### Get All Entries for a Specific Trade
 ```bash
-GET /api/v1/journal/trade/{tradeId}
+GET /v1/journal/trade/{tradeId}
 ```
 
 ### Get Entries in Date Range
 ```bash
-GET /api/v1/journal/date-range?userId=user_12345&startDate=2025-11-01&endDate=2025-11-30
+GET /v1/journal/date-range?userId=user_12345&startDate=2025-11-01&endDate=2025-11-30
 ```
 
 ---
@@ -387,4 +387,4 @@ For issues or questions:
 
 **Last Updated:** November 30, 2025  
 **Version:** 2.0.0  
-**API Base URL:** `http://localhost:8073/api/v1/journal`
+**API Base URL:** `http://localhost:8073/v1/journal`

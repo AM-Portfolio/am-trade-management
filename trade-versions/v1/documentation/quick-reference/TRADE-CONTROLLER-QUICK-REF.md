@@ -2,7 +2,7 @@
 
 ## Base URL
 ```
-http://localhost:8073/api/v1/trades
+http://localhost:8073/v1/trades
 ```
 
 ## Quick Navigation
@@ -59,7 +59,7 @@ http://localhost:8073/api/v1/trades
 
 **cURL:**
 ```bash
-curl -X GET "http://localhost:8073/api/v1/trades/details/portfolio/163d0143-4fcb-480c-ac20-622f14e0e293?symbols=NIFTY,BANKNIFTY"
+curl -X GET "http://localhost:8073/v1/trades/details/portfolio/163d0143-4fcb-480c-ac20-622f14e0e293?symbols=NIFTY,BANKNIFTY"
 ```
 
 ### 3. Filter Trades
@@ -79,7 +79,7 @@ curl -X GET "http://localhost:8073/api/v1/trades/details/portfolio/163d0143-4fcb
 
 **cURL:**
 ```bash
-curl -X GET "http://localhost:8073/api/v1/trades/filter?portfolioIds=163d0143-4fcb-480c-ac20-622f14e0e293&statuses=WIN,LOSS&page=0&size=20&sort=profitLoss,desc"
+curl -X GET "http://localhost:8073/v1/trades/filter?portfolioIds=163d0143-4fcb-480c-ac20-622f14e0e293&statuses=WIN,LOSS&page=0&size=20&sort=profitLoss,desc"
 ```
 
 ### 4. Update Trade Status
@@ -215,25 +215,25 @@ COMMODITY_FUTURES   - Commodity futures
 ### Filter by Winning Trades
 
 ```bash
-curl -X GET "http://localhost:8073/api/v1/trades/filter?statuses=WIN&page=0&size=20&sort=profitLoss,desc"
+curl -X GET "http://localhost:8073/v1/trades/filter?statuses=WIN&page=0&size=20&sort=profitLoss,desc"
 ```
 
 ### Filter by Date Range
 
 ```bash
-curl -X GET "http://localhost:8073/api/v1/trades/filter?startDate=2025-01-01&endDate=2025-01-31&page=0&size=50"
+curl -X GET "http://localhost:8073/v1/trades/filter?startDate=2025-01-01&endDate=2025-01-31&page=0&size=50"
 ```
 
 ### Filter by Strategy
 
 ```bash
-curl -X GET "http://localhost:8073/api/v1/trades/filter?strategies=Momentum Trading,Scalping&page=0&size=20"
+curl -X GET "http://localhost:8073/v1/trades/filter?strategies=Momentum Trading,Scalping&page=0&size=20"
 ```
 
 ### Filter by Symbol
 
 ```bash
-curl -X GET "http://localhost:8073/api/v1/trades/filter?symbols=NIFTY,BANKNIFTY&statuses=WIN,LOSS&page=0&size=20"
+curl -X GET "http://localhost:8073/v1/trades/filter?symbols=NIFTY,BANKNIFTY&statuses=WIN,LOSS&page=0&size=20"
 ```
 
 ---
@@ -269,7 +269,7 @@ All list endpoints support pagination:
   "status": 400,
   "error": "Bad Request",
   "message": "Invalid trade data",
-  "path": "/api/v1/trades/details",
+  "path": "/v1/trades/details",
   "details": [
     "Field 'portfolioId' is required",
     "Field 'tradeId' must not be empty"
@@ -326,4 +326,4 @@ For issues or questions:
 
 **Last Updated:** January 2025  
 **API Version:** 1.0.0  
-**Base URL:** http://localhost:8073/api/v1/trades
+**Base URL:** http://localhost:8073/v1/trades

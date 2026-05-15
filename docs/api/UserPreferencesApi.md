@@ -1,6 +1,6 @@
 # User Preferences API Documentation
 
-**Base URL**: `/api/v1/preferences`
+**Base URL**: `/v1/preferences`
 **Controller File**: `am-trade-api/src/main/java/am/trade/api/controller/UserPreferencesController.java`
 
 This module maintains the specific state, layouts, and configurations unique to the individual trader. It abstracts UI configuration states away from trading mechanics.

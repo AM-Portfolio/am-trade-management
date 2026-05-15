@@ -45,7 +45,7 @@ public class UserPreferencesController {
             log.error("Preferences not found: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.notFound(
                     "Dashboard preferences not found",
-                    "/api/v1/preferences/dashboard")
+                    "/v1/preferences/dashboard")
                     .addDetail("No preferences found for user: " + userId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
@@ -70,7 +70,7 @@ public class UserPreferencesController {
             log.error("Invalid preferences data: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
                     e.getMessage(),
-                    "/api/v1/preferences/dashboard");
+                    "/v1/preferences/dashboard");
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
@@ -91,7 +91,7 @@ public class UserPreferencesController {
             log.error("User not found: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.notFound(
                     e.getMessage(),
-                    "/api/v1/preferences/dashboard/reset");
+                    "/v1/preferences/dashboard/reset");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }

@@ -54,7 +54,7 @@
 							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"tradeId\": \"sample-trade-id\",\n  \"title\": \"Market Analysis - AAPL Trade\",\n  \"content\": \"Analyzed AAPL chart showing strong support at $145. RSI oversold, expecting bounce. Entry at $146.50 with stop at $144.\",\n  \"category\": \"ANALYSIS\",\n  \"tags\": [\"AAPL\", \"technical-analysis\", \"support-resistance\"],\n  \"mood\": \"CONFIDENT\",\n  \"isPrivate\": false\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/journal",
+							"raw": "{{baseUrl}}/v1/journal",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -100,7 +100,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/journal/{{entryId}}",
+							"raw": "{{baseUrl}}/v1/journal/{{entryId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -154,7 +154,7 @@
 							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"tradeId\": \"sample-trade-id\",\n  \"title\": \"Updated: Market Analysis - AAPL Trade Result\",\n  \"content\": \"Trade executed successfully. AAPL bounced from support as expected. Exit at $149.20 for +1.85% gain. Technical analysis proved correct.\",\n  \"category\": \"RESULT\",\n  \"tags\": [\"AAPL\", \"successful-trade\", \"technical-analysis\"],\n  \"mood\": \"SATISFIED\",\n  \"isPrivate\": false\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/journal/{{entryId}}",
+							"raw": "{{baseUrl}}/v1/journal/{{entryId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -198,7 +198,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/journal/{{entryId}}",
+							"raw": "{{baseUrl}}/v1/journal/{{entryId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -255,7 +255,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/journal/user/{{userId}}?page=0&size=10&sort=createdDate,desc",
+							"raw": "{{baseUrl}}/v1/journal/user/{{userId}}?page=0&size=10&sort=createdDate,desc",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -322,7 +322,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/journal/trade/sample-trade-id",
+							"raw": "{{baseUrl}}/v1/journal/trade/sample-trade-id",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -372,7 +372,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/journal/date-range?userId={{userId}}&startDate=2020-01-01&endDate=2020-12-31&page=0&size=20&sort=createdDate,desc",
+							"raw": "{{baseUrl}}/v1/journal/date-range?userId={{userId}}&startDate=2020-01-01&endDate=2020-12-31&page=0&size=20&sort=createdDate,desc",
 							"host": [
 								"{{baseUrl}}"
 							],

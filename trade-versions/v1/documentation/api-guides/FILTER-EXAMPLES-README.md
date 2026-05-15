@@ -24,7 +24,7 @@ Filter to show only profitable/winning trades.
 
 **curl example**:
 ```bash
-curl -X POST "http://localhost:8050/api/v1/filters?userId=user123" \
+curl -X POST "http://localhost:8050/v1/filters?userId=user123" \
   -H "Content-Type: application/json" \
   -d @filter-winning-trades.json
 ```
@@ -215,7 +215,7 @@ Group results by dimensions:
 
 ### Create Filter
 ```bash
-POST /api/v1/filters?userId={userId}
+POST /v1/filters?userId={userId}
 Content-Type: application/json
 
 Body: {filter payload}
@@ -223,7 +223,7 @@ Body: {filter payload}
 
 ### Update Filter
 ```bash
-PUT /api/v1/filters/{filterId}?userId={userId}
+PUT /v1/filters/{filterId}?userId={userId}
 Content-Type: application/json
 
 Body: {filter payload}
@@ -231,39 +231,39 @@ Body: {filter payload}
 
 ### Get All Filters
 ```bash
-GET /api/v1/filters?userId={userId}
+GET /v1/filters?userId={userId}
 ```
 
 ### Get Specific Filter
 ```bash
-GET /api/v1/filters/{filterId}?userId={userId}
+GET /v1/filters/{filterId}?userId={userId}
 ```
 
 ### Delete Filter
 ```bash
-DELETE /api/v1/filters/{filterId}?userId={userId}
+DELETE /v1/filters/{filterId}?userId={userId}
 ```
 
 ### Get Default Filter
 ```bash
-GET /api/v1/filters/default?userId={userId}
+GET /v1/filters/default?userId={userId}
 ```
 
 ### Set Filter as Default
 ```bash
-PUT /api/v1/filters/{filterId}/default?userId={userId}
+PUT /v1/filters/{filterId}/default?userId={userId}
 ```
 
 ### Apply Filter to Get Metrics
 ```bash
-GET /api/v1/filters/apply/{filterId}?userId={userId}&portfolioIds={portfolioId}
+GET /v1/filters/apply/{filterId}?userId={userId}&portfolioIds={portfolioId}
 ```
 
 ## Complete Example Workflow
 
 ### 1. Create a new filter for winning trades
 ```bash
-curl -X POST "http://localhost:8050/api/v1/filters?userId=user123" \
+curl -X POST "http://localhost:8050/v1/filters?userId=user123" \
   -H "Content-Type: application/json" \
   -d @filter-winning-trades.json
 ```
@@ -283,26 +283,26 @@ Response:
 
 ### 2. Set it as default
 ```bash
-curl -X PUT "http://localhost:8050/api/v1/filters/a1b2c3d4-e5f6-7890-abcd-ef1234567890/default?userId=user123" \
+curl -X PUT "http://localhost:8050/v1/filters/a1b2c3d4-e5f6-7890-abcd-ef1234567890/default?userId=user123" \
   -H "Content-Type: application/json"
 ```
 
 ### 3. Apply filter to get metrics
 ```bash
-curl -X GET "http://localhost:8050/api/v1/filters/apply/a1b2c3d4-e5f6-7890-abcd-ef1234567890?userId=user123" \
+curl -X GET "http://localhost:8050/v1/filters/apply/a1b2c3d4-e5f6-7890-abcd-ef1234567890?userId=user123" \
   -H "Content-Type: application/json"
 ```
 
 ### 4. Update filter
 ```bash
-curl -X PUT "http://localhost:8050/api/v1/filters/a1b2c3d4-e5f6-7890-abcd-ef1234567890?userId=user123" \
+curl -X PUT "http://localhost:8050/v1/filters/a1b2c3d4-e5f6-7890-abcd-ef1234567890?userId=user123" \
   -H "Content-Type: application/json" \
   -d @filter-winning-trades.json
 ```
 
 ### 5. Delete filter
 ```bash
-curl -X DELETE "http://localhost:8050/api/v1/filters/a1b2c3d4-e5f6-7890-abcd-ef1234567890?userId=user123" \
+curl -X DELETE "http://localhost:8050/v1/filters/a1b2c3d4-e5f6-7890-abcd-ef1234567890?userId=user123" \
   -H "Content-Type: application/json"
 ```
 
@@ -311,7 +311,7 @@ curl -X DELETE "http://localhost:8050/api/v1/filters/a1b2c3d4-e5f6-7890-abcd-ef1
 ### Create Filter
 ```powershell
 $body = Get-Content -Path "filter-winning-trades.json" -Raw
-Invoke-RestMethod -Uri "http://localhost:8050/api/v1/filters?userId=user123" `
+Invoke-RestMethod -Uri "http://localhost:8050/v1/filters?userId=user123" `
   -Method Post `
   -ContentType "application/json" `
   -Body $body
@@ -319,7 +319,7 @@ Invoke-RestMethod -Uri "http://localhost:8050/api/v1/filters?userId=user123" `
 
 ### Get All Filters
 ```powershell
-Invoke-RestMethod -Uri "http://localhost:8050/api/v1/filters?userId=user123" `
+Invoke-RestMethod -Uri "http://localhost:8050/v1/filters?userId=user123" `
   -Method Get `
   -ContentType "application/json"
 ```
@@ -327,7 +327,7 @@ Invoke-RestMethod -Uri "http://localhost:8050/api/v1/filters?userId=user123" `
 ### Apply Filter
 ```powershell
 $filterId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-Invoke-RestMethod -Uri "http://localhost:8050/api/v1/filters/apply/$filterId?userId=user123" `
+Invoke-RestMethod -Uri "http://localhost:8050/v1/filters/apply/$filterId?userId=user123" `
   -Method Get `
   -ContentType "application/json"
 ```

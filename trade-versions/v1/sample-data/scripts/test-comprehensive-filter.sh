@@ -2,7 +2,7 @@
 # Favorite Filter API - Comprehensive Filter Example
 # Copy and paste these curl commands for quick testing
 
-BASE_URL="http://localhost:8073/api/v1/filters"
+BASE_URL="http://localhost:8073/v1/filters"
 USER_ID="ssd2658"
 
 echo "==================================="

@@ -41,7 +41,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/preferences/dashboard?userId={{userId}}",
+							"raw": "{{baseUrl}}/v1/preferences/dashboard?userId={{userId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -107,7 +107,7 @@
 							"raw": "{\n  \"preferences\": {\n    \"theme\": \"dark\",\n    \"language\": \"en-US\",\n    \"timezone\": \"America/New_York\",\n    \"dateFormat\": \"MM/dd/yyyy\",\n    \"currency\": \"USD\",\n    \"layout\": {\n      \"sidebarCollapsed\": false,\n      \"dashboardLayout\": \"grid\",\n      \"defaultPage\": \"/dashboard\"\n    },\n    \"notifications\": {\n      \"email\": true,\n      \"push\": false,\n      \"tradeAlerts\": true,\n      \"portfolioUpdates\": true\n    },\n    \"charts\": {\n      \"defaultTimeframe\": \"1D\",\n      \"candlestickStyle\": \"standard\",\n      \"indicators\": [\"RSI\", \"MACD\"]\n    }\n  }\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/preferences/dashboard?userId={{userId}}",
+							"raw": "{{baseUrl}}/v1/preferences/dashboard?userId={{userId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -163,7 +163,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/preferences/dashboard/reset?userId={{userId}}",
+							"raw": "{{baseUrl}}/v1/preferences/dashboard/reset?userId={{userId}}",
 							"host": [
 								"{{baseUrl}}"
 							],

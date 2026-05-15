@@ -76,7 +76,7 @@
 
 ### Filter with Custom Criteria
 ```bash
-curl -X POST "http://localhost:8050/api/v1/trades/details/filter" \
+curl -X POST "http://localhost:8050/v1/trades/details/filter" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -91,7 +91,7 @@ curl -X POST "http://localhost:8050/api/v1/trades/details/filter" \
 
 ### Filter Using Saved Favorite Filter
 ```bash
-curl -X POST "http://localhost:8050/api/v1/trades/details/filter" \
+curl -X POST "http://localhost:8050/v1/trades/details/filter" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -101,7 +101,7 @@ curl -X POST "http://localhost:8050/api/v1/trades/details/filter" \
 
 ### Filter with Saved Filter + Overrides
 ```bash
-curl -X POST "http://localhost:8050/api/v1/trades/details/filter" \
+curl -X POST "http://localhost:8050/v1/trades/details/filter" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -126,7 +126,7 @@ $body = @{
     minProfitLoss = 0.01
 } | ConvertTo-Json -Depth 10
 
-Invoke-RestMethod -Uri "http://localhost:8050/api/v1/trades/details/filter" `
+Invoke-RestMethod -Uri "http://localhost:8050/v1/trades/details/filter" `
   -Method Post `
   -ContentType "application/json" `
   -Body $body
@@ -139,7 +139,7 @@ $body = @{
     favoriteFilterId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 } | ConvertTo-Json
 
-Invoke-RestMethod -Uri "http://localhost:8050/api/v1/trades/details/filter" `
+Invoke-RestMethod -Uri "http://localhost:8050/v1/trades/details/filter" `
   -Method Post `
   -ContentType "application/json" `
   -Body $body
@@ -154,7 +154,7 @@ $body = @{
     tags = @("intraday")
 } | ConvertTo-Json -Depth 10
 
-Invoke-RestMethod -Uri "http://localhost:8050/api/v1/trades/details/filter" `
+Invoke-RestMethod -Uri "http://localhost:8050/v1/trades/details/filter" `
   -Method Post `
   -ContentType "application/json" `
   -Body $body

@@ -269,7 +269,7 @@ ajv validate -s favorite-filter-api-schema.json -d favorite-filter-examples.json
 ### 8.2 API Testing
 Test comprehensive filter creation:
 ```bash
-curl -X POST 'http://localhost:8073/api/v1/filters?userId=ssd2658' \
+curl -X POST 'http://localhost:8073/v1/filters?userId=ssd2658' \
   -H 'Content-Type: application/json' \
   -d @postman/favorite-filter-examples.json#/examples/requests/createFilter/comprehensive/payload
 ```

@@ -9,7 +9,7 @@
 
 ### Base URL
 ```
-http://localhost:8073/api/v1/filters
+http://localhost:8073/v1/filters
 ```
 
 ---
@@ -69,7 +69,7 @@ http://localhost:8073/api/v1/filters
 
 ### 1️⃣ Create Filter
 ```bash
-POST /api/v1/filters?userId=ssd2658
+POST /v1/filters?userId=ssd2658
 Content-Type: application/json
 
 {
@@ -94,17 +94,17 @@ Content-Type: application/json
 
 ### 2️⃣ Get All Filters
 ```bash
-GET /api/v1/filters?userId=ssd2658
+GET /v1/filters?userId=ssd2658
 ```
 
 ### 3️⃣ Get Filter by ID
 ```bash
-GET /api/v1/filters/{filterId}?userId=ssd2658
+GET /v1/filters/{filterId}?userId=ssd2658
 ```
 
 ### 4️⃣ Update Filter
 ```bash
-PUT /api/v1/filters/{filterId}?userId=ssd2658
+PUT /v1/filters/{filterId}?userId=ssd2658
 Content-Type: application/json
 
 {
@@ -115,12 +115,12 @@ Content-Type: application/json
 
 ### 5️⃣ Delete Single Filter
 ```bash
-DELETE /api/v1/filters/{filterId}?userId=ssd2658
+DELETE /v1/filters/{filterId}?userId=ssd2658
 ```
 
 ### 6️⃣ Bulk Delete Filters
 ```bash
-DELETE /api/v1/filters/bulk
+DELETE /v1/filters/bulk
 Content-Type: application/json
 
 {
@@ -134,17 +134,17 @@ Content-Type: application/json
 
 ### 7️⃣ Get Default Filter
 ```bash
-GET /api/v1/filters/default?userId=ssd2658
+GET /v1/filters/default?userId=ssd2658
 ```
 
 ### 8️⃣ Set as Default
 ```bash
-PUT /api/v1/filters/{filterId}/default?userId=ssd2658
+PUT /v1/filters/{filterId}/default?userId=ssd2658
 ```
 
 ### 9️⃣ Apply Filter (Get Metrics)
 ```bash
-GET /api/v1/filters/apply/{filterId}?userId=ssd2658&portfolioIds=uuid1,uuid2
+GET /v1/filters/apply/{filterId}?userId=ssd2658&portfolioIds=uuid1,uuid2
 ```
 
 ---
@@ -426,10 +426,10 @@ Available values:
 
 ## 🔗 Related Endpoints
 
-- **Trade Details Filter**: `POST /api/v1/trades/details/filter`
-- **Trade Summary**: `POST /api/v1/trade-summary`
-- **Portfolio Summary**: `POST /api/v1/portfolio-summary`
-- **Trade Metrics**: `POST /api/v1/metrics`
+- **Trade Details Filter**: `POST /v1/trades/details/filter`
+- **Trade Summary**: `POST /v1/trade-summary`
+- **Portfolio Summary**: `POST /v1/portfolio-summary`
+- **Trade Metrics**: `POST /v1/metrics`
 
 ---
 

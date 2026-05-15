@@ -995,7 +995,7 @@
         "path": {
           "type": "string",
           "description": "API endpoint path",
-          "example": "/api/v1/trades/details"
+          "example": "/v1/trades/details"
         },
         "details": {
           "type": "array",
@@ -1009,7 +1009,7 @@
     }
   },
   "paths": {
-    "/api/v1/trades/details/portfolio/{portfolioId}": {
+    "/v1/trades/details/portfolio/{portfolioId}": {
       "get": {
         "summary": "Get trade details by portfolio ID and symbols",
         "operationId": "getTradeDetailsByPortfolioAndSymbols",
@@ -1070,7 +1070,7 @@
         }
       }
     },
-    "/api/v1/trades/details": {
+    "/v1/trades/details": {
       "post": {
         "summary": "Add a new trade",
         "operationId": "addTrade",
@@ -1105,7 +1105,7 @@
         }
       }
     },
-    "/api/v1/trades/details/{tradeId}": {
+    "/v1/trades/details/{tradeId}": {
       "put": {
         "summary": "Update an existing trade",
         "operationId": "updateTrade",
@@ -1155,7 +1155,7 @@
         }
       }
     },
-    "/api/v1/trades/filter": {
+    "/v1/trades/filter": {
       "get": {
         "summary": "Filter trades by multiple criteria",
         "operationId": "getTradesByFilters",
@@ -1309,7 +1309,7 @@
         }
       }
     },
-    "/api/v1/trades/details/batch": {
+    "/v1/trades/details/batch": {
       "post": {
         "summary": "Add or update multiple trades",
         "operationId": "addOrUpdateTrades",
@@ -1350,7 +1350,7 @@
         }
       }
     },
-    "/api/v1/trades/details/by-ids": {
+    "/v1/trades/details/by-ids": {
       "post": {
         "summary": "Get trade details by trade IDs",
         "operationId": "getTradeDetailsByTradeIds",
@@ -1392,7 +1392,7 @@
         }
       }
     },
-    "/api/v1/trades/details/filter": {
+    "/v1/trades/details/filter": {
       "post": {
         "summary": "Filter trade details using favorite filter configuration",
         "operationId": "filterTradeDetails",

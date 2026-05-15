@@ -355,19 +355,19 @@
 
 **GET Request:**
 ```
-/api/v1/trades/filter?portfolioIds=163d0143-4fcb-480c-ac20-622f14e0e293&statuses=WIN,LOSS&page=0&size=20&sort=profitLoss,desc
+/v1/trades/filter?portfolioIds=163d0143-4fcb-480c-ac20-622f14e0e293&statuses=WIN,LOSS&page=0&size=20&sort=profitLoss,desc
 ```
 
 ### Example 2: Filter by Date Range and Strategy
 
 **GET Request:**
 ```
-/api/v1/trades/filter?startDate=2025-01-01&endDate=2025-01-31&strategies=Momentum Trading,Scalping&page=0&size=50
+/v1/trades/filter?startDate=2025-01-01&endDate=2025-01-31&strategies=Momentum Trading,Scalping&page=0&size=50
 ```
 
 ### Example 3: Filter Using Favorite Filter Configuration
 
-**POST Request to `/api/v1/trades/details/filter`:**
+**POST Request to `/v1/trades/details/filter`:**
 
 ```json
 {
@@ -523,7 +523,7 @@
   "status": 400,
   "error": "Bad Request",
   "message": "Invalid trade data",
-  "path": "/api/v1/trades/details",
+  "path": "/v1/trades/details",
   "details": [
     "Field 'portfolioId' is required",
     "Field 'tradeId' must not be empty"
@@ -538,7 +538,7 @@
 ### Example 1: Create a New Trade
 
 ```bash
-curl -X POST http://localhost:8073/api/v1/trades/details \
+curl -X POST http://localhost:8073/v1/trades/details \
   -H "Content-Type: application/json" \
   -d '{
     "tradeId": "TRD-2025-001",
@@ -563,13 +563,13 @@ curl -X POST http://localhost:8073/api/v1/trades/details \
 ### Example 2: Get Trades by Portfolio
 
 ```bash
-curl -X GET "http://localhost:8073/api/v1/trades/details/portfolio/163d0143-4fcb-480c-ac20-622f14e0e293?symbols=NIFTY,BANKNIFTY"
+curl -X GET "http://localhost:8073/v1/trades/details/portfolio/163d0143-4fcb-480c-ac20-622f14e0e293?symbols=NIFTY,BANKNIFTY"
 ```
 
 ### Example 3: Update a Trade
 
 ```bash
-curl -X PUT http://localhost:8073/api/v1/trades/details/TRD-2025-001 \
+curl -X PUT http://localhost:8073/v1/trades/details/TRD-2025-001 \
   -H "Content-Type: application/json" \
   -d '{
     "tradeId": "TRD-2025-001",
@@ -596,13 +596,13 @@ curl -X PUT http://localhost:8073/api/v1/trades/details/TRD-2025-001 \
 ### Example 4: Filter Trades
 
 ```bash
-curl -X GET "http://localhost:8073/api/v1/trades/filter?portfolioIds=163d0143-4fcb-480c-ac20-622f14e0e293&statuses=WIN,LOSS&startDate=2025-01-01&endDate=2025-01-31&page=0&size=20&sort=profitLoss,desc"
+curl -X GET "http://localhost:8073/v1/trades/filter?portfolioIds=163d0143-4fcb-480c-ac20-622f14e0e293&statuses=WIN,LOSS&startDate=2025-01-01&endDate=2025-01-31&page=0&size=20&sort=profitLoss,desc"
 ```
 
 ### Example 5: Batch Create/Update Trades
 
 ```bash
-curl -X POST http://localhost:8073/api/v1/trades/details/batch \
+curl -X POST http://localhost:8073/v1/trades/details/batch \
   -H "Content-Type: application/json" \
   -d '[
     {
@@ -623,7 +623,7 @@ curl -X POST http://localhost:8073/api/v1/trades/details/batch \
 ### Example 6: Get Trades by IDs
 
 ```bash
-curl -X POST http://localhost:8073/api/v1/trades/details/by-ids \
+curl -X POST http://localhost:8073/v1/trades/details/by-ids \
   -H "Content-Type: application/json" \
   -d '["TRD-2025-001", "TRD-2025-002", "TRD-2025-003"]'
 ```
@@ -631,7 +631,7 @@ curl -X POST http://localhost:8073/api/v1/trades/details/by-ids \
 ### Example 7: Filter Trades Using Favorite Filter
 
 ```bash
-curl -X POST "http://localhost:8073/api/v1/trades/details/filter?page=0&size=20&sort=profitLoss,desc" \
+curl -X POST "http://localhost:8073/v1/trades/details/filter?page=0&size=20&sort=profitLoss,desc" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "ssd2658",
@@ -674,7 +674,7 @@ async function createTrade() {
     userId: "ssd2658"
   };
 
-  const response = await fetch('http://localhost:8073/api/v1/trades/details', {
+  const response = await fetch('http://localhost:8073/v1/trades/details', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(trade)
@@ -710,7 +710,7 @@ def create_trade():
     }
     
     response = requests.post(
-        'http://localhost:8073/api/v1/trades/details',
+        'http://localhost:8073/v1/trades/details',
         json=trade
     )
     
@@ -725,7 +725,7 @@ def create_trade():
 - Prices are in decimal format
 - Portfolio IDs are UUIDs
 - Trade IDs follow the pattern: TRD-YYYY-NNN
-- Base URL: `http://localhost:8073/api/v1/trades`
+- Base URL: `http://localhost:8073/v1/trades`
 - All endpoints return JSON responses
 - Error responses follow standard format with status, message, and details
 

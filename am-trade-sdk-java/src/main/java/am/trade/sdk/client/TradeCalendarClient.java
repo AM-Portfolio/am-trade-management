@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import am.trade.models.shared.TradeDetails;
 
-@FeignClient(name = "am-trade-management-service", url = "${am.trade.management.url:http://am-trade-management-service:8080}", path = "/api/v1/trades")
+@FeignClient(name = "am-trade-management-service", url = "${am.trade.management.url:http://am-trade-management-service:8080}", path = "/v1/trades")
 public interface TradeCalendarClient {
 
     @GetMapping("/calendar/day")

@@ -48,7 +48,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/metrics/types",
+							"raw": "{{baseUrl}}/v1/metrics/types",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -104,7 +104,7 @@
 							"raw": "{\n  \"portfolioIds\": [\"{{portfolioId}}\"],\n  \"metricTypes\": [\"PERFORMANCE\", \"RISK\"],\n  \"startDate\": \"2020-01-01\",\n  \"endDate\": \"2020-12-31\",\n  \"symbols\": [\"AAPL\", \"TSLA\"],\n  \"strategies\": null,\n  \"granularity\": \"MONTHLY\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/metrics",
+							"raw": "{{baseUrl}}/v1/metrics",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -145,7 +145,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/metrics/compare?portfolioIds={{portfolioId}}&metricTypes=PERFORMANCE,RISK&startDate1=2020-01-01&endDate1=2020-06-30&startDate2=2020-07-01&endDate2=2020-12-31",
+							"raw": "{{baseUrl}}/v1/metrics/compare?portfolioIds={{portfolioId}}&metricTypes=PERFORMANCE,RISK&startDate1=2020-01-01&endDate1=2020-06-30&startDate2=2020-07-01&endDate2=2020-12-31",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -218,7 +218,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/metrics/trends?portfolioIds={{portfolioId}}&metricTypes=PERFORMANCE&startDate=2020-01-01&endDate=2020-12-31&granularity=MONTHLY",
+							"raw": "{{baseUrl}}/v1/metrics/trends?portfolioIds={{portfolioId}}&metricTypes=PERFORMANCE&startDate=2020-01-01&endDate=2020-12-31&granularity=MONTHLY",
 							"host": [
 								"{{baseUrl}}"
 							],

@@ -26,7 +26,7 @@
     }
   ],
   "paths": {
-    "/api/v1/trades/details/portfolio/{portfolioId}": {
+    "/v1/trades/details/portfolio/{portfolioId}": {
       "get": {
         "tags": [
           "Trade API"
@@ -71,7 +71,7 @@
         }
       }
     },
-    "/api/v1/trades/details": {
+    "/v1/trades/details": {
       "post": {
         "tags": [
           "Trade API"
@@ -102,7 +102,7 @@
         }
       }
     },
-    "/api/v1/metrics/calculate": {
+    "/v1/metrics/calculate": {
       "post": {
         "tags": [
           "Metrics API"
@@ -133,7 +133,7 @@
         }
       }
     },
-    "/api/v1/portfolio/summary/{portfolioId}": {
+    "/v1/portfolio/summary/{portfolioId}": {
       "get": {
         "tags": [
           "Portfolio API"

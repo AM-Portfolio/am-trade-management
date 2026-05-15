@@ -31,7 +31,7 @@ public class RestMarketDataClient implements MarketDataClient {
     @Value("${market-data.api.base-url:http://localhost:8084}")
     private String baseUrl;
     
-    @Value("${market-data.api.historical-data-path:/api/v1/market-data/historical-data}")
+    @Value("${market-data.api.historical-data-path:/v1/market-data/historical-data}")
     private String historicalDataPath;
     
     @Value("${market-data.api.retry.max-attempts:3}")

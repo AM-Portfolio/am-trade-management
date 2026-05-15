@@ -224,9 +224,9 @@ sample-data/
 
 **Steps:**
 ```
-1. POST /api/v1/trades/details (use basic-trade.json)
-2. GET /api/v1/journal/trade/{tradeId} (returns journal entry format)
-3. POST /api/v1/filters (use high-probability-filter.json)
+1. POST /v1/trades/details (use basic-trade.json)
+2. GET /v1/journal/trade/{tradeId} (returns journal entry format)
+3. POST /v1/filters (use high-probability-filter.json)
 4. Review trade metrics
 ```
 
@@ -239,8 +239,8 @@ sample-data/
 
 **Steps:**
 ```
-1. POST /api/v1/trades/filter (apply momentum filter)
-2. POST /api/v1/trades/filter (apply high-risk filter)
+1. POST /v1/trades/filter (apply momentum filter)
+2. POST /v1/trades/filter (apply high-risk filter)
 3. Compare results using TradeComparisonController
 ```
 
@@ -253,9 +253,9 @@ sample-data/
 
 **Steps:**
 ```
-1. GET /api/v1/portfolio-summary/{portfolioId}
-2. POST /api/v1/analytics/monthly-report
-3. GET /api/v1/heatmap
+1. GET /v1/portfolio-summary/{portfolioId}
+2. POST /v1/analytics/monthly-report
+3. GET /v1/heatmap
 ```
 
 ## Data Generation & Modification

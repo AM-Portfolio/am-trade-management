@@ -37,7 +37,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trades/calendar/day?date=2020-12-15&portfolioId={{portfolioId}}",
+							"raw": "{{baseUrl}}/v1/trades/calendar/day?date=2020-12-15&portfolioId={{portfolioId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -92,7 +92,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trades/calendar/month?portfolioId={{portfolioId}}&year=2020&month=12",
+							"raw": "{{baseUrl}}/v1/trades/calendar/month?portfolioId={{portfolioId}}&year=2020&month=12",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -149,7 +149,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trades/calendar/quarter?portfolioId={{portfolioId}}&year=2020&quarter=4",
+							"raw": "{{baseUrl}}/v1/trades/calendar/quarter?portfolioId={{portfolioId}}&year=2020&quarter=4",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -206,7 +206,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trades/calendar/financial-year?portfolioId={{portfolioId}}&financialYear=2020&countryCode=US",
+							"raw": "{{baseUrl}}/v1/trades/calendar/financial-year?portfolioId={{portfolioId}}&financialYear=2020&countryCode=US",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -266,7 +266,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trades/calendar/custom?portfolioId={{portfolioId}}&startDate=2020-01-01&endDate=2020-12-31&page=0&size=20",
+							"raw": "{{baseUrl}}/v1/trades/calendar/custom?portfolioId={{portfolioId}}&startDate=2020-01-01&endDate=2020-12-31&page=0&size=20",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -341,7 +341,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trades/portfolio-details/{{portfolioId}}?page=0&size=20&sort=tradeDate,desc",
+							"raw": "{{baseUrl}}/v1/trades/portfolio-details/{{portfolioId}}?page=0&size=20&sort=tradeDate,desc",
 							"host": [
 								"{{baseUrl}}"
 							],

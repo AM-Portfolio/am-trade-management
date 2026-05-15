@@ -1,6 +1,6 @@
 # Portfolio Summary API Documentation
 
-**Base URL**: `/api/v1/portfolio-summary`
+**Base URL**: `/v1/portfolio-summary`
 **Controller File**: `am-trade-api/src/main/java/am/trade/api/controller/PortfolioSummaryController.java`
 
 This module provides high-level aggregation metrics, allowing users to measure portfolio performance, asset allocation, and overall trading success across multiple instruments.

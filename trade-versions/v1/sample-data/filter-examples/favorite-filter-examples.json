@@ -436,7 +436,7 @@
           "status": 404,
           "error": "Not Found",
           "message": "Filter not found",
-          "path": "/api/v1/filters/invalid-id",
+          "path": "/v1/filters/invalid-id",
           "details": [
             "The requested filter ID 'invalid-id' was not found"
           ]
@@ -450,7 +450,7 @@
           "status": 400,
           "error": "Bad Request",
           "message": "Validation failed",
-          "path": "/api/v1/filters",
+          "path": "/v1/filters",
           "details": [
             "Filter name is required",
             "Filter configuration is required"
@@ -459,16 +459,16 @@
       }
     },
     "curlExamples": {
-      "createFilter": "curl -X POST 'http://localhost:8073/api/v1/filters?userId=ssd2658' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\n    \"name\": \"High Risk Intraday Trades\",\n    \"description\": \"Filter for high-risk intraday trades\",\n    \"isDefault\": false,\n    \"filterConfig\": {\n      \"portfolioIds\": [\"163d0143-4fcb-480c-ac20-622f14e0e293\"],\n      \"instruments\": [\"NIFTY\", \"BANKNIFTY\"],\n      \"tradeCharacteristics\": {\n        \"statuses\": [\"LOSS\"],\n        \"strategies\": [\"Momentum Trading\"],\n        \"tags\": [\"intraday\", \"high-risk\"],\n        \"maxHoldingTimeHours\": 24\n      },\n      \"profitLossFilters\": {\n        \"minProfitLoss\": -10000.00\n      },\n      \"dateRange\": {\n        \"startDate\": \"2025-01-01\",\n        \"endDate\": \"2025-12-31\"\n      }\n    }\n  }'",
-      "getAllFilters": "curl -X GET 'http://localhost:8073/api/v1/filters?userId=ssd2658'",
-      "getFilterById": "curl -X GET 'http://localhost:8073/api/v1/filters/f47ac10b-58cc-4372-a567-0e02b2c3d479?userId=ssd2658'",
-      "updateFilter": "curl -X PUT 'http://localhost:8073/api/v1/filters/f47ac10b-58cc-4372-a567-0e02b2c3d479?userId=ssd2658' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\n    \"name\": \"Updated Filter Name\",\n    \"filterConfig\": {\n      \"portfolioIds\": [\"163d0143-4fcb-480c-ac20-622f14e0e293\"]\n    }\n  }'",
-      "deleteFilter": "curl -X DELETE 'http://localhost:8073/api/v1/filters/f47ac10b-58cc-4372-a567-0e02b2c3d479?userId=ssd2658'",
-      "bulkDelete": "curl -X DELETE 'http://localhost:8073/api/v1/filters/bulk' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\n    \"userId\": \"ssd2658\",\n    \"filterIds\": [\n      \"f47ac10b-58cc-4372-a567-0e02b2c3d479\",\n      \"a12bc34d-56ef-7890-b123-4567890abcde\"\n    ]\n  }'",
-      "getDefaultFilter": "curl -X GET 'http://localhost:8073/api/v1/filters/default?userId=ssd2658'",
-      "setDefaultFilter": "curl -X PUT 'http://localhost:8073/api/v1/filters/f47ac10b-58cc-4372-a567-0e02b2c3d479/default?userId=ssd2658'",
-      "applyFilter": "curl -X GET 'http://localhost:8073/api/v1/filters/apply/f47ac10b-58cc-4372-a567-0e02b2c3d479?userId=ssd2658&portfolioIds=163d0143-4fcb-480c-ac20-622f14e0e293'",
-      "comprehensiveFilter": "curl -X POST 'http://localhost:8073/api/v1/filters?userId=ssd2658' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\n    \"name\": \"Comprehensive Filter Example\",\n    \"description\": \"Filter with all possible configuration options\",\n    \"isDefault\": false,\n    \"filterConfig\": {\n      \"portfolioIds\": [\"163d0143-4fcb-480c-ac20-622f14e0e293\"],\n      \"dateRange\": {\n        \"startDate\": \"2025-01-01\",\n        \"endDate\": \"2025-12-31\"\n      },\n      \"timePeriod\": {\n        \"period\": \"LAST_30_DAYS\"\n      },\n      \"metricTypes\": [\n        \"PERFORMANCE\", \"RISK\", \"DISTRIBUTION\", \"TIMING\", \"PATTERN\",\n        \"PROFIT_LOSS\", \"WIN_RATE\", \"RISK_REWARD\", \"DRAWDOWN\", \"SHARPE_RATIO\"\n      ],\n      \"instruments\": [\"NIFTY\", \"BANKNIFTY\", \"FINNIFTY\", \"RELIANCE\", \"TCS\"],\n      \"instrumentFilters\": {\n        \"marketSegments\": [\"EQUITY\", \"INDEX\", \"INDEX_FUTURES\", \"INDEX_OPTIONS\"],\n        \"baseSymbols\": [\"NIFTY\", \"BANKNIFTY\"],\n        \"indexTypes\": [\"NIFTY\", \"BANKNIFTY\"],\n        \"derivativeTypes\": [\"FUTURES\", \"OPTIONS\"]\n      },\n      \"tradeCharacteristics\": {\n        \"strategies\": [\"Momentum Trading\", \"Scalping\", \"Options Strategy\"],\n        \"tags\": [\"futures\", \"momentum\", \"intraday\"],\n        \"directions\": [\"LONG\", \"SHORT\"],\n        \"statuses\": [\"OPEN\", \"CLOSED\", \"CANCELLED\"],\n        \"minHoldingTimeHours\": 1,\n        \"maxHoldingTimeHours\": 168\n      },\n      \"profitLossFilters\": {\n        \"minProfitLoss\": -10000.0,\n        \"maxProfitLoss\": 50000.0,\n        \"minPositionSize\": 1000.0,\n        \"maxPositionSize\": 100000.0\n      },\n      \"groupBy\": [\"STRATEGY\", \"SYMBOL\", \"DAY_OF_WEEK\", \"MONTH\", \"DIRECTION\"]\n    }\n  }'"
+      "createFilter": "curl -X POST 'http://localhost:8073/v1/filters?userId=ssd2658' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\n    \"name\": \"High Risk Intraday Trades\",\n    \"description\": \"Filter for high-risk intraday trades\",\n    \"isDefault\": false,\n    \"filterConfig\": {\n      \"portfolioIds\": [\"163d0143-4fcb-480c-ac20-622f14e0e293\"],\n      \"instruments\": [\"NIFTY\", \"BANKNIFTY\"],\n      \"tradeCharacteristics\": {\n        \"statuses\": [\"LOSS\"],\n        \"strategies\": [\"Momentum Trading\"],\n        \"tags\": [\"intraday\", \"high-risk\"],\n        \"maxHoldingTimeHours\": 24\n      },\n      \"profitLossFilters\": {\n        \"minProfitLoss\": -10000.00\n      },\n      \"dateRange\": {\n        \"startDate\": \"2025-01-01\",\n        \"endDate\": \"2025-12-31\"\n      }\n    }\n  }'",
+      "getAllFilters": "curl -X GET 'http://localhost:8073/v1/filters?userId=ssd2658'",
+      "getFilterById": "curl -X GET 'http://localhost:8073/v1/filters/f47ac10b-58cc-4372-a567-0e02b2c3d479?userId=ssd2658'",
+      "updateFilter": "curl -X PUT 'http://localhost:8073/v1/filters/f47ac10b-58cc-4372-a567-0e02b2c3d479?userId=ssd2658' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\n    \"name\": \"Updated Filter Name\",\n    \"filterConfig\": {\n      \"portfolioIds\": [\"163d0143-4fcb-480c-ac20-622f14e0e293\"]\n    }\n  }'",
+      "deleteFilter": "curl -X DELETE 'http://localhost:8073/v1/filters/f47ac10b-58cc-4372-a567-0e02b2c3d479?userId=ssd2658'",
+      "bulkDelete": "curl -X DELETE 'http://localhost:8073/v1/filters/bulk' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\n    \"userId\": \"ssd2658\",\n    \"filterIds\": [\n      \"f47ac10b-58cc-4372-a567-0e02b2c3d479\",\n      \"a12bc34d-56ef-7890-b123-4567890abcde\"\n    ]\n  }'",
+      "getDefaultFilter": "curl -X GET 'http://localhost:8073/v1/filters/default?userId=ssd2658'",
+      "setDefaultFilter": "curl -X PUT 'http://localhost:8073/v1/filters/f47ac10b-58cc-4372-a567-0e02b2c3d479/default?userId=ssd2658'",
+      "applyFilter": "curl -X GET 'http://localhost:8073/v1/filters/apply/f47ac10b-58cc-4372-a567-0e02b2c3d479?userId=ssd2658&portfolioIds=163d0143-4fcb-480c-ac20-622f14e0e293'",
+      "comprehensiveFilter": "curl -X POST 'http://localhost:8073/v1/filters?userId=ssd2658' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\n    \"name\": \"Comprehensive Filter Example\",\n    \"description\": \"Filter with all possible configuration options\",\n    \"isDefault\": false,\n    \"filterConfig\": {\n      \"portfolioIds\": [\"163d0143-4fcb-480c-ac20-622f14e0e293\"],\n      \"dateRange\": {\n        \"startDate\": \"2025-01-01\",\n        \"endDate\": \"2025-12-31\"\n      },\n      \"timePeriod\": {\n        \"period\": \"LAST_30_DAYS\"\n      },\n      \"metricTypes\": [\n        \"PERFORMANCE\", \"RISK\", \"DISTRIBUTION\", \"TIMING\", \"PATTERN\",\n        \"PROFIT_LOSS\", \"WIN_RATE\", \"RISK_REWARD\", \"DRAWDOWN\", \"SHARPE_RATIO\"\n      ],\n      \"instruments\": [\"NIFTY\", \"BANKNIFTY\", \"FINNIFTY\", \"RELIANCE\", \"TCS\"],\n      \"instrumentFilters\": {\n        \"marketSegments\": [\"EQUITY\", \"INDEX\", \"INDEX_FUTURES\", \"INDEX_OPTIONS\"],\n        \"baseSymbols\": [\"NIFTY\", \"BANKNIFTY\"],\n        \"indexTypes\": [\"NIFTY\", \"BANKNIFTY\"],\n        \"derivativeTypes\": [\"FUTURES\", \"OPTIONS\"]\n      },\n      \"tradeCharacteristics\": {\n        \"strategies\": [\"Momentum Trading\", \"Scalping\", \"Options Strategy\"],\n        \"tags\": [\"futures\", \"momentum\", \"intraday\"],\n        \"directions\": [\"LONG\", \"SHORT\"],\n        \"statuses\": [\"OPEN\", \"CLOSED\", \"CANCELLED\"],\n        \"minHoldingTimeHours\": 1,\n        \"maxHoldingTimeHours\": 168\n      },\n      \"profitLossFilters\": {\n        \"minProfitLoss\": -10000.0,\n        \"maxProfitLoss\": 50000.0,\n        \"minPositionSize\": 1000.0,\n        \"maxPositionSize\": 100000.0\n      },\n      \"groupBy\": [\"STRATEGY\", \"SYMBOL\", \"DAY_OF_WEEK\", \"MONTH\", \"DIRECTION\"]\n    }\n  }'"
     }
   }
 }

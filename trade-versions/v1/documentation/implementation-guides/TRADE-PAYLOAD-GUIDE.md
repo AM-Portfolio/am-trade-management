@@ -127,9 +127,9 @@
 
 ## Controller Endpoint Details
 
-### POST /api/v1/trades/details - Add New Trade
+### POST /v1/trades/details - Add New Trade
 
-**Endpoint**: `POST http://localhost:8073/api/v1/trades/details`
+**Endpoint**: `POST http://localhost:8073/v1/trades/details`
 
 **Headers**:
 ```
@@ -341,7 +341,7 @@ Accept: application/json
 
 ## Additional Resources
 
-- **Controller**: `TradeController.java` - `/api/v1/trades/details`
+- **Controller**: `TradeController.java` - `/v1/trades/details`
 - **Model**: `TradeDetails.java` - Complete trade model
 - **Validation**: `TradeValidator.java` - Field validation logic
 - **Service**: `TradeApiService.java` - Business logic

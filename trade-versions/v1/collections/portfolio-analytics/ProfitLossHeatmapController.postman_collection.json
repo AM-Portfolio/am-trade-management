@@ -51,7 +51,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/heatmap/yearly?portfolioId={{portfolioId}}&year=2020&includeTradeDetails=false",
+							"raw": "{{baseUrl}}/v1/heatmap/yearly?portfolioId={{portfolioId}}&year=2020&includeTradeDetails=false",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -111,7 +111,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/heatmap/yearly?portfolioId={{portfolioId}}&year=2020&includeTradeDetails=true",
+							"raw": "{{baseUrl}}/v1/heatmap/yearly?portfolioId={{portfolioId}}&year=2020&includeTradeDetails=true",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -170,7 +170,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/heatmap/monthly?portfolioId={{portfolioId}}&financialYear=2020&includeTradeDetails=false",
+							"raw": "{{baseUrl}}/v1/heatmap/monthly?portfolioId={{portfolioId}}&financialYear=2020&includeTradeDetails=false",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -230,7 +230,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/heatmap/daily?portfolioId={{portfolioId}}&year=2020&month=12&includeTradeDetails=false",
+							"raw": "{{baseUrl}}/v1/heatmap/daily?portfolioId={{portfolioId}}&year=2020&month=12&includeTradeDetails=false",
 							"host": [
 								"{{baseUrl}}"
 							],

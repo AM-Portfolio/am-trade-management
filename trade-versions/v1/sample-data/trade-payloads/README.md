@@ -93,7 +93,7 @@ This directory contains sample JSON payloads for creating trades via the AM Trad
 ### Method 2: Using cURL
 
 ```bash
-curl -X POST http://localhost:8073/api/v1/trades/details \
+curl -X POST http://localhost:8073/v1/trades/details \
   -H "Content-Type: application/json" \
   -d @create-trade-nifty-futures.json
 ```
@@ -105,7 +105,7 @@ curl -X POST http://localhost:8073/api/v1/trades/details \
 cat create-trade-nifty-futures.json | \
   sed 's/{{portfolioId}}/actual-portfolio-id/g' | \
   sed 's/{{userId}}/actual-user-id/g' | \
-  curl -X POST http://localhost:8073/api/v1/trades/details \
+  curl -X POST http://localhost:8073/v1/trades/details \
     -H "Content-Type: application/json" \
     -d @-
 ```
@@ -256,7 +256,7 @@ All payloads are validated against:
   "status": 400,
   "error": "Bad Request",
   "message": "Validation failed: userId is required",
-  "path": "/api/v1/trades/details"
+  "path": "/v1/trades/details"
 }
 ```
 

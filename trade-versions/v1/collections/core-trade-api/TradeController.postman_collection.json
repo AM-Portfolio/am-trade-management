@@ -46,7 +46,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trades/details/portfolio/{{portfolioId}}?symbols=AAPL,TSLA",
+							"raw": "{{baseUrl}}/v1/trades/details/portfolio/{{portfolioId}}?symbols=AAPL,TSLA",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -107,7 +107,7 @@
 							"raw": "{\n  \"symbol\": \"MSFT\",\n  \"side\": \"BUY\",\n  \"type\": \"MARKET\",\n  \"status\": \"EXECUTED\",\n  \"quantity\": 50,\n  \"price\": 300.00,\n  \"totalValue\": 15000.00,\n  \"portfolioId\": \"{{portfolioId}}\",\n  \"traderId\": \"{{traderId}}\",\n  \"tradeDate\": \"2025-01-11T15:00:00\",\n  \"userId\": \"{{traderId}}\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trades/details",
+							"raw": "{{baseUrl}}/v1/trades/details",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -159,7 +159,7 @@
 							"raw": "{\n  \"tradeId\": \"{{tradeId}}\",\n  \"symbol\": \"MSFT\",\n  \"side\": \"BUY\",\n  \"type\": \"MARKET\",\n  \"status\": \"EXECUTED\",\n  \"quantity\": 75,\n  \"price\": 305.00,\n  \"totalValue\": 22875.00,\n  \"portfolioId\": \"{{portfolioId}}\",\n  \"traderId\": \"{{traderId}}\",\n  \"userId\": \"{{traderId}}\",\n  \"tradeDate\": \"2025-01-11T15:00:00\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trades/details/{{tradeId}}",
+							"raw": "{{baseUrl}}/v1/trades/details/{{tradeId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -210,7 +210,7 @@
 							"raw": "[\"{{tradeId}}\", \"TRADE002\", \"TRADE003\"]"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trades/details/by-ids",
+							"raw": "{{baseUrl}}/v1/trades/details/by-ids",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -261,7 +261,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trades/filter?portfolioIds={{portfolioId}}&symbols=AAPL,TSLA&statuses=EXECUTED&startDate=2020-01-01&endDate=2025-12-31&page=0&size=20",
+							"raw": "{{baseUrl}}/v1/trades/filter?portfolioIds={{portfolioId}}&symbols=AAPL,TSLA&statuses=EXECUTED&startDate=2020-01-01&endDate=2025-12-31&page=0&size=20",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -350,7 +350,7 @@
 							"raw": "[\n  {\n    \"symbol\": \"GOOGL\",\n    \"side\": \"BUY\",\n    \"type\": \"LIMIT\",\n    \"status\": \"EXECUTED\",\n    \"quantity\": 25,\n    \"price\": 2800.00,\n    \"totalValue\": 70000.00,\n    \"portfolioId\": \"{{portfolioId}}\",\n    \"traderId\": \"{{traderId}}\",\n    \"userId\": \"{{traderId}}\",\n    \"tradeDate\": \"2025-01-11T14:30:00\"\n  },\n  {\n    \"symbol\": \"AMZN\",\n    \"side\": \"SELL\",\n    \"type\": \"MARKET\",\n    \"status\": \"EXECUTED\",\n    \"quantity\": 10,\n    \"price\": 3200.00,\n    \"totalValue\": 32000.00,\n    \"portfolioId\": \"{{portfolioId}}\",\n    \"traderId\": \"{{traderId}}\",\n    \"userId\": \"{{traderId}}\",\n    \"tradeDate\": \"2025-01-11T14:45:00\"\n  }\n]"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trades/details/batch",
+							"raw": "{{baseUrl}}/v1/trades/details/batch",
 							"host": [
 								"{{baseUrl}}"
 							],
