@@ -1,20 +1,21 @@
-# Development configuration for am-trade-management.
-# Aligned with am-market industry standards.
-
+# Dev Environment — am-trade-management
+environment: dev
 replicaCount: 1
 
-environment: "dev"
-
-env:
-  SPRING_PROFILES_ACTIVE: "dev"
-  TRACING_SAMPLING_PROBABILITY: "1.0"
-  AM_OBSERVABILITY_ENABLED: "true"
-  AM_OBSERVABILITY_REQUEST_LOG_ENABLED: "true"
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi
 
 global:
   vault:
     enabled: true
     secrets:
+      auth:
+        path: "apps/data/dev/services/am-auth"
       infra:
         path: "apps/data/dev/infra/shared-api"
       mongo:
@@ -26,18 +27,38 @@ global:
       app:
         path: "apps/data/dev/services/am-trade-management"
 
+hostAliases:
+  - ip: "203.174.22.129"
+    hostnames:
+      - "redis.asrax.in"
+      - "mongodb.asrax.in"
+      - "kafka.asrax.in"
+
+probes:
+  port: 8080
+  startup:
+    path: "/actuator/health"
+    failureThreshold: 30
+    periodSeconds: 10
+  liveness:
+    path: "/actuator/health"
+  readiness:
+    path: "/actuator/health"
+
 ingress:
   enabled: true
+  className: "traefik"
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      am-apps-dev-dev-global-cors@kubernetescrd,
+      am-apps-dev-dev-strip-prefix@kubernetescrd
   hosts:
-    - host: trade-dev.amportfolio.com
+    - host: am-dev.asrax.in
       paths:
-        - path: /
+        - path: /trade
           pathType: Prefix
 
-resources:
-  limits:
-    cpu: 1000m
-    memory: 1024Mi
-  requests:
-    cpu: 500m
-    memory: 512Mi
+env:
+  SPRING_PROFILES_ACTIVE: "dev"
