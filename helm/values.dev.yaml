@@ -15,11 +15,16 @@ global:
   vault:
     enabled: true
     secrets:
-      infra: "kv/data/dev/infra"
-      mongo: "apps/data/dev/apps/trade/database/mongo"
-      kafka: "apps/data/dev/apps/trade/kafka"
-      redis: "apps/data/dev/apps/trade/database/redis"
-      app: "apps/data/dev/apps/trade"
+      infra:
+        path: "apps/data/dev/infra/shared-api"
+      mongo:
+        path: "apps/data/dev/infra/mongodb"
+      kafka:
+        path: "apps/data/dev/infra/kafka"
+      redis:
+        path: "apps/data/dev/infra/redis"
+      app:
+        path: "apps/data/dev/services/am-trade-management"
 
 ingress:
   enabled: true
