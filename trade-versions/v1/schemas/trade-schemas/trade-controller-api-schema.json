@@ -720,14 +720,8 @@
     },
     "FilterTradeDetailsRequest": {
       "type": "object",
-      "description": "Request for filtering trade details using favorite filter configuration",
-      "required": ["userId"],
+      "description": "Request for filtering trade details using favorite filter configuration. User identity is derived from the Authorization Bearer JWT.",
       "properties": {
-        "userId": {
-          "type": "string",
-          "description": "User ID",
-          "example": "ssd2658"
-        },
         "favoriteFilterId": {
           "type": "string",
           "format": "uuid",

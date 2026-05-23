@@ -1,8 +1,8 @@
 package am.trade.api.controller;
 
+import com.am.security.context.UserContext;
 import am.trade.api.service.PortfolioSummaryService;
 import am.trade.common.models.PortfolioModel;
-import am.trade.common.models.PortfolioSummaryDTO;
 import am.trade.common.models.AssetAllocation;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -138,21 +138,50 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "400", description = "Invalid owner ID"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @GetMapping("/by-owner/{ownerId}")
-    public ResponseEntity<List<PortfolioSummaryDTO>> getPortfolioSummariesByOwnerId(
-            @Parameter(description = "Owner ID") @PathVariable String ownerId) {
-
+    @GetMapping("/by-owner")
+    public ResponseEntity<?> getPortfolioSummariesForAuthenticatedUser() {
+        String ownerId = UserContext.getUserIdOrThrow();
         try {
             log.info("Fetching portfolio summaries for ownerId: {}", ownerId);
-            List<PortfolioSummaryDTO> portfolioSummaries = portfolioSummaryService
+            List<PortfolioModel> portfolioSummaries = portfolioSummaryService
                     .getPortfolioSummariesByOwnerId(ownerId);
             return ResponseEntity.ok(portfolioSummaries);
         } catch (IllegalArgumentException e) {
             log.error("Invalid owner ID: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/by-owner"));
         } catch (Exception e) {
             log.error("Error fetching portfolio summaries", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/by-owner")
+                    .build());
+        }
+    }
+
+    @Operation(summary = "Recalculate portfolio metrics")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Portfolio metrics recalculated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/{portfolioId}/recalculate")
+    public ResponseEntity<?> recalculatePortfolio(
+            @Parameter(description = "Portfolio ID") @PathVariable String portfolioId) {
+        String userId = UserContext.getUserIdOrThrow();
+        try {
+            log.info("Request to recalculate metrics for portfolioId: {} by userId: {}", portfolioId, userId);
+            PortfolioModel updatedPortfolio = tradeApiService.recalculatePortfolio(portfolioId, userId);
+            return ResponseEntity.ok(updatedPortfolio);
+        } catch (Exception e) {
+            log.error("Error recalculating portfolio metrics", e);
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/" + portfolioId + "/recalculate")
+                    .build());
         }
     }
 }

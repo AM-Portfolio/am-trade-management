@@ -24,9 +24,6 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TradeJournalEntryRequest {
 
-    @NotBlank(message = "User ID is required")
-    private String userId;
-
     private String tradeId; // Optional, can be null for general journal entries
 
     @NotBlank(message = "Title is required")

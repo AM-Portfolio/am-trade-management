@@ -4,6 +4,10 @@
 
 This folder contains comprehensive JSON Schema definitions for all API endpoints in the AM Trade Management system. Schemas define the contract, validation rules, and examples for every API.
 
+### Authentication (JWT)
+
+Protected endpoints resolve the caller from `Authorization: Bearer <JWT>`. Do **not** send `userId` as a query parameter, path segment, or request body field for identity. The shared `am-security-lib` `UserContextFilter` extracts `userId` from the token on the server.
+
 ## Schema Files by Controller
 
 ### Core Trade Schemas

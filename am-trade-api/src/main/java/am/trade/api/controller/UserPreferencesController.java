@@ -1,5 +1,6 @@
 package am.trade.api.controller;
 
+import com.am.security.context.UserContext;
 import am.trade.api.dto.DashboardPreferencesRequest;
 import am.trade.api.dto.DashboardPreferencesResponse;
 import am.trade.api.dto.ErrorResponse;
@@ -36,7 +37,8 @@ public class UserPreferencesController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/dashboard")
-    public ResponseEntity<Object> getDashboardPreferences(@RequestParam String userId) {
+    public ResponseEntity<Object> getDashboardPreferences() {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Fetching dashboard preferences for user: {}", userId);
         try {
             DashboardPreferencesResponse preferences = userPreferencesService.getDashboardPreferences(userId);
@@ -59,9 +61,8 @@ public class UserPreferencesController {
     })
     @PostMapping("/dashboard")
     public ResponseEntity<Object> saveDashboardPreferences(
-            @RequestParam String userId,
             @Valid @RequestBody DashboardPreferencesRequest request) {
-
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Saving dashboard preferences for user: {}", userId);
         try {
             DashboardPreferencesResponse preferences = userPreferencesService.saveDashboardPreferences(userId, request);
@@ -82,7 +83,8 @@ public class UserPreferencesController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/dashboard/reset")
-    public ResponseEntity<Object> resetDashboardPreferences(@RequestParam String userId) {
+    public ResponseEntity<Object> resetDashboardPreferences() {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Resetting dashboard preferences for user: {}", userId);
         try {
             DashboardPreferencesResponse preferences = userPreferencesService.resetDashboardPreferences(userId);
