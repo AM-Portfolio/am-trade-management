@@ -1,5 +1,6 @@
 package am.trade.api.controller;
 
+import com.am.security.context.UserContext;
 import am.trade.api.dto.ErrorResponse;
 import am.trade.api.dto.TradeJournalEntryRequest;
 import am.trade.api.dto.TradeJournalEntryResponse;
@@ -45,7 +46,7 @@ public class TradeJournalController {
     public ResponseEntity<Object> createJournalEntry(
             @Valid @RequestBody TradeJournalEntryRequest request) {
 
-        log.info("Creating journal entry for user: {}", request.getUserId());
+        log.info("Creating journal entry for user: {}", UserContext.getUserIdOrThrow());
         try {
             TradeJournalEntryResponse response = tradeJournalService.createJournalEntry(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -85,11 +86,9 @@ public class TradeJournalController {
             @ApiResponse(responseCode = "200", description = "Journal entries retrieved successfully"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<Page<TradeJournalEntryResponse>> getJournalEntriesByUser(
-            @PathVariable String userId,
-            Pageable pageable) {
-
+    @GetMapping("/user")
+    public ResponseEntity<Page<TradeJournalEntryResponse>> getJournalEntriesByUser(Pageable pageable) {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Fetching journal entries for user: {}", userId);
         Page<TradeJournalEntryResponse> entries = tradeJournalService.getJournalEntriesByUser(userId, pageable);
         return ResponseEntity.ok(entries);
@@ -115,11 +114,10 @@ public class TradeJournalController {
     })
     @GetMapping("/date-range")
     public ResponseEntity<Object> getJournalEntriesByDateRange(
-            @RequestParam String userId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             Pageable pageable) {
-
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Fetching journal entries for user: {} between {} and {}", userId, startDate, endDate);
 
         if (endDate.isBefore(startDate)) {

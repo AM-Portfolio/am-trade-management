@@ -22,9 +22,6 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class NotebookItemRequest {
 
-    @NotBlank(message = "User ID is required")
-    private String userId;
-
     @NotNull(message = "Type is required")
     private NotebookItemType type;
 

@@ -1,5 +1,6 @@
 package am.trade.api.controller;
 
+import com.am.security.context.UserContext;
 import am.trade.api.dto.*;
 import am.trade.api.service.JournalTemplateService;
 import am.trade.common.models.enums.JournalTemplateCategory;
@@ -56,9 +57,8 @@ public class JournalTemplateController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/{templateId}")
-    public ResponseEntity<JournalTemplateResponse> getTemplate(
-            @PathVariable String templateId,
-            @RequestParam String userId) {
+    public ResponseEntity<JournalTemplateResponse> getTemplate(@PathVariable String templateId) {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Fetching template with ID: {}", templateId);
         try {
             JournalTemplateResponse response = templateService.getTemplate(templateId, userId);
@@ -102,9 +102,8 @@ public class JournalTemplateController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @DeleteMapping("/{templateId}")
-    public ResponseEntity<Void> deleteTemplate(
-            @PathVariable String templateId,
-            @RequestParam String userId) {
+    public ResponseEntity<Void> deleteTemplate(@PathVariable String templateId) {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Deleting template with ID: {}", templateId);
         try {
             templateService.deleteTemplate(templateId, userId);
@@ -126,9 +125,9 @@ public class JournalTemplateController {
     })
     @GetMapping
     public ResponseEntity<List<JournalTemplateResponse>> getAllTemplates(
-            @RequestParam String userId,
             @RequestParam(required = false) JournalTemplateCategory category,
             @RequestParam(required = false) String search) {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Fetching all templates for user: {}, category: {}, search: {}", userId, category, search);
         List<JournalTemplateResponse> templates = templateService.getAllTemplates(userId, category, search);
         return ResponseEntity.ok(templates);
@@ -140,7 +139,8 @@ public class JournalTemplateController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/favorites")
-    public ResponseEntity<List<JournalTemplateResponse>> getFavoriteTemplates(@RequestParam String userId) {
+    public ResponseEntity<List<JournalTemplateResponse>> getFavoriteTemplates() {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Fetching favorite templates for user: {}", userId);
         List<JournalTemplateResponse> templates = templateService.getFavoriteTemplates(userId);
         return ResponseEntity.ok(templates);
@@ -152,7 +152,8 @@ public class JournalTemplateController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/recommended")
-    public ResponseEntity<List<JournalTemplateResponse>> getRecommendedTemplates(@RequestParam String userId) {
+    public ResponseEntity<List<JournalTemplateResponse>> getRecommendedTemplates() {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Fetching recommended templates for user: {}", userId);
         List<JournalTemplateResponse> templates = templateService.getRecommendedTemplates(userId);
         return ResponseEntity.ok(templates);
@@ -164,7 +165,8 @@ public class JournalTemplateController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/my-templates")
-    public ResponseEntity<List<JournalTemplateResponse>> getUserCustomTemplates(@RequestParam String userId) {
+    public ResponseEntity<List<JournalTemplateResponse>> getUserCustomTemplates() {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Fetching custom templates for user: {}", userId);
         List<JournalTemplateResponse> templates = templateService.getUserCustomTemplates(userId);
         return ResponseEntity.ok(templates);
@@ -177,9 +179,8 @@ public class JournalTemplateController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/{templateId}/favorite")
-    public ResponseEntity<JournalTemplateResponse> toggleFavorite(
-            @PathVariable String templateId,
-            @RequestParam String userId) {
+    public ResponseEntity<JournalTemplateResponse> toggleFavorite(@PathVariable String templateId) {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Toggling favorite for template: {} and user: {}", templateId, userId);
         try {
             JournalTemplateResponse response = templateService.toggleFavorite(templateId, userId);
@@ -201,7 +202,7 @@ public class JournalTemplateController {
     public ResponseEntity<TradeJournalEntryResponse> useTemplate(
             @PathVariable String templateId,
             @Valid @RequestBody UseTemplateRequest request) {
-        log.info("Using template {} for user {}", templateId, request.getUserId());
+        log.info("Using template {} for user {}", templateId, UserContext.getUserIdOrThrow());
 
         // Ensure templateId in path matches request
         if (!templateId.equals(request.getTemplateId())) {

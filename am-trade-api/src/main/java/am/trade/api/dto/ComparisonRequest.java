@@ -20,9 +20,6 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class ComparisonRequest {
     
-    @NotBlank(message = "User ID is required")
-    private String userId;
-    
     @NotBlank(message = "Comparison type is required")
     private String comparisonType; // TIME_PERIOD, PORTFOLIO, STRATEGY, INSTRUMENT
     

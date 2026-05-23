@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.am.security.context.UserContext;
 import am.trade.api.dto.FilterTradeDetailsRequest;
 import am.trade.api.dto.FilterTradeDetailsResponse;
 import am.trade.api.dto.FavoriteFilterResponse;
@@ -51,7 +52,13 @@ public class TradeApiServiceImpl implements TradeApiService {
     @Override
     public List<TradeDetails> getTradeDetailsByPortfolioAndSymbols(String portfolioId, List<String> symbols) {
         log.info("Service: Fetching trade details for portfolio: {} with symbols: {}", portfolioId, symbols);
-        return tradeManagementService.getTradesBySymbols(portfolioId, symbols);
+        List<TradeDetails> trades = tradeManagementService.getTradesBySymbols(portfolioId, symbols);
+        
+        // Verify ownership
+        String currentUserId = UserContext.getUserIdOrThrow();
+        return trades.stream()
+                .filter(t -> currentUserId.equals(t.getUserId()))
+                .collect(Collectors.toList());
     }
     
     @Override
@@ -133,6 +140,14 @@ public class TradeApiServiceImpl implements TradeApiService {
         
         // Get the original trade
         TradeDetails originalTrade = existingTradeOpt.get();
+        
+        // Verify ownership
+        String currentUserId = UserContext.getUserIdOrThrow();
+        if (!currentUserId.equals(originalTrade.getUserId())) {
+            log.warn("Security Alert: User {} attempted to update trade {} owned by user {}", 
+                    currentUserId, tradeId, originalTrade.getUserId());
+            throw new SecurityException("You do not have permission to modify this trade");
+        }
         
         // Validate non-editable fields
         validateNonEditableFields(originalTrade, tradeDetails);
@@ -307,8 +322,16 @@ public class TradeApiServiceImpl implements TradeApiService {
         log.info("Service: Filtering trades with criteria - portfolioIds: {}, symbols: {}, statuses: {}, startDate: {}, endDate: {}, strategies: {}", 
                 portfolioIds, symbols, statuses, startDate, endDate, strategies);
         
-        return tradeManagementService.getTradesByFilters(
+        Page<TradeDetails> tradesPage = tradeManagementService.getTradesByFilters(
                 portfolioIds, symbols, statuses, startDate, endDate, strategies, pageable);
+                
+        // Verify ownership
+        String currentUserId = UserContext.getUserIdOrThrow();
+        List<TradeDetails> filteredList = tradesPage.getContent().stream()
+                .filter(t -> currentUserId.equals(t.getUserId()))
+                .collect(Collectors.toList());
+                
+        return new org.springframework.data.domain.PageImpl<>(filteredList, pageable, filteredList.size());
     }
     
     @Override
@@ -407,14 +430,20 @@ public class TradeApiServiceImpl implements TradeApiService {
         
         try {
             // Use the efficient method that makes a single database call
-            List<TradeDetails> tradeDetails = tradeDetailsService.findModelsByTradeIds(tradeIds);
+            List<TradeDetails> allTradeDetails = tradeDetailsService.findModelsByTradeIds(tradeIds);
+            
+            // Verify ownership
+            String currentUserId = UserContext.getUserIdOrThrow();
+            List<TradeDetails> tradeDetails = allTradeDetails.stream()
+                    .filter(t -> currentUserId.equals(t.getUserId()))
+                    .collect(Collectors.toList());
             
             // Log success metrics
             int foundCount = tradeDetails.size();
             int requestedCount = tradeIds.size();
             
             if (foundCount < requestedCount) {
-                log.warn("Only found {} trades out of {} requested IDs", foundCount, requestedCount);
+                log.warn("Only found {} trades out of {} requested IDs for user {}", foundCount, requestedCount, currentUserId);
             } else {
                 log.info("Successfully retrieved all {} requested trade details", requestedCount);
             }
@@ -428,18 +457,17 @@ public class TradeApiServiceImpl implements TradeApiService {
     
     @Override
     public FilterTradeDetailsResponse filterTradeDetails(FilterTradeDetailsRequest request, org.springframework.data.domain.Pageable pageable) {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Filtering trade details for user: {} with filter ID: {}", 
-                request.getUserId(), request.getFavoriteFilterId());
-        
-        validateFilterRequest(request);
+                userId, request.getFavoriteFilterId());
         
         // If favorite filter ID is provided, merge with saved filter
         FilterTradeDetailsRequest effectiveFilter = request;
         String appliedFilterName = null;
         
         if (request.getFavoriteFilterId() != null && !request.getFavoriteFilterId().isEmpty()) {
-            effectiveFilter = mergeFavoriteFilter(request);
-            appliedFilterName = getFilterName(request.getUserId(), request.getFavoriteFilterId());
+            effectiveFilter = mergeFavoriteFilter(request, userId);
+            appliedFilterName = getFilterName(userId, request.getFavoriteFilterId());
         }
         
         // Apply filters and get all matching trades
@@ -458,23 +486,16 @@ public class TradeApiServiceImpl implements TradeApiService {
                 effectiveFilter, appliedFilterName, null);
     }
     
-    private void validateFilterRequest(FilterTradeDetailsRequest request) {
-        if (request.getUserId() == null || request.getUserId().isEmpty()) {
-            throw new IllegalArgumentException("User ID is required");
-        }
-    }
-    
-    private FilterTradeDetailsRequest mergeFavoriteFilter(FilterTradeDetailsRequest request) {
+    private FilterTradeDetailsRequest mergeFavoriteFilter(FilterTradeDetailsRequest request, String userId) {
         try {
             // Get saved filter configuration
             FavoriteFilterResponse savedFilter = favoriteFilterService.getFilterById(
-                    request.getUserId(), 
+                    userId, 
                     request.getFavoriteFilterId());
             
             // If request has no metrics config, use saved filter's config
             if (request.getMetricsConfig() == null) {
                 return FilterTradeDetailsRequest.builder()
-                        .userId(request.getUserId())
                         .metricsConfig(savedFilter.getFilterConfig())
                         .favoriteFilterId(request.getFavoriteFilterId())
                         .build();
@@ -511,7 +532,6 @@ public class TradeApiServiceImpl implements TradeApiService {
                     .build();
             
             return FilterTradeDetailsRequest.builder()
-                    .userId(request.getUserId())
                     .metricsConfig(mergedConfig)
                     .favoriteFilterId(request.getFavoriteFilterId())
                     .build();
@@ -555,7 +575,9 @@ public class TradeApiServiceImpl implements TradeApiService {
         }
         
         // Apply all filters
+        String currentUserId = UserContext.getUserIdOrThrow();
         return allTrades.stream()
+                .filter(trade -> currentUserId.equals(trade.getUserId()))
                 .filter(trade -> matchesFilter(trade, filter.getMetricsConfig()))
                 .collect(Collectors.toList());
     }

@@ -1,5 +1,6 @@
 package am.trade.api.controller;
 
+import com.am.security.context.UserContext;
 import am.trade.api.dto.ErrorResponse;
 import am.trade.api.dto.NotebookItemRequest;
 import am.trade.api.dto.NotebookItemResponse;
@@ -45,7 +46,7 @@ public class NotebookController {
     })
     @PostMapping("/items")
     public ResponseEntity<NotebookItemResponse> createNotebookItem(@Valid @RequestBody NotebookItemRequest request) {
-        log.info("Creating notebook item for user: {}", request.getUserId());
+        log.info("Creating notebook item for user: {}", UserContext.getUserIdOrThrow());
         try {
             NotebookItemResponse response = notebookService.createNotebookItem(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -119,10 +120,9 @@ public class NotebookController {
     @Operation(summary = "Get notebook items for a user")
     @GetMapping("/items")
     public ResponseEntity<List<NotebookItemResponse>> getNotebookItems(
-            @RequestParam String userId,
             @RequestParam(required = false) String parentId,
             @RequestParam(required = false) NotebookItemType type) {
-
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Fetching notebook items for user: {}", userId);
 
         List<NotebookItemResponse> items;
@@ -142,7 +142,7 @@ public class NotebookController {
     @Operation(summary = "Create a new notebook tag")
     @PostMapping("/tags")
     public ResponseEntity<NotebookTagResponse> createNotebookTag(@Valid @RequestBody NotebookTagRequest request) {
-        log.info("Creating notebook tag for user: {}", request.getUserId());
+        log.info("Creating notebook tag for user: {}", UserContext.getUserIdOrThrow());
         try {
             NotebookTagResponse response = notebookService.createNotebookTag(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -154,7 +154,8 @@ public class NotebookController {
 
     @Operation(summary = "Get notebook tags for a user")
     @GetMapping("/tags")
-    public ResponseEntity<List<NotebookTagResponse>> getNotebookTags(@RequestParam String userId) {
+    public ResponseEntity<List<NotebookTagResponse>> getNotebookTags() {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Fetching notebook tags for user: {}", userId);
         List<NotebookTagResponse> tags = notebookService.getNotebookTagsByUser(userId);
         return ResponseEntity.ok(tags);

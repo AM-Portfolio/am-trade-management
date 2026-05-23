@@ -1,5 +1,6 @@
 package am.trade.api.service.impl;
 
+import com.am.security.context.UserContext;
 import am.trade.api.dto.NotebookItemRequest;
 import am.trade.api.dto.NotebookItemResponse;
 import am.trade.api.dto.NotebookTagRequest;
@@ -31,11 +32,11 @@ public class NotebookServiceImpl implements NotebookService {
 
     @Override
     public NotebookItemResponse createNotebookItem(NotebookItemRequest request) {
-        log.debug("Creating notebook item for user: {}", request.getUserId());
+        log.debug("Creating notebook item for user: {}", UserContext.getUserIdOrThrow());
 
         NotebookItem item = NotebookItem.builder()
                 .id(UUID.randomUUID().toString())
-                .userId(request.getUserId())
+                .userId(UserContext.getUserIdOrThrow())
                 .type(request.getType())
                 .parentId(request.getParentId())
                 .title(request.getTitle())
@@ -63,7 +64,7 @@ public class NotebookServiceImpl implements NotebookService {
         NotebookItem item = notebookItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Notebook item not found with ID: " + itemId));
 
-        if (!item.getUserId().equals(request.getUserId())) {
+        if (!item.getUserId().equals(UserContext.getUserIdOrThrow())) {
             throw new IllegalArgumentException("Cannot update notebook item belonging to another user");
         }
 
@@ -123,11 +124,11 @@ public class NotebookServiceImpl implements NotebookService {
 
     @Override
     public NotebookTagResponse createNotebookTag(NotebookTagRequest request) {
-        log.debug("Creating notebook tag for user: {}", request.getUserId());
+        log.debug("Creating notebook tag for user: {}", UserContext.getUserIdOrThrow());
 
         NotebookTag tag = NotebookTag.builder()
                 .id(UUID.randomUUID().toString())
-                .userId(request.getUserId())
+                .userId(UserContext.getUserIdOrThrow())
                 .name(request.getName())
                 .color(request.getColor())
                 .description(request.getDescription())
@@ -151,7 +152,7 @@ public class NotebookServiceImpl implements NotebookService {
         NotebookTag tag = notebookTagRepository.findById(tagId)
                 .orElseThrow(() -> new IllegalArgumentException("Notebook tag not found with ID: " + tagId));
 
-        if (!tag.getUserId().equals(request.getUserId())) {
+        if (!tag.getUserId().equals(UserContext.getUserIdOrThrow())) {
             throw new IllegalArgumentException("Cannot update notebook tag belonging to another user");
         }
 

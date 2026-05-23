@@ -68,16 +68,11 @@
         "TradeJournalEntryRequest": {
             "type": "object",
             "required": [
-                "userId",
                 "title",
                 "content",
                 "entryDate"
             ],
             "properties": {
-                "userId": {
-                    "type": "string",
-                    "description": "User ID is required"
-                },
                 "tradeId": {
                     "type": "string",
                     "description": "Optional, can be null for general journal entries"
@@ -492,23 +487,12 @@
                 }
             }
         },
-        "/api/v1/journal/user/{userId}": {
+        "/api/v1/journal/user": {
             "get": {
-                "summary": "Get journal entries for a user",
+                "summary": "Get journal entries for the authenticated user",
                 "operationId": "getJournalEntriesByUser",
                 "tags": [
                     "Trade Journal"
-                ],
-                "parameters": [
-                    {
-                        "name": "userId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "User ID"
-                    }
                 ],
                 "responses": {
                     "200": {
@@ -581,15 +565,6 @@
                     "Trade Journal"
                 ],
                 "parameters": [
-                    {
-                        "name": "userId",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "User ID"
-                    },
                     {
                         "name": "startDate",
                         "in": "query",

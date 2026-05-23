@@ -1,5 +1,6 @@
 package am.trade.api.controller;
 
+import com.am.security.context.UserContext;
 import am.trade.api.dto.ComparisonRequest;
 import am.trade.api.dto.ComparisonResponse;
 import am.trade.api.dto.ErrorResponse;
@@ -36,7 +37,7 @@ public class TradeComparisonController {
     })
     @PostMapping
     public ResponseEntity<Object> compareTradePerformance(@Valid @RequestBody ComparisonRequest request) {
-        log.info("Comparing trade performance for user: {}", request.getUserId());
+        log.info("Comparing trade performance for user: {}", UserContext.getUserIdOrThrow());
         try {
             ComparisonResponse response = tradeComparisonService.compareTradePerformance(request);
             return ResponseEntity.ok(response);
@@ -57,12 +58,11 @@ public class TradeComparisonController {
     })
     @GetMapping("/portfolios")
     public ResponseEntity<Object> comparePortfolios(
-            @RequestParam String userId,
             @RequestParam String portfolioId1,
             @RequestParam String portfolioId2,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
-
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Comparing portfolios {} and {} for user: {}", portfolioId1, portfolioId2, userId);
         try {
             ComparisonResponse response = tradeComparisonService.comparePortfolios(
@@ -85,13 +85,12 @@ public class TradeComparisonController {
     })
     @GetMapping("/time-periods")
     public ResponseEntity<Object> compareTimePeriods(
-            @RequestParam String userId,
             @RequestParam String period1Start,
             @RequestParam String period1End,
             @RequestParam String period2Start,
             @RequestParam String period2End,
             @RequestParam(required = false) String portfolioId) {
-
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Comparing time periods for user: {}", userId);
         try {
             ComparisonResponse response = tradeComparisonService.compareTimePeriods(
@@ -114,12 +113,11 @@ public class TradeComparisonController {
     })
     @GetMapping("/strategies")
     public ResponseEntity<Object> compareStrategies(
-            @RequestParam String userId,
             @RequestParam String strategy1,
             @RequestParam String strategy2,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
-
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Comparing strategies {} and {} for user: {}", strategy1, strategy2, userId);
         try {
             ComparisonResponse response = tradeComparisonService.compareStrategies(

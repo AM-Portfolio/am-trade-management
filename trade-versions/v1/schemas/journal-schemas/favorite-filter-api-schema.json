@@ -447,15 +447,9 @@
     },
     "BulkDeleteRequest": {
       "type": "object",
-      "description": "Request DTO for bulk deletion of favorite filters",
-      "required": ["userId", "filterIds"],
+      "description": "Request DTO for bulk deletion of favorite filters. User identity is derived from the Authorization Bearer JWT.",
+      "required": ["filterIds"],
       "properties": {
-        "userId": {
-          "type": "string",
-          "description": "ID of the user performing the bulk delete",
-          "minLength": 1,
-          "example": "ssd2658"
-        },
         "filterIds": {
           "type": "array",
           "description": "List of filter IDs to delete",
@@ -613,18 +607,6 @@
         "summary": "Create a new favorite filter",
         "operationId": "createFilter",
         "tags": ["Favorite Filters"],
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "User ID",
-            "example": "ssd2658"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -658,18 +640,6 @@
         "summary": "Get all favorite filters for a user",
         "operationId": "getUserFilters",
         "tags": ["Favorite Filters"],
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "User ID",
-            "example": "ssd2658"
-          }
-        ],
         "responses": {
           "200": {
             "description": "Filters retrieved successfully",
@@ -696,16 +666,6 @@
         "operationId": "getFilterById",
         "tags": ["Favorite Filters"],
         "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "User ID",
-            "example": "ssd2658"
-          },
           {
             "name": "filterId",
             "in": "path",
@@ -742,16 +702,6 @@
         "operationId": "updateFilter",
         "tags": ["Favorite Filters"],
         "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "User ID",
-            "example": "ssd2658"
-          },
           {
             "name": "filterId",
             "in": "path",
@@ -801,16 +751,6 @@
         "operationId": "deleteFilter",
         "tags": ["Favorite Filters"],
         "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "User ID",
-            "example": "ssd2658"
-          },
           {
             "name": "filterId",
             "in": "path",
@@ -876,18 +816,6 @@
         "summary": "Get the user's default filter",
         "operationId": "getDefaultFilter",
         "tags": ["Favorite Filters"],
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "User ID",
-            "example": "ssd2658"
-          }
-        ],
         "responses": {
           "200": {
             "description": "Default filter retrieved successfully",
@@ -914,16 +842,6 @@
         "operationId": "setDefaultFilter",
         "tags": ["Favorite Filters"],
         "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "User ID",
-            "example": "ssd2658"
-          },
           {
             "name": "filterId",
             "in": "path",
@@ -962,16 +880,6 @@
         "operationId": "saveCurrentFilter",
         "tags": ["Favorite Filters"],
         "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "User ID",
-            "example": "ssd2658"
-          },
           {
             "name": "name",
             "in": "query",
@@ -1038,16 +946,6 @@
         "operationId": "getMetricsWithFavoriteFilter",
         "tags": ["Favorite Filters"],
         "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "User ID",
-            "example": "ssd2658"
-          },
           {
             "name": "filterId",
             "in": "path",

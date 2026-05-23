@@ -188,7 +188,7 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
 
     @Override
     public TradeJournalEntryResponse useTemplate(UseTemplateRequest request) {
-        log.debug("Using template {} for user {}", request.getTemplateId(), request.getUserId());
+        log.debug("Using template {} for user {}", request.getTemplateId(), com.am.security.context.UserContext.getUserIdOrThrow());
 
         JournalTemplate template = findTemplateById(request.getTemplateId());
 
@@ -203,7 +203,6 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
 
         // Create journal entry
         TradeJournalEntryRequest journalRequest = TradeJournalEntryRequest.builder()
-                .userId(request.getUserId())
                 .tradeId(request.getTradeId())
                 .title(title)
                 .content(content)

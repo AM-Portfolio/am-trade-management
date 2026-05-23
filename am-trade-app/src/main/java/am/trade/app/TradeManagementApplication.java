@@ -21,6 +21,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 @SpringBootApplication(scanBasePackages = { "am.trade" })
 @Import({
         KafkaConfig.class,
+        am.trade.kafka.config.LocalKafkaConfig.class,
         TradeServicesAutoConfiguration.class,
         DashboardAutoConfiguration.class,
         ApiAutoConfiguration.class,

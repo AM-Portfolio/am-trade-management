@@ -1,5 +1,6 @@
 package am.trade.api.service.impl;
 
+import com.am.security.context.UserContext;
 import am.trade.api.dto.TradeJournalEntryRequest;
 import am.trade.api.dto.TradeJournalEntryResponse;
 import am.trade.api.service.TradeJournalService;
@@ -31,7 +32,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
     @Override
     public TradeJournalEntryResponse createJournalEntry(TradeJournalEntryRequest request) {
-        log.debug("Creating journal entry for user: {}", request.getUserId());
+        log.debug("Creating journal entry for user: {}", UserContext.getUserIdOrThrow());
 
         validateRequest(request);
 
@@ -98,7 +99,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         TradeJournalEntry existingEntry = findEntryById(entryId);
 
         // Check if user ID matches
-        if (!existingEntry.getUserId().equals(request.getUserId())) {
+        if (!existingEntry.getUserId().equals(UserContext.getUserIdOrThrow())) {
             throw new IllegalArgumentException("Cannot update journal entry that belongs to another user");
         }
 
@@ -163,10 +164,6 @@ public class TradeJournalServiceImpl implements TradeJournalService {
             throw new IllegalArgumentException("Content is required");
         }
 
-        if (request.getUserId() == null || request.getUserId().trim().isEmpty()) {
-            throw new IllegalArgumentException("User ID is required");
-        }
-
         if (request.getEntryDate() == null) {
             throw new IllegalArgumentException("Entry date is required");
         }
@@ -180,7 +177,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
      */
     private TradeJournalEntry convertToEntity(TradeJournalEntryRequest request) {
         return TradeJournalEntry.builder()
-                .userId(request.getUserId())
+                .userId(UserContext.getUserIdOrThrow())
                 .tradeId(request.getTradeId())
                 .title(request.getTitle())
                 .content(request.getContent())

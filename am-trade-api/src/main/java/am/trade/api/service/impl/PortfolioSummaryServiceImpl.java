@@ -163,19 +163,15 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
     }
     
     @Override
-    public List<PortfolioSummaryDTO> getPortfolioSummariesByOwnerId(String ownerId) {
+    public List<PortfolioModel> getPortfolioSummariesByOwnerId(String ownerId) {
         log.debug("Getting portfolio summaries for ownerId: {}", ownerId);
         
         if (ownerId == null || ownerId.trim().isEmpty()) {
             throw new IllegalArgumentException("Owner ID cannot be null or empty");
         }
         
-        // Get all portfolios for the owner
-        List<PortfolioModel> portfolios = portfolioService.findByOwnerId(ownerId);
-        
-        // Map to summary DTOs containing only ID and name
-        return portfolios.stream()
-            .map(portfolio -> new PortfolioSummaryDTO(portfolio.getPortfolioId(), portfolio.getName()))
-            .collect(Collectors.toList());
+        // Return the full PortfolioModel list so the frontend receives all metrics
+        // (winRate, netProfitLoss, totalTrades, etc.) — not just portfolioId + name
+        return portfolioService.findByOwnerId(ownerId);
     }
 }

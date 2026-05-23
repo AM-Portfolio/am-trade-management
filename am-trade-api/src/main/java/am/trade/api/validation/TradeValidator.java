@@ -1,5 +1,6 @@
 package am.trade.api.validation;
 
+import com.am.security.context.UserContext;
 import am.trade.common.models.Attachment;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.TradeEntryExistReasoning;
@@ -24,10 +25,7 @@ public class TradeValidator {
      * @throws IllegalArgumentException if validation fails
      */
     public void validateRequiredFields(TradeDetails tradeDetails) {
-        if (tradeDetails.getUserId() == null || tradeDetails.getUserId().isEmpty()) {
-            log.error("User ID is required");
-            throw new IllegalArgumentException("User ID is required");
-        }
+        tradeDetails.setUserId(UserContext.getUserIdOrThrow());
         
         if (tradeDetails.getPortfolioId() == null || tradeDetails.getPortfolioId().isEmpty()) {
             log.error("Portfolio ID is required");

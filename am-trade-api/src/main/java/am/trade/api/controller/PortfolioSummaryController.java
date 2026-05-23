@@ -1,9 +1,9 @@
 package am.trade.api.controller;
 
+import com.am.security.context.UserContext;
 import am.trade.api.service.PortfolioSummaryService;
 import am.trade.api.service.TradeApiService;
 import am.trade.common.models.PortfolioModel;
-import am.trade.common.models.PortfolioSummaryDTO;
 import am.trade.common.models.AssetAllocation;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -162,25 +162,24 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "400", description = "Invalid owner ID"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @GetMapping("/by-owner/{ownerId}")
-    public ResponseEntity<?> getPortfolioSummariesByOwnerId(
-            @Parameter(description = "Owner ID") @PathVariable String ownerId) {
-
+    @GetMapping("/by-owner")
+    public ResponseEntity<?> getPortfolioSummariesForAuthenticatedUser() {
+        String ownerId = UserContext.getUserIdOrThrow();
         try {
             log.info("Fetching portfolio summaries for ownerId: {}", ownerId);
-            List<PortfolioSummaryDTO> portfolioSummaries = portfolioSummaryService
+            List<PortfolioModel> portfolioSummaries = portfolioSummaryService
                     .getPortfolioSummariesByOwnerId(ownerId);
             return ResponseEntity.ok(portfolioSummaries);
         } catch (IllegalArgumentException e) {
             log.error("Invalid owner ID: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/by-owner/" + ownerId));
+            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/by-owner"));
         } catch (Exception e) {
             log.error("Error fetching portfolio summaries", e);
             return ResponseEntity.internalServerError().body(ErrorResponse.builder()
                     .status("INTERNAL_SERVER_ERROR")
                     .code(500)
                     .message("An unexpected error occurred: " + e.getMessage())
-                    .path("/v1/portfolio-summary/by-owner/" + ownerId)
+                    .path("/v1/portfolio-summary/by-owner")
                     .build());
         }
     }
@@ -193,9 +192,8 @@ public class PortfolioSummaryController {
     })
     @PostMapping("/{portfolioId}/recalculate")
     public ResponseEntity<?> recalculatePortfolio(
-            @Parameter(description = "Portfolio ID") @PathVariable String portfolioId,
-            @Parameter(description = "User ID") @RequestParam String userId) {
-
+            @Parameter(description = "Portfolio ID") @PathVariable String portfolioId) {
+        String userId = UserContext.getUserIdOrThrow();
         try {
             log.info("Request to recalculate metrics for portfolioId: {} by userId: {}", portfolioId, userId);
             PortfolioModel updatedPortfolio = tradeApiService.recalculatePortfolio(portfolioId, userId);

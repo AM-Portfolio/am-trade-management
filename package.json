@@ -1,0 +1,14 @@
+{
+  "name": "am-trade-management",
+  "version": "1.0.0",
+  "description": "NPM wrapper scripts for am-trade-management Spring Boot backend",
+  "scripts": {
+    "dev": "dotenv -- mvnw spring-boot:run -pl am-trade-app \"-Dspring-boot.run.profiles=local\"",
+    "build": "dotenv -- mvnw clean install",
+    "test": "dotenv -- mvnw test",
+    "clean": "mvnw clean"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^11.0.0"
+  }
+}
