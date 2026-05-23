@@ -41,7 +41,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "404", description = "Portfolio not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @GetMapping("/{portfolioId}")
+    @GetMapping("/{portfolioId:(?!by-owner|compare)[^/]+}")
     public ResponseEntity<PortfolioModel> getPortfolioSummary(
             @Parameter(description = "Portfolio ID") @PathVariable String portfolioId) {
 
