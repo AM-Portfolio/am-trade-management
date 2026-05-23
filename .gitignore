@@ -115,3 +115,7 @@ k8s/
 !docker-compose*.yml
 !Dockerfile
 .env.docker
+
+# Backup files (may contain credentials)
+*.bak
+*.backup
