@@ -31,16 +31,19 @@ public class LocalUserContextFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
         boolean hasBearer = authHeader != null && authHeader.startsWith("Bearer ");
-        if (!hasBearer && UserContext.getUserId() == null) {
+        
+        // In local mode, if UserContext is not populated (e.g. Gateway is bypassed or mock token used),
+        // we always inject the local default user.
+        if (UserContext.getUserId() == null) {
             UserContext.setUserId(localDefaultUserId);
             UserContext.setEmail(localDefaultUserId + "@local.dev");
         }
+        
         try {
             filterChain.doFilter(request, response);
         } finally {
-            if (!hasBearer) {
-                UserContext.clear();
-            }
+            // Always clear the context to prevent thread-local leaks
+            UserContext.clear();
         }
     }
 }
