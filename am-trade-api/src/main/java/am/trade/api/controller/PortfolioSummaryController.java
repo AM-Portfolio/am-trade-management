@@ -66,6 +66,37 @@ public class PortfolioSummaryController {
         }
     }
 
+    @Operation(summary = "Get portfolio summary by owner ID as fallback")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Portfolio summary retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid owner ID"),
+            @ApiResponse(responseCode = "404", description = "Portfolio not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/by-owner/{ownerId}")
+    public ResponseEntity<?> getPortfolioSummaryByOwnerIdFallback(
+            @Parameter(description = "Owner ID") @PathVariable String ownerId) {
+        
+        String portfolioId = "by-owner/" + ownerId;
+        
+        try {
+            log.info("Fallback: Fetching portfolio summary for constructed portfolioId: {}", portfolioId);
+            PortfolioModel portfolioSummary = portfolioSummaryService.getPortfolioSummary(portfolioId);
+            return ResponseEntity.ok(portfolioSummary);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid portfolio ID: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/by-owner/" + ownerId));
+        } catch (Exception e) {
+            log.error("Error fetching portfolio summary", e);
+            return ResponseEntity.internalServerError().body(ErrorResponse.builder()
+                    .status("INTERNAL_SERVER_ERROR")
+                    .code(500)
+                    .message("An unexpected error occurred: " + e.getMessage())
+                    .path("/v1/portfolio-summary/by-owner/" + ownerId)
+                    .build());
+        }
+    }
+
     @Operation(summary = "Get portfolio summary by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Portfolio summary retrieved successfully"),
