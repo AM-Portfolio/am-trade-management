@@ -31,7 +31,7 @@ public class ApiAutoConfiguration {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") // Allow all endpoints
-                    .allowedOriginPatterns("http://localhost:*", "https://localhost:*") // Allow localhost with any port
+                    .allowedOriginPatterns("http://localhost:*", "https://localhost:*", "https://*") // Allow localhost and HTTPS
                     .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                     .allowedHeaders("*")
                     .allowCredentials(true)
