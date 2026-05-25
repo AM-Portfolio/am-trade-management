@@ -145,6 +145,43 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId, userId);
     }
 
+    public void processTradeDetailsWithObjects(List<TradeDetails> trades, String portfolioId, String userId) {
+        if (trades == null || trades.isEmpty()) {
+            return;
+        }
+        
+        List<String> newTradeIds = trades.stream().map(TradeDetails::getTradeId).collect(Collectors.toList());
+        log.info("Processing {} new trade objects for portfolio {}", trades.size(), portfolioId);
+        
+        Optional<PortfolioModel> existingPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId);
+        Set<String> uniqueTradeIds = new HashSet<>();
+        
+        if (existingPortfolio.isPresent()) {
+            List<String> existingTrades = existingPortfolio.get().getTradeIds();
+            if (existingTrades != null && !existingTrades.isEmpty()) {
+                uniqueTradeIds.addAll(existingTrades);
+            }
+        }
+        
+        uniqueTradeIds.addAll(newTradeIds);
+        List<String> allTradeIds = new ArrayList<>(uniqueTradeIds);
+        
+        // Fetch all trades from database
+        List<TradeDetails> allTrades = tradeDetailsService.findModelsByTradeIds(allTradeIds);
+        
+        // Update the fetched trades with the provided trade objects if they exist
+        // to ensure we use the most recent data for calculations
+        Map<String, TradeDetails> tradeMap = allTrades.stream()
+            .collect(Collectors.toMap(TradeDetails::getTradeId, t -> t, (t1, t2) -> t1));
+            
+        for (TradeDetails newTrade : trades) {
+            tradeMap.put(newTrade.getTradeId(), newTrade);
+        }
+        
+        List<TradeDetails> finalTrades = new ArrayList<>(tradeMap.values());
+        
+        processTradeDetailsWithObjects(finalTrades, allTradeIds, portfolioId, userId);
+    }
     private PortfolioModel processTradeDetailsAndGetPortfolio(List<String> tradeIds, String portfolioId, String userId) {
 
         // Calculate portfolio-level metrics
