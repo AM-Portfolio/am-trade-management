@@ -218,6 +218,13 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         boolean anyUpdated = false;
 
         for (TradeDetails trade : trades) {
+            // Check and fix entryInfo totalValue if it's missing
+            if (trade.getEntryInfo() != null && (trade.getEntryInfo().getTotalValue() == null || trade.getEntryInfo().getTotalValue().compareTo(BigDecimal.ZERO) == 0)) {
+                if (trade.getEntryInfo().getPrice() != null) {
+                    trade.getEntryInfo().setTotalValue(trade.getEntryInfo().getPrice().multiply(BigDecimal.valueOf(trade.getEntryInfo().getQuantity())));
+                }
+            }
+            
             // Recalculate if metrics are null OR if profitLoss is zero (might be stale/initial value)
             if (trade.getMetrics() == null || trade.getMetrics().getProfitLoss() == null || 
                 trade.getMetrics().getProfitLoss().compareTo(BigDecimal.ZERO) == 0) {
@@ -300,8 +307,19 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             }
             
             // Add to total value
-            if (trade.getEntryInfo() != null && trade.getEntryInfo().getTotalValue() != null) {
-                totalValue = totalValue.add(trade.getEntryInfo().getTotalValue());
+            if (trade.getEntryInfo() != null) {
+                BigDecimal entryTotalValue = trade.getEntryInfo().getTotalValue();
+                
+                // Safety fallback: If totalValue is null or zero, calculate it from price * quantity
+                if (entryTotalValue == null || entryTotalValue.compareTo(BigDecimal.ZERO) == 0) {
+                    if (trade.getEntryInfo().getPrice() != null) {
+                        entryTotalValue = trade.getEntryInfo().getPrice().multiply(BigDecimal.valueOf(trade.getEntryInfo().getQuantity()));
+                    } else {
+                        entryTotalValue = BigDecimal.ZERO;
+                    }
+                }
+                
+                totalValue = totalValue.add(entryTotalValue);
             }
         }
         
