@@ -12,8 +12,9 @@ import am.trade.services.config.TradeServicesAutoConfiguration;
  * Auto-configuration for API module
  */
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "am.trade.api", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -23,20 +24,23 @@ public class ApiAutoConfiguration {
     
     /**
      * Configures CORS for the API to allow cross-origin requests from the frontend
-     * @return WebMvcConfigurer with CORS configuration
+     * Uses CorsFilter which integrates better with Spring Security than WebMvcConfigurer
      */
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**") // Allow all endpoints
-                    .allowedOriginPatterns("http://localhost:*", "https://localhost:*", "https://*") // Allow localhost and HTTPS
-                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                    .allowedHeaders("*")
-                    .allowCredentials(true)
-                    .maxAge(3600); // 1 hour max age
-            }
-        };
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        
+        config.setAllowCredentials(true);
+        config.addAllowedOriginPattern("http://localhost:*"); // Allow all localhost ports
+        config.addAllowedOriginPattern("https://localhost:*"); // Allow local HTTPS
+        config.addAllowedOriginPattern("https://*.replit.dev");
+        config.addAllowedOriginPattern("https://*");
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+        config.setMaxAge(3600L);
+        
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
 }
