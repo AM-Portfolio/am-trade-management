@@ -7,6 +7,7 @@ import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.TradeMetrics;
 import am.trade.common.models.TradeModel;
+import am.trade.common.models.enums.MarketSegment;
 import am.trade.common.models.enums.TradePositionType;
 import am.trade.common.models.enums.TradeStatus;
 import am.trade.common.models.enums.TradeType;
@@ -184,6 +185,62 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
 
         return portfolioModel;
     }
+
+    /**
+     * Ensures all trades in a list have their metrics calculated.
+     * This acts as a synchronous fallback for the Kafka-based calculation pipeline.
+     */
+    private List<TradeDetails> refreshTradeMetricsWithList(List<TradeDetails> trades) {
+        if (trades == null) return new ArrayList<>();
+        
+        boolean anyUpdated = false;
+
+        for (TradeDetails trade : trades) {
+            // Check and fix entryInfo totalValue if it's missing
+            if (trade.getEntryInfo() != null && (trade.getEntryInfo().getTotalValue() == null || trade.getEntryInfo().getTotalValue().compareTo(BigDecimal.ZERO) == 0)) {
+                if (trade.getEntryInfo().getPrice() != null) {
+                    trade.getEntryInfo().setTotalValue(trade.getEntryInfo().getPrice().multiply(BigDecimal.valueOf(trade.getEntryInfo().getQuantity())));
+                }
+            }
+            
+            // Recalculate if metrics are null OR if profitLoss is zero (might be stale/initial value)
+            if (trade.getMetrics() == null || trade.getMetrics().getProfitLoss() == null || 
+                trade.getMetrics().getProfitLoss().compareTo(BigDecimal.ZERO) == 0) {
+                
+                log.info("Refreshing metrics for trade: {} (Current P/L: {})", 
+                    trade.getTradeId(), 
+                    trade.getMetrics() != null ? trade.getMetrics().getProfitLoss() : "null");
+                
+                TradeMetrics metrics = calculateTradeMetrics(
+                    trade.getEntryInfo(), 
+                    trade.getExitInfo(), 
+                    trade.getTradePositionType()
+                );
+                
+                trade.setMetrics(metrics);
+                
+                // Determine and set status
+                TradeStatus status = determineTradeStatus(trade.getEntryInfo(), trade.getExitInfo(), metrics);
+                trade.setStatus(status);
+                
+                tradeDetailsService.saveTradeDetails(trade);
+                anyUpdated = true;
+            }
+
+            // Ensure InstrumentInfo is populated for allocation calculation (even if metrics were not refreshed)
+            if (trade.getInstrumentInfo() == null || trade.getInstrumentInfo().getSegment() == MarketSegment.UNKNOWN) {
+                // Use factory method to build proper InstrumentInfo
+                InstrumentInfo info = InstrumentInfo.fromRawSymbol(trade.getSymbol());
+                if (info != null) {
+                    trade.setInstrumentInfo(info);
+                    // We must save if we updated the instrument info
+                    tradeDetailsService.saveTradeDetails(trade);
+                }
+            }
+        }
+        
+        return trades;
+    }
     
     /**
      * Calculate portfolio-level metrics from trade details
@@ -226,8 +283,19 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             }
             
             // Add to total value
-            if (trade.getEntryInfo() != null && trade.getEntryInfo().getTotalValue() != null) {
-                totalValue = totalValue.add(trade.getEntryInfo().getTotalValue());
+            if (trade.getEntryInfo() != null) {
+                BigDecimal entryTotalValue = trade.getEntryInfo().getTotalValue();
+                
+                // Safety fallback: If totalValue is null or zero, calculate it from price * quantity
+                if (entryTotalValue == null || entryTotalValue.compareTo(BigDecimal.ZERO) == 0) {
+                    if (trade.getEntryInfo().getPrice() != null) {
+                        entryTotalValue = trade.getEntryInfo().getPrice().multiply(BigDecimal.valueOf(trade.getEntryInfo().getQuantity()));
+                    } else {
+                        entryTotalValue = BigDecimal.ZERO;
+                    }
+                }
+                
+                totalValue = totalValue.add(entryTotalValue);
             }
         }
         
