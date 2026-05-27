@@ -1,6 +1,6 @@
 # Trade API Documentation
 
-**Base URL**: `/api/v1/trades`
+**Base URL**: `/v1/trades`
 **Controller File**: `am-trade-api/src/main/java/am/trade/api/controller/TradeController.java`
 
 This module is the core orchestrator for inserting and updating trades into the system.

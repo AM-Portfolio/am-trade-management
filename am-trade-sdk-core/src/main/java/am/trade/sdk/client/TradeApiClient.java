@@ -33,7 +33,7 @@ public class TradeApiClient extends BaseApiClient {
      */
     public TradeDTO.TradeResponse getTradeById(String tradeId) {
         log.debug("Getting trade with ID: {}", tradeId);
-        JsonObject response = get("/api/v1/trades/" + tradeId);
+        JsonObject response = get("/v1/trades/" + tradeId);
         JsonObject data = response.has("data") ? 
                 response.getAsJsonObject("data") : response;
         
@@ -69,7 +69,7 @@ public class TradeApiClient extends BaseApiClient {
         // Transform user DTO to internal format
         Map<String, Object> payload = DTOTransformer.fromTradeCreateRequest(request);
         
-        JsonObject response = post("/api/v1/trades", payload);
+        JsonObject response = post("/v1/trades", payload);
         JsonObject data = response.has("data") ? 
                 response.getAsJsonObject("data") : response;
         
@@ -91,7 +91,7 @@ public class TradeApiClient extends BaseApiClient {
         // Transform user DTO to internal format
         Map<String, Object> payload = DTOTransformer.fromTradeUpdateRequest(request);
         
-        JsonObject response = put("/api/v1/trades/" + tradeId, payload);
+        JsonObject response = put("/v1/trades/" + tradeId, payload);
         JsonObject data = response.has("data") ? 
                 response.getAsJsonObject("data") : response;
         
@@ -108,7 +108,7 @@ public class TradeApiClient extends BaseApiClient {
      */
     public boolean deleteTrade(String tradeId) {
         log.debug("Deleting trade: {}", tradeId);
-        delete("/api/v1/trades/" + tradeId);
+        delete("/v1/trades/" + tradeId);
         return true;
     }
 
@@ -120,7 +120,7 @@ public class TradeApiClient extends BaseApiClient {
      */
     public Map<String, Object> filterTrades(Map<String, Object> filters) {
         log.debug("Filtering trades with criteria: {}", filters);
-        JsonObject response = post("/api/v1/trades/filter", filters);
+        JsonObject response = post("/v1/trades/filter", filters);
         return gson.fromJson(response, Map.class);
     }
 
@@ -158,7 +158,7 @@ public class TradeApiClient extends BaseApiClient {
      */
     public Map<String, Object> getTradeStats(String portfolioId) {
         log.debug("Getting trade stats for portfolio: {}", portfolioId);
-        JsonObject response = get("/api/v1/trades/stats/" + portfolioId);
+        JsonObject response = get("/v1/trades/stats/" + portfolioId);
         return gson.fromJson(response, Map.class);
     }
 
@@ -172,7 +172,7 @@ public class TradeApiClient extends BaseApiClient {
         log.debug("Creating {} trades in batch", trades.size());
         Map<String, Object> request = new HashMap<>();
         request.put("trades", trades);
-        JsonObject response = post("/api/v1/trades/batch", request);
+        JsonObject response = post("/v1/trades/batch", request);
         
         List<Trade> result = new ArrayList<>();
         if (response.has("data") && response.get("data").isJsonArray()) {
@@ -194,7 +194,7 @@ public class TradeApiClient extends BaseApiClient {
         log.debug("Deleting {} trades in batch", tradeIds.size());
         Map<String, Object> request = new HashMap<>();
         request.put("ids", tradeIds);
-        JsonObject response = post("/api/v1/trades/batch/delete", request);
+        JsonObject response = post("/v1/trades/batch/delete", request);
         return gson.fromJson(response, Map.class);
     }
 
@@ -223,7 +223,7 @@ public class TradeApiClient extends BaseApiClient {
             params.put("size", effectivePageSize);
             params.put("tier", "FREE");
             
-            JsonObject response = get("/api/v1/trades/free-tab", params);
+            JsonObject response = get("/v1/trades/free-tab", params);
             Map<String, Object> result = gson.fromJson(response, Map.class);
             
             log.debug("Successfully fetched FREE tier trades - total results: {}", result.get("totalCount"));
@@ -262,7 +262,7 @@ public class TradeApiClient extends BaseApiClient {
             params.put("size", effectivePageSize);
             params.put("tier", "FREE");
             
-            JsonObject response = get("/api/v1/trades/free-tab/symbol/" + symbol, params);
+            JsonObject response = get("/v1/trades/free-tab/symbol/" + symbol, params);
             Map<String, Object> result = gson.fromJson(response, Map.class);
             
             log.debug("Successfully fetched FREE tier trades for symbol {} - total results: {}", 
@@ -302,7 +302,7 @@ public class TradeApiClient extends BaseApiClient {
             params.put("size", effectivePageSize);
             params.put("tier", "FREE");
             
-            JsonObject response = get("/api/v1/trades/free-tab/status/" + status, params);
+            JsonObject response = get("/v1/trades/free-tab/status/" + status, params);
             Map<String, Object> result = gson.fromJson(response, Map.class);
             
             log.debug("Successfully fetched FREE tier trades with status {} - total results: {}", 

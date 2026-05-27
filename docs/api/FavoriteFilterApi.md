@@ -1,6 +1,6 @@
 # Favorite Filter API Documentation
 
-**Base URL**: `/api/v1/filters`
+**Base URL**: `/v1/filters`
 **Controller File**: `am-trade-api/src/main/java/am/trade/api/controller/FavoriteFilterController.java`
 
 This module manages the user's saved queries, acting as a bookmarking system for complex filter parameters so users don't have to manually select their preferred indicators/strategies over and over.

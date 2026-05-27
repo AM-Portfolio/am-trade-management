@@ -501,7 +501,7 @@ json2ts \
 
 ### Base URL
 ```
-http://localhost:8073/api/v1/trades
+http://localhost:8073/v1/trades
 ```
 
 ### Endpoints

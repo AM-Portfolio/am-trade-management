@@ -42,7 +42,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trade-summary/trades?periodType=DAY&startDate=2020-01-15&portfolioId={{portfolioId}}",
+							"raw": "{{baseUrl}}/v1/trade-summary/trades?periodType=DAY&startDate=2020-01-15&portfolioId={{portfolioId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -102,7 +102,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trade-summary/trades?periodType=MONTH&year=2020&month=3&portfolioId={{portfolioId}}",
+							"raw": "{{baseUrl}}/v1/trade-summary/trades?periodType=MONTH&year=2020&month=3&portfolioId={{portfolioId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -165,7 +165,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trade-summary/trades?periodType=QUARTER&year=2020&quarter=2&portfolioId={{portfolioId}}",
+							"raw": "{{baseUrl}}/v1/trade-summary/trades?periodType=QUARTER&year=2020&quarter=2&portfolioId={{portfolioId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -228,7 +228,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trade-summary/trades?periodType=FINANCIAL_YEAR&year=2020&portfolioId={{portfolioId}}",
+							"raw": "{{baseUrl}}/v1/trade-summary/trades?periodType=FINANCIAL_YEAR&year=2020&portfolioId={{portfolioId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -286,7 +286,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trade-summary/trades?periodType=CUSTOM&startDate=2020-01-01&endDate=2020-12-31&portfolioId={{portfolioId}}",
+							"raw": "{{baseUrl}}/v1/trade-summary/trades?periodType=CUSTOM&startDate=2020-01-01&endDate=2020-12-31&portfolioId={{portfolioId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -359,7 +359,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trade-summary/basic/{{tradeSummaryId}}",
+							"raw": "{{baseUrl}}/v1/trade-summary/basic/{{tradeSummaryId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -405,7 +405,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trade-summary/detailed/{{tradeSummaryId}}",
+							"raw": "{{baseUrl}}/v1/trade-summary/detailed/{{tradeSummaryId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -451,7 +451,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trade-summary/detailed/by-basic/{{tradeSummaryId}}",
+							"raw": "{{baseUrl}}/v1/trade-summary/detailed/by-basic/{{tradeSummaryId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -498,7 +498,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trade-summary/composite/{{tradeSummaryId}}?forceRecalculate=false",
+							"raw": "{{baseUrl}}/v1/trade-summary/composite/{{tradeSummaryId}}?forceRecalculate=false",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -551,7 +551,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trade-summary/composite/{{tradeSummaryId}}?forceRecalculate=true",
+							"raw": "{{baseUrl}}/v1/trade-summary/composite/{{tradeSummaryId}}?forceRecalculate=true",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -611,7 +611,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/trade-summary/basic/by-owner/{{ownerId}}",
+							"raw": "{{baseUrl}}/v1/trade-summary/basic/by-owner/{{ownerId}}",
 							"host": [
 								"{{baseUrl}}"
 							],

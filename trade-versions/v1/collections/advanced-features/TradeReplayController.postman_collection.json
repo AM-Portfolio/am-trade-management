@@ -53,7 +53,7 @@
 							"raw": "{\n  \"symbol\": \"AAPL\",\n  \"portfolioId\": \"{{portfolioId}}\",\n  \"strategyId\": \"sample-strategy-id\",\n  \"originalTradeId\": \"sample-trade-id\",\n  \"startDate\": \"2020-01-01T09:30:00\",\n  \"endDate\": \"2020-01-01T16:00:00\",\n  \"initialCapital\": 10000.0,\n  \"replayType\": \"BACKTEST\",\n  \"parameters\": {\n    \"stopLoss\": 0.02,\n    \"takeProfit\": 0.05\n  }\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays",
+							"raw": "{{baseUrl}}/v1/analytics/trade-replays",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -99,7 +99,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/{{replayId}}",
+							"raw": "{{baseUrl}}/v1/analytics/trade-replays/{{replayId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -144,7 +144,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/{{replayId}}",
+							"raw": "{{baseUrl}}/v1/analytics/trade-replays/{{replayId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -199,7 +199,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/symbol/AAPL",
+							"raw": "{{baseUrl}}/v1/analytics/trade-replays/symbol/AAPL",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -248,7 +248,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/date-range?startDate=2020-01-01T00:00:00&endDate=2020-12-31T23:59:59",
+							"raw": "{{baseUrl}}/v1/analytics/trade-replays/date-range?startDate=2020-01-01T00:00:00&endDate=2020-12-31T23:59:59",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -310,7 +310,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/portfolio/{{portfolioId}}",
+							"raw": "{{baseUrl}}/v1/analytics/trade-replays/portfolio/{{portfolioId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -361,7 +361,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/strategy/sample-strategy-id",
+							"raw": "{{baseUrl}}/v1/analytics/trade-replays/strategy/sample-strategy-id",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -412,7 +412,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/trade/sample-trade-id",
+							"raw": "{{baseUrl}}/v1/analytics/trade-replays/trade/sample-trade-id",
 							"host": [
 								"{{baseUrl}}"
 							],

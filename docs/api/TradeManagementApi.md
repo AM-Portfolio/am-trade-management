@@ -1,6 +1,6 @@
 # Trade Management API Documentation
 
-**Base URL**: `/api/v1/trades`
+**Base URL**: `/v1/trades`
 **Controller File**: `am-trade-api/src/main/java/am/trade/api/controller/TradeManagementController.java`
 
 This module serves specifically as a calendar-driven retrieval system. While `TradeController` manages the heavy insertion/update states, this module focuses strictly on navigating history via logical financial timelines.

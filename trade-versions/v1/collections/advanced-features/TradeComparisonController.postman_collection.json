@@ -53,7 +53,7 @@
 							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"comparisonType\": \"PORTFOLIO\",\n  \"parameters\": {\n    \"portfolioIds\": [\"{{portfolioId}}\", \"{{portfolioId2}}\"],\n    \"startDate\": \"2020-01-01\",\n    \"endDate\": \"2020-12-31\",\n    \"metrics\": [\"TOTAL_RETURN\", \"SHARPE_RATIO\", \"MAX_DRAWDOWN\"],\n    \"granularity\": \"MONTHLY\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/comparison",
+							"raw": "{{baseUrl}}/v1/comparison",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -107,7 +107,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/comparison/portfolios?userId={{userId}}&portfolioId1={{portfolioId}}&portfolioId2={{portfolioId2}}&startDate=2020-01-01&endDate=2020-12-31",
+							"raw": "{{baseUrl}}/v1/comparison/portfolios?userId={{userId}}&portfolioId1={{portfolioId}}&portfolioId2={{portfolioId2}}&startDate=2020-01-01&endDate=2020-12-31",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -176,7 +176,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/comparison/portfolios?userId={{userId}}&portfolioId1={{portfolioId}}&portfolioId2={{portfolioId2}}",
+							"raw": "{{baseUrl}}/v1/comparison/portfolios?userId={{userId}}&portfolioId1={{portfolioId}}&portfolioId2={{portfolioId2}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -245,7 +245,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/comparison/time-periods?userId={{userId}}&period1Start=2020-01-01&period1End=2020-06-30&period2Start=2020-07-01&period2End=2020-12-31&portfolioId={{portfolioId}}",
+							"raw": "{{baseUrl}}/v1/comparison/time-periods?userId={{userId}}&period1Start=2020-01-01&period1End=2020-06-30&period2Start=2020-07-01&period2End=2020-12-31&portfolioId={{portfolioId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -319,7 +319,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/comparison/time-periods?userId={{userId}}&period1Start=2020-01-01&period1End=2020-06-30&period2Start=2020-07-01&period2End=2020-12-31",
+							"raw": "{{baseUrl}}/v1/comparison/time-periods?userId={{userId}}&period1Start=2020-01-01&period1End=2020-06-30&period2Start=2020-07-01&period2End=2020-12-31",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -396,7 +396,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/comparison/strategies?userId={{userId}}&strategy1=momentum-trading&strategy2=value-investing&startDate=2020-01-01&endDate=2020-12-31",
+							"raw": "{{baseUrl}}/v1/comparison/strategies?userId={{userId}}&strategy1=momentum-trading&strategy2=value-investing&startDate=2020-01-01&endDate=2020-12-31",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -465,7 +465,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/comparison/strategies?userId={{userId}}&strategy1=momentum-trading&strategy2=value-investing",
+							"raw": "{{baseUrl}}/v1/comparison/strategies?userId={{userId}}&strategy1=momentum-trading&strategy2=value-investing",
 							"host": [
 								"{{baseUrl}}"
 							],

@@ -54,7 +54,7 @@ public class TradeJournalController {
             log.error("Invalid journal entry data: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
                     e.getMessage(),
-                    "/api/v1/journal");
+                    "/v1/journal");
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
@@ -75,7 +75,7 @@ public class TradeJournalController {
             log.error("Journal entry not found: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.notFound(
                     "Journal entry not found",
-                    "/api/v1/journal/" + entryId)
+                    "/v1/journal/" + entryId)
                     .addDetail("No journal entry found with ID: " + entryId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
@@ -123,7 +123,7 @@ public class TradeJournalController {
         if (endDate.isBefore(startDate)) {
             ErrorResponse errorResponse = ErrorResponse.badRequest(
                     "End date cannot be before start date",
-                    "/api/v1/journal/date-range");
+                    "/v1/journal/date-range");
             return ResponseEntity.badRequest().body(errorResponse);
         }
 
@@ -135,7 +135,7 @@ public class TradeJournalController {
             log.error("Error fetching journal entries: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
                     e.getMessage(),
-                    "/api/v1/journal/date-range");
+                    "/v1/journal/date-range");
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
@@ -162,12 +162,12 @@ public class TradeJournalController {
             if (e.getMessage().contains("not found")) {
                 ErrorResponse errorResponse = ErrorResponse.notFound(
                         e.getMessage(),
-                        "/api/v1/journal/" + entryId);
+                        "/v1/journal/" + entryId);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
             } else {
                 ErrorResponse errorResponse = ErrorResponse.badRequest(
                         e.getMessage(),
-                        "/api/v1/journal/" + entryId);
+                        "/v1/journal/" + entryId);
                 return ResponseEntity.badRequest().body(errorResponse);
             }
         }
@@ -189,7 +189,7 @@ public class TradeJournalController {
             log.error("Journal entry not found: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.notFound(
                     e.getMessage(),
-                    "/api/v1/journal/" + entryId);
+                    "/v1/journal/" + entryId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }

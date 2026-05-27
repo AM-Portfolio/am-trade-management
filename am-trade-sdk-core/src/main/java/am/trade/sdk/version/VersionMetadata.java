@@ -68,7 +68,7 @@ public class VersionMetadata {
                         "Removed legacy endpoints",
                         "Changed response format"
                 ))
-                .deprecatedEndpoints(Arrays.asList("/api/v1/old-endpoint"))
+                .deprecatedEndpoints(Arrays.asList("/v1/old-endpoint"))
                 .maxRetries(5)
                 .timeout(120)
                 .paginationMaxSize(1000)

@@ -45,7 +45,7 @@ public class TradeComparisonController {
             log.error("Invalid comparison request: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
                     e.getMessage(),
-                    "/api/v1/comparison");
+                    "/v1/comparison");
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
@@ -72,7 +72,7 @@ public class TradeComparisonController {
             log.error("Invalid portfolio comparison request: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
                     e.getMessage(),
-                    "/api/v1/comparison/portfolios");
+                    "/v1/comparison/portfolios");
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
@@ -100,7 +100,7 @@ public class TradeComparisonController {
             log.error("Invalid time period comparison request: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
                     e.getMessage(),
-                    "/api/v1/comparison/time-periods");
+                    "/v1/comparison/time-periods");
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
@@ -127,7 +127,7 @@ public class TradeComparisonController {
             log.error("Invalid strategy comparison request: {}", e.getMessage());
             ErrorResponse errorResponse = ErrorResponse.badRequest(
                     e.getMessage(),
-                    "/api/v1/comparison/strategies");
+                    "/v1/comparison/strategies");
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }

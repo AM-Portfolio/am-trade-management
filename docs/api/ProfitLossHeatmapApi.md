@@ -1,6 +1,6 @@
 # Profit/Loss Heatmap API Documentation
 
-**Base URL**: `/api/v1/heatmap`
+**Base URL**: `/v1/heatmap`
 **Controller File**: `am-trade-api/src/main/java/am/trade/api/controller/ProfitLossHeatmapController.java`
 
 This module provides time-series aggregations suitable for generating financial heatmap visualizations (e.g., GitHub-style contribution squares colored by trading profit or loss).

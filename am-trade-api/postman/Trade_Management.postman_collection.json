@@ -17,7 +17,7 @@
                     }
                 ],
                 "url": {
-                    "raw": "{{base_url}}/api/v1/trades/details/portfolio/:portfolioId",
+                    "raw": "{{base_url}}/v1/trades/details/portfolio/:portfolioId",
                     "host": [
                         "{{base_url}}"
                     ],
@@ -57,7 +57,7 @@
                     "raw": "{\n    \"portfolioId\": \"12345\",\n    \"symbol\": \"RELIANCE\",\n    \"quantity\": 10,\n    \"price\": 2500.0,\n    \"tradeDate\": \"2024-01-01\",\n    \"tradeType\": \"BUY\"\n}"
                 },
                 "url": {
-                    "raw": "{{base_url}}/api/v1/trades/details",
+                    "raw": "{{base_url}}/v1/trades/details",
                     "host": [
                         "{{base_url}}"
                     ],

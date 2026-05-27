@@ -9,13 +9,13 @@ This folder contains the fundamental trade management API collections. These are
 **Purpose**: Core trade CRUD operations and management
 
 **Main Endpoints**:
-- `GET /api/v1/trades` - Retrieve all trades
-- `GET /api/v1/trades/{id}` - Get trade by ID
-- `POST /api/v1/trades` - Create new trade
-- `PUT /api/v1/trades/{id}` - Update trade
-- `DELETE /api/v1/trades/{id}` - Delete trade
-- `POST /api/v1/trades/batch` - Batch operations
-- `GET /api/v1/trades/filter` - Filter trades
+- `GET /v1/trades` - Retrieve all trades
+- `GET /v1/trades/{id}` - Get trade by ID
+- `POST /v1/trades` - Create new trade
+- `PUT /v1/trades/{id}` - Update trade
+- `DELETE /v1/trades/{id}` - Delete trade
+- `POST /v1/trades/batch` - Batch operations
+- `GET /v1/trades/filter` - Filter trades
 
 **Use Case**: Daily trade management, CRUD operations
 
@@ -30,11 +30,11 @@ This folder contains the fundamental trade management API collections. These are
 **Purpose**: Advanced trade queries and calendar-based operations
 
 **Main Endpoints**:
-- `GET /api/v1/trades/calendar/*` - Calendar-based queries
-- `GET /api/v1/trades/date-range` - Date range queries
-- `GET /api/v1/trades/by-date` - Trades by specific date
-- `GET /api/v1/trades/by-month` - Monthly trades
-- `GET /api/v1/trades/by-strategy` - Filter by strategy
+- `GET /v1/trades/calendar/*` - Calendar-based queries
+- `GET /v1/trades/date-range` - Date range queries
+- `GET /v1/trades/by-date` - Trades by specific date
+- `GET /v1/trades/by-month` - Monthly trades
+- `GET /v1/trades/by-strategy` - Filter by strategy
 
 **Use Case**: Historical analysis, date-based reporting
 
@@ -49,12 +49,12 @@ This folder contains the fundamental trade management API collections. These are
 **Purpose**: Trading journal and notes management
 
 **Main Endpoints**:
-- `GET /api/v1/journal` - Get all journal entries
-- `POST /api/v1/journal` - Create new entry
-- `PUT /api/v1/journal/{id}` - Update entry
-- `DELETE /api/v1/journal/{id}` - Delete entry
-- `GET /api/v1/journal/by-trade/{tradeId}` - Get entries for trade
-- `POST /api/v1/journal/with-attachments` - Entry with files
+- `GET /v1/journal` - Get all journal entries
+- `POST /v1/journal` - Create new entry
+- `PUT /v1/journal/{id}` - Update entry
+- `DELETE /v1/journal/{id}` - Delete entry
+- `GET /v1/journal/by-trade/{tradeId}` - Get entries for trade
+- `POST /v1/journal/with-attachments` - Entry with files
 
 **Use Case**: Trade analysis, decision documentation, behavior tracking
 
@@ -91,23 +91,23 @@ This folder contains the fundamental trade management API collections. These are
 
 ### Create and Update Trade
 ```
-1. POST /api/v1/trades          (Create)
-2. GET /api/v1/trades/{id}      (Verify)
-3. PUT /api/v1/trades/{id}      (Update)
-4. GET /api/v1/trades/{id}      (Confirm)
+1. POST /v1/trades          (Create)
+2. GET /v1/trades/{id}      (Verify)
+3. PUT /v1/trades/{id}      (Update)
+4. GET /v1/trades/{id}      (Confirm)
 ```
 
 ### Add Journal Entry for Trade
 ```
-1. GET /api/v1/trades/{id}      (Get trade details)
-2. POST /api/v1/journal         (Create entry)
-3. GET /api/v1/journal/by-trade/{tradeId}  (View entries)
+1. GET /v1/trades/{id}      (Get trade details)
+2. POST /v1/journal         (Create entry)
+3. GET /v1/journal/by-trade/{tradeId}  (View entries)
 ```
 
 ### Analyze Historical Trades
 ```
-1. GET /api/v1/trades/by-month?month=12&year=2024  (Get monthly)
-2. POST /api/v1/trades/filter?strategy=MOMENTUM     (By strategy)
+1. GET /v1/trades/by-month?month=12&year=2024  (Get monthly)
+2. POST /v1/trades/filter?strategy=MOMENTUM     (By strategy)
 3. Review trade details and metrics
 ```
 

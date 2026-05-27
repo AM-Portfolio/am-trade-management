@@ -1,7 +1,7 @@
 # Filter Trade Details API - Pagination Guide
 
 ## Endpoint
-`POST /api/v1/trades/details/filter`
+`POST /v1/trades/details/filter`
 
 ## Pagination Support
 
@@ -35,7 +35,7 @@ The API supports optional pagination using Spring Data's `Pageable` interface th
 ### 1. Without Pagination (All Results)
 
 ```bash
-curl -X POST "http://localhost:8050/api/v1/trades/details/filter" \
+curl -X POST "http://localhost:8050/v1/trades/details/filter" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -51,7 +51,7 @@ curl -X POST "http://localhost:8050/api/v1/trades/details/filter" \
 ### 2. With Pagination - First Page (20 items)
 
 ```bash
-curl -X POST "http://localhost:8050/api/v1/trades/details/filter?page=0&size=20" \
+curl -X POST "http://localhost:8050/v1/trades/details/filter?page=0&size=20" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -64,7 +64,7 @@ curl -X POST "http://localhost:8050/api/v1/trades/details/filter?page=0&size=20"
 ### 3. With Pagination - Second Page
 
 ```bash
-curl -X POST "http://localhost:8050/api/v1/trades/details/filter?page=1&size=20" \
+curl -X POST "http://localhost:8050/v1/trades/details/filter?page=1&size=20" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -77,7 +77,7 @@ curl -X POST "http://localhost:8050/api/v1/trades/details/filter?page=1&size=20"
 ### 4. With Sorting - By Profit/Loss (Descending)
 
 ```bash
-curl -X POST "http://localhost:8050/api/v1/trades/details/filter?sort=profitLoss,desc" \
+curl -X POST "http://localhost:8050/v1/trades/details/filter?sort=profitLoss,desc" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -93,7 +93,7 @@ curl -X POST "http://localhost:8050/api/v1/trades/details/filter?sort=profitLoss
 ### 5. With Sorting - By Entry Date (Ascending)
 
 ```bash
-curl -X POST "http://localhost:8050/api/v1/trades/details/filter?sort=entryDate,asc" \
+curl -X POST "http://localhost:8050/v1/trades/details/filter?sort=entryDate,asc" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -106,7 +106,7 @@ curl -X POST "http://localhost:8050/api/v1/trades/details/filter?sort=entryDate,
 ### 6. With Pagination AND Sorting
 
 ```bash
-curl -X POST "http://localhost:8050/api/v1/trades/details/filter?page=0&size=10&sort=profitLoss,desc" \
+curl -X POST "http://localhost:8050/v1/trades/details/filter?page=0&size=10&sort=profitLoss,desc" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -122,7 +122,7 @@ curl -X POST "http://localhost:8050/api/v1/trades/details/filter?page=0&size=10&
 ### 7. Multiple Sort Fields
 
 ```bash
-curl -X POST "http://localhost:8050/api/v1/trades/details/filter?sort=status,asc&sort=profitLoss,desc" \
+curl -X POST "http://localhost:8050/v1/trades/details/filter?sort=status,asc&sort=profitLoss,desc" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -135,7 +135,7 @@ curl -X POST "http://localhost:8050/api/v1/trades/details/filter?sort=status,asc
 ### 8. Large Page Size for Export
 
 ```bash
-curl -X POST "http://localhost:8050/api/v1/trades/details/filter?page=0&size=1000&sort=entryDate,desc" \
+curl -X POST "http://localhost:8050/v1/trades/details/filter?page=0&size=1000&sort=entryDate,desc" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -166,7 +166,7 @@ $body = @{
     }
 } | ConvertTo-Json -Depth 10
 
-Invoke-RestMethod -Uri "http://localhost:8050/api/v1/trades/details/filter?page=0&size=20&sort=profitLoss,desc" `
+Invoke-RestMethod -Uri "http://localhost:8050/v1/trades/details/filter?page=0&size=20&sort=profitLoss,desc" `
   -Method Post `
   -ContentType "application/json" `
   -Body $body
@@ -180,7 +180,7 @@ $body = @{
     favoriteFilterId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 } | ConvertTo-Json
 
-Invoke-RestMethod -Uri "http://localhost:8050/api/v1/trades/details/filter?page=0&size=50&sort=entryDate,desc" `
+Invoke-RestMethod -Uri "http://localhost:8050/v1/trades/details/filter?page=0&size=50&sort=entryDate,desc" `
   -Method Post `
   -ContentType "application/json" `
   -Body $body

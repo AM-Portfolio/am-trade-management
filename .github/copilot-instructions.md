@@ -69,7 +69,7 @@ All exceptions include:
 All REST controllers follow consistent patterns:
 ```java
 @RestController
-@RequestMapping("/api/v1/{resource}")
+@RequestMapping("/v1/{resource}")
 @Tag(name = "API Name", description = "Description")
 @RequiredArgsConstructor
 @Slf4j
@@ -146,48 +146,48 @@ public class ServiceImpl implements ServiceInterface {
 ## REST API Endpoints Structure
 
 ### Core Controllers & Endpoints
-1. **TradeController** (`/api/v1/trades`)
+1. **TradeController** (`/v1/trades`)
    - CRUD operations for individual trades
    - Batch operations for multiple trades
    - Filtering by portfolio, symbol, status, date ranges
 
-2. **TradeManagementController** (`/api/v1/trades`)
+2. **TradeManagementController** (`/v1/trades`)
    - Calendar-based trade queries
    - Advanced filtering and search capabilities
 
-3. **TradeSummaryController** (`/api/v1/trade-summary`)
+3. **TradeSummaryController** (`/v1/trade-summary`)
    - Time-period based trade analysis
    - Performance summaries and aggregations
 
-4. **PortfolioSummaryController** (`/api/v1/portfolio-summary`)
+4. **PortfolioSummaryController** (`/v1/portfolio-summary`)
    - Portfolio-level analytics and summaries
    - Multi-portfolio comparisons
 
-5. **TradeAnalyticsController** (`/api/v1/analytics/trade-replays`)
+5. **TradeAnalyticsController** (`/v1/analytics/trade-replays`)
    - Trade replay scenarios and analysis
    - Historical performance evaluation
 
-6. **TradeMetricsController** (`/api/v1/metrics`)
+6. **TradeMetricsController** (`/v1/metrics`)
    - Performance metrics and KPIs
    - Risk analysis and reporting
 
-7. **TradeJournalController** (`/api/v1/journal`)
+7. **TradeJournalController** (`/v1/journal`)
    - Trading journal and notes management
    - Trade documentation and insights
 
-8. **TradeComparisonController** (`/api/v1/comparison`)
+8. **TradeComparisonController** (`/v1/comparison`)
    - Side-by-side trade analysis
    - Comparative performance metrics
 
-9. **ProfitLossHeatmapController** (`/api/v1/heatmap`)
+9. **ProfitLossHeatmapController** (`/v1/heatmap`)
    - P&L visualization data
    - Heat map analytics for performance
 
-10. **FavoriteFilterController** (`/api/v1/filters`)
+10. **FavoriteFilterController** (`/v1/filters`)
     - Saved filter management
     - User preference handling
 
-11. **UserPreferencesController** (`/api/v1/preferences`)
+11. **UserPreferencesController** (`/v1/preferences`)
     - User settings and configurations
     - Personalization features
 
@@ -255,7 +255,7 @@ public class ServiceImpl implements ServiceInterface {
 ### Creating a New Controller
 ```java
 @RestController
-@RequestMapping("/api/v1/new-resource")
+@RequestMapping("/v1/new-resource")
 @Tag(name = "New Resource API", description = "API for new resource operations")
 @RequiredArgsConstructor
 @Slf4j

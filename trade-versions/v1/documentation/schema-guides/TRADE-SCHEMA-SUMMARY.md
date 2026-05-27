@@ -411,7 +411,7 @@ Consistent error responses across all endpoints:
   "status": 400,
   "error": "Bad Request",
   "message": "Invalid trade data",
-  "path": "/api/v1/trades/details",
+  "path": "/v1/trades/details",
   "details": ["Field 'portfolioId' is required"]
 }
 ```

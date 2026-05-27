@@ -588,7 +588,7 @@
         "path": {
           "type": "string",
           "description": "API endpoint path",
-          "example": "/api/v1/filters/apply/invalid-id"
+          "example": "/v1/filters/apply/invalid-id"
         },
         "details": {
           "type": "array",
@@ -602,7 +602,7 @@
     }
   },
   "paths": {
-    "/api/v1/filters": {
+    "/v1/filters": {
       "post": {
         "summary": "Create a new favorite filter",
         "operationId": "createFilter",
@@ -660,7 +660,7 @@
         }
       }
     },
-    "/api/v1/filters/{filterId}": {
+    "/v1/filters/{filterId}": {
       "get": {
         "summary": "Get a specific favorite filter by ID",
         "operationId": "getFilterById",
@@ -776,7 +776,7 @@
         }
       }
     },
-    "/api/v1/filters/bulk": {
+    "/v1/filters/bulk": {
       "delete": {
         "summary": "Delete multiple favorite filters",
         "operationId": "deleteMultipleFilters",
@@ -811,7 +811,7 @@
         }
       }
     },
-    "/api/v1/filters/default": {
+    "/v1/filters/default": {
       "get": {
         "summary": "Get the user's default filter",
         "operationId": "getDefaultFilter",
@@ -836,7 +836,7 @@
         }
       }
     },
-    "/api/v1/filters/{filterId}/default": {
+    "/v1/filters/{filterId}/default": {
       "put": {
         "summary": "Set a filter as the default",
         "operationId": "setDefaultFilter",
@@ -874,7 +874,7 @@
         }
       }
     },
-    "/api/v1/filters/save-current": {
+    "/v1/filters/save-current": {
       "post": {
         "summary": "Save current filter as favorite",
         "operationId": "saveCurrentFilter",
@@ -940,7 +940,7 @@
         }
       }
     },
-    "/api/v1/filters/apply/{filterId}": {
+    "/v1/filters/apply/{filterId}": {
       "get": {
         "summary": "Get trade metrics using a saved favorite filter",
         "operationId": "getMetricsWithFavoriteFilter",
