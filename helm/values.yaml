@@ -105,3 +105,10 @@ ingress:
     - secretName: trade-tls
       hosts:
         - trade.preprod.am-portfolio.com
+
+# Config block required by universal-chart templates.
+# batchSearch is not used by this service — set to disabled to prevent
+# nil pointer errors in universal-chart/templates/_batch-search-env.tpl
+config:
+  batchSearch:
+    enabled: false
