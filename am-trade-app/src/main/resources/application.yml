@@ -1,5 +1,7 @@
 # Application specific common settings
 am:
+  cors:
+    allowed-origin-patterns: http://localhost:*,https://localhost:*,https://*.replit.dev,https://*
   trade:
     kafka:
       enabled: true
@@ -62,7 +64,7 @@ spring:
     properties:
       security.protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_PLAINTEXT}
       sasl.mechanism: ${KAFKA_SASL_MECHANISM:SCRAM-SHA-256}
-      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_SASL_USERNAME:kafkaUser}" password="${KAFKA_SASL_PASSWORD:kafkaPassword123!}";}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_SASL_USERNAME:kafkaUser}" password="${KAFKA_SASL_PASSWORD}";}
     consumer:
       group-id: am-trade-management
       auto-offset-reset: latest

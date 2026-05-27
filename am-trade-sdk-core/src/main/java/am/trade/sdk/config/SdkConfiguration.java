@@ -34,7 +34,7 @@ public class SdkConfiguration {
      * API base URL
      */
     @Builder.Default
-    private String apiUrl = "https://api.munish.org";
+    private String apiUrl = "";
 
     /**
      * API authentication key (optional)
@@ -78,7 +78,7 @@ public class SdkConfiguration {
      */
     public void validate() {
         if (apiUrl == null || apiUrl.isEmpty()) {
-            throw new IllegalArgumentException("apiUrl cannot be empty");
+            throw new IllegalStateException("apiUrl cannot be empty. It must be explicitly configured.");
         }
         if (!apiUrl.startsWith("http://") && !apiUrl.startsWith("https://")) {
             throw new IllegalArgumentException("apiUrl must start with http:// or https://");
@@ -97,7 +97,7 @@ public class SdkConfiguration {
      * @return API URL
      */
     public String getApiUrl() {
-        return apiUrl != null ? apiUrl.replaceAll("/$", "") : "http://localhost:8073";
+        return apiUrl != null ? apiUrl.replaceAll("/$", "") : "";
     }
 
 
