@@ -230,7 +230,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/am-trade-integration")
+@RequestMapping("/v1/am-trade-integration")
 public class TradeIntegrationController {
     
     @Autowired
@@ -454,7 +454,7 @@ from services.am_trade_service import AMTradeService
 app = FastAPI(title="AM Trade Integration API")
 trade_service = AMTradeService()
 
-@app.get("/api/v1/trades")
+@app.get("/v1/trades")
 async def get_all_trades(page: int = 0, page_size: int = 20):
     """Get all trades"""
     try:
@@ -462,7 +462,7 @@ async def get_all_trades(page: int = 0, page_size: int = 20):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/v1/trades/free-tab")
+@app.get("/v1/trades/free-tab")
 async def get_free_tab_trades(page: int = 0, page_size: int = 20):
     """Get FREE tier trades"""
     try:
@@ -470,7 +470,7 @@ async def get_free_tab_trades(page: int = 0, page_size: int = 20):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/v1/trades/free-tab/{symbol}")
+@app.get("/v1/trades/free-tab/{symbol}")
 async def get_free_tab_trades_by_symbol(symbol: str, page: int = 0, 
                                        page_size: int = 20):
     """Get FREE tier trades by symbol"""
@@ -479,7 +479,7 @@ async def get_free_tab_trades_by_symbol(symbol: str, page: int = 0,
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/trades")
+@app.post("/v1/trades")
 async def create_trade(trade_data: dict):
     """Create new trade"""
     try:

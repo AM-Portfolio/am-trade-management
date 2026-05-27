@@ -1,6 +1,6 @@
 # Trade Metrics API Documentation
 
-**Base URL**: `/api/v1/metrics`
+**Base URL**: `/v1/metrics`
 **Controller File**: `am-trade-api/src/main/java/am/trade/api/controller/TradeMetricsController.java`
 
 This module acts as the advanced analytics engine endpoint layout. Built for extremely flexible and dynamic data requests (like building custom charts / pivot tables on the UI).

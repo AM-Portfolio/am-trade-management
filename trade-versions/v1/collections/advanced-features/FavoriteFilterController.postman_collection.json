@@ -54,7 +54,7 @@
 							"raw": "{\n  \"name\": \"High Performing Trades Filter\",\n  \"description\": \"Filter for trades with returns greater than 5%\",\n  \"isDefault\": false,\n  \"filterConfig\": {\n    \"portfolioIds\": [\"{{portfolioId}}\"],\n    \"symbols\": [\"AAPL\", \"TSLA\", \"MSFT\"],\n    \"strategies\": [\"momentum-trading\"],\n    \"startDate\": \"2020-01-01\",\n    \"endDate\": \"2020-12-31\",\n    \"minReturn\": 5.0,\n    \"maxReturn\": null,\n    \"tradeStatus\": [\"CLOSED\"],\n    \"sortBy\": \"totalReturn\",\n    \"sortDirection\": \"DESC\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/filters?userId={{userId}}",
+							"raw": "{{baseUrl}}/v1/filters?userId={{userId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -113,7 +113,7 @@
 							"raw": "{\n  \"name\": \"Updated: High Performing Trades Filter\",\n  \"description\": \"Updated filter for trades with returns greater than 3% (lowered threshold)\",\n  \"isDefault\": false,\n  \"filterConfig\": {\n    \"portfolioIds\": [\"{{portfolioId}}\"],\n    \"symbols\": [\"AAPL\", \"TSLA\", \"MSFT\", \"NVDA\"],\n    \"strategies\": [\"momentum-trading\", \"swing-trading\"],\n    \"startDate\": \"2020-01-01\",\n    \"endDate\": \"2021-12-31\",\n    \"minReturn\": 3.0,\n    \"maxReturn\": null,\n    \"tradeStatus\": [\"CLOSED\"],\n    \"sortBy\": \"totalReturn\",\n    \"sortDirection\": \"DESC\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/filters/{{filterId}}?userId={{userId}}",
+							"raw": "{{baseUrl}}/v1/filters/{{filterId}}?userId={{userId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -166,7 +166,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/filters/{{filterId}}?userId={{userId}}",
+							"raw": "{{baseUrl}}/v1/filters/{{filterId}}?userId={{userId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -216,7 +216,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/filters/{{filterId}}?userId={{userId}}",
+							"raw": "{{baseUrl}}/v1/filters/{{filterId}}?userId={{userId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -277,7 +277,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/filters?userId={{userId}}",
+							"raw": "{{baseUrl}}/v1/filters?userId={{userId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -328,7 +328,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/filters/default?userId={{userId}}",
+							"raw": "{{baseUrl}}/v1/filters/default?userId={{userId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -379,7 +379,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/filters/{{filterId}}/default?userId={{userId}}",
+							"raw": "{{baseUrl}}/v1/filters/{{filterId}}/default?userId={{userId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -443,7 +443,7 @@
 							"raw": "{\n  \"portfolioIds\": [\"{{portfolioId}}\"],\n  \"symbols\": [\"AAPL\", \"TSLA\"],\n  \"strategies\": [\"momentum-trading\"],\n  \"startDate\": \"2020-01-01\",\n  \"endDate\": \"2020-12-31\",\n  \"minReturn\": null,\n  \"maxReturn\": null,\n  \"tradeStatus\": [\"OPEN\", \"CLOSED\"],\n  \"sortBy\": \"entryDate\",\n  \"sortDirection\": \"DESC\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/filters/save-current?userId={{userId}}&name=Current Momentum Strategy&description=Active momentum trading filter&isDefault=false",
+							"raw": "{{baseUrl}}/v1/filters/save-current?userId={{userId}}&name=Current Momentum Strategy&description=Active momentum trading filter&isDefault=false",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -512,7 +512,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/filters/apply/{{filterId}}?userId={{userId}}&portfolioIds={{portfolioId}}",
+							"raw": "{{baseUrl}}/v1/filters/apply/{{filterId}}?userId={{userId}}&portfolioIds={{portfolioId}}",
 							"host": [
 								"{{baseUrl}}"
 							],

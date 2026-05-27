@@ -11,11 +11,11 @@ This folder contains Postman collection exports for all API controllers in the A
 #### TradeController.postman_collection.json
 - **Purpose**: Core trade CRUD operations and filtering
 - **Key Endpoints**:
-  - `POST /api/v1/trades/details` - Create new trade
-  - `PUT /api/v1/trades/details/{tradeId}` - Update trade
-  - `GET /api/v1/trades/details/portfolio/{portfolioId}` - Get trades by portfolio
-  - `POST /api/v1/trades/filter` - Filter trades with multiple criteria
-  - `POST /api/v1/trades/details/batch` - Batch operations
+  - `POST /v1/trades/details` - Create new trade
+  - `PUT /v1/trades/details/{tradeId}` - Update trade
+  - `GET /v1/trades/details/portfolio/{portfolioId}` - Get trades by portfolio
+  - `POST /v1/trades/filter` - Filter trades with multiple criteria
+  - `POST /v1/trades/details/batch` - Batch operations
 - **Use Case**: Primary collection for managing individual trades
 
 #### TradeManagementController.postman_collection.json

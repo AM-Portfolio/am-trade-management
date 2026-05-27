@@ -78,7 +78,7 @@
 ### Phase 2: Core Trade Operations
 
 #### 2.1 Portfolio Trade Retrieval
-**Endpoint**: `GET /api/v1/trades/details/portfolio/{portfolioId}`
+**Endpoint**: `GET /v1/trades/details/portfolio/{portfolioId}`
 **Test Data**: Portfolio ID `8a57024c-05c2-475b-a2c4-0545865efa4a`
 
 **Test Scenarios**:
@@ -95,7 +95,7 @@ Scenario B: With Symbol Filter
 ```
 
 #### 2.2 Trade Creation
-**Endpoint**: `POST /api/v1/trades/details`
+**Endpoint**: `POST /v1/trades/details`
 
 **Test Data Set**:
 ```json
@@ -164,7 +164,7 @@ Trade 4 - Tesla Stock (Sell Order):
 - Field validation
 
 #### 2.3 Batch Trade Operations
-**Endpoint**: `POST /api/v1/trades/details/batch`
+**Endpoint**: `POST /v1/trades/details/batch`
 
 **Test Scenario**: Create multiple trades in single request
 - Submit 3-5 trades simultaneously
@@ -172,7 +172,7 @@ Trade 4 - Tesla Stock (Sell Order):
 - Test transaction integrity
 
 #### 2.4 Trade Updates
-**Endpoint**: `PUT /api/v1/trades/details/{tradeId}`
+**Endpoint**: `PUT /v1/trades/details/{tradeId}`
 
 **Test Cases**:
 - Update trade quantity
@@ -181,7 +181,7 @@ Trade 4 - Tesla Stock (Sell Order):
 - Update notes and strategy
 
 #### 2.5 Trade Filtering
-**Endpoint**: `GET /api/v1/trades/filter`
+**Endpoint**: `GET /v1/trades/filter`
 
 **Filter Test Scenarios**:
 ```
@@ -209,7 +209,7 @@ Scenario E: Combined Filters
 ### Phase 3: Analytics & Reporting
 
 #### 3.1 Portfolio Summary
-**Endpoint**: `GET /api/v1/portfolio-summary/{portfolioId}`
+**Endpoint**: `GET /v1/portfolio-summary/{portfolioId}`
 
 **Test Scenarios**:
 - Get complete portfolio summary
@@ -217,7 +217,7 @@ Scenario E: Combined Filters
 - Check position aggregations
 
 #### 3.2 Trade Metrics
-**Endpoint**: `GET /api/v1/metrics/portfolio/{portfolioId}`
+**Endpoint**: `GET /v1/metrics/portfolio/{portfolioId}`
 
 **Validation**:
 - Win/loss ratios
@@ -227,8 +227,8 @@ Scenario E: Combined Filters
 
 #### 3.3 Calendar-Based Queries
 **Endpoints**: 
-- `GET /api/v1/trades/calendar/day`
-- `GET /api/v1/trades/calendar/month`
+- `GET /v1/trades/calendar/day`
+- `GET /v1/trades/calendar/month`
 
 **Test Data**:
 ```
@@ -237,7 +237,7 @@ Month Query: year=2025&month=10
 ```
 
 #### 3.4 Trade Summary by Time Period
-**Endpoint**: `GET /api/v1/trade-summary/trades`
+**Endpoint**: `GET /v1/trade-summary/trades`
 
 **Period Tests**:
 - DAY: periodType=DAY&startDate=2025-10-11
@@ -247,7 +247,7 @@ Month Query: year=2025&month=10
 ### Phase 4: Advanced Features
 
 #### 4.1 Trade Analytics & Replay
-**Endpoint**: `POST /api/v1/analytics/trade-replays`
+**Endpoint**: `POST /v1/analytics/trade-replays`
 
 **Test Scenario**:
 ```json
@@ -264,12 +264,12 @@ Month Query: year=2025&month=10
 ```
 
 #### 4.2 Trade Comparison
-**Endpoint**: `POST /api/v1/comparison/trades`
+**Endpoint**: `POST /v1/comparison/trades`
 
 **Test**: Compare AAPL vs GOOGL trades performance
 
 #### 4.3 P&L Heatmap
-**Endpoint**: `GET /api/v1/heatmap`
+**Endpoint**: `GET /v1/heatmap`
 
 **Parameters**:
 - portfolioId: 8a57024c-05c2-475b-a2c4-0545865efa4a
@@ -366,9 +366,9 @@ Month Query: year=2025&month=10
 ### Cleanup Commands
 ```bash
 # If cleanup endpoints exist
-DELETE /api/v1/trades/{tradeId}
-DELETE /api/v1/preferences/{userId}
-DELETE /api/v1/journal/{journalId}
+DELETE /v1/trades/{tradeId}
+DELETE /v1/preferences/{userId}
+DELETE /v1/journal/{journalId}
 ```
 
 ## 📋 Test Execution Checklist

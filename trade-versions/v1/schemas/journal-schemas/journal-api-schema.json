@@ -304,7 +304,7 @@
         }
     },
     "paths": {
-        "/api/v1/journal": {
+        "/v1/journal": {
             "post": {
                 "summary": "Create a new journal entry",
                 "operationId": "createJournalEntry",
@@ -348,7 +348,7 @@
                 }
             }
         },
-        "/api/v1/journal/{entryId}": {
+        "/v1/journal/{entryId}": {
             "get": {
                 "summary": "Get journal entry by ID",
                 "operationId": "getJournalEntry",
@@ -492,7 +492,7 @@
                 }
             }
         },
-        "/api/v1/journal/user/{userId}": {
+        "/v1/journal/user/{userId}": {
             "get": {
                 "summary": "Get journal entries for a user",
                 "operationId": "getJournalEntriesByUser",
@@ -535,7 +535,7 @@
                 }
             }
         },
-        "/api/v1/journal/trade/{tradeId}": {
+        "/v1/journal/trade/{tradeId}": {
             "get": {
                 "summary": "Get journal entries for a specific trade",
                 "operationId": "getJournalEntriesByTrade",
@@ -573,7 +573,7 @@
                 }
             }
         },
-        "/api/v1/journal/date-range": {
+        "/v1/journal/date-range": {
             "get": {
                 "summary": "Get journal entries by date range",
                 "operationId": "getJournalEntriesByDateRange",

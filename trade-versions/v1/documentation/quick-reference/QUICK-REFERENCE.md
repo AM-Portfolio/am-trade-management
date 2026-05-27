@@ -56,38 +56,38 @@ curl http://localhost:8073/actuator
 ### Core Trading Endpoints
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/v1/trades/details/portfolio/{portfolioId}` | Get trades by portfolio |
-| POST | `/api/v1/trades/details` | Create new trade |
-| PUT | `/api/v1/trades/details/{tradeId}` | Update existing trade |
-| GET | `/api/v1/trades/filter` | Filter trades by criteria |
-| POST | `/api/v1/trades/details/batch` | Batch create/update trades |
+| GET | `/v1/trades/details/portfolio/{portfolioId}` | Get trades by portfolio |
+| POST | `/v1/trades/details` | Create new trade |
+| PUT | `/v1/trades/details/{tradeId}` | Update existing trade |
+| GET | `/v1/trades/filter` | Filter trades by criteria |
+| POST | `/v1/trades/details/batch` | Batch create/update trades |
 
 ### Calendar-Based Endpoints
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/v1/trades/calendar/day` | Get trades for specific day |
-| GET | `/api/v1/trades/calendar/month` | Get trades for specific month |
+| GET | `/v1/trades/calendar/day` | Get trades for specific day |
+| GET | `/v1/trades/calendar/month` | Get trades for specific month |
 
 ### Analytics Endpoints
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/v1/analytics/trade-replays` | Create trade replay |
-| GET | `/api/v1/analytics/trade-replays/{id}` | Get replay by ID |
-| GET | `/api/v1/analytics/trade-replays/symbol/{symbol}` | Get replays by symbol |
+| POST | `/v1/analytics/trade-replays` | Create trade replay |
+| GET | `/v1/analytics/trade-replays/{id}` | Get replay by ID |
+| GET | `/v1/analytics/trade-replays/symbol/{symbol}` | Get replays by symbol |
 
 ### Metrics & Performance
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/v1/metrics` | Get all trade metrics |
-| GET | `/api/v1/metrics/portfolio/{portfolioId}` | Get portfolio metrics |
-| GET | `/api/v1/portfolio-summary/{portfolioId}` | Get portfolio summary |
+| GET | `/v1/metrics` | Get all trade metrics |
+| GET | `/v1/metrics/portfolio/{portfolioId}` | Get portfolio metrics |
+| GET | `/v1/portfolio-summary/{portfolioId}` | Get portfolio summary |
 
 ### User Management
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/v1/preferences/{userId}` | Get user preferences |
-| PUT | `/api/v1/preferences/{userId}` | Update user preferences |
-| POST | `/api/v1/preferences` | Create user preferences |
+| GET | `/v1/preferences/{userId}` | Get user preferences |
+| PUT | `/v1/preferences/{userId}` | Update user preferences |
+| POST | `/v1/preferences` | Create user preferences |
 
 ## 🔧 Environment Variables
 
@@ -127,12 +127,12 @@ curl -X GET http://localhost:8073/actuator/health
 
 ### 2. Get Portfolio Trades
 ```bash
-curl -X GET "http://localhost:8073/api/v1/trades/details/portfolio/portfolio-123?symbols=AAPL,GOOGL"
+curl -X GET "http://localhost:8073/v1/trades/details/portfolio/portfolio-123?symbols=AAPL,GOOGL"
 ```
 
 ### 3. Create New Trade
 ```bash
-curl -X POST http://localhost:8073/api/v1/trades/details \
+curl -X POST http://localhost:8073/v1/trades/details \
   -H "Content-Type: application/json" \
   -d '{
     "portfolioId": "portfolio-123",
@@ -149,12 +149,12 @@ curl -X POST http://localhost:8073/api/v1/trades/details \
 
 ### 4. Filter Trades
 ```bash
-curl -X GET "http://localhost:8073/api/v1/trades/filter?portfolioIds=portfolio-123&symbols=AAPL&statuses=EXECUTED&startDate=2024-01-01&endDate=2024-12-31"
+curl -X GET "http://localhost:8073/v1/trades/filter?portfolioIds=portfolio-123&symbols=AAPL&statuses=EXECUTED&startDate=2024-01-01&endDate=2024-12-31"
 ```
 
 ### 5. Get Trade Metrics
 ```bash
-curl -X GET "http://localhost:8073/api/v1/metrics/portfolio/portfolio-123"
+curl -X GET "http://localhost:8073/v1/metrics/portfolio/portfolio-123"
 ```
 
 ## 🚨 Troubleshooting Commands

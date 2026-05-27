@@ -26,7 +26,7 @@ A new endpoint has been added to filter trade details using favorite filter conf
 
 ## Endpoint Details
 
-**URL**: `POST /api/v1/trades/details/filter`
+**URL**: `POST /v1/trades/details/filter`
 
 **Features**:
 - ✅ Filter by custom criteria
@@ -38,7 +38,7 @@ A new endpoint has been added to filter trade details using favorite filter conf
 ## Quick Test
 
 ```bash
-curl -X POST "http://localhost:8050/api/v1/trades/details/filter" \
+curl -X POST "http://localhost:8050/v1/trades/details/filter" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",

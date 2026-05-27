@@ -297,7 +297,7 @@
         }
     },
     "paths": {
-        "/api/v1/journal-templates": {
+        "/v1/journal-templates": {
             "post": {
                 "summary": "Create a new journal template",
                 "operationId": "createTemplate",
@@ -377,7 +377,7 @@
                 }
             }
         },
-        "/api/v1/journal-templates/{templateId}": {
+        "/v1/journal-templates/{templateId}": {
             "get": {
                 "summary": "Get template by ID",
                 "parameters": [
@@ -485,7 +485,7 @@
                 }
             }
         },
-        "/api/v1/journal-templates/favorites": {
+        "/v1/journal-templates/favorites": {
             "get": {
                 "summary": "Get favorite templates",
                 "parameters": [
@@ -515,7 +515,7 @@
                 }
             }
         },
-        "/api/v1/journal-templates/recommended": {
+        "/v1/journal-templates/recommended": {
             "get": {
                 "summary": "Get recommended templates",
                 "parameters": [
@@ -545,7 +545,7 @@
                 }
             }
         },
-        "/api/v1/journal-templates/my-templates": {
+        "/v1/journal-templates/my-templates": {
             "get": {
                 "summary": "Get user's custom templates",
                 "parameters": [
@@ -575,7 +575,7 @@
                 }
             }
         },
-        "/api/v1/journal-templates/{templateId}/favorite": {
+        "/v1/journal-templates/{templateId}/favorite": {
             "post": {
                 "summary": "Toggle favorite status",
                 "parameters": [
@@ -613,7 +613,7 @@
                 }
             }
         },
-        "/api/v1/journal-templates/{templateId}/use": {
+        "/v1/journal-templates/{templateId}/use": {
             "post": {
                 "summary": "Use template to create journal entry",
                 "parameters": [

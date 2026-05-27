@@ -1,6 +1,6 @@
 # Trade Journal API Documentation
 
-**Base URL**: `/api/v1/journal`
+**Base URL**: `/v1/journal`
 **Controller File**: `am-trade-api/src/main/java/am/trade/api/controller/TradeJournalController.java`
 
 This module is responsible for managing "Mental Models" and journaling capabilities. It connects a trader's emotional state, psychology data, and specific textual reasonings directly to executed trades.

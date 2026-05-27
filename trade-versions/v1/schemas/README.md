@@ -161,28 +161,28 @@ Use schemas in your IDE:
 
 | Method | Endpoint | Request | Response |
 |--------|----------|---------|----------|
-| POST | `/api/v1/trades/details` | TradeDetails | TradeDetails |
-| PUT | `/api/v1/trades/details/{id}` | TradeDetails | TradeDetails |
-| GET | `/api/v1/trades/details/portfolio/{id}` | Query params | Array<TradeDetails> |
-| POST | `/api/v1/trades/filter` | FilterConfig | FilterResponse |
-| POST | `/api/v1/trades/details/batch` | Array<TradeDetails> | Array<TradeDetails> |
+| POST | `/v1/trades/details` | TradeDetails | TradeDetails |
+| PUT | `/v1/trades/details/{id}` | TradeDetails | TradeDetails |
+| GET | `/v1/trades/details/portfolio/{id}` | Query params | Array<TradeDetails> |
+| POST | `/v1/trades/filter` | FilterConfig | FilterResponse |
+| POST | `/v1/trades/details/batch` | Array<TradeDetails> | Array<TradeDetails> |
 
 ### Journal Operations
 
 | Method | Endpoint | Request | Response |
 |--------|----------|---------|----------|
-| POST | `/api/v1/journal` | TradeJournalEntryRequest | TradeJournalEntryResponse |
-| GET | `/api/v1/journal/{id}` | - | TradeJournalEntryResponse |
-| PUT | `/api/v1/journal/{id}` | TradeJournalEntryRequest | TradeJournalEntryResponse |
-| DELETE | `/api/v1/journal/{id}` | - | 204 No Content |
+| POST | `/v1/journal` | TradeJournalEntryRequest | TradeJournalEntryResponse |
+| GET | `/v1/journal/{id}` | - | TradeJournalEntryResponse |
+| PUT | `/v1/journal/{id}` | TradeJournalEntryRequest | TradeJournalEntryResponse |
+| DELETE | `/v1/journal/{id}` | - | 204 No Content |
 
 ### Filter Operations
 
 | Method | Endpoint | Request | Response |
 |--------|----------|---------|----------|
-| POST | `/api/v1/filters` | FavoriteFilter | FavoriteFilter |
-| GET | `/api/v1/filters/{id}` | - | FavoriteFilter |
-| POST | `/api/v1/filters/apply` | FilterRequest | FilterResponse |
+| POST | `/v1/filters` | FavoriteFilter | FavoriteFilter |
+| GET | `/v1/filters/{id}` | - | FavoriteFilter |
+| POST | `/v1/filters/apply` | FilterRequest | FilterResponse |
 
 ## Validation Rules
 
@@ -236,7 +236,7 @@ Use schemas in your IDE:
   "status": 400,
   "error": "Bad Request",
   "message": "Validation failed",
-  "path": "/api/v1/trades/details",
+  "path": "/v1/trades/details",
   "details": [
     "Field 'portfolioId' must be a valid UUID",
     "Field 'quantity' must be greater than 0"

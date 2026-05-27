@@ -38,7 +38,7 @@ There is only one Java file in this entire folder:
 ## 4. Endpoints
 > [!NOTE]
 > **This module contains zero business endpoints.** 
-> All `/api/v1/...` REST paths are inherited dynamically from the `am-trade-api` module.
+> All `/v1/...` REST paths are inherited dynamically from the `am-trade-api` module.
 
 However, because of the Actuator configuration, this module *does* expose infrastructure endpoints:
 *   `GET /actuator/health` (Used by Kubernetes to check if the app crashed)

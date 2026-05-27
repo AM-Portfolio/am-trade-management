@@ -376,7 +376,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/dashboard")
+@RequestMapping("/v1/dashboard")
 @RequiredArgsConstructor
 @Slf4j
 public class DashboardController {
@@ -384,12 +384,12 @@ public class DashboardController {
     private final TradeIntegrationService tradeService;
     
     /**
-     * GET /api/v1/dashboard
+     * GET /v1/dashboard
      * Returns dashboard with FREE tier trades summary
      */
     @GetMapping
     public ResponseEntity<DashboardResponse> getDashboard() {
-        log.info("GET /api/v1/dashboard");
+        log.info("GET /v1/dashboard");
         
         try {
             DashboardResponse response = tradeService.getDashboard();
@@ -404,12 +404,12 @@ public class DashboardController {
     }
     
     /**
-     * GET /api/v1/dashboard/trades/symbol/{symbol}
+     * GET /v1/dashboard/trades/symbol/{symbol}
      * Returns trades for specific symbol from FREE tier
      */
     @GetMapping("/trades/symbol/{symbol}")
     public ResponseEntity<?> getTradesBySymbol(@PathVariable String symbol) {
-        log.info("GET /api/v1/dashboard/trades/symbol/{}", symbol);
+        log.info("GET /v1/dashboard/trades/symbol/{}", symbol);
         
         try {
             Map<String, Object> trades = tradeService.getTradesBySymbol(symbol);
@@ -422,12 +422,12 @@ public class DashboardController {
     }
     
     /**
-     * GET /api/v1/dashboard/trades/status/{status}
+     * GET /v1/dashboard/trades/status/{status}
      * Returns trades with specific status from FREE tier
      */
     @GetMapping("/trades/status/{status}")
     public ResponseEntity<?> getTradesByStatus(@PathVariable String status) {
-        log.info("GET /api/v1/dashboard/trades/status/{}", status);
+        log.info("GET /v1/dashboard/trades/status/{}", status);
         
         try {
             Map<String, Object> trades = tradeService.getTradesByStatus(status);
@@ -440,12 +440,12 @@ public class DashboardController {
     }
     
     /**
-     * GET /api/v1/dashboard/export/csv
+     * GET /v1/dashboard/export/csv
      * Exports FREE tier trades to CSV format
      */
     @GetMapping("/export/csv")
     public ResponseEntity<String> exportToCSV() {
-        log.info("GET /api/v1/dashboard/export/csv");
+        log.info("GET /v1/dashboard/export/csv");
         
         try {
             String csv = tradeService.exportToCSV();
@@ -737,13 +737,13 @@ from services.am_trade_service import AMTradeService
 import logging
 
 logger = logging.getLogger(__name__)
-dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/api/v1/dashboard')
+dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/v1/dashboard')
 trade_service = AMTradeService()
 
 @dashboard_bp.route('/', methods=['GET'])
 def get_dashboard():
-    """GET /api/v1/dashboard - Returns dashboard with FREE tier summary"""
-    logger.info("GET /api/v1/dashboard")
+    """GET /v1/dashboard - Returns dashboard with FREE tier summary"""
+    logger.info("GET /v1/dashboard")
     
     try:
         response = trade_service.get_dashboard()
@@ -754,8 +754,8 @@ def get_dashboard():
 
 @dashboard_bp.route('/trades/symbol/<symbol>', methods=['GET'])
 def get_trades_by_symbol(symbol):
-    """GET /api/v1/dashboard/trades/symbol/{symbol}"""
-    logger.info(f"GET /api/v1/dashboard/trades/symbol/{symbol}")
+    """GET /v1/dashboard/trades/symbol/{symbol}"""
+    logger.info(f"GET /v1/dashboard/trades/symbol/{symbol}")
     
     try:
         page = request.args.get('page', 0, type=int)
@@ -769,8 +769,8 @@ def get_trades_by_symbol(symbol):
 
 @dashboard_bp.route('/trades/status/<status>', methods=['GET'])
 def get_trades_by_status(status):
-    """GET /api/v1/dashboard/trades/status/{status}"""
-    logger.info(f"GET /api/v1/dashboard/trades/status/{status}")
+    """GET /v1/dashboard/trades/status/{status}"""
+    logger.info(f"GET /v1/dashboard/trades/status/{status}")
     
     try:
         page = request.args.get('page', 0, type=int)
@@ -784,8 +784,8 @@ def get_trades_by_status(status):
 
 @dashboard_bp.route('/export/csv', methods=['GET'])
 def export_to_csv():
-    """GET /api/v1/dashboard/export/csv - Export trades as CSV"""
-    logger.info("GET /api/v1/dashboard/export/csv")
+    """GET /v1/dashboard/export/csv - Export trades as CSV"""
+    logger.info("GET /v1/dashboard/export/csv")
     
     try:
         csv_data = trade_service.export_to_csv()
@@ -867,19 +867,19 @@ def test_health(client):
 
 def test_get_dashboard(client):
     """Test dashboard endpoint"""
-    response = client.get('/api/v1/dashboard')
+    response = client.get('/v1/dashboard')
     assert response.status_code in [200, 500]  # May fail if SDK not available
     data = response.get_json()
     assert data is not None
 
 def test_get_trades_by_symbol(client):
     """Test trades by symbol endpoint"""
-    response = client.get('/api/v1/dashboard/trades/symbol/NIFTY')
+    response = client.get('/v1/dashboard/trades/symbol/NIFTY')
     assert response.status_code in [200, 500]
 
 def test_get_trades_by_status(client):
     """Test trades by status endpoint"""
-    response = client.get('/api/v1/dashboard/trades/status/WIN')
+    response = client.get('/v1/dashboard/trades/status/WIN')
     assert response.status_code in [200, 500]
 ```
 
@@ -907,32 +907,32 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:create_app()
 
 ```bash
 # Get dashboard
-curl http://localhost:8080/api/v1/dashboard
+curl http://localhost:8080/v1/dashboard
 
 # Get NIFTY trades
-curl http://localhost:8080/api/v1/dashboard/trades/symbol/NIFTY
+curl http://localhost:8080/v1/dashboard/trades/symbol/NIFTY
 
 # Get winning trades
-curl http://localhost:8080/api/v1/dashboard/trades/status/WIN
+curl http://localhost:8080/v1/dashboard/trades/status/WIN
 
 # Export CSV
-curl http://localhost:8080/api/v1/dashboard/export/csv -o trades.csv
+curl http://localhost:8080/v1/dashboard/export/csv -o trades.csv
 ```
 
 ### Python: Test Requests
 
 ```bash
 # Get dashboard
-curl http://localhost:5000/api/v1/dashboard
+curl http://localhost:5000/v1/dashboard
 
 # Get NIFTY trades
-curl http://localhost:5000/api/v1/dashboard/trades/symbol/NIFTY?page=0&page_size=20
+curl http://localhost:5000/v1/dashboard/trades/symbol/NIFTY?page=0&page_size=20
 
 # Get winning trades
-curl http://localhost:5000/api/v1/dashboard/trades/status/WIN
+curl http://localhost:5000/v1/dashboard/trades/status/WIN
 
 # Export CSV
-curl http://localhost:5000/api/v1/dashboard/export/csv -o trades.csv
+curl http://localhost:5000/v1/dashboard/export/csv -o trades.csv
 ```
 
 ---

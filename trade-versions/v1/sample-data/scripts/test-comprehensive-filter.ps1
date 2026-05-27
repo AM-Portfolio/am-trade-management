@@ -1,7 +1,7 @@
 # Favorite Filter API - Comprehensive Filter Example (PowerShell)
 # Run this script to test all filter creation endpoints
 
-$baseUrl = "http://localhost:8073/api/v1/filters"
+$baseUrl = "http://localhost:8073/v1/filters"
 $userId = "ssd2658"
 
 Write-Host "===================================" -ForegroundColor Cyan

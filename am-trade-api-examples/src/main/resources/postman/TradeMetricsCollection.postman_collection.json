@@ -24,7 +24,7 @@
           "raw": "{\n  \"portfolioIds\": [\"portfolio-001\", \"portfolio-002\"],\n  \"dateRange\": {\n    \"startDate\": \"2025-01-01\",\n    \"endDate\": \"2025-09-01\"\n  },\n  \"metricTypes\": [\"PERFORMANCE\", \"RISK\", \"DISTRIBUTION\"],\n  \"instruments\": [\"AAPL\", \"MSFT\", \"GOOGL\"],\n  \"instrumentFilters\": {\n    \"sectors\": [\"TECHNOLOGY\", \"HEALTHCARE\"],\n    \"marketCap\": \"LARGE\"\n  },\n  \"tradeCharacteristics\": {\n    \"minDuration\": 1,\n    \"maxDuration\": 30,\n    \"direction\": \"LONG\"\n  },\n  \"profitLossFilters\": {\n    \"minProfitLoss\": 1000,\n    \"maxProfitLoss\": 50000,\n    \"minPositionSize\": 5000,\n    \"maxPositionSize\": 100000\n  },\n  \"groupBy\": [\"STRATEGY\", \"SYMBOL\"],\n  \"includeTradeDetails\": true,\n  \"customFilters\": {\n    \"excludeWeekends\": true,\n    \"onlyRegularHours\": true\n  }\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/api/v1/metrics",
+          "raw": "{{baseUrl}}/v1/metrics",
           "host": ["{{baseUrl}}"],
           "path": ["api", "v1", "metrics"]
         },
@@ -43,7 +43,7 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/api/v1/metrics/types",
+          "raw": "{{baseUrl}}/v1/metrics/types",
           "host": ["{{baseUrl}}"],
           "path": ["api", "v1", "metrics", "types"]
         },
@@ -62,7 +62,7 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/api/v1/metrics/compare?portfolioIds=portfolio-001,portfolio-002&metricTypes=PERFORMANCE,RISK&firstPeriodStart=2025-01-01&firstPeriodEnd=2025-03-31&secondPeriodStart=2025-04-01&secondPeriodEnd=2025-06-30",
+          "raw": "{{baseUrl}}/v1/metrics/compare?portfolioIds=portfolio-001,portfolio-002&metricTypes=PERFORMANCE,RISK&firstPeriodStart=2025-01-01&firstPeriodEnd=2025-03-31&secondPeriodStart=2025-04-01&secondPeriodEnd=2025-06-30",
           "host": ["{{baseUrl}}"],
           "path": ["api", "v1", "metrics", "compare"],
           "query": [
@@ -107,7 +107,7 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/api/v1/metrics/trends?portfolioIds=portfolio-001,portfolio-002&metricTypes=PERFORMANCE,RISK&startDate=2025-01-01&endDate=2025-09-01&interval=MONTH",
+          "raw": "{{baseUrl}}/v1/metrics/trends?portfolioIds=portfolio-001,portfolio-002&metricTypes=PERFORMANCE,RISK&startDate=2025-01-01&endDate=2025-09-01&interval=MONTH",
           "host": ["{{baseUrl}}"],
           "path": ["api", "v1", "metrics", "trends"],
           "query": [

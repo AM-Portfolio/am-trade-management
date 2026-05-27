@@ -1,6 +1,6 @@
 # Trade Comparison API Documentation
 
-**Base URL**: `/api/v1/comparison`
+**Base URL**: `/v1/comparison`
 **Controller File**: `am-trade-api/src/main/java/am/trade/api/controller/TradeComparisonController.java`
 
 This module handles dimensional comparative analysis. It powers features allowing the trader to compare Portfolio A against Portfolio B, or Strategy A against Strategy B, rendering performance delta metrics.

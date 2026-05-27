@@ -184,5 +184,5 @@ v1/
 
 **Version**: 1.0.0  
 **Last Updated**: December 2025  
-**API Base URL**: `http://localhost:8080/api/v1`  
+**API Base URL**: `http://localhost:8080/v1`  
 **Contact**: AM Trade Management Team

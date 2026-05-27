@@ -51,7 +51,7 @@
 ### Phase 2: Core Data Retrieval ✅ PASSED
 
 #### Test 2.1: Portfolio Trade Retrieval
-- **Endpoint**: `GET /api/v1/trades/details/portfolio/{portfolioId}`
+- **Endpoint**: `GET /v1/trades/details/portfolio/{portfolioId}`
 - **Status**: ✅ PASSED
 - **Response**: 200 OK with 40+ trade records
 - **Data Quality**: Excellent - Complete trade records with all fields populated
@@ -93,13 +93,13 @@
 ```
 
 #### Test 2.2: Symbol-Based Filtering
-- **Endpoint**: `GET /api/v1/trades/filter?portfolioIds={id}&symbols=ITC&page=0&size=5`
+- **Endpoint**: `GET /v1/trades/filter?portfolioIds={id}&symbols=ITC&page=0&size=5`
 - **Status**: ✅ PASSED
 - **Response**: Paginated results with 9 ITC trades total
 - **Pagination**: Working correctly (5 items per page, 2 total pages)
 
 #### Test 2.3: Status-Based Filtering
-- **Endpoint**: `GET /api/v1/trades/filter?portfolioIds={id}&statuses=WIN&page=0&size=3`
+- **Endpoint**: `GET /v1/trades/filter?portfolioIds={id}&statuses=WIN&page=0&size=3`
 - **Status**: ✅ PASSED
 - **Response**: 21 winning trades total, properly paginated
 - **Filter Accuracy**: 100% - All returned trades have WIN status
@@ -107,13 +107,13 @@
 ### Phase 3: Calendar Operations ✅ PASSED
 
 #### Test 3.1: Monthly Trade Retrieval
-- **Endpoint**: `GET /api/v1/trades/calendar/month?year=2020&month=8&portfolioId={id}`
+- **Endpoint**: `GET /v1/trades/calendar/month?year=2020&month=8&portfolioId={id}`
 - **Status**: ✅ PASSED
 - **Response**: Successfully retrieved August 2020 trades
 - **Data Organization**: Trades properly grouped by portfolio ID
 
 #### Test 3.2: Trade Summary by Time Period
-- **Endpoint**: `GET /api/v1/trade-summary/trades?periodType=MONTH&year=2020&month=9&portfolioId={id}`
+- **Endpoint**: `GET /v1/trade-summary/trades?periodType=MONTH&year=2020&month=9&portfolioId={id}`
 - **Status**: ✅ PASSED
 - **Response**: September 2020 trade summary generated
 - **Period Filtering**: Accurate time-based filtering
@@ -121,7 +121,7 @@
 ### Phase 4: Write Operations ❌ FAILED
 
 #### Test 4.1: Create New Trade
-- **Endpoint**: `POST /api/v1/trades/details`
+- **Endpoint**: `POST /v1/trades/details`
 - **Status**: ❌ FAILED
 - **Response**: 500 Internal Server Error
 - **Test Data**: 
@@ -202,7 +202,7 @@
 ## 🚨 Issues Identified
 
 ### Critical Issues:
-1. **POST Endpoint Error**: `/api/v1/trades/details` returns 500 error
+1. **POST Endpoint Error**: `/v1/trades/details` returns 500 error
    - Impact: Cannot create new trades
    - Priority: HIGH
    - Investigation needed
@@ -277,27 +277,27 @@
 
 #### Get All Portfolio Trades:
 ```bash
-GET http://localhost:8073/api/v1/trades/details/portfolio/8a57024c-05c2-475b-a2c4-0545865efa4a
+GET http://localhost:8073/v1/trades/details/portfolio/8a57024c-05c2-475b-a2c4-0545865efa4a
 ```
 
 #### Filter by Symbol:
 ```bash
-GET http://localhost:8073/api/v1/trades/filter?portfolioIds=8a57024c-05c2-475b-a2c4-0545865efa4a&symbols=ITC&page=0&size=5
+GET http://localhost:8073/v1/trades/filter?portfolioIds=8a57024c-05c2-475b-a2c4-0545865efa4a&symbols=ITC&page=0&size=5
 ```
 
 #### Filter by Status:
 ```bash
-GET http://localhost:8073/api/v1/trades/filter?portfolioIds=8a57024c-05c2-475b-a2c4-0545865efa4a&statuses=WIN&page=0&size=3
+GET http://localhost:8073/v1/trades/filter?portfolioIds=8a57024c-05c2-475b-a2c4-0545865efa4a&statuses=WIN&page=0&size=3
 ```
 
 #### Monthly Calendar Query:
 ```bash
-GET http://localhost:8073/api/v1/trades/calendar/month?year=2020&month=8&portfolioId=8a57024c-05c2-475b-a2c4-0545865efa4a
+GET http://localhost:8073/v1/trades/calendar/month?year=2020&month=8&portfolioId=8a57024c-05c2-475b-a2c4-0545865efa4a
 ```
 
 #### Trade Summary by Month:
 ```bash
-GET http://localhost:8073/api/v1/trade-summary/trades?periodType=MONTH&year=2020&month=9&portfolioId=8a57024c-05c2-475b-a2c4-0545865efa4a
+GET http://localhost:8073/v1/trade-summary/trades?periodType=MONTH&year=2020&month=9&portfolioId=8a57024c-05c2-475b-a2c4-0545865efa4a
 ```
 
 ---

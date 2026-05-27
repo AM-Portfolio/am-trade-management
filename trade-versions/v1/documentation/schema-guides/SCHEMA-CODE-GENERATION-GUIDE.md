@@ -19,16 +19,16 @@ This document provides comprehensive guidance on using the JSON Schema (`favorit
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/v1/filters` | POST | Create a new favorite filter |
-| `/api/v1/filters` | GET | Get all favorite filters for a user |
-| `/api/v1/filters/{filterId}` | GET | Get a specific filter by ID |
-| `/api/v1/filters/{filterId}` | PUT | Update an existing filter |
-| `/api/v1/filters/{filterId}` | DELETE | Delete a filter |
-| `/api/v1/filters/bulk` | DELETE | Delete multiple filters |
-| `/api/v1/filters/default` | GET | Get user's default filter |
-| `/api/v1/filters/{filterId}/default` | PUT | Set filter as default |
-| `/api/v1/filters/save-current` | POST | Save current filter as favorite |
-| `/api/v1/filters/apply/{filterId}` | GET | Get metrics using saved filter |
+| `/v1/filters` | POST | Create a new favorite filter |
+| `/v1/filters` | GET | Get all favorite filters for a user |
+| `/v1/filters/{filterId}` | GET | Get a specific filter by ID |
+| `/v1/filters/{filterId}` | PUT | Update an existing filter |
+| `/v1/filters/{filterId}` | DELETE | Delete a filter |
+| `/v1/filters/bulk` | DELETE | Delete multiple filters |
+| `/v1/filters/default` | GET | Get user's default filter |
+| `/v1/filters/{filterId}/default` | PUT | Set filter as default |
+| `/v1/filters/save-current` | POST | Save current filter as favorite |
+| `/v1/filters/apply/{filterId}` | GET | Get metrics using saved filter |
 
 ---
 

@@ -1,6 +1,6 @@
 # Trade Summary API Documentation
 
-**Base URL**: `/api/v1/trade-summary`
+**Base URL**: `/v1/trade-summary`
 **Controller File**: `am-trade-api/src/main/java/am/trade/api/controller/TradeSummaryController.java`
 
 This module generates persistent or dynamically generated snapshots of trading performance. Unlike the raw calculations running in `TradeMetrics`, these Summaries are formalized documents that encapsulate time-boxed statistics.

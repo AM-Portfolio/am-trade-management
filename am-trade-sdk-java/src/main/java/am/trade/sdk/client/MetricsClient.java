@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import am.trade.models.dto.MetricsFilterRequest;
 import am.trade.models.dto.MetricsResponse;
 
-@FeignClient(name = "am-trade-management-service", url = "${am.trade.management.url:http://am-trade-management-service:8080}", path = "/api/v1/metrics")
+@FeignClient(name = "am-trade-management-service", url = "${am.trade.management.url:http://am-trade-management-service:8080}", path = "/v1/metrics")
 public interface MetricsClient {
 
     @PostMapping

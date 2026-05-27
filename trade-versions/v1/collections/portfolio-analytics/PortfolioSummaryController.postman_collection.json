@@ -46,7 +46,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/portfolio-summary/{{portfolioId}}",
+							"raw": "{{baseUrl}}/v1/portfolio-summary/{{portfolioId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -96,7 +96,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/portfolio-summary/{{portfolioId}}/asset-allocation",
+							"raw": "{{baseUrl}}/v1/portfolio-summary/{{portfolioId}}/asset-allocation",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -140,7 +140,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/portfolio-summary/{{portfolioId}}/performance?startDate=2020-01-01&endDate=2020-12-31",
+							"raw": "{{baseUrl}}/v1/portfolio-summary/{{portfolioId}}/performance?startDate=2020-01-01&endDate=2020-12-31",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -196,7 +196,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/portfolio-summary/{{portfolioId}}/recalculate?userId={{userId}}",
+							"raw": "{{baseUrl}}/v1/portfolio-summary/{{portfolioId}}/recalculate?userId={{userId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -252,7 +252,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/portfolio-summary/compare?portfolioIds={{portfolioId}}&startDate=2020-01-01&endDate=2020-12-31",
+							"raw": "{{baseUrl}}/v1/portfolio-summary/compare?portfolioIds={{portfolioId}}&startDate=2020-01-01&endDate=2020-12-31",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -319,7 +319,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/portfolio-summary/by-owner/{{traderId}}",
+							"raw": "{{baseUrl}}/v1/portfolio-summary/by-owner/{{traderId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
