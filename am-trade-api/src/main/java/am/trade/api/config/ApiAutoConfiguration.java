@@ -16,6 +16,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
+
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "am.trade.api", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ComponentScan(basePackages = "am.trade.api")
@@ -27,15 +30,16 @@ public class ApiAutoConfiguration {
      * Uses CorsFilter which integrates better with Spring Security than WebMvcConfigurer
      */
     @Bean
-    public CorsFilter corsFilter() {
+    public CorsFilter corsFilter(@Value("${am.cors.allowed-origin-patterns:http://localhost:*,https://localhost:*}") List<String> allowedOriginPatterns) {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         
         config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("http://localhost:*"); // Allow all localhost ports
-        config.addAllowedOriginPattern("https://localhost:*"); // Allow local HTTPS
-        config.addAllowedOriginPattern("https://*.replit.dev");
-        config.addAllowedOriginPattern("https://*");
+        if (allowedOriginPatterns != null) {
+            for (String pattern : allowedOriginPatterns) {
+                config.addAllowedOriginPattern(pattern);
+            }
+        }
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.setMaxAge(3600L);

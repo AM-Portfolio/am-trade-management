@@ -46,6 +46,12 @@ public class AmTradeSdk {
      * Initialize SDK with configuration
      */
     private AmTradeSdk(SdkConfiguration configuration) {
+        if (configuration.getApiUrl() == null || configuration.getApiUrl().isEmpty()) {
+            throw new IllegalStateException(
+                "AM Trade SDK: apiUrl is not configured. " +
+                "Set AM_TRADE_API_URL in your application.yml or environment."
+            );
+        }
         this.configuration = configuration;
         configuration.validate();
         log.info("Initializing AM Trade SDK v{}", this.getVersion());
@@ -132,7 +138,7 @@ public class AmTradeSdk {
      * Builder class for fluent SDK configuration
      */
     public static class Builder {
-        private String apiUrl = "https://api.munish.org";
+        private String apiUrl = "";
         private String apiKey;
         private int timeout = 30;
         private int maxRetries = 3;
