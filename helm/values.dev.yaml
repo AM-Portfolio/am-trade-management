@@ -1,33 +1,6 @@
-# Development configuration for am-trade-management.
-# Aligned with am-market industry standards.
-
-replicaCount: 1
-
+# Dev Environment — am-trade-management
 environment: "dev"
-
-env:
-  SPRING_PROFILES_ACTIVE: "dev"
-  TRACING_SAMPLING_PROBABILITY: "1.0"
-  AM_OBSERVABILITY_ENABLED: "true"
-  AM_OBSERVABILITY_REQUEST_LOG_ENABLED: "true"
-
-global:
-  vault:
-    enabled: true
-    secrets:
-      infra: "kv/data/dev/infra"
-      mongo: "apps/data/dev/apps/trade/database/mongo"
-      kafka: "apps/data/dev/apps/trade/kafka"
-      redis: "apps/data/dev/apps/trade/database/redis"
-      app: "apps/data/dev/apps/trade"
-
-ingress:
-  enabled: true
-  hosts:
-    - host: trade-dev.amportfolio.com
-      paths:
-        - path: /
-          pathType: Prefix
+replicaCount: 1
 
 resources:
   limits:
@@ -36,3 +9,59 @@ resources:
   requests:
     cpu: 500m
     memory: 512Mi
+
+global:
+  vault:
+    enabled: true
+    secrets:
+      auth:
+        path: "apps/data/dev/services/am-auth"
+      infra:
+        path: "apps/data/dev/infra/shared-api"
+      mongo:
+        path: "apps/data/dev/infra/mongodb"
+      kafka:
+        path: "apps/data/dev/infra/kafka"
+      redis:
+        path: "apps/data/dev/infra/redis"
+      app:
+        path: "apps/data/dev/services/am-trade-management"
+
+hostAliases:
+  - ip: "203.174.22.129"
+    hostnames:
+      - "redis.asrax.in"
+      - "mongodb.asrax.in"
+      - "kafka.asrax.in"
+
+probes:
+  port: 8080
+  startup:
+    path: "/actuator/health"
+    failureThreshold: 30
+    periodSeconds: 10
+  liveness:
+    path: "/actuator/health"
+  readiness:
+    path: "/actuator/health"
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      am-apps-dev-dev-global-cors@kubernetescrd,
+      am-apps-dev-dev-strip-prefix@kubernetescrd
+  hosts:
+    - host: am-dev.asrax.in
+      paths:
+        - path: /trade
+          pathType: Prefix
+
+env:
+  SPRING_PROFILES_ACTIVE: "dev"
+  TRACING_SAMPLING_PROBABILITY: "1.0"
+  AM_OBSERVABILITY_ENABLED: "true"
+  AM_OBSERVABILITY_REQUEST_LOG_ENABLED: "true"
