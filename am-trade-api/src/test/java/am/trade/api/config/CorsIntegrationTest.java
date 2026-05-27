@@ -15,7 +15,7 @@ public class CorsIntegrationTest {
     @Test
     public void testCorsConfigurationMatchesPortfolio() throws Exception {
         ApiAutoConfiguration config = new ApiAutoConfiguration();
-        CorsFilter filter = config.corsFilter();
+        CorsFilter filter = config.corsFilter(java.util.Arrays.asList("http://localhost:*", "https://*"));
         
         assertNotNull(filter, "CorsFilter bean should be created");
         
