@@ -26,23 +26,26 @@ import am.trade.api.validation.TradeValidator;
 import am.trade.common.models.Attachment;
 import am.trade.common.models.DerivativeInfo;
 import am.trade.common.models.TradeDetails;
+import am.trade.common.models.enums.TradePositionType;
 import am.trade.common.models.enums.TradeStatus;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
+import am.trade.services.service.PortfolioPersistenceService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implementation of TradeApiService that handles trade API operations
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class TradeApiServiceImpl implements TradeApiService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeApiServiceImpl.class);
+
     
     private final TradeManagementService tradeManagementService;
     private final TradeProcessingService tradeProcessingService;
     private final TradeDetailsService tradeDetailsService;
+    private final PortfolioPersistenceService portfolioPersistenceService;
     private final TradeValidator tradeValidator;
     private final FavoriteFilterService favoriteFilterService;
     
@@ -78,11 +81,17 @@ public class TradeApiServiceImpl implements TradeApiService {
         
         logTradeComponents(tradeDetails);
         
+        // Ensure trade position type is set to LONG by default if missing to allow calculations
+        if (tradeDetails.getTradePositionType() == null) {
+            log.info("Trade position type not specified for symbol {}, defaulting to LONG", tradeDetails.getSymbol());
+            tradeDetails.setTradePositionType(TradePositionType.LONG);
+        }
+        
         // Save trade details and process for portfolio aggregation
         TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
         if (savedTrade != null) {
-            tradeProcessingService.processTradeDetails(
-                List.of(savedTrade.getTradeId()), 
+            tradeProcessingService.processTradeDetailsWithObjects(
+                List.of(savedTrade), 
                 savedTrade.getPortfolioId(), 
                 savedTrade.getUserId());
         }
@@ -158,8 +167,8 @@ public class TradeApiServiceImpl implements TradeApiService {
         // Save and process trade
         TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
         if (savedTrade != null) {
-            tradeProcessingService.processTradeDetails(
-                List.of(savedTrade.getTradeId()), 
+            tradeProcessingService.processTradeDetailsWithObjects(
+                List.of(savedTrade), 
                 savedTrade.getPortfolioId(), 
                 savedTrade.getUserId());
         }
@@ -345,7 +354,18 @@ public class TradeApiServiceImpl implements TradeApiService {
             logBatchStatistics(tradeDetailsList);
             
             // Save all trades in a single operation
-            return tradeDetailsService.saveAllTradeDetails(tradeDetailsList);
+            List<TradeDetails> savedTrades = tradeDetailsService.saveAllTradeDetails(tradeDetailsList);
+            
+            // Process the saved trades to update portfolio metrics
+            if (!savedTrades.isEmpty()) {
+                TradeDetails representativeTrade = savedTrades.get(0);
+                tradeProcessingService.processTradeDetailsWithObjects(
+                    savedTrades, 
+                    representativeTrade.getPortfolioId(), 
+                    representativeTrade.getUserId());
+            }
+            
+            return savedTrades;
         } catch (Exception e) {
             log.error("Error processing batch of trades: {}", e.getMessage(), e);
             throw e;
@@ -905,5 +925,22 @@ public class TradeApiServiceImpl implements TradeApiService {
                 .profitLossRange(profitLossRange)
                 .holdingTimeRange(holdingTimeRange)
                 .build();
+    }
+
+    @Override
+    public am.trade.common.models.PortfolioModel recalculatePortfolio(String portfolioId, String userId) {
+        log.info("Service: Manually recalculating all metrics for portfolio: {} for user: {}", portfolioId, userId);
+        
+        // 1. Fetch ALL trades for this portfolio from the database
+        List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+        log.info("Found {} historical trades to process for portfolio {}", allTrades.size(), portfolioId);
+        
+        // 2. Trigger the synchronous processing for all these trades
+        // This will rebuild the PortfolioMetrics from scratch
+        tradeProcessingService.processTradeDetailsWithObjects(allTrades, portfolioId, userId);
+        
+        // 3. Return the updated portfolio
+        return portfolioPersistenceService.findByPortfolioId(portfolioId)
+                .orElseThrow(() -> new am.trade.exceptions.TradeException("Portfolio not found with ID: " + portfolioId, org.springframework.http.HttpStatus.NOT_FOUND));
     }
 }

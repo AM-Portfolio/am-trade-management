@@ -5,6 +5,8 @@ import am.trade.api.service.PortfolioSummaryService;
 import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.AssetAllocation;
 
+import am.trade.api.service.TradeApiService;
+import am.trade.api.dto.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,6 +35,7 @@ import java.util.Map;
 public class PortfolioSummaryController {
 
     private final PortfolioSummaryService portfolioSummaryService;
+    private final TradeApiService tradeApiService;
 
     @Operation(summary = "Get portfolio summaries by owner ID")
     @ApiResponses(value = {
