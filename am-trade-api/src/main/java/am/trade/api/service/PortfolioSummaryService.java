@@ -48,10 +48,11 @@ public interface PortfolioSummaryService {
     Map<String, PortfolioModel> comparePortfolios(List<String> portfolioIds);
     
     /**
-     * Get a list of portfolio summaries (ID and name only) for a specific owner
-     * 
+     * Get a list of portfolio summaries for a specific owner.
+     * Returns the full PortfolioModel so the frontend receives metrics (winRate, netProfitLoss, etc.)
+     *
      * @param ownerId the ID of the portfolio owner
-     * @return a list of portfolio summary DTOs containing ID and name
+     * @return a list of full portfolio models
      */
-    List<PortfolioSummaryDTO> getPortfolioSummariesByOwnerId(String ownerId);
+    List<PortfolioModel> getPortfolioSummariesByOwnerId(String ownerId);
 }

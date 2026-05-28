@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.am.security.context.UserContext;
 import am.trade.api.dto.BulkDeleteRequest;
 import am.trade.api.dto.BulkDeleteResponse;
 import am.trade.api.dto.ErrorResponse;
@@ -51,9 +52,8 @@ public class FavoriteFilterController {
     })
     @PostMapping
     public ResponseEntity<FavoriteFilterResponse> createFilter(
-            @RequestParam String userId,
             @Valid @RequestBody FavoriteFilterRequest request) {
-
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Creating favorite filter for user: {}", userId);
         try {
             FavoriteFilterResponse response = favoriteFilterService.createFilter(userId, request);
@@ -73,10 +73,9 @@ public class FavoriteFilterController {
     })
     @PutMapping("/{filterId}")
     public ResponseEntity<FavoriteFilterResponse> updateFilter(
-            @RequestParam String userId,
             @PathVariable String filterId,
             @Valid @RequestBody FavoriteFilterRequest request) {
-
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Updating favorite filter: {} for user: {}", filterId, userId);
         try {
             FavoriteFilterResponse response = favoriteFilterService.updateFilter(userId, filterId, request);
@@ -93,9 +92,8 @@ public class FavoriteFilterController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping
-    public ResponseEntity<List<FavoriteFilterResponse>> getUserFilters(
-            @RequestParam String userId) {
-
+    public ResponseEntity<List<FavoriteFilterResponse>> getUserFilters() {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Getting all favorite filters for user: {}", userId);
         List<FavoriteFilterResponse> filters = favoriteFilterService.getUserFilters(userId);
         return ResponseEntity.ok(filters);
@@ -109,9 +107,8 @@ public class FavoriteFilterController {
     })
     @GetMapping("/{filterId}")
     public ResponseEntity<FavoriteFilterResponse> getFilterById(
-            @RequestParam String userId,
             @PathVariable String filterId) {
-
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Getting favorite filter: {} for user: {}", filterId, userId);
         try {
             FavoriteFilterResponse filter = favoriteFilterService.getFilterById(userId, filterId);
@@ -130,9 +127,8 @@ public class FavoriteFilterController {
     })
     @DeleteMapping("/{filterId}")
     public ResponseEntity<Void> deleteFilter(
-            @RequestParam String userId,
             @PathVariable String filterId) {
-
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Deleting favorite filter: {} for user: {}", filterId, userId);
         try {
             boolean deleted = favoriteFilterService.deleteFilter(userId, filterId);
@@ -153,9 +149,10 @@ public class FavoriteFilterController {
     public ResponseEntity<BulkDeleteResponse> deleteMultipleFilters(
             @Valid @RequestBody BulkDeleteRequest request) {
 
-        log.info("Deleting {} filters for user: {}", request.getFilterIds().size(), request.getUserId());
+        String userId = UserContext.getUserIdOrThrow();
+        log.info("Deleting {} filters for user: {}", request.getFilterIds().size(), userId);
         try {
-            int deletedCount = favoriteFilterService.deleteMultipleFilters(request.getUserId(), request.getFilterIds());
+            int deletedCount = favoriteFilterService.deleteMultipleFilters(userId, request.getFilterIds());
 
             BulkDeleteResponse response = BulkDeleteResponse.builder()
                     .deletedCount(deletedCount)
@@ -178,9 +175,8 @@ public class FavoriteFilterController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/default")
-    public ResponseEntity<FavoriteFilterResponse> getDefaultFilter(
-            @RequestParam String userId) {
-
+    public ResponseEntity<FavoriteFilterResponse> getDefaultFilter() {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Getting default filter for user: {}", userId);
         FavoriteFilterResponse filter = favoriteFilterService.getDefaultFilter(userId);
         return filter != null ? ResponseEntity.ok(filter) : ResponseEntity.notFound().build();
@@ -194,9 +190,8 @@ public class FavoriteFilterController {
     })
     @PutMapping("/{filterId}/default")
     public ResponseEntity<FavoriteFilterResponse> setDefaultFilter(
-            @RequestParam String userId,
             @PathVariable String filterId) {
-
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Setting filter: {} as default for user: {}", filterId, userId);
         try {
             FavoriteFilterResponse response = favoriteFilterService.setDefaultFilter(userId, filterId);
@@ -215,12 +210,12 @@ public class FavoriteFilterController {
     })
     @PostMapping("/save-current")
     public ResponseEntity<FavoriteFilterResponse> saveCurrentFilter(
-            @RequestParam String userId,
             @RequestParam String name,
             @RequestParam(required = false) String description,
             @RequestParam(defaultValue = "false") boolean isDefault,
             @Valid @RequestBody MetricsFilterRequest currentFilter) {
 
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Saving current filter as favorite for user: {}", userId);
         try {
             // Convert MetricsFilterRequest to FavoriteFilterRequest
@@ -248,10 +243,9 @@ public class FavoriteFilterController {
     })
     @GetMapping("/apply/{filterId}")
     public ResponseEntity<Object> getMetricsWithFavoriteFilter(
-            @RequestParam String userId,
             @PathVariable String filterId,
             @RequestParam(required = false) List<String> portfolioIds) {
-
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Fetching trade metrics with favorite filter: {} for user: {}", filterId, userId);
         try {
             // Delegate to the UserTradeService

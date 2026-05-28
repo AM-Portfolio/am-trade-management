@@ -19,9 +19,6 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class UseTemplateRequest {
 
-    @NotBlank(message = "User ID is required")
-    private String userId;
-
     @NotBlank(message = "Template ID is required")
     private String templateId;
 

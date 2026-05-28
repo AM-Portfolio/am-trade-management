@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.am.security.context.UserContext;
 import am.trade.api.dto.FilterTradeDetailsRequest;
 import am.trade.api.dto.FilterTradeDetailsResponse;
 import am.trade.common.models.TradeDetails;
@@ -182,7 +183,7 @@ public class TradeController {
             @Parameter(description = "Pagination parameters (page, size, sort) - optional", example = "page=0&size=20&sort=profitLoss,desc") Pageable pageable) {
 
         log.info("Filtering trade details for user: {} with favorite filter: {}, page: {}, size: {}",
-                request.getUserId(), request.getFavoriteFilterId(),
+                UserContext.getUserIdOrThrow(), request.getFavoriteFilterId(),
                 pageable != null ? pageable.getPageNumber() : "unpaged",
                 pageable != null ? pageable.getPageSize() : "all");
 

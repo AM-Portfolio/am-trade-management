@@ -4,9 +4,15 @@
   "description": "AM Trade Management System",
   "private": true,
   "scripts": {
-    "vault:sync": "node scripts/vault-sync.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "dotenv -- mvnw spring-boot:run -pl am-trade-app \"-Dspring-boot.run.profiles=local\"",
+    "build": "dotenv -- mvnw clean install",
+    "test": "dotenv -- mvnw test",
+    "clean": "mvnw clean",
+    "vault:sync": "node scripts/vault-sync.js"
   },
   "author": "AM-Portfolio",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "dotenv-cli": "^11.0.0"
+  }
 }

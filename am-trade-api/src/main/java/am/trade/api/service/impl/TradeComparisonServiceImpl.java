@@ -1,5 +1,6 @@
 package am.trade.api.service.impl;
 
+import com.am.security.context.UserContext;
 import am.trade.api.dto.ComparisonRequest;
 import am.trade.api.dto.ComparisonResponse;
 import am.trade.api.service.TradeComparisonService;
@@ -38,7 +39,7 @@ public class TradeComparisonServiceImpl implements TradeComparisonService {
     @Override
     public ComparisonResponse compareTradePerformance(ComparisonRequest request) {
         log.info("Comparing trade performance for user: {}, type: {}", 
-                request.getUserId(), request.getComparisonType());
+                UserContext.getUserIdOrThrow(), request.getComparisonType());
         
         validateComparisonRequest(request);
         
@@ -64,7 +65,6 @@ public class TradeComparisonServiceImpl implements TradeComparisonService {
         
         // Create a comparison request
         ComparisonRequest request = ComparisonRequest.builder()
-                .userId(userId)
                 .comparisonType("PORTFOLIO")
                 .portfolioIds(Arrays.asList(portfolioId1, portfolioId2))
                 .startDate(startDate)
@@ -98,7 +98,6 @@ public class TradeComparisonServiceImpl implements TradeComparisonService {
         
         // Create a comparison request
         ComparisonRequest request = ComparisonRequest.builder()
-                .userId(userId)
                 .comparisonType("TIME_PERIOD")
                 .timePeriods(timePeriods)
                 .build();
@@ -119,7 +118,6 @@ public class TradeComparisonServiceImpl implements TradeComparisonService {
         
         // Create a comparison request
         ComparisonRequest request = ComparisonRequest.builder()
-                .userId(userId)
                 .comparisonType("STRATEGY")
                 .strategies(Arrays.asList(strategy1, strategy2))
                 .startDate(startDate)
@@ -202,7 +200,7 @@ public class TradeComparisonServiceImpl implements TradeComparisonService {
                 // If no portfolio IDs provided, fetch all trades for the user in this period
                 // This would require a custom repository method that we'll assume exists
                 trades = tradeDetailsService.findByUserIdAndEntryInfoTimestampBetween(
-                        request.getUserId(), startDateTime, endDateTime);
+                        UserContext.getUserIdOrThrow(), startDateTime, endDateTime);
             }
             
             // Create dimension
@@ -245,7 +243,7 @@ public class TradeComparisonServiceImpl implements TradeComparisonService {
         for (String strategy : request.getStrategies()) {
             // Fetch trades for this strategy
             List<TradeDetails> trades = tradeDetailsService.findByUserIdAndStrategyAndDateRange(
-                    request.getUserId(), strategy, startDateTime, endDateTime);
+                    UserContext.getUserIdOrThrow(), strategy, startDateTime, endDateTime);
             
             // Create dimension
             ComparisonResponse.ComparisonDimension dimension = createDimension(
@@ -290,9 +288,9 @@ public class TradeComparisonServiceImpl implements TradeComparisonService {
             
             if (startDateTime != null && endDateTime != null) {
                 trades = tradeDetailsService.findByUserIdAndSymbolAndDateRange(
-                        request.getUserId(), instrument, startDateTime, endDateTime);
+                        UserContext.getUserIdOrThrow(), instrument, startDateTime, endDateTime);
             } else {
-                trades = tradeDetailsService.findByUserIdAndSymbol(request.getUserId(), instrument);
+                trades = tradeDetailsService.findByUserIdAndSymbol(UserContext.getUserIdOrThrow(), instrument);
             }
             
             // Create dimension
@@ -499,7 +497,7 @@ public class TradeComparisonServiceImpl implements TradeComparisonService {
         
         return ComparisonResponse.builder()
                 .comparisonId(UUID.randomUUID().toString())
-                .userId(request.getUserId())
+                .userId(UserContext.getUserIdOrThrow())
                 .comparisonType(request.getComparisonType())
                 .dimensions(dimensions)
                 .metrics(metrics)
@@ -512,10 +510,8 @@ public class TradeComparisonServiceImpl implements TradeComparisonService {
      * Validate comparison request
      */
     private void validateComparisonRequest(ComparisonRequest request) {
-        if (request.getUserId() == null || request.getUserId().trim().isEmpty()) {
-            throw new IllegalArgumentException("User ID is required");
-        }
-        
+        UserContext.getUserIdOrThrow();
+
         if (request.getComparisonType() == null || request.getComparisonType().trim().isEmpty()) {
             throw new IllegalArgumentException("Comparison type is required");
         }

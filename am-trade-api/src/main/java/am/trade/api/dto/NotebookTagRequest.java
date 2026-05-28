@@ -17,9 +17,6 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class NotebookTagRequest {
 
-    @NotBlank(message = "User ID is required")
-    private String userId;
-
     @NotBlank(message = "Name is required")
     private String name;
 

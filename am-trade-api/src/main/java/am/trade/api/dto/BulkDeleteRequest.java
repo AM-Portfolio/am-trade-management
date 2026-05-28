@@ -18,10 +18,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BulkDeleteRequest {
     
-    @NotNull(message = "User ID cannot be null")
-    @NotEmpty(message = "User ID cannot be empty")
-    private String userId;
-    
     @NotNull(message = "Filter IDs list cannot be null")
     @NotEmpty(message = "Filter IDs list cannot be empty")
     private List<String> filterIds;

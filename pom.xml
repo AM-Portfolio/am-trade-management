@@ -57,9 +57,14 @@
         </repository>
     
         <repository>
-            <id>github-am-common</id>
+            <id>github</id>
             <name>GitHub AM Common Data Model Apache Maven Packages</name>
             <url>https://maven.pkg.github.com/AM-Portfolio/am-common-data-parent</url>
+        </repository>
+        <repository>
+            <id>github-core</id>
+            <name>GitHub AM Core Services Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/AM-Portfolio/am-core-services</url>
         </repository>
     </repositories>
 

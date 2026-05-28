@@ -4,11 +4,18 @@ KAFKA_SASL_MECHANISM: GSSAPI
 KAFKA_SASL_JAAS_CONFIG: null
 
 spring:
+  config:
+    import: optional:file:../.env[.properties], optional:file:.env[.properties]
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret-key: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_SECRET_KEY}
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
   data:
     mongodb:
-      uri: ${MONGODB_URI}
+      uri: ${MONGODB_URI:mongodb://admin:password123@localhost:27017/trade?authSource=admin}
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     properties:
@@ -28,3 +35,5 @@ am:
   trade:
     kafka:
       enabled: false
+    security:
+      local-default-user-id: ${AM_TRADE_LOCAL_USER_ID:local-dev-user}

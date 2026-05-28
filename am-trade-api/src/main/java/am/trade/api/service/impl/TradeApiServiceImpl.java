@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.am.security.context.UserContext;
 import am.trade.api.dto.FilterTradeDetailsRequest;
 import am.trade.api.dto.FilterTradeDetailsResponse;
 import am.trade.api.dto.FavoriteFilterResponse;
@@ -25,30 +26,39 @@ import am.trade.api.validation.TradeValidator;
 import am.trade.common.models.Attachment;
 import am.trade.common.models.DerivativeInfo;
 import am.trade.common.models.TradeDetails;
+import am.trade.common.models.enums.TradePositionType;
 import am.trade.common.models.enums.TradeStatus;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
+import am.trade.services.service.PortfolioPersistenceService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implementation of TradeApiService that handles trade API operations
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class TradeApiServiceImpl implements TradeApiService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeApiServiceImpl.class);
+
     
     private final TradeManagementService tradeManagementService;
     private final TradeProcessingService tradeProcessingService;
     private final TradeDetailsService tradeDetailsService;
+    private final PortfolioPersistenceService portfolioPersistenceService;
     private final TradeValidator tradeValidator;
     private final FavoriteFilterService favoriteFilterService;
     
     @Override
     public List<TradeDetails> getTradeDetailsByPortfolioAndSymbols(String portfolioId, List<String> symbols) {
         log.info("Service: Fetching trade details for portfolio: {} with symbols: {}", portfolioId, symbols);
-        return tradeManagementService.getTradesBySymbols(portfolioId, symbols);
+        List<TradeDetails> trades = tradeManagementService.getTradesBySymbols(portfolioId, symbols);
+        
+        // Verify ownership
+        String currentUserId = UserContext.getUserIdOrThrow();
+        return trades.stream()
+                .filter(t -> currentUserId.equals(t.getUserId()))
+                .collect(Collectors.toList());
     }
     
     @Override
@@ -71,11 +81,17 @@ public class TradeApiServiceImpl implements TradeApiService {
         
         logTradeComponents(tradeDetails);
         
+        // Ensure trade position type is set to LONG by default if missing to allow calculations
+        if (tradeDetails.getTradePositionType() == null) {
+            log.info("Trade position type not specified for symbol {}, defaulting to LONG", tradeDetails.getSymbol());
+            tradeDetails.setTradePositionType(TradePositionType.LONG);
+        }
+        
         // Save trade details and process for portfolio aggregation
         TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
         if (savedTrade != null) {
-            tradeProcessingService.processTradeDetails(
-                List.of(savedTrade.getTradeId()), 
+            tradeProcessingService.processTradeDetailsWithObjects(
+                List.of(savedTrade), 
                 savedTrade.getPortfolioId(), 
                 savedTrade.getUserId());
         }
@@ -125,6 +141,14 @@ public class TradeApiServiceImpl implements TradeApiService {
         // Get the original trade
         TradeDetails originalTrade = existingTradeOpt.get();
         
+        // Verify ownership
+        String currentUserId = UserContext.getUserIdOrThrow();
+        if (!currentUserId.equals(originalTrade.getUserId())) {
+            log.warn("Security Alert: User {} attempted to update trade {} owned by user {}", 
+                    currentUserId, tradeId, originalTrade.getUserId());
+            throw new SecurityException("You do not have permission to modify this trade");
+        }
+        
         // Validate non-editable fields
         validateNonEditableFields(originalTrade, tradeDetails);
         
@@ -143,8 +167,8 @@ public class TradeApiServiceImpl implements TradeApiService {
         // Save and process trade
         TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
         if (savedTrade != null) {
-            tradeProcessingService.processTradeDetails(
-                List.of(savedTrade.getTradeId()), 
+            tradeProcessingService.processTradeDetailsWithObjects(
+                List.of(savedTrade), 
                 savedTrade.getPortfolioId(), 
                 savedTrade.getUserId());
         }
@@ -298,8 +322,16 @@ public class TradeApiServiceImpl implements TradeApiService {
         log.info("Service: Filtering trades with criteria - portfolioIds: {}, symbols: {}, statuses: {}, startDate: {}, endDate: {}, strategies: {}", 
                 portfolioIds, symbols, statuses, startDate, endDate, strategies);
         
-        return tradeManagementService.getTradesByFilters(
+        Page<TradeDetails> tradesPage = tradeManagementService.getTradesByFilters(
                 portfolioIds, symbols, statuses, startDate, endDate, strategies, pageable);
+                
+        // Verify ownership
+        String currentUserId = UserContext.getUserIdOrThrow();
+        List<TradeDetails> filteredList = tradesPage.getContent().stream()
+                .filter(t -> currentUserId.equals(t.getUserId()))
+                .collect(Collectors.toList());
+                
+        return new org.springframework.data.domain.PageImpl<>(filteredList, pageable, filteredList.size());
     }
     
     @Override
@@ -322,7 +354,18 @@ public class TradeApiServiceImpl implements TradeApiService {
             logBatchStatistics(tradeDetailsList);
             
             // Save all trades in a single operation
-            return tradeDetailsService.saveAllTradeDetails(tradeDetailsList);
+            List<TradeDetails> savedTrades = tradeDetailsService.saveAllTradeDetails(tradeDetailsList);
+            
+            // Process the saved trades to update portfolio metrics
+            if (!savedTrades.isEmpty()) {
+                TradeDetails representativeTrade = savedTrades.get(0);
+                tradeProcessingService.processTradeDetailsWithObjects(
+                    savedTrades, 
+                    representativeTrade.getPortfolioId(), 
+                    representativeTrade.getUserId());
+            }
+            
+            return savedTrades;
         } catch (Exception e) {
             log.error("Error processing batch of trades: {}", e.getMessage(), e);
             throw e;
@@ -387,14 +430,20 @@ public class TradeApiServiceImpl implements TradeApiService {
         
         try {
             // Use the efficient method that makes a single database call
-            List<TradeDetails> tradeDetails = tradeDetailsService.findModelsByTradeIds(tradeIds);
+            List<TradeDetails> allTradeDetails = tradeDetailsService.findModelsByTradeIds(tradeIds);
+            
+            // Verify ownership
+            String currentUserId = UserContext.getUserIdOrThrow();
+            List<TradeDetails> tradeDetails = allTradeDetails.stream()
+                    .filter(t -> currentUserId.equals(t.getUserId()))
+                    .collect(Collectors.toList());
             
             // Log success metrics
             int foundCount = tradeDetails.size();
             int requestedCount = tradeIds.size();
             
             if (foundCount < requestedCount) {
-                log.warn("Only found {} trades out of {} requested IDs", foundCount, requestedCount);
+                log.warn("Only found {} trades out of {} requested IDs for user {}", foundCount, requestedCount, currentUserId);
             } else {
                 log.info("Successfully retrieved all {} requested trade details", requestedCount);
             }
@@ -408,18 +457,17 @@ public class TradeApiServiceImpl implements TradeApiService {
     
     @Override
     public FilterTradeDetailsResponse filterTradeDetails(FilterTradeDetailsRequest request, org.springframework.data.domain.Pageable pageable) {
+        String userId = UserContext.getUserIdOrThrow();
         log.info("Filtering trade details for user: {} with filter ID: {}", 
-                request.getUserId(), request.getFavoriteFilterId());
-        
-        validateFilterRequest(request);
+                userId, request.getFavoriteFilterId());
         
         // If favorite filter ID is provided, merge with saved filter
         FilterTradeDetailsRequest effectiveFilter = request;
         String appliedFilterName = null;
         
         if (request.getFavoriteFilterId() != null && !request.getFavoriteFilterId().isEmpty()) {
-            effectiveFilter = mergeFavoriteFilter(request);
-            appliedFilterName = getFilterName(request.getUserId(), request.getFavoriteFilterId());
+            effectiveFilter = mergeFavoriteFilter(request, userId);
+            appliedFilterName = getFilterName(userId, request.getFavoriteFilterId());
         }
         
         // Apply filters and get all matching trades
@@ -438,23 +486,16 @@ public class TradeApiServiceImpl implements TradeApiService {
                 effectiveFilter, appliedFilterName, null);
     }
     
-    private void validateFilterRequest(FilterTradeDetailsRequest request) {
-        if (request.getUserId() == null || request.getUserId().isEmpty()) {
-            throw new IllegalArgumentException("User ID is required");
-        }
-    }
-    
-    private FilterTradeDetailsRequest mergeFavoriteFilter(FilterTradeDetailsRequest request) {
+    private FilterTradeDetailsRequest mergeFavoriteFilter(FilterTradeDetailsRequest request, String userId) {
         try {
             // Get saved filter configuration
             FavoriteFilterResponse savedFilter = favoriteFilterService.getFilterById(
-                    request.getUserId(), 
+                    userId, 
                     request.getFavoriteFilterId());
             
             // If request has no metrics config, use saved filter's config
             if (request.getMetricsConfig() == null) {
                 return FilterTradeDetailsRequest.builder()
-                        .userId(request.getUserId())
                         .metricsConfig(savedFilter.getFilterConfig())
                         .favoriteFilterId(request.getFavoriteFilterId())
                         .build();
@@ -491,7 +532,6 @@ public class TradeApiServiceImpl implements TradeApiService {
                     .build();
             
             return FilterTradeDetailsRequest.builder()
-                    .userId(request.getUserId())
                     .metricsConfig(mergedConfig)
                     .favoriteFilterId(request.getFavoriteFilterId())
                     .build();
@@ -535,7 +575,9 @@ public class TradeApiServiceImpl implements TradeApiService {
         }
         
         // Apply all filters
+        String currentUserId = UserContext.getUserIdOrThrow();
         return allTrades.stream()
+                .filter(trade -> currentUserId.equals(trade.getUserId()))
                 .filter(trade -> matchesFilter(trade, filter.getMetricsConfig()))
                 .collect(Collectors.toList());
     }
@@ -883,5 +925,22 @@ public class TradeApiServiceImpl implements TradeApiService {
                 .profitLossRange(profitLossRange)
                 .holdingTimeRange(holdingTimeRange)
                 .build();
+    }
+
+    @Override
+    public am.trade.common.models.PortfolioModel recalculatePortfolio(String portfolioId, String userId) {
+        log.info("Service: Manually recalculating all metrics for portfolio: {} for user: {}", portfolioId, userId);
+        
+        // 1. Fetch ALL trades for this portfolio from the database
+        List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+        log.info("Found {} historical trades to process for portfolio {}", allTrades.size(), portfolioId);
+        
+        // 2. Trigger the synchronous processing for all these trades
+        // This will rebuild the PortfolioMetrics from scratch
+        tradeProcessingService.processTradeDetailsWithObjects(allTrades, portfolioId, userId);
+        
+        // 3. Return the updated portfolio
+        return portfolioPersistenceService.findByPortfolioId(portfolioId)
+                .orElseThrow(() -> new am.trade.exceptions.TradeException("Portfolio not found with ID: " + portfolioId, org.springframework.http.HttpStatus.NOT_FOUND));
     }
 }

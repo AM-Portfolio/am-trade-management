@@ -1,4 +1,4 @@
-AM_MARKET_DATA_API_URL: http://localhost:8092
+AM_MARKET_DATA_API_URL: ${AM_MARKET_DATA_API_URL:http://localhost:8092}
 
 market-data:
   api:

@@ -32,6 +32,15 @@ public interface TradeProcessingService {
     void processTradeDetails(List<String> tradeIds, String portfolioId, String userId);
     
     /**
+     * Process trade details and update portfolio metrics using objects directly
+     * 
+     * @param trades List of trade detail objects
+     * @param portfolioId The portfolio ID
+     * @param userId The user ID
+     */
+    void processTradeDetailsWithObjects(List<TradeDetails> trades, String portfolioId, String userId);
+    
+    /**
      * Get the current status of an open position
      * 
      * @param symbol The trading symbol
