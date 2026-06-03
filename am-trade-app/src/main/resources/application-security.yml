@@ -1,6 +1,8 @@
 am:
   security:
     enabled: true
+    public-paths:
+      - "/actuator/**"
     proxy-name: "trade"
     oidc:
       jwk-set-uri: ${OIDC_JWKS_URI:http://localhost:8001/realms/am-realm/protocol/openid-connect/certs}
