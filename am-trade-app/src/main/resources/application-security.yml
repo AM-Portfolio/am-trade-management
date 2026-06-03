@@ -1,0 +1,9 @@
+am:
+  security:
+    enabled: true
+    proxy-name: "trade"
+    oidc:
+      jwk-set-uri: ${OIDC_JWKS_URI:http://localhost:8001/realms/am-realm/protocol/openid-connect/certs}
+      issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8001/realms/am-realm}
+      client-id: ${OAUTH2_CLIENT_ID:am-trade-client}
+      client-secret: ${OAUTH2_CLIENT_SECRET:secret}

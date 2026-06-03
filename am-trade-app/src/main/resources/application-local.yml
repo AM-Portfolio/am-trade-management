@@ -32,6 +32,17 @@ management:
 
 # Application specific settings
 am:
+  security:
+    enabled: true
+    proxy-name: "trade"
+    local-mock:
+      enabled: true
+      user-id: "local-dev-user"
+      username: "Local Developer"
+      email: "local-dev@am.com"
+      roles:
+        - "ROLE_USER"
+        - "ROLE_ADMIN"
   trade:
     kafka:
       enabled: false

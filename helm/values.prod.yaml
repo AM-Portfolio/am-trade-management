@@ -19,6 +19,10 @@ global:
         path: "apps/data/prod/apps/trade/database/redis"
       app:
         path: "apps/data/prod/apps/trade"
+      identity-oidc:
+        path: "apps/data/prod/services/am-identity"
+      service-oauth:
+        path: "apps/data/prod/services/am-trade-management"
 
 env:
   SPRING_PROFILES_ACTIVE: "prod"

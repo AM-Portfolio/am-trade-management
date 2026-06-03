@@ -30,9 +30,12 @@ springdoc:
   packages-to-scan: am.trade.api.controller
 
 # Server configuration
+server:
   servlet:
     context-path: /
   compression:
     enabled: true
     mime-types: application/json,application/xml,text/html,text/plain
     min-response-size: 2048
+
+

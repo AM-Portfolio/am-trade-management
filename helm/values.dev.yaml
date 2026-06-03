@@ -27,6 +27,10 @@ global:
         path: "apps/data/dev/infra/redis"
       app:
         path: "apps/data/dev/services/am-trade-management"
+      identity-oidc:
+        path: "apps/data/dev/services/am-identity"
+      service-oauth:
+        path: "apps/data/dev/services/am-trade-management"
 
 hostAliases:
   - ip: "203.174.22.129"

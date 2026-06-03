@@ -19,6 +19,10 @@ global:
         path: "apps/data/preprod/infra/redis"
       app:
         path: "apps/data/preprod/services/am-trade-management"
+      identity-oidc:
+        path: "apps/data/preprod/services/am-identity"
+      service-oauth:
+        path: "apps/data/preprod/services/am-trade-management"
 env:
   SPRING_PROFILES_ACTIVE: "preprod"
 
