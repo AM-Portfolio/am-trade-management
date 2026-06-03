@@ -45,6 +45,7 @@
             <artifactId>am-trade-analytics</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- am-security-lib transitively brings am-api-core-lib; @ConditionalOnMissingBean fix applied -->
         <dependency>
             <groupId>com.am.libraries</groupId>
             <artifactId>am-security-lib</artifactId>
