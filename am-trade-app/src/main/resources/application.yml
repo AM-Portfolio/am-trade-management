@@ -30,6 +30,8 @@ server:
 spring:
   application:
     name: am-trade-management
+  profiles:
+    include: security
   config:
     import:
       - classpath:application-common.yml
