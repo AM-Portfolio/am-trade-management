@@ -1,3 +1,4 @@
+# Security configuration for trade management app
 am:
   security:
     enabled: true
