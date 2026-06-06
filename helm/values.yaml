@@ -45,6 +45,10 @@ vault:
       path: apps/data/preprod/infra/kafka
     redis:
       path: apps/data/preprod/infra/redis
+    identity-oidc:
+      path: apps/data/preprod/services/am-identity
+    service-oauth:
+      path: apps/data/preprod/services/am-trade-management
 
 # Health probe configuration (Spring Boot Actuator)
 probes:

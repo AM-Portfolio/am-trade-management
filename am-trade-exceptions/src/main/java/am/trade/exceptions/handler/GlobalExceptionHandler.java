@@ -20,12 +20,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
 /**
  * Global exception handler for the trade management application
  * Converts exceptions to standardized error responses
  */
 @Slf4j
 @RestControllerAdvice
+@ConditionalOnProperty(prefix = "am.api.core.exception-handler", name = "enabled", havingValue = "false", matchIfMissing = true)
 public class GlobalExceptionHandler {
 
     /**
