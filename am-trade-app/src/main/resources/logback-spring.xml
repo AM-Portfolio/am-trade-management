@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- Appender for standard plain-text console logging -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- Standard spring boot pattern with MDC traceId/spanId injected -->
+            <pattern>%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd'T'HH:mm:ss.SSSXXX}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} [traceId=%X{traceId:-}, spanId=%X{spanId:-}] %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Appender for JSON structured logging (Grafana Loki) -->
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Ensure trace and span IDs are captured from Micrometer MDC -->
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <!-- Also capture tradeId if it's set in the MDC by your services -->
+            <includeMdcKeyName>tradeId</includeMdcKeyName>
+            <customFields>{"app":"am-trade-management"}</customFields>
+        </encoder>
+    </appender>
+
+    <!-- Default to JSON for deployed environments (or all environments) -->
+    <!-- You can change the springProfile rules below depending on your exact profile setup -->
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="!local">
+        <root level="INFO">
+            <appender-ref ref="JSON_CONSOLE"/>
+        </root>
+    </springProfile>
+</configuration>
