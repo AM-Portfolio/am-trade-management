@@ -90,7 +90,7 @@ public class PortfolioUpdateConsumerService {
             // Log and rethrow so Kafka's DefaultErrorHandler can trigger retries
             // and eventually route to DLT if retries are exhausted.
             log.error("Failed to process portfolio update message: {}", e.getMessage(), e);
-            throw e;
+            throw new RuntimeException("Error processing Kafka message", e);
         }
     }
 

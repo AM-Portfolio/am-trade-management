@@ -104,6 +104,30 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId, userId);
     }
 
+    @Override
+    public void processTradeDetailsWithObjects(List<TradeDetails> trades, String portfolioId, String userId) {
+        if (trades == null || trades.isEmpty()) {
+            return;
+        }
+        
+        List<String> newTradeIds = trades.stream().map(TradeDetails::getTradeId).collect(Collectors.toList());
+        
+        Optional<PortfolioModel> existingPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId);
+        Set<String> uniqueTradeIds = new HashSet<>();
+        
+        if (existingPortfolio.isPresent()) {
+            List<String> existingTrades = existingPortfolio.get().getTradeIds();
+            if (existingTrades != null && !existingTrades.isEmpty()) {
+                uniqueTradeIds.addAll(existingTrades);
+            }
+        }
+        
+        uniqueTradeIds.addAll(newTradeIds);
+        List<String> allTradeIds = new ArrayList<>(uniqueTradeIds);
+        
+        processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId, userId);
+    }
+
     private PortfolioModel processTradeDetailsAndGetPortfolio(List<String> tradeIds, String portfolioId, String userId) {
 
         // Calculate portfolio-level metrics
