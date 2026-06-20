@@ -31,7 +31,7 @@ logging:
 
 # Development server configuration
 server:
-  port: 8086
+  port: 8080
 
 # Actuator configuration for development
 management:
