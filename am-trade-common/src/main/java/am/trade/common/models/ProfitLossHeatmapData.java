@@ -30,10 +30,11 @@ public class ProfitLossHeatmapData {
     // The type of granularity for this heatmap data
     private GranularityType granularityType;
     
-    // For YEARLY: key is year (e.g., "2025")
-    // For MONTHLY: key is month (e.g., "2025-06")
-    // For DAILY: key is day (e.g., "2025-06-25")
-    private Map<String, BigDecimal> profitLossMap;
+    // Detailed profit/loss data for each period
+    // For YEARLY: periodId is year (e.g., "2025")
+    // For MONTHLY: periodId is month (e.g., "2025-06")
+    // For DAILY: periodId is day (e.g., "2025-06-25")
+    private List<PeriodProfitLossData> periodData;
     
     // Total profit/loss for the entire period
     private BigDecimal totalProfitLoss;

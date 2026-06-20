@@ -1,1 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=am.trade.kafka.config.KafkaAutoConfiguration

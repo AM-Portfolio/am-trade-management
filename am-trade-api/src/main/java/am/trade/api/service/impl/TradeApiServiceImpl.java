@@ -1,24 +1,20 @@
 package am.trade.api.service.impl;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import am.trade.common.models.EntryExitInfo;
-import am.trade.common.models.TradeMetrics;
-import am.trade.common.models.enums.TradePositionType;
+import com.am.security.context.UserContext;
+import am.trade.api.dto.FilterTradeDetailsRequest;
+import am.trade.api.dto.FilterTradeDetailsResponse;
+import am.trade.api.dto.FavoriteFilterResponse;
+import am.trade.api.service.FavoriteFilterService;
 import am.trade.exceptions.TradeFieldValidationException;
-import am.trade.exceptions.model.ErrorDetail;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,109 +24,41 @@ import am.trade.api.service.TradeApiService;
 import am.trade.api.service.TradeManagementService;
 import am.trade.api.validation.TradeValidator;
 import am.trade.common.models.Attachment;
+import am.trade.common.models.DerivativeInfo;
 import am.trade.common.models.TradeDetails;
+import am.trade.common.models.enums.TradePositionType;
 import am.trade.common.models.enums.TradeStatus;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
-import am.trade.services.publisher.TradeHoldingEventPublisher;
-import am.trade.services.mapper.TradeHoldingEventMapper;
-import am.trade.models.kafka.TradeHoldingEvent;
+import am.trade.services.service.PortfolioPersistenceService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implementation of TradeApiService that handles trade API operations
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class TradeApiServiceImpl implements TradeApiService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeApiServiceImpl.class);
+
     
     private final TradeManagementService tradeManagementService;
     private final TradeProcessingService tradeProcessingService;
     private final TradeDetailsService tradeDetailsService;
+    private final PortfolioPersistenceService portfolioPersistenceService;
     private final TradeValidator tradeValidator;
-    private final TradeHoldingEventPublisher tradeHoldingEventPublisher;
-    private final TradeHoldingEventMapper tradeHoldingEventMapper;
+    private final FavoriteFilterService favoriteFilterService;
     
     @Override
     public List<TradeDetails> getTradeDetailsByPortfolioAndSymbols(String portfolioId, List<String> symbols) {
         log.info("Service: Fetching trade details for portfolio: {} with symbols: {}", portfolioId, symbols);
         List<TradeDetails> trades = tradeManagementService.getTradesBySymbols(portfolioId, symbols);
-
-        // Compute P&L at read-time for any closed trade whose metrics are missing or zero.
-        // This ensures the Holdings page always shows correct P&L even for trades that
-        // were saved before server-side metric calculation was in place.
-        for (TradeDetails trade : trades) {
-            boolean isClosed = trade.getStatus() == TradeStatus.WIN
-                            || trade.getStatus() == TradeStatus.LOSS
-                            || trade.getStatus() == TradeStatus.BREAK_EVEN;
-            boolean metricsAreMissing = trade.getMetrics() == null
-                            || trade.getMetrics().getProfitLoss() == null
-                            || trade.getMetrics().getProfitLoss().compareTo(BigDecimal.ZERO) == 0;
-
-            log.info("DEBUG TRADE {}: status={}, isClosed={}, metricsNull={}, metricsAreMissing={}, entryInfoNull={}, exitInfoNull={}", 
-                trade.getTradeId(), 
-                trade.getStatus(), isClosed, 
-                trade.getMetrics() == null, metricsAreMissing, 
-                trade.getEntryInfo() == null, trade.getExitInfo() == null);
-
-            if (isClosed && metricsAreMissing
-                    && trade.getEntryInfo() != null
-                    && trade.getExitInfo() != null) {
-                // compute P&L in-memory for the API response
-                TradeMetrics computed = computePnl(trade.getEntryInfo(), trade.getExitInfo(), trade.getTradePositionType());
-                trade.setMetrics(computed);
-                // Do NOT persist this back. GET requests must be idempotent and side-effect free.
-                // We compute the P&L inline for the payload only.
-                log.info("Computed inline P&L for {} trade {}: P&L={}, P&L%={}",
-                    trade.getStatus(), trade.getTradeId(),
-                    computed.getProfitLoss(), computed.getProfitLossPercentage());
-            }
-        }
-        return trades;
-    }
-
-    /**
-     * Calculate P&L metrics from raw entry/exit data.
-     * All nullable fields (fees, totalValue) are defaulted to ZERO so we never throw NPE.
-     */
-    private TradeMetrics computePnl(EntryExitInfo entry, EntryExitInfo exit, TradePositionType positionType) {
-        if (entry.getPrice() == null || exit.getPrice() == null || entry.getQuantity() == null) {
-            return TradeMetrics.builder()
-                    .profitLoss(BigDecimal.ZERO)
-                    .profitLossPercentage(BigDecimal.ZERO)
-                    .returnOnEquity(BigDecimal.ZERO)
-                    .build();
-        }
-
-        BigDecimal qty       = BigDecimal.valueOf(entry.getQuantity());
-        BigDecimal entryFees = entry.getFees()  != null ? entry.getFees()  : BigDecimal.ZERO;
-        BigDecimal exitFees  = exit.getFees()   != null ? exit.getFees()   : BigDecimal.ZERO;
-
-        BigDecimal profitLoss;
-        if (positionType == TradePositionType.SHORT) {
-            // SHORT: sell high, buy back low → profit = (entryPrice - exitPrice) × qty
-            profitLoss = entry.getPrice().subtract(exit.getPrice()).multiply(qty);
-        } else {
-            // LONG (default): buy low, sell high → profit = (exitPrice - entryPrice) × qty
-            profitLoss = exit.getPrice().subtract(entry.getPrice()).multiply(qty);
-        }
-        profitLoss = profitLoss.subtract(entryFees).subtract(exitFees);
-
-        BigDecimal investment = entry.getTotalValue() != null && entry.getTotalValue().compareTo(BigDecimal.ZERO) > 0
-                ? entry.getTotalValue()
-                : entry.getPrice().multiply(qty);
-
-        BigDecimal pnlPct = investment.compareTo(BigDecimal.ZERO) > 0
-                ? profitLoss.divide(investment, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100))
-                : BigDecimal.ZERO;
-
-        return TradeMetrics.builder()
-                .profitLoss(profitLoss)
-                .profitLossPercentage(pnlPct)
-                .returnOnEquity(pnlPct)
-                .build();
+        
+        // Verify ownership
+        String currentUserId = UserContext.getUserIdOrThrow();
+        return trades.stream()
+                .filter(t -> currentUserId.equals(t.getUserId()))
+                .collect(Collectors.toList());
     }
     
     @Override
@@ -153,33 +81,22 @@ public class TradeApiServiceImpl implements TradeApiService {
         
         logTradeComponents(tradeDetails);
         
+        // Ensure trade position type is set to LONG by default if missing to allow calculations
+        if (tradeDetails.getTradePositionType() == null) {
+            log.info("Trade position type not specified for symbol {}, defaulting to LONG", tradeDetails.getSymbol());
+            tradeDetails.setTradePositionType(TradePositionType.LONG);
+        }
+        
         // Save trade details and process for portfolio aggregation
         TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
         if (savedTrade != null) {
-            tradeProcessingService.processTradeDetails(
-                List.of(savedTrade.getTradeId()), 
+            tradeProcessingService.processTradeDetailsWithObjects(
+                List.of(savedTrade), 
                 savedTrade.getPortfolioId(), 
                 savedTrade.getUserId());
-                
-            publishHoldingUpdateEvent(savedTrade, "ADD");
         }
         
         return savedTrade;
-    }
-    
-    private void publishHoldingUpdateEvent(TradeDetails tradeDetails, String updateType) {
-        log.info("Publishing portfolio update event for trade {} (status: {}, type: {})", 
-                 tradeDetails.getTradeId(), tradeDetails.getStatus(), updateType);
-        
-        try {
-            TradeHoldingEvent event = tradeHoldingEventMapper.toHoldingEvent(tradeDetails, updateType);
-            if (event != null) {
-                tradeHoldingEventPublisher.publishHoldingUpdate(event);
-            }
-        } catch (Exception e) {
-            log.error("Failed to publish holding update event for trade details: {}. Trade was saved successfully.", 
-                      tradeDetails.getTradeId(), e);
-        }
     }
     
     /**
@@ -223,7 +140,14 @@ public class TradeApiServiceImpl implements TradeApiService {
         
         // Get the original trade
         TradeDetails originalTrade = existingTradeOpt.get();
-        TradeStatus oldStatus = originalTrade.getStatus();
+        
+        // Verify ownership
+        String currentUserId = UserContext.getUserIdOrThrow();
+        if (!currentUserId.equals(originalTrade.getUserId())) {
+            log.warn("Security Alert: User {} attempted to update trade {} owned by user {}", 
+                    currentUserId, tradeId, originalTrade.getUserId());
+            throw new SecurityException("You do not have permission to modify this trade");
+        }
         
         // Validate non-editable fields
         validateNonEditableFields(originalTrade, tradeDetails);
@@ -243,18 +167,10 @@ public class TradeApiServiceImpl implements TradeApiService {
         // Save and process trade
         TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
         if (savedTrade != null) {
-            tradeProcessingService.processTradeDetails(
-                List.of(savedTrade.getTradeId()), 
+            tradeProcessingService.processTradeDetailsWithObjects(
+                List.of(savedTrade), 
                 savedTrade.getPortfolioId(), 
                 savedTrade.getUserId());
-                
-            if (oldStatus == TradeStatus.OPEN && savedTrade.getStatus() != TradeStatus.OPEN) {
-                publishHoldingUpdateEvent(savedTrade, "REMOVE");
-            } else if (oldStatus != TradeStatus.OPEN && savedTrade.getStatus() == TradeStatus.OPEN) {
-                publishHoldingUpdateEvent(savedTrade, "ADD");
-            } else if (oldStatus == TradeStatus.OPEN && savedTrade.getStatus() == TradeStatus.OPEN) {
-                publishHoldingUpdateEvent(savedTrade, "UPDATE");
-            }
         }
         
         return savedTrade;
@@ -302,8 +218,7 @@ public class TradeApiServiceImpl implements TradeApiService {
         if (updatedTrade.getEntryInfo() != null && originalTrade.getEntryInfo() != null) {
             // Check if price was modified
             if (updatedTrade.getEntryInfo().getPrice() != null && 
-                    (originalTrade.getEntryInfo().getPrice() == null ||
-                    updatedTrade.getEntryInfo().getPrice().compareTo(originalTrade.getEntryInfo().getPrice()) != 0)) {
+                    !Objects.equals(updatedTrade.getEntryInfo().getPrice(), originalTrade.getEntryInfo().getPrice())) {
                 exceptionBuilder.addFieldError("entryInfo.price", "Entry price cannot be modified");
                 hasErrors = true;
             }
@@ -351,11 +266,6 @@ public class TradeApiServiceImpl implements TradeApiService {
         // Preserve instrument info
         updatedTrade.setInstrumentInfo(originalTrade.getInstrumentInfo());
         
-        // Preserve status if missing
-        if (updatedTrade.getStatus() == null) {
-            updatedTrade.setStatus(originalTrade.getStatus());
-        }
-        
         // Preserve entry info core details (price, size)
         if (originalTrade.getEntryInfo() != null) {
             if (updatedTrade.getEntryInfo() == null) {
@@ -368,12 +278,6 @@ public class TradeApiServiceImpl implements TradeApiService {
         
         // Preserve trade executions list
         updatedTrade.setTradeExecutions(originalTrade.getTradeExecutions());
-        
-        // Preserve metrics — processTradeDetails will recalculate immediately after save.
-        // Without this, an update that omits the metrics field clears previously stored P&L.
-        if (updatedTrade.getMetrics() == null && originalTrade.getMetrics() != null) {
-            updatedTrade.setMetrics(originalTrade.getMetrics());
-        }
     }
     
     /**
@@ -418,8 +322,16 @@ public class TradeApiServiceImpl implements TradeApiService {
         log.info("Service: Filtering trades with criteria - portfolioIds: {}, symbols: {}, statuses: {}, startDate: {}, endDate: {}, strategies: {}", 
                 portfolioIds, symbols, statuses, startDate, endDate, strategies);
         
-        return tradeManagementService.getTradesByFilters(
+        Page<TradeDetails> tradesPage = tradeManagementService.getTradesByFilters(
                 portfolioIds, symbols, statuses, startDate, endDate, strategies, pageable);
+                
+        // Verify ownership
+        String currentUserId = UserContext.getUserIdOrThrow();
+        List<TradeDetails> filteredList = tradesPage.getContent().stream()
+                .filter(t -> currentUserId.equals(t.getUserId()))
+                .collect(Collectors.toList());
+                
+        return new org.springframework.data.domain.PageImpl<>(filteredList, pageable, filteredList.size());
     }
     
     @Override
@@ -435,18 +347,6 @@ public class TradeApiServiceImpl implements TradeApiService {
             // Validate all trades in batch
             validateTradesBatch(tradeDetailsList);
             
-            // Identify existing trades to map their old statuses
-            List<String> incomingIds = tradeDetailsList.stream()
-                .map(TradeDetails::getTradeId)
-                .filter(id -> id != null && !id.isEmpty())
-                .collect(Collectors.toList());
-                
-            Map<String, TradeStatus> oldStatusMap = new java.util.HashMap<>();
-            if (!incomingIds.isEmpty()) {
-                oldStatusMap = tradeDetailsService.findModelsByTradeIds(incomingIds).stream()
-                    .collect(Collectors.toMap(TradeDetails::getTradeId, TradeDetails::getStatus));
-            }
-
             // Generate trade IDs for new trades and prepare trades for saving
             prepareTradesForSaving(tradeDetailsList);
             
@@ -456,25 +356,13 @@ public class TradeApiServiceImpl implements TradeApiService {
             // Save all trades in a single operation
             List<TradeDetails> savedTrades = tradeDetailsService.saveAllTradeDetails(tradeDetailsList);
             
-            // Publish events for each saved trade
-            if (savedTrades != null) {
-                for (TradeDetails savedTrade : savedTrades) {
-                    TradeStatus oldStatus = oldStatusMap.get(savedTrade.getTradeId());
-                    
-                    if (oldStatus == null) {
-                        // New trade
-                        publishHoldingUpdateEvent(savedTrade, "ADD");
-                    } else {
-                        // Existing trade
-                        if (oldStatus == TradeStatus.OPEN && savedTrade.getStatus() != TradeStatus.OPEN) {
-                            publishHoldingUpdateEvent(savedTrade, "REMOVE");
-                        } else if (oldStatus != TradeStatus.OPEN && savedTrade.getStatus() == TradeStatus.OPEN) {
-                            publishHoldingUpdateEvent(savedTrade, "ADD");
-                        } else if (oldStatus == TradeStatus.OPEN && savedTrade.getStatus() == TradeStatus.OPEN) {
-                            publishHoldingUpdateEvent(savedTrade, "UPDATE");
-                        }
-                    }
-                }
+            // Process the saved trades to update portfolio metrics
+            if (!savedTrades.isEmpty()) {
+                TradeDetails representativeTrade = savedTrades.get(0);
+                tradeProcessingService.processTradeDetailsWithObjects(
+                    savedTrades, 
+                    representativeTrade.getPortfolioId(), 
+                    representativeTrade.getUserId());
             }
             
             return savedTrades;
@@ -542,14 +430,20 @@ public class TradeApiServiceImpl implements TradeApiService {
         
         try {
             // Use the efficient method that makes a single database call
-            List<TradeDetails> tradeDetails = tradeDetailsService.findModelsByTradeIds(tradeIds);
+            List<TradeDetails> allTradeDetails = tradeDetailsService.findModelsByTradeIds(tradeIds);
+            
+            // Verify ownership
+            String currentUserId = UserContext.getUserIdOrThrow();
+            List<TradeDetails> tradeDetails = allTradeDetails.stream()
+                    .filter(t -> currentUserId.equals(t.getUserId()))
+                    .collect(Collectors.toList());
             
             // Log success metrics
             int foundCount = tradeDetails.size();
             int requestedCount = tradeIds.size();
             
             if (foundCount < requestedCount) {
-                log.warn("Only found {} trades out of {} requested IDs", foundCount, requestedCount);
+                log.warn("Only found {} trades out of {} requested IDs for user {}", foundCount, requestedCount, currentUserId);
             } else {
                 log.info("Successfully retrieved all {} requested trade details", requestedCount);
             }
@@ -559,5 +453,494 @@ public class TradeApiServiceImpl implements TradeApiService {
             log.error("Error retrieving trade details for {} IDs: {}", tradeIds.size(), e.getMessage(), e);
             throw e;
         }
+    }
+    
+    @Override
+    public FilterTradeDetailsResponse filterTradeDetails(FilterTradeDetailsRequest request, org.springframework.data.domain.Pageable pageable) {
+        String userId = UserContext.getUserIdOrThrow();
+        log.info("Filtering trade details for user: {} with filter ID: {}", 
+                userId, request.getFavoriteFilterId());
+        
+        // If favorite filter ID is provided, merge with saved filter
+        FilterTradeDetailsRequest effectiveFilter = request;
+        String appliedFilterName = null;
+        
+        if (request.getFavoriteFilterId() != null && !request.getFavoriteFilterId().isEmpty()) {
+            effectiveFilter = mergeFavoriteFilter(request, userId);
+            appliedFilterName = getFilterName(userId, request.getFavoriteFilterId());
+        }
+        
+        // Apply filters and get all matching trades
+        List<TradeDetails> filteredTrades = applyFilters(effectiveFilter);
+        
+        // Apply sorting and pagination if Pageable is provided
+        if (pageable != null && pageable.isPaged()) {
+            List<TradeDetails> sortedTrades = applySortingWithPageable(filteredTrades, pageable);
+            PaginationResult paginationResult = applyPaginationWithPageable(sortedTrades, pageable);
+            return buildFilterResponse(paginationResult.trades, filteredTrades.size(), 
+                    effectiveFilter, appliedFilterName, paginationResult);
+        }
+        
+        // Return all results without pagination
+        return buildFilterResponse(filteredTrades, filteredTrades.size(), 
+                effectiveFilter, appliedFilterName, null);
+    }
+    
+    private FilterTradeDetailsRequest mergeFavoriteFilter(FilterTradeDetailsRequest request, String userId) {
+        try {
+            // Get saved filter configuration
+            FavoriteFilterResponse savedFilter = favoriteFilterService.getFilterById(
+                    userId, 
+                    request.getFavoriteFilterId());
+            
+            // If request has no metrics config, use saved filter's config
+            if (request.getMetricsConfig() == null) {
+                return FilterTradeDetailsRequest.builder()
+                        .metricsConfig(savedFilter.getFilterConfig())
+                        .favoriteFilterId(request.getFavoriteFilterId())
+                        .build();
+            }
+            
+            // Otherwise, merge configurations (request overrides saved filter)
+            am.trade.common.models.MetricsFilterConfig mergedConfig = 
+                    am.trade.common.models.MetricsFilterConfig.builder()
+                    .portfolioIds(mergeList(request.getMetricsConfig().getPortfolioIds(), 
+                            savedFilter.getFilterConfig().getPortfolioIds()))
+                    .instruments(mergeList(request.getMetricsConfig().getInstruments(), 
+                            savedFilter.getFilterConfig().getInstruments()))
+                    .dateRange(request.getMetricsConfig().getDateRange() != null ? 
+                            request.getMetricsConfig().getDateRange() : 
+                            savedFilter.getFilterConfig().getDateRange())
+                    .timePeriod(request.getMetricsConfig().getTimePeriod() != null ?
+                            request.getMetricsConfig().getTimePeriod() :
+                            savedFilter.getFilterConfig().getTimePeriod())
+                    .tradeCharacteristics(request.getMetricsConfig().getTradeCharacteristics() != null ?
+                            request.getMetricsConfig().getTradeCharacteristics() :
+                            savedFilter.getFilterConfig().getTradeCharacteristics())
+                    .profitLossFilters(request.getMetricsConfig().getProfitLossFilters() != null ?
+                            request.getMetricsConfig().getProfitLossFilters() :
+                            savedFilter.getFilterConfig().getProfitLossFilters())
+                    .instrumentFilters(request.getMetricsConfig().getInstrumentFilters() != null ?
+                            request.getMetricsConfig().getInstrumentFilters() :
+                            savedFilter.getFilterConfig().getInstrumentFilters())
+                    .metricTypes(request.getMetricsConfig().getMetricTypes() != null ?
+                            request.getMetricsConfig().getMetricTypes() :
+                            savedFilter.getFilterConfig().getMetricTypes())
+                    .groupBy(request.getMetricsConfig().getGroupBy() != null ?
+                            request.getMetricsConfig().getGroupBy() :
+                            savedFilter.getFilterConfig().getGroupBy())
+                    .build();
+            
+            return FilterTradeDetailsRequest.builder()
+                    .metricsConfig(mergedConfig)
+                    .favoriteFilterId(request.getFavoriteFilterId())
+                    .build();
+        } catch (Exception e) {
+            log.warn("Could not merge with favorite filter: {}", e.getMessage());
+            return request;
+        }
+    }
+    
+    private List<String> mergeList(List<String> requested, List<String> saved) {
+        return requested != null && !requested.isEmpty() ? requested : saved;
+    }
+    
+    private String getFilterName(String userId, String filterId) {
+        try {
+            FavoriteFilterResponse filter = favoriteFilterService.getFilterById(userId, filterId);
+            return filter.getName();
+        } catch (Exception e) {
+            log.warn("Could not get filter name: {}", e.getMessage());
+            return null;
+        }
+    }
+    
+    private List<TradeDetails> applyFilters(FilterTradeDetailsRequest filter) {
+        // Get all trades for the user's portfolios
+        List<TradeDetails> allTrades = new ArrayList<>();
+        
+        if (filter.getMetricsConfig() == null) {
+            log.warn("No metrics configuration provided in filter request");
+            return Collections.emptyList();
+        }
+        
+        List<String> portfolioIds = filter.getMetricsConfig().getPortfolioIds();
+        if (portfolioIds != null && !portfolioIds.isEmpty()) {
+            for (String portfolioId : portfolioIds) {
+                allTrades.addAll(tradeManagementService.getTradesBySymbols(portfolioId, null));
+            }
+        } else {
+            log.warn("No portfolio IDs provided in filter request");
+            return Collections.emptyList();
+        }
+        
+        // Apply all filters
+        String currentUserId = UserContext.getUserIdOrThrow();
+        return allTrades.stream()
+                .filter(trade -> currentUserId.equals(trade.getUserId()))
+                .filter(trade -> matchesFilter(trade, filter.getMetricsConfig()))
+                .collect(Collectors.toList());
+    }
+    
+    private boolean matchesFilter(TradeDetails trade, am.trade.common.models.MetricsFilterConfig config) {
+        // Symbol/Instrument filter
+        if (config.getInstruments() != null && !config.getInstruments().isEmpty()) {
+            if (!config.getInstruments().contains(trade.getSymbol())) {
+                return false;
+            }
+        }
+        
+        // Date range filter
+        if (config.getDateRange() != null && trade.getEntryInfo() != null) {
+            LocalDate tradeDate = trade.getEntryInfo().getTimestamp().toLocalDate();
+            
+            if (config.getDateRange().get("startDate") != null) {
+                LocalDate startDate = LocalDate.parse(config.getDateRange().get("startDate").toString());
+                if (tradeDate.isBefore(startDate)) {
+                    return false;
+                }
+            }
+            
+            if (config.getDateRange().get("endDate") != null) {
+                LocalDate endDate = LocalDate.parse(config.getDateRange().get("endDate").toString());
+                if (tradeDate.isAfter(endDate)) {
+                    return false;
+                }
+            }
+        }
+        
+        // Trade characteristics filter (status, strategy, position type, tags, etc.)
+        if (config.getTradeCharacteristics() != null) {
+            // Status filter
+            if (config.getTradeCharacteristics().get("statuses") != null) {
+                @SuppressWarnings("unchecked")
+                List<String> statuses = (List<String>) config.getTradeCharacteristics().get("statuses");
+                if (!statuses.contains(trade.getStatus().name())) {
+                    return false;
+                }
+            }
+            
+            // Strategy filter
+            if (config.getTradeCharacteristics().get("strategies") != null) {
+                @SuppressWarnings("unchecked")
+                List<String> strategies = (List<String>) config.getTradeCharacteristics().get("strategies");
+                if (!strategies.contains(trade.getStrategy())) {
+                    return false;
+                }
+            }
+            
+            // Position type filter
+            if (config.getTradeCharacteristics().get("positionTypes") != null) {
+                @SuppressWarnings("unchecked")
+                List<String> positionTypes = (List<String>) config.getTradeCharacteristics().get("positionTypes");
+                if (trade.getTradePositionType() == null || 
+                    !positionTypes.contains(trade.getTradePositionType().name())) {
+                    return false;
+                }
+            }
+            
+            // Tags filter
+            if (config.getTradeCharacteristics().get("tags") != null) {
+                @SuppressWarnings("unchecked")
+                List<String> tags = (List<String>) config.getTradeCharacteristics().get("tags");
+                if (trade.getTags() == null || trade.getTags().isEmpty()) {
+                    return false;
+                }
+                boolean hasAnyTag = tags.stream()
+                        .anyMatch(tag -> trade.getTags().contains(tag));
+                if (!hasAnyTag) {
+                    return false;
+                }
+            }
+            
+            // Holding time filters
+            if (config.getTradeCharacteristics().get("minHoldingTimeHours") != null && trade.getMetrics() != null) {
+                Integer minHours = (Integer) config.getTradeCharacteristics().get("minHoldingTimeHours");
+                if (trade.getMetrics().getHoldingTimeHours() < minHours) {
+                    return false;
+                }
+            }
+            
+            if (config.getTradeCharacteristics().get("maxHoldingTimeHours") != null && trade.getMetrics() != null) {
+                Integer maxHours = (Integer) config.getTradeCharacteristics().get("maxHoldingTimeHours");
+                if (trade.getMetrics().getHoldingTimeHours() > maxHours) {
+                    return false;
+                }
+            }
+        }
+        
+        // Profit/Loss filters
+        if (config.getProfitLossFilters() != null && trade.getMetrics() != null) {
+            if (config.getProfitLossFilters().get("minProfitLoss") != null) {
+                Double minPL = ((Number) config.getProfitLossFilters().get("minProfitLoss")).doubleValue();
+                if (trade.getMetrics().getProfitLoss().doubleValue() < minPL) {
+                    return false;
+                }
+            }
+            
+            if (config.getProfitLossFilters().get("maxProfitLoss") != null) {
+                Double maxPL = ((Number) config.getProfitLossFilters().get("maxProfitLoss")).doubleValue();
+                if (trade.getMetrics().getProfitLoss().doubleValue() > maxPL) {
+                    return false;
+                }
+            }
+        }
+        
+        // Instrument filters (option type, strike range, expiry, etc.)
+        if (config.getInstrumentFilters() != null && 
+            trade.getInstrumentInfo() != null && 
+            trade.getInstrumentInfo().getDerivativeInfo() != null) {
+            
+            DerivativeInfo derivativeInfo = trade.getInstrumentInfo().getDerivativeInfo();
+            
+            // Option type filter (CE/PE)
+            if (config.getInstrumentFilters().get("optionType") != null) {
+                String optionType = config.getInstrumentFilters().get("optionType").toString();
+                Boolean isCall = derivativeInfo.getIsCall();
+                if (isCall == null) {
+                    return false;
+                }
+                String tradeOptionType = isCall ? "CE" : "PE";
+                if (!tradeOptionType.equals(optionType)) {
+                    return false;
+                }
+            }
+            
+            // Strike price range
+            if (config.getInstrumentFilters().get("minStrike") != null && 
+                derivativeInfo.getStrikePrice() != null) {
+                Double minStrike = ((Number) config.getInstrumentFilters().get("minStrike")).doubleValue();
+                if (derivativeInfo.getStrikePrice().doubleValue() < minStrike) {
+                    return false;
+                }
+            }
+            
+            if (config.getInstrumentFilters().get("maxStrike") != null && 
+                derivativeInfo.getStrikePrice() != null) {
+                Double maxStrike = ((Number) config.getInstrumentFilters().get("maxStrike")).doubleValue();
+                if (derivativeInfo.getStrikePrice().doubleValue() > maxStrike) {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    }
+    
+    private List<TradeDetails> applySortingWithPageable(List<TradeDetails> trades, org.springframework.data.domain.Pageable pageable) {
+        if (pageable == null || pageable.getSort().isUnsorted() || trades.isEmpty()) {
+            return trades;
+        }
+        
+        return trades.stream()
+                .sorted(createComparatorFromSort(pageable.getSort()))
+                .collect(Collectors.toList());
+    }
+    
+    private java.util.Comparator<TradeDetails> createComparatorFromSort(org.springframework.data.domain.Sort sort) {
+        java.util.Comparator<TradeDetails> comparator = null;
+        
+        for (org.springframework.data.domain.Sort.Order order : sort) {
+            java.util.Comparator<TradeDetails> fieldComparator = createComparatorForField(order.getProperty(), order.isDescending());
+            if (comparator == null) {
+                comparator = fieldComparator;
+            } else {
+                comparator = comparator.thenComparing(fieldComparator);
+            }
+        }
+        
+        return comparator != null ? comparator : (t1, t2) -> 0;
+    }
+    
+    private java.util.Comparator<TradeDetails> createComparatorForField(String field, boolean descending) {
+        java.util.Comparator<TradeDetails> comparator = switch (field.toLowerCase()) {
+            case "entrydate", "tradedate", "entrytimestamp" -> java.util.Comparator.comparing(
+                    t -> t.getEntryInfo() != null ? t.getEntryInfo().getTimestamp() : null,
+                    java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            case "exitdate", "exittimestamp" -> java.util.Comparator.comparing(
+                    t -> t.getExitInfo() != null ? t.getExitInfo().getTimestamp() : null,
+                    java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            case "profitloss", "pnl" -> java.util.Comparator.comparing(
+                    t -> t.getMetrics() != null ? t.getMetrics().getProfitLoss() : null,
+                    java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            case "symbol" -> java.util.Comparator.comparing(
+                    t -> t.getSymbol() != null ? t.getSymbol() : "",
+                    java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            case "status" -> java.util.Comparator.comparing(
+                    t -> t.getStatus() != null ? t.getStatus().name() : "",
+                    java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            case "strategy" -> java.util.Comparator.comparing(
+                    t -> t.getStrategy() != null ? t.getStrategy() : "",
+                    java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            case "holdingtimehours", "holdingtime" -> java.util.Comparator.comparing(
+                    t -> t.getMetrics() != null ? t.getMetrics().getHoldingTimeHours() : null,
+                    java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            default -> java.util.Comparator.comparing(
+                    t -> t.getEntryInfo() != null ? t.getEntryInfo().getTimestamp() : null,
+                    java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+        };
+        
+        return descending ? comparator.reversed() : comparator;
+    }
+    
+    private PaginationResult applyPaginationWithPageable(List<TradeDetails> trades, org.springframework.data.domain.Pageable pageable) {
+        if (pageable == null || pageable.isUnpaged()) {
+            return new PaginationResult(trades, 0, trades.size(), 1, true, true);
+        }
+        
+        int totalItems = trades.size();
+        int pageNumber = pageable.getPageNumber();
+        int pageSize = pageable.getPageSize();
+        
+        // Calculate pagination
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+        int startIndex = (int) pageable.getOffset();
+        int endIndex = Math.min(startIndex + pageSize, totalItems);
+        
+        // Handle out of bounds
+        if (startIndex >= totalItems) {
+            return new PaginationResult(
+                    Collections.emptyList(), 
+                    pageNumber, 
+                    pageSize, 
+                    totalPages,
+                    pageNumber == 0,
+                    true
+            );
+        }
+        
+        List<TradeDetails> paginatedTrades = trades.subList(startIndex, endIndex);
+        
+        return new PaginationResult(
+                paginatedTrades,
+                pageNumber,
+                pageSize,
+                totalPages,
+                pageNumber == 0,
+                pageNumber >= totalPages - 1
+        );
+    }
+    
+    private static class PaginationResult {
+        final List<TradeDetails> trades;
+        final int page;
+        final int size;
+        final int totalPages;
+        final boolean isFirst;
+        final boolean isLast;
+        
+        PaginationResult(List<TradeDetails> trades, int page, int size, int totalPages, 
+                        boolean isFirst, boolean isLast) {
+            this.trades = trades;
+            this.page = page;
+            this.size = size;
+            this.totalPages = totalPages;
+            this.isFirst = isFirst;
+            this.isLast = isLast;
+        }
+    }
+    
+    private FilterTradeDetailsResponse buildFilterResponse(
+            List<TradeDetails> trades,
+            long totalCount,
+            FilterTradeDetailsRequest filter,
+            String appliedFilterName,
+            PaginationResult paginationResult) {
+        
+        return FilterTradeDetailsResponse.builder()
+                .trades(trades)
+                .totalCount(totalCount)
+                .appliedFilterName(appliedFilterName)
+                .filterSummary(buildFilterSummary(filter))
+                .page(paginationResult != null ? paginationResult.page : null)
+                .size(paginationResult != null ? paginationResult.size : null)
+                .totalPages(paginationResult != null ? paginationResult.totalPages : null)
+                .isFirst(paginationResult != null ? paginationResult.isFirst : null)
+                .isLast(paginationResult != null ? paginationResult.isLast : null)
+                .build();
+    }
+    
+    private FilterTradeDetailsResponse.FilterSummary buildFilterSummary(FilterTradeDetailsRequest filter) {
+        if (filter.getMetricsConfig() == null) {
+            return FilterTradeDetailsResponse.FilterSummary.builder().build();
+        }
+        
+        am.trade.common.models.MetricsFilterConfig config = filter.getMetricsConfig();
+        
+        String dateRange = null;
+        if (config.getDateRange() != null) {
+            Object startDate = config.getDateRange().get("startDate");
+            Object endDate = config.getDateRange().get("endDate");
+            dateRange = String.format("%s to %s", 
+                    startDate != null ? startDate : "any",
+                    endDate != null ? endDate : "any");
+        }
+        
+        String profitLossRange = null;
+        if (config.getProfitLossFilters() != null) {
+            Object minPL = config.getProfitLossFilters().get("minProfitLoss");
+            Object maxPL = config.getProfitLossFilters().get("maxProfitLoss");
+            if (minPL != null || maxPL != null) {
+                profitLossRange = String.format("%s to %s",
+                        minPL != null ? minPL : "any",
+                        maxPL != null ? maxPL : "any");
+            }
+        }
+        
+        String holdingTimeRange = null;
+        if (config.getTradeCharacteristics() != null) {
+            Object minHours = config.getTradeCharacteristics().get("minHoldingTimeHours");
+            Object maxHours = config.getTradeCharacteristics().get("maxHoldingTimeHours");
+            if (minHours != null || maxHours != null) {
+                holdingTimeRange = String.format("%s to %s hours",
+                        minHours != null ? minHours : "any",
+                        maxHours != null ? maxHours : "any");
+            }
+        }
+        
+        // Extract statuses from trade characteristics
+        List<String> statuses = null;
+        if (config.getTradeCharacteristics() != null && 
+            config.getTradeCharacteristics().get("statuses") != null) {
+            @SuppressWarnings("unchecked")
+            List<String> statusList = (List<String>) config.getTradeCharacteristics().get("statuses");
+            statuses = statusList;
+        }
+        
+        // Extract strategies from trade characteristics
+        List<String> strategies = null;
+        if (config.getTradeCharacteristics() != null && 
+            config.getTradeCharacteristics().get("strategies") != null) {
+            @SuppressWarnings("unchecked")
+            List<String> strategyList = (List<String>) config.getTradeCharacteristics().get("strategies");
+            strategies = strategyList;
+        }
+        
+        return FilterTradeDetailsResponse.FilterSummary.builder()
+                .portfolioIds(config.getPortfolioIds())
+                .symbols(config.getInstruments())
+                .statuses(statuses)
+                .dateRange(dateRange)
+                .strategies(strategies)
+                .profitLossRange(profitLossRange)
+                .holdingTimeRange(holdingTimeRange)
+                .build();
+    }
+
+    @Override
+    public am.trade.common.models.PortfolioModel recalculatePortfolio(String portfolioId, String userId) {
+        log.info("Service: Manually recalculating all metrics for portfolio: {} for user: {}", portfolioId, userId);
+        
+        // 1. Fetch ALL trades for this portfolio from the database
+        List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+        log.info("Found {} historical trades to process for portfolio {}", allTrades.size(), portfolioId);
+        
+        // 2. Trigger the synchronous processing for all these trades
+        // This will rebuild the PortfolioMetrics from scratch
+        tradeProcessingService.processTradeDetailsWithObjects(allTrades, portfolioId, userId);
+        
+        // 3. Return the updated portfolio
+        return portfolioPersistenceService.findByPortfolioId(portfolioId)
+                .orElseThrow(() -> new am.trade.exceptions.TradeException("Portfolio not found with ID: " + portfolioId, org.springframework.http.HttpStatus.NOT_FOUND));
     }
 }

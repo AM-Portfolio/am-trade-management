@@ -1,0 +1,17 @@
+{
+  "name": "Momentum Strategy Performance",
+  "description": "Analysis of momentum trading strategy",
+  "isDefault": false,
+  "filterConfig": {
+    "portfolioIds": ["163d0143-4fcb-480c-ac20-622f14e0e293"],
+    "timePeriod": {
+      "period": "LAST_90_DAYS"
+    },
+    "metricTypes": ["PERFORMANCE", "PATTERN", "WIN_RATE"],
+    "tradeCharacteristics": {
+      "strategies": ["Momentum Trading"],
+      "statuses": ["CLOSED"]
+    },
+    "groupBy": ["SYMBOL", "DAY_OF_WEEK", "DIRECTION"]
+  }
+}

@@ -69,4 +69,41 @@ public interface TradeDetailsService {
      * @return List of trade details matching the criteria
      */
     List<TradeDetails> findByPortfolioIdInAndEntryInfoTimestampBetween(List<String> portfolioIds, LocalDateTime startDate, LocalDateTime endDate);
+    
+    /**
+     * Find trade details by user ID and entry timestamp between given dates
+     * @param userId User ID to search for
+     * @param startDate Start date for entry timestamp range
+     * @param endDate End date for entry timestamp range
+     * @return List of trade details matching the criteria
+     */
+    List<TradeDetails> findByUserIdAndEntryInfoTimestampBetween(String userId, LocalDateTime startDate, LocalDateTime endDate);
+    
+    /**
+     * Find trade details by user ID and symbol with date range filtering
+     * @param userId User ID to search for
+     * @param symbol Symbol to filter by
+     * @param startDate Start date for entry timestamp range (can be null)
+     * @param endDate End date for entry timestamp range (can be null)
+     * @return List of trade details matching the criteria
+     */
+    List<TradeDetails> findByUserIdAndSymbolAndDateRange(String userId, String symbol, LocalDateTime startDate, LocalDateTime endDate);
+    
+    /**
+     * Find trade details by user ID and symbol
+     * @param userId User ID to search for
+     * @param symbol Symbol to filter by
+     * @return List of trade details matching the criteria
+     */
+    List<TradeDetails> findByUserIdAndSymbol(String userId, String symbol);
+    
+    /**
+     * Find trade details by user ID and strategy with date range filtering
+     * @param userId User ID to search for
+     * @param strategy Strategy to filter by
+     * @param startDate Start date for entry timestamp range (can be null)
+     * @param endDate End date for entry timestamp range (can be null)
+     * @return List of trade details matching the criteria
+     */
+    List<TradeDetails> findByUserIdAndStrategyAndDateRange(String userId, String strategy, LocalDateTime startDate, LocalDateTime endDate);
 }

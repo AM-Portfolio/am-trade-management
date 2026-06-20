@@ -1,0 +1,537 @@
+{
+	"info": {
+		"_postman_id": "tradecomparisoncontroller-{{$randomUUID}}",
+		"name": "TradeComparisonController Collection",
+		"description": "API collection for TradeComparisonController - Side-by-side trade analysis and comparative performance metrics",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "General Comparison",
+			"item": [
+				{
+					"name": "Compare Trade Performance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains comparison data\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('comparisonId');",
+									"    pm.expect(response).to.have.property('userId');",
+									"    pm.expect(response).to.have.property('comparisonType');",
+									"});",
+									"",
+									"pm.test(\"Response contains metrics\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('metrics');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"comparisonType\": \"PORTFOLIO\",\n  \"parameters\": {\n    \"portfolioIds\": [\"{{portfolioId}}\", \"{{portfolioId2}}\"],\n    \"startDate\": \"2020-01-01\",\n    \"endDate\": \"2020-12-31\",\n    \"metrics\": [\"TOTAL_RETURN\", \"SHARPE_RATIO\", \"MAX_DRAWDOWN\"],\n    \"granularity\": \"MONTHLY\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/comparison",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"comparison"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Portfolio Comparison",
+			"item": [
+				{
+					"name": "Compare Two Portfolios",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains portfolio comparison\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('comparisonType', 'PORTFOLIO');",
+									"});",
+									"",
+									"pm.test(\"Comparison includes both portfolios\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('comparedEntities');",
+									"    pm.expect(response.comparedEntities).to.be.an('array');",
+									"    pm.expect(response.comparedEntities.length).to.equal(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/comparison/portfolios?userId={{userId}}&portfolioId1={{portfolioId}}&portfolioId2={{portfolioId2}}&startDate=2020-01-01&endDate=2020-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"comparison",
+								"portfolios"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "portfolioId1",
+									"value": "{{portfolioId}}",
+									"description": "First portfolio to compare"
+								},
+								{
+									"key": "portfolioId2",
+									"value": "{{portfolioId2}}",
+									"description": "Second portfolio to compare"
+								},
+								{
+									"key": "startDate",
+									"value": "2020-01-01",
+									"description": "Optional start date for comparison"
+								},
+								{
+									"key": "endDate",
+									"value": "2020-12-31",
+									"description": "Optional end date for comparison"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Compare Portfolios (All Time)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains all-time comparison\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('comparisonType', 'PORTFOLIO');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/comparison/portfolios?userId={{userId}}&portfolioId1={{portfolioId}}&portfolioId2={{portfolioId2}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"comparison",
+								"portfolios"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "portfolioId1",
+									"value": "{{portfolioId}}"
+								},
+								{
+									"key": "portfolioId2",
+									"value": "{{portfolioId2}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Time Period Comparison",
+			"item": [
+				{
+					"name": "Compare Two Time Periods",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains time period comparison\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('comparisonType', 'TIME_PERIOD');",
+									"});",
+									"",
+									"pm.test(\"Comparison includes both time periods\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('comparedEntities');",
+									"    pm.expect(response.comparedEntities).to.be.an('array');",
+									"    pm.expect(response.comparedEntities.length).to.equal(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/comparison/time-periods?userId={{userId}}&period1Start=2020-01-01&period1End=2020-06-30&period2Start=2020-07-01&period2End=2020-12-31&portfolioId={{portfolioId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"comparison",
+								"time-periods"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "period1Start",
+									"value": "2020-01-01",
+									"description": "First period start date"
+								},
+								{
+									"key": "period1End",
+									"value": "2020-06-30",
+									"description": "First period end date"
+								},
+								{
+									"key": "period2Start",
+									"value": "2020-07-01",
+									"description": "Second period start date"
+								},
+								{
+									"key": "period2End",
+									"value": "2020-12-31",
+									"description": "Second period end date"
+								},
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}",
+									"description": "Optional portfolio filter"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Compare Time Periods (All Portfolios)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains time period comparison for all portfolios\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('comparisonType', 'TIME_PERIOD');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/comparison/time-periods?userId={{userId}}&period1Start=2020-01-01&period1End=2020-06-30&period2Start=2020-07-01&period2End=2020-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"comparison",
+								"time-periods"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "period1Start",
+									"value": "2020-01-01"
+								},
+								{
+									"key": "period1End",
+									"value": "2020-06-30"
+								},
+								{
+									"key": "period2Start",
+									"value": "2020-07-01"
+								},
+								{
+									"key": "period2End",
+									"value": "2020-12-31"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Strategy Comparison",
+			"item": [
+				{
+					"name": "Compare Two Strategies",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains strategy comparison\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('comparisonType', 'STRATEGY');",
+									"});",
+									"",
+									"pm.test(\"Comparison includes both strategies\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('comparedEntities');",
+									"    pm.expect(response.comparedEntities).to.be.an('array');",
+									"    pm.expect(response.comparedEntities.length).to.equal(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/comparison/strategies?userId={{userId}}&strategy1=momentum-trading&strategy2=value-investing&startDate=2020-01-01&endDate=2020-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"comparison",
+								"strategies"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "strategy1",
+									"value": "momentum-trading",
+									"description": "First strategy to compare"
+								},
+								{
+									"key": "strategy2",
+									"value": "value-investing",
+									"description": "Second strategy to compare"
+								},
+								{
+									"key": "startDate",
+									"value": "2020-01-01",
+									"description": "Optional start date for comparison"
+								},
+								{
+									"key": "endDate",
+									"value": "2020-12-31",
+									"description": "Optional end date for comparison"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Compare Strategies (All Time)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains all-time strategy comparison\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('comparisonType', 'STRATEGY');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/comparison/strategies?userId={{userId}}&strategy1=momentum-trading&strategy2=value-investing",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"comparison",
+								"strategies"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "strategy1",
+									"value": "momentum-trading"
+								},
+								{
+									"key": "strategy2",
+									"value": "value-investing"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8073"
+		},
+		{
+			"key": "userId",
+			"value": "sample-user-id"
+		},
+		{
+			"key": "portfolioId",
+			"value": "8a57024c-05c2-475b-a2c4-0545865efa4a"
+		},
+		{
+			"key": "portfolioId2",
+			"value": "sample-portfolio-2-id"
+		}
+	]
+}

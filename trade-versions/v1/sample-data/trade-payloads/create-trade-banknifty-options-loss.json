@@ -1,0 +1,147 @@
+{
+  "portfolioId": "{{portfolioId}}",
+  "userId": "{{userId}}",
+  "instrumentInfo": {
+    "symbol": "BANKNIFTY25JUL45000CE",
+    "exchange": "NSE",
+    "segment": "INDEX_OPTIONS",
+    "series": "OPT",
+    "derivativeInfo": {
+      "expiryDate": "2025-07-31",
+      "underlyingSymbol": "BANKNIFTY",
+      "strikePrice": 45000,
+      "isCall": true,
+      "isEuropean": true,
+      "isCashSettled": true
+    },
+    "description": "Bank Nifty 45000 Call Option",
+    "currency": "INR",
+    "lotSize": "15"
+  },
+  "strategy": "Option Selling",
+  "status": "LOSS",
+  "tradePositionType": "SHORT",
+  "entryInfo": {
+    "timestamp": "2025-07-15T09:30:00",
+    "price": 150.00,
+    "quantity": 15,
+    "totalValue": 2250.00,
+    "fees": 75.00
+  },
+  "exitInfo": {
+    "timestamp": "2025-07-15T14:00:00",
+    "price": 185.00,
+    "quantity": 15,
+    "totalValue": 2775.00,
+    "fees": 75.00
+  },
+  "metrics": {
+    "profitLoss": -525.00,
+    "profitLossPercentage": -23.33,
+    "holdingTimeHours": 4.5,
+    "riskRewardRatio": 0.5
+  },
+  "psychologyData": {
+    "entryPsychologyFactors": [
+      {
+        "code": "FEAR_OF_MISSING_OUT",
+        "description": "Fear of missing out on potential gains"
+      },
+      {
+        "code": "OVERCONFIDENCE",
+        "description": "Excessive confidence in analysis or prediction"
+      }
+    ],
+    "exitPsychologyFactors": [
+      {
+        "code": "GREED",
+        "description": "Holding too long hoping for more gains"
+      },
+      {
+        "code": "SUNK_COST_FALLACY",
+        "description": "Holding losing position too long"
+      },
+      {
+        "code": "PANIC",
+        "description": "Exiting hastily due to market volatility"
+      }
+    ],
+    "behaviorPatterns": [
+      {
+        "code": "OVERTRADING",
+        "description": "Trading too frequently"
+      },
+      {
+        "code": "HOLDING_LOSERS",
+        "description": "Keeping losing positions too long"
+      },
+      {
+        "code": "POSITION_SIZING_ISSUES",
+        "description": "Inconsistent or improper position sizing"
+      },
+      {
+        "code": "REVENGE_TRADING",
+        "description": "Trading to recover losses"
+      }
+    ],
+    "categorizedTags": {
+      "STRATEGY": ["Options Selling", "Premium Decay"],
+      "MARKET_CONDITION": ["Bullish Banking Sector", "High Volatility"],
+      "SETUP_TYPE": ["Resistance Trade", "Impulsive Entry"],
+      "TIME_FRAME": ["Intraday", "Weekly Expiry"],
+      "RISK_LEVEL": ["High Risk", "Oversized Position"],
+      "SECTOR": ["Banking", "Index Options"],
+      "TECHNICAL_PATTERN": ["Failed Resistance"],
+      "FUNDAMENTAL_FACTOR": ["Banking Sector Rally", "Credit Growth"],
+      "SENTIMENT": ["FOMO", "Overconfident"],
+      "PERFORMANCE": ["Loss", "Violated Plan", "Risk Management Failure"]
+    },
+    "psychologyNotes": "FOMO-driven entry. Entered impulsively without proper confirmation after seeing others profit from premium decay. Overconfidence in resistance level analysis led to ignoring contradictory signals (banking sector news, bullish sentiment). Moved stop loss three times (165->175->185) due to sunk cost fallacy and hope for reversal. Classic emotional mistakes - didn't follow the plan, violated risk management rules (3% risk instead of 2%), and held losing position too long. This trade exemplifies what NOT to do: FOMO entry, oversized position, ignored conflicting signals, and violated stop loss discipline."
+  },
+  "entryReasoning": {
+    "technicalReasons": [
+      {
+        "code": "RESISTANCE_BREAKOUT",
+        "description": "Assumed price at resistance (NO CONFIRMATION)"
+      }
+    ],
+    "fundamentalReasons": [
+      {
+        "code": "EARNINGS_MISS",
+        "description": "Ignored positive banking news - MISTAKE"
+      }
+    ],
+    "primaryReason": "Assumed resistance would hold (INSUFFICIENT CONFIRMATION)",
+    "reasoningSummary": "POOR ENTRY - Entered impulsively without confirmation. Ignored bullish banking news. Position size too large (3% instead of planned 2%). Felt FOMO seeing premium decay. Did not wait for proper resistance confirmation.",
+    "confidenceLevel": 4,
+    "supportingIndicators": [
+      "Resistance at 44950 (but no confirmation it would hold)"
+    ],
+    "conflictingIndicators": [
+      "Positive banking sector news - credit growth rally",
+      "Banking stocks showing strength",
+      "No volume confirmation of resistance",
+      "Bullish market sentiment",
+      "Position size too large - 3% risk instead of 2%"
+    ]
+  },
+  "exitReasoning": {
+    "technicalReasons": [],
+    "fundamentalReasons": [],
+    "exitPrimaryReason": "Stop loss hit after multiple violations",
+    "exitReasoningSummary": "Exited after stop loss hit at 185. Should have exited at planned stop of 165. Moving stop loss (165 -> 175 -> 185) made the loss 23.33% instead of planned 10%. Complete violation of risk management and trading plan.",
+    "exitConfidenceLevel": 10,
+    "exitSupportingIndicators": [
+      "Final stop loss hit at 185",
+      "Should have exited at 165 (first stop)",
+      "Loss increased due to stop loss violations",
+      "Market proved the initial analysis wrong"
+    ],
+    "exitConflictingIndicators": [],
+    "exitQualityScore": 1
+  },
+  "notes": "LOSING TRADE - Clear violation of trading rules. Entered on FOMO without confirmation. Moved stop loss multiple times. Need to work on emotional discipline and FOMO control. This is a textbook example of how NOT to trade options.",
+  "tags": ["options", "banknifty", "loss", "intraday", "fomo", "mistake", "lesson-learned"],
+  "tradeExecutions": [],
+  "attachments": []
+}

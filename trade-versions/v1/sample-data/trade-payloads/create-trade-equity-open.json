@@ -1,0 +1,107 @@
+{
+  "portfolioId": "{{portfolioId}}",
+  "userId": "{{userId}}",
+  "instrumentInfo": {
+    "symbol": "RELIANCE",
+    "isin": "INE002A01018",
+    "exchange": "NSE",
+    "segment": "EQUITY",
+    "series": "EQ",
+    "description": "Reliance Industries Limited",
+    "currency": "INR",
+    "lotSize": "1"
+  },
+  "strategy": "Swing Trading",
+  "status": "OPEN",
+  "tradePositionType": "LONG",
+  "entryInfo": {
+    "timestamp": "2025-11-01T10:15:00",
+    "price": 2850.50,
+    "quantity": 10,
+    "totalValue": 28505.00,
+    "fees": 50.00,
+    "reason": "Entry on support zone breakout with bullish reversal pattern"
+  },
+  "metrics": {
+    "riskAmount": 250.00,
+    "riskPercentage": 0.88,
+    "riskRewardRatio": 3.0
+  },
+  "psychologyData": {
+    "entryPsychologyFactors": [
+      {
+        "code": "FOLLOWING_THE_PLAN",
+        "description": "Disciplined entry according to trading plan"
+      },
+      {
+        "code": "DISCIPLINED",
+        "description": "Disciplined entry according to trading plan"
+      }
+    ],
+    "exitPsychologyFactors": [],
+    "behaviorPatterns": [
+      {
+        "code": "DISCIPLINED_EXECUTION",
+        "description": "Following trading plan consistently"
+      }
+    ],
+    "categorizedTags": {
+      "STRATEGY": ["Swing Trading", "Support Zone Trading"],
+      "MARKET_CONDITION": ["Neutral to Bullish", "Support Holding"],
+      "SETUP_TYPE": ["Reversal Pattern", "Support Bounce"],
+      "TIME_FRAME": ["Daily", "Swing Trade"],
+      "RISK_LEVEL": ["Medium Risk", "Position Swing"],
+      "SECTOR": ["Energy", "Oil & Gas"],
+      "TECHNICAL_PATTERN": ["Bullish Hammer", "Support Zone"],
+      "FUNDAMENTAL_FACTOR": ["Earnings Beat", "Sector Strength"],
+      "SENTIMENT": ["Confident", "Patient"]
+    },
+    "psychologyNotes": "Entered with proper analysis and confirmation. Comfortable with the risk (0.88% of portfolio). Will monitor daily and adjust stop loss as the trade progresses to breakeven once in profit. No emotional pressure, following the swing trading plan. Accepting market volatility as part of swing trades. Plan is to hold for target at 2950 (first resistance) or exit if support breaks at 2825."
+  },
+  "entryReasoning": {
+    "technicalReasons": [
+      {
+        "code": "SUPPORT_BOUNCE",
+        "description": "Price bouncing off support level"
+      },
+      {
+        "code": "CHART_PATTERN",
+        "description": "Recognized chart pattern formation"
+      },
+      {
+        "code": "OVERSOLD_RSI",
+        "description": "RSI indicating oversold conditions"
+      }
+    ],
+    "fundamentalReasons": [
+      {
+        "code": "EARNINGS_BEAT",
+        "description": "Company reported better than expected earnings"
+      },
+      {
+        "code": "SECTOR_ROTATION",
+        "description": "Capital flowing into this market sector"
+      }
+    ],
+    "primaryReason": "Support zone breakout with bullish reversal pattern and positive earnings",
+    "reasoningSummary": "Swing trade entry at support zone with bullish reversal pattern (bullish hammer candle). Good quarterly results beat estimates, providing fundamental support. RSI bouncing from oversold zone. Entry aligns with medium-term bullish trend.",
+    "confidenceLevel": 7,
+    "supportingIndicators": [
+      "Bullish hammer candle formed at support zone 2840-2850",
+      "RSI bouncing from 45 (oversold zone recovery)",
+      "Strong support zone tested and holding",
+      "Q3 results beat estimates (positive fundamental catalyst)",
+      "Energy sector showing strength",
+      "Refining margins improving"
+    ],
+    "conflictingIndicators": [
+      "Market volatility present",
+      "Global crude oil price fluctuations",
+      "Short-term trend neutral"
+    ]
+  },
+  "notes": "OPEN TRADE - Entry on support breakout after positive Q3 results. Monitoring for swing target of 2950.",
+  "tags": ["equity", "swing", "open", "reliance", "support-entry"],
+  "tradeExecutions": [],
+  "attachments": []
+}

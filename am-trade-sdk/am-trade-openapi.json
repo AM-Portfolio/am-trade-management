@@ -1,0 +1,276 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "AM Trade Management API",
+    "description": "API for AM Trade Management System",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Local server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Trade API",
+      "description": "API for trade operations"
+    },
+    {
+      "name": "Metrics API",
+      "description": "API for trade performance and risk metrics"
+    },
+    {
+      "name": "Portfolio API",
+      "description": "API for portfolio summaries"
+    }
+  ],
+  "paths": {
+    "/api/v1/trades/details/portfolio/{portfolioId}": {
+      "get": {
+        "tags": [
+          "Trade API"
+        ],
+        "summary": "Get trade details by portfolio ID and symbols",
+        "operationId": "getTradeDetailsByPortfolioAndSymbols",
+        "parameters": [
+          {
+            "name": "portfolioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "symbols",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trade details found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TradeDetails"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/trades/details": {
+      "post": {
+        "tags": [
+          "Trade API"
+        ],
+        "summary": "Add a new trade",
+        "operationId": "addTrade",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TradeDetails"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Trade created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradeDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/metrics/calculate": {
+      "post": {
+        "tags": [
+          "Metrics API"
+        ],
+        "summary": "Calculate trade metrics with flexible filters",
+        "operationId": "calculateMetrics",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MetricsFilterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Metrics calculated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portfolio/summary/{portfolioId}": {
+      "get": {
+        "tags": [
+          "Portfolio API"
+        ],
+        "summary": "Get portfolio summary",
+        "operationId": "getPortfolioSummary",
+        "parameters": [
+          {
+            "name": "portfolioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Summary retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TradeDetails": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "tradeId": {
+            "type": "string"
+          },
+          "portfolioId": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TradeStatus"
+          },
+          "tradeDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "TradeStatus": {
+        "type": "string",
+        "enum": [
+          "OPEN",
+          "CLOSED",
+          "CANCELLED",
+          "PENDING"
+        ]
+      },
+      "MetricsFilterRequest": {
+        "type": "object",
+        "required": ["portfolioIds"],
+        "properties": {
+          "portfolioIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metricTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "MetricsResponse": {
+        "type": "object",
+        "properties": {
+          "portfolioIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "totalTradesCount": {
+            "type": "integer"
+          },
+          "performanceMetrics": {
+            "type": "object"
+          }
+        }
+      },
+      "PortfolioSummary": {
+        "type": "object",
+        "properties": {
+          "portfolioId": {
+            "type": "string"
+          },
+          "totalEquity": {
+            "type": "number",
+            "format": "double"
+          },
+          "realizedPnl": {
+            "type": "number",
+            "format": "double"
+          },
+          "unrealizedPnl": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      }
+    }
+  }
+}

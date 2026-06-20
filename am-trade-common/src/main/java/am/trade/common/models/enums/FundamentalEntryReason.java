@@ -1,5 +1,9 @@
 package am.trade.common.models.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,19 +14,52 @@ import java.util.Map;
  * Supports both predefined values and custom user-defined values
  */
 @Getter
+@Schema(
+    description = "Fundamental analysis reason for trade entry. Supports both predefined and custom values.",
+    example = "EARNINGS_BEAT",
+    allowableValues = {
+        "EARNINGS_BEAT", "EARNINGS_MISS", "REVENUE_GROWTH", "VALUATION",
+        "DIVIDEND_INCREASE", "ANALYST_UPGRADE", "SECTOR_ROTATION", 
+        "PRODUCT_LAUNCH", "MERGER_ACQUISITION", "ECONOMIC_DATA",
+        "POLICY_CHANGE", "MANAGEMENT_CHANGE"
+    }
+)
 public class FundamentalEntryReason {
     // Predefined common fundamental entry reasons
+    @Schema(description = "Company reported better than expected earnings")
     public static final FundamentalEntryReason EARNINGS_BEAT = new FundamentalEntryReason("EARNINGS_BEAT", "Company reported better than expected earnings");
+    
+    @Schema(description = "Company reported worse than expected earnings")
     public static final FundamentalEntryReason EARNINGS_MISS = new FundamentalEntryReason("EARNINGS_MISS", "Company reported worse than expected earnings");
+    
+    @Schema(description = "Strong revenue growth reported")
     public static final FundamentalEntryReason REVENUE_GROWTH = new FundamentalEntryReason("REVENUE_GROWTH", "Strong revenue growth reported");
+    
+    @Schema(description = "Attractive price relative to intrinsic value")
     public static final FundamentalEntryReason VALUATION = new FundamentalEntryReason("VALUATION", "Attractive price relative to intrinsic value");
+    
+    @Schema(description = "Company increased dividend payment")
     public static final FundamentalEntryReason DIVIDEND_INCREASE = new FundamentalEntryReason("DIVIDEND_INCREASE", "Company increased dividend payment");
+    
+    @Schema(description = "Positive change in analyst recommendation")
     public static final FundamentalEntryReason ANALYST_UPGRADE = new FundamentalEntryReason("ANALYST_UPGRADE", "Positive change in analyst recommendation");
+    
+    @Schema(description = "Capital flowing into this market sector")
     public static final FundamentalEntryReason SECTOR_ROTATION = new FundamentalEntryReason("SECTOR_ROTATION", "Capital flowing into this market sector");
+    
+    @Schema(description = "Company launched significant new product")
     public static final FundamentalEntryReason PRODUCT_LAUNCH = new FundamentalEntryReason("PRODUCT_LAUNCH", "Company launched significant new product");
+    
+    @Schema(description = "Merger, acquisition or takeover activity")
     public static final FundamentalEntryReason MERGER_ACQUISITION = new FundamentalEntryReason("MERGER_ACQUISITION", "Merger, acquisition or takeover activity");
+    
+    @Schema(description = "Favorable economic indicators")
     public static final FundamentalEntryReason ECONOMIC_DATA = new FundamentalEntryReason("ECONOMIC_DATA", "Favorable economic indicators");
+    
+    @Schema(description = "Beneficial regulatory or policy changes")
     public static final FundamentalEntryReason POLICY_CHANGE = new FundamentalEntryReason("POLICY_CHANGE", "Beneficial regulatory or policy changes");
+    
+    @Schema(description = "Changes in company leadership")
     public static final FundamentalEntryReason MANAGEMENT_CHANGE = new FundamentalEntryReason("MANAGEMENT_CHANGE", "Changes in company leadership");
     
     private static final Map<String, FundamentalEntryReason> VALUES = new HashMap<>();
@@ -47,19 +84,31 @@ public class FundamentalEntryReason {
     }
     
     /**
-     * Get the code for this reason
-     * @return The code
+     * JSON serialization - returns object with code and description
+     * This ensures proper JSON structure when serializing to MongoDB or REST responses
      */
-    public String getCode() {
-        return code;
+    @JsonValue
+    public Map<String, String> toJson() {
+        Map<String, String> json = new HashMap<>();
+        json.put("code", code);
+        json.put("description", description);
+        return json;
     }
     
     /**
-     * Get the description for this reason
-     * @return The description
+     * JSON deserialization constructor - handles both string code and object with code/description
+     * 
+     * @param code The code for the fundamental entry reason
+     * @param description Optional description for new custom values
      */
-    public String getDescription() {
-        return description;
+    @JsonCreator
+    public static FundamentalEntryReason fromJson(
+            @JsonProperty("code") String code, 
+            @JsonProperty("description") String description) {
+        if (code == null || code.trim().isEmpty()) {
+            throw new IllegalArgumentException("Fundamental entry reason code cannot be null or empty");
+        }
+        return fromCode(code, description);
     }
     
     /**

@@ -1,0 +1,50 @@
+KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+KAFKA_SECURITY_PROTOCOL: PLAINTEXT
+KAFKA_SASL_MECHANISM: GSSAPI
+KAFKA_SASL_JAAS_CONFIG: null
+
+spring:
+  config:
+    import: optional:file:../.env[.properties], optional:file:.env[.properties]
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret-key: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_SECRET_KEY}
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration, org.springframework.boot.actuate.autoconfigure.tracing.OpenTelemetryTracingAutoConfiguration
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://admin:password123@localhost:27017/trade?authSource=admin}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    properties:
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG}
+
+# Disable mongo health check for readiness since we want the app to start fast locally
+management:
+  health:
+    mongo:
+      enabled: false
+    kafka:
+      enabled: false
+
+# Application specific settings
+am:
+  security:
+    enabled: true
+    proxy-name: "trade"
+    local-mock:
+      enabled: true
+      user-id: "local-dev-user"
+      username: "Local Developer"
+      email: "local-dev@am.com"
+      roles:
+        - "ROLE_USER"
+        - "ROLE_ADMIN"
+  trade:
+    kafka:
+      enabled: false
+    security:
+      local-default-user-id: ${AM_TRADE_LOCAL_USER_ID:local-dev-user}

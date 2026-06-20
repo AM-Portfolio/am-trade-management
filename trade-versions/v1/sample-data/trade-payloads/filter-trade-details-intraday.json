@@ -1,0 +1,7 @@
+{
+  "userId": "user123",
+  "portfolioIds": ["163d0143-4fcb-480c-ac20-622f14e0e293"],
+  "maxHoldingTimeHours": 24,
+  "tags": ["intraday"],
+  "statuses": ["WIN", "LOSS"]
+}

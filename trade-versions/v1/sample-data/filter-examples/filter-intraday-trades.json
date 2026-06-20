@@ -1,0 +1,17 @@
+{
+  "name": "Intraday Trades",
+  "description": "Filter for intraday trades (holding time less than 1 day)",
+  "isDefault": false,
+  "filterConfig": {
+    "portfolioIds": ["163d0143-4fcb-480c-ac20-622f14e0e293"],
+    "timePeriod": {
+      "period": "LAST_30_DAYS"
+    },
+    "metricTypes": ["PERFORMANCE", "TIMING"],
+    "tradeCharacteristics": {
+      "maxHoldingTimeHours": 24,
+      "tags": ["intraday"],
+      "statuses": ["CLOSED"]
+    }
+  }
+}

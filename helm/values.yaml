@@ -1,0 +1,110 @@
+# Base values for am-trade-management service
+# Aligned with am-market industry standards.
+# Reference: am-portfolio/helm/values.yaml
+
+replicaCount: 1
+port: 8080
+language: java
+environment: preprod
+
+global:
+  image:
+    registry: ghcr.io/am-portfolio
+    pullPolicy: Always
+    imagePullSecrets:
+      - name: regcred
+  vault:
+    enabled: true
+    role: "am-backend-role"
+    authPath: "auth/kubernetes"
+    serviceAccountName: "am-backend-sa"
+
+image:
+  repository: am-trade-management-service
+
+service:
+  type: ClusterIP
+  port: 8080
+
+security:
+  automountServiceAccountToken: true
+
+# Vault Secret Injection Configuration
+vault:
+  enabled: true
+  serviceAccountName: am-backend-sa
+  role: am-backend-role
+  secretPaths:
+    auth:
+      path: apps/data/preprod/services/am-auth
+    market-data:
+      path: apps/data/preprod/services/am-market-data
+    mongo:
+      path: apps/data/preprod/infra/mongodb
+    kafka:
+      path: apps/data/preprod/infra/kafka
+    redis:
+      path: apps/data/preprod/infra/redis
+    identity-oidc:
+      path: apps/data/preprod/services/am-identity
+    service-oauth:
+      path: apps/data/preprod/services/am-trade-management
+
+# Health probe configuration (Spring Boot Actuator)
+probes:
+  port: 8080
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 180
+    periodSeconds: 20
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 150
+    periodSeconds: 20
+
+# Default resource limits
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Environment label
+# Key application environment variables
+env:
+  SPRING_PROFILES_ACTIVE: "preprod"
+  LOG_FORMAT: "json"
+  LOG_LEVEL: "INFO"
+  TZ: "UTC"
+  # Non-secret defaults (Vault will override at runtime)
+  KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
+  KAFKA_SASL_MECHANISM: "SCRAM-SHA-256"
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWS_ALGORITHMS: "HS256"
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://otel-collector.monitoring.svc.cluster.local:4318/v1/traces"
+  TRACING_SAMPLING_PROBABILITY: "0.1"
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: trade.preprod.am-portfolio.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: trade-tls
+      hosts:
+        - trade.preprod.am-portfolio.com
+
+# Config block required by universal-chart templates.
+# batchSearch is not used by this service — set to disabled to prevent
+# nil pointer errors in universal-chart/templates/_batch-search-env.tpl
+config:
+  batchSearch:
+    enabled: false

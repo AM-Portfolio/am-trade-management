@@ -1,0 +1,332 @@
+{
+  "title": "Trade Journal Payload Examples",
+  "description": "Comprehensive examples for TradeJournalController API requests with enhanced attachment support",
+  "version": "2.0.0",
+  "examples": [
+    {
+      "name": "minimal_journal_entry",
+      "description": "Minimal required fields for creating a journal entry",
+      "payload": {
+        "userId": "user_12345",
+        "title": "Quick Trade Note",
+        "content": "Simple observation about market conditions today.",
+        "entryDate": "2025-11-30T10:30:00Z"
+      }
+    },
+    {
+      "name": "basic_trade_journal",
+      "description": "Basic journal entry with common fields",
+      "payload": {
+        "userId": "user_12345",
+        "tradeId": "trade_67890",
+        "title": "Nifty 50 Scalp Trade",
+        "content": "Executed quick scalp on Nifty based on 5-minute breakout. Entry was clean at support level.",
+        "behaviorPatternSummaries": [
+          {
+            "summary": "Quick scalping session on Nifty 50. Clean entry at support.",
+            "mood": "CONFIDENT",
+            "marketSentiment": 7,
+            "tags": ["scalping", "nifty50", "intraday"]
+          }
+        ],
+        "entryDate": "2025-11-30T14:45:00Z"
+      }
+    },
+    {
+      "name": "journal_with_legacy_images",
+      "description": "Journal entry using legacy imageUrls (backward compatible)",
+      "payload": {
+        "userId": "user_12345",
+        "tradeId": "trade_67890",
+        "title": "Bank Nifty Options Trade",
+        "content": "Executed call option on Bank Nifty. Chart showed bullish engulfing pattern.",
+        "behaviorPatternSummaries": [
+          {
+            "summary": "Options trading on Bank Nifty with bullish pattern confirmation.",
+            "mood": "OPTIMISTIC",
+            "marketSentiment": 8,
+            "tags": ["options", "banknifty"]
+          }
+        ],
+        "entryDate": "2025-11-30T09:15:00Z",
+        "imageUrls": [
+          "https://storage.example.com/charts/banknifty_20251130.png",
+          "https://storage.example.com/screenshots/entry_point.png"
+        ],
+        "relatedTradeIds": ["trade_67889"]
+      }
+    },
+    {
+      "name": "journal_with_attachments",
+      "description": "Modern journal entry using structured attachments with metadata",
+      "payload": {
+        "userId": "user_12345",
+        "tradeId": "trade_67890",
+        "title": "Comprehensive Analysis - Reliance Industries",
+        "content": "Detailed technical and fundamental analysis of Reliance Industries position trade. Entry based on multiple timeframe confirmation.",
+        "behaviorPatternSummaries": [
+          {
+            "summary": "Position trade setup on Reliance with multi-timeframe analysis.",
+            "mood": "ANALYTICAL",
+            "marketSentiment": 6,
+            "tags": ["position-trade", "reliance", "technical-analysis", "fundamental-analysis"]
+          }
+        ],
+        "entryDate": "2025-11-30T11:00:00Z",
+        "attachments": [
+          {
+            "fileName": "reliance_daily_chart.png",
+            "fileUrl": "https://storage.example.com/charts/reliance_daily_20251130.png",
+            "fileType": "image/png",
+            "uploadedAt": "2025-11-30T11:05:00Z",
+            "description": "Daily chart showing support and resistance levels"
+          },
+          {
+            "fileName": "trade_plan.pdf",
+            "fileUrl": "https://storage.example.com/docs/reliance_trade_plan.pdf",
+            "fileType": "application/pdf",
+            "uploadedAt": "2025-11-30T11:10:00Z",
+            "description": "Detailed trade plan with entry, exit, and risk management"
+          },
+          {
+            "fileName": "earnings_report.pdf",
+            "fileUrl": "https://storage.example.com/docs/reliance_q2_earnings.pdf",
+            "fileType": "application/pdf",
+            "uploadedAt": "2025-11-30T11:12:00Z",
+            "description": "Q2 2025 earnings report"
+          }
+        ],
+        "relatedTradeIds": ["trade_67891", "trade_67892"]
+      }
+    },
+    {
+      "name": "journal_with_categorized_urls",
+      "description": "Journal entry with categorized URL fields for better organization",
+      "payload": {
+        "userId": "user_12345",
+        "tradeId": "trade_67893",
+        "title": "HDFC Bank Swing Trade Setup",
+        "content": "Setting up swing trade on HDFC Bank based on weekly chart pattern. Multiple confirmations from volume and RSI.",
+        "behaviorPatternSummaries": [
+          {
+            "summary": "Swing trade setup with strong technical confirmations.",
+            "mood": "CONFIDENT",
+            "marketSentiment": 7,
+            "tags": ["swing-trade", "hdfc-bank", "weekly-chart"]
+          }
+        ],
+        "entryDate": "2025-11-30T16:30:00Z",
+        "chartUrls": [
+          "https://tradingview.com/chart/HDFCBANK/weekly_analysis",
+          "https://storage.example.com/charts/hdfc_weekly_20251130.png",
+          "https://storage.example.com/charts/hdfc_rsi_divergence.png"
+        ],
+        "documentUrls": [
+          "https://storage.example.com/docs/hdfc_sector_analysis.pdf",
+          "https://storage.example.com/docs/banking_sector_outlook.pdf"
+        ],
+        "videoUrls": [
+          "https://youtube.com/watch?v=example_analysis_video",
+          "https://storage.example.com/videos/hdfc_setup_explanation.mp4"
+        ],
+        "externalUrls": [
+          "https://moneycontrol.com/news/business/hdfc-bank-latest-news",
+          "https://economictimes.com/hdfc-bank-quarterly-results"
+        ],
+        "relatedTradeIds": ["trade_67890"]
+      }
+    },
+    {
+      "name": "comprehensive_journal_entry",
+      "description": "Complete journal entry with all available fields including attachments and categorized URLs",
+      "payload": {
+        "userId": "user_12345",
+        "tradeId": "trade_67894",
+        "title": "Major Position Trade - TCS Weekly Options Strategy",
+        "content": "Comprehensive weekly options strategy on TCS. Implemented iron condor based on earnings expectations and volatility analysis. Entry executed with precise risk management parameters. Position sizing calculated based on portfolio allocation rules.",
+        "behaviorPatternSummaries": [
+          {
+            "summary": "Complex options strategy execution with comprehensive planning.",
+            "mood": "STRATEGIC",
+            "marketSentiment": 6,
+            "tags": [
+              "options-strategy",
+              "iron-condor",
+              "tcs",
+              "weekly-options",
+              "volatility-play",
+              "earnings-trade"
+            ]
+          }
+        ],
+        "customFields": {
+          "strategy_type": "iron_condor",
+          "risk_reward_ratio": 1.5,
+          "expected_duration_days": 5,
+          "confidence_level": 8,
+          "position_size_percent": 5,
+          "max_loss_percent": 2,
+          "target_profit_percent": 3,
+          "volatility_index": "high",
+          "market_conditions": "neutral_to_bullish"
+        },
+        "entryDate": "2025-11-30T09:30:00Z",
+        "attachments": [
+          {
+            "fileName": "tcs_option_chain.png",
+            "fileUrl": "https://storage.example.com/screenshots/tcs_option_chain_20251130.png",
+            "fileType": "image/png",
+            "uploadedAt": "2025-11-30T09:35:00Z",
+            "description": "Option chain snapshot showing strike selection"
+          },
+          {
+            "fileName": "volatility_analysis.png",
+            "fileUrl": "https://storage.example.com/charts/tcs_volatility_20251130.png",
+            "fileType": "image/png",
+            "uploadedAt": "2025-11-30T09:40:00Z",
+            "description": "Historical and implied volatility analysis"
+          },
+          {
+            "fileName": "trade_journal_template.xlsx",
+            "fileUrl": "https://storage.example.com/docs/tcs_trade_calculations.xlsx",
+            "fileType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "uploadedAt": "2025-11-30T09:45:00Z",
+            "description": "Position sizing and P&L calculations"
+          },
+          {
+            "fileName": "risk_management_plan.pdf",
+            "fileUrl": "https://storage.example.com/docs/tcs_risk_plan.pdf",
+            "fileType": "application/pdf",
+            "uploadedAt": "2025-11-30T09:50:00Z",
+            "description": "Comprehensive risk management and exit strategy"
+          }
+        ],
+        "chartUrls": [
+          "https://tradingview.com/chart/TCS/daily_setup",
+          "https://storage.example.com/charts/tcs_daily_chart.png",
+          "https://storage.example.com/charts/tcs_4h_chart.png",
+          "https://storage.example.com/charts/tcs_volume_profile.png"
+        ],
+        "documentUrls": [
+          "https://storage.example.com/docs/tcs_earnings_report_q2.pdf",
+          "https://storage.example.com/docs/it_sector_analysis.pdf",
+          "https://storage.example.com/docs/options_strategy_guide.pdf"
+        ],
+        "videoUrls": [
+          "https://youtube.com/watch?v=iron_condor_tutorial",
+          "https://storage.example.com/videos/tcs_trade_setup_recording.mp4",
+          "https://storage.example.com/videos/options_greeks_explanation.mp4"
+        ],
+        "externalUrls": [
+          "https://moneycontrol.com/news/business/tcs-earnings-preview",
+          "https://economictimes.com/tech/tcs-quarterly-results",
+          "https://nseindia.com/option-chain?symbol=TCS",
+          "https://tradingeconomics.com/india/stock-market"
+        ],
+        "relatedTradeIds": [
+          "trade_67890",
+          "trade_67892",
+          "trade_67893"
+        ]
+      }
+    },
+    {
+      "name": "general_market_journal",
+      "description": "General journal entry without specific trade (market observation)",
+      "payload": {
+        "userId": "user_12345",
+        "title": "Market Observation - High Volatility Day",
+        "content": "Observed unusual volatility across the board. Bank Nifty showing strong bearish pressure while IT stocks holding support. VIX spiked to 18.5. Decision made to stay on sidelines until clearer direction emerges.",
+        "behaviorPatternSummaries": [
+          {
+            "summary": "High volatility market conditions. Decided to remain on sidelines.",
+            "mood": "CAUTIOUS",
+            "marketSentiment": 4,
+            "tags": ["market-analysis", "high-volatility", "observation"]
+          }
+        ],
+        "entryDate": "2025-11-30T15:30:00Z",
+        "chartUrls": [
+          "https://tradingview.com/chart/NIFTY50/market_overview",
+          "https://storage.example.com/charts/india_vix_spike.png"
+        ],
+        "externalUrls": [
+          "https://moneycontrol.com/news/market-outlook",
+          "https://economictimes.com/market-news"
+        ]
+      }
+    },
+    {
+      "name": "psychology_focused_journal",
+      "description": "Journal entry focused on trading psychology and emotions",
+      "payload": {
+        "userId": "user_12345",
+        "tradeId": "trade_67895",
+        "title": "Lesson Learned - Overtrading Due to FOMO",
+        "content": "Made the mistake of entering a trade based on FOMO after seeing strong moves in the market. Violated my trading plan by not waiting for proper setup. Position immediately went against me. Closed with small loss but important lesson learned about discipline and patience.",
+        "behaviorPatternSummaries": [
+          {
+            "summary": "FOMO-driven trade violation. Lesson in discipline and patience.",
+            "mood": "REFLECTIVE",
+            "marketSentiment": 5,
+            "tags": [
+              "psychology",
+              "lesson-learned",
+              "fomo",
+              "discipline",
+              "trading-mistakes"
+            ]
+          }
+        ],
+        "customFields": {
+          "emotional_state": "FOMO_driven",
+          "plan_followed": false,
+          "lesson_category": "discipline",
+          "action_items": [
+            "Review trading plan before every entry",
+            "Set alerts instead of watching charts constantly",
+            "Journal emotions before placing trades"
+          ]
+        },
+        "entryDate": "2025-11-30T12:00:00Z",
+        "documentUrls": [
+          "https://storage.example.com/docs/trading_psychology_notes.pdf"
+        ],
+        "videoUrls": [
+          "https://youtube.com/watch?v=trading_psychology_video"
+        ]
+      }
+    },
+    {
+      "name": "update_journal_entry",
+      "description": "Example of updating an existing journal entry with additional insights",
+      "payload": {
+        "userId": "user_12345",
+        "tradeId": "trade_67890",
+        "title": "Nifty 50 Scalp Trade - Updated with Exit Analysis",
+        "content": "Executed quick scalp on Nifty based on 5-minute breakout. Entry was clean at support level. UPDATE: Exited with 1.2% profit after hitting first target. Price continued higher but followed plan to take profits at predetermined level. Discipline maintained.",
+        "behaviorPatternSummaries": [
+          {
+            "summary": "Successful scalp with disciplined exit at target. Profit taken as planned.",
+            "mood": "SATISFIED",
+            "marketSentiment": 7,
+            "tags": ["scalping", "nifty50", "intraday", "successful-trade"]
+          }
+        ],
+        "entryDate": "2025-11-30T14:45:00Z",
+        "attachments": [
+          {
+            "fileName": "exit_chart.png",
+            "fileUrl": "https://storage.example.com/charts/nifty_exit_20251130.png",
+            "fileType": "image/png",
+            "uploadedAt": "2025-11-30T15:30:00Z",
+            "description": "Chart showing exit point and subsequent price action"
+          }
+        ],
+        "chartUrls": [
+          "https://storage.example.com/charts/nifty_entry_exit_comparison.png"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,582 @@
+{
+	"info": {
+		"_postman_id": "favoritefiltercontroller-{{$randomUUID}}",
+		"name": "FavoriteFilterController Collection",
+		"description": "API collection for FavoriteFilterController - Saved filter management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Filter Management",
+			"item": [
+				{
+					"name": "Create Favorite Filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response contains filter data\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('filterId');",
+									"    pm.expect(response).to.have.property('name');",
+									"    pm.expect(response).to.have.property('filterConfig');",
+									"});",
+									"",
+									"// Save filter ID for other requests",
+									"if (pm.response.code === 201) {",
+									"    const filterId = pm.response.json().filterId;",
+									"    pm.environment.set('filterId', filterId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"High Performing Trades Filter\",\n  \"description\": \"Filter for trades with returns greater than 5%\",\n  \"isDefault\": false,\n  \"filterConfig\": {\n    \"portfolioIds\": [\"{{portfolioId}}\"],\n    \"symbols\": [\"AAPL\", \"TSLA\", \"MSFT\"],\n    \"strategies\": [\"momentum-trading\"],\n    \"startDate\": \"2020-01-01\",\n    \"endDate\": \"2020-12-31\",\n    \"minReturn\": 5.0,\n    \"maxReturn\": null,\n    \"tradeStatus\": [\"CLOSED\"],\n    \"sortBy\": \"totalReturn\",\n    \"sortDirection\": \"DESC\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/filters?userId={{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"filters"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Favorite Filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Response contains updated filter data\", function () {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response).to.have.property('filterId');",
+									"        pm.expect(response.name).to.include('Updated');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated: High Performing Trades Filter\",\n  \"description\": \"Updated filter for trades with returns greater than 3% (lowered threshold)\",\n  \"isDefault\": false,\n  \"filterConfig\": {\n    \"portfolioIds\": [\"{{portfolioId}}\"],\n    \"symbols\": [\"AAPL\", \"TSLA\", \"MSFT\", \"NVDA\"],\n    \"strategies\": [\"momentum-trading\", \"swing-trading\"],\n    \"startDate\": \"2020-01-01\",\n    \"endDate\": \"2021-12-31\",\n    \"minReturn\": 3.0,\n    \"maxReturn\": null,\n    \"tradeStatus\": [\"CLOSED\"],\n    \"sortBy\": \"totalReturn\",\n    \"sortDirection\": \"DESC\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/filters/{{filterId}}?userId={{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"filters",
+								"{{filterId}}"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Filter by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Response contains filter details\", function () {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response).to.have.property('filterId');",
+									"        pm.expect(response).to.have.property('name');",
+									"        pm.expect(response).to.have.property('filterConfig');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/filters/{{filterId}}?userId={{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"filters",
+								"{{filterId}}"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Favorite Filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([204, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 204) {",
+									"    pm.test(\"Filter deleted successfully\", function () {",
+									"        console.log('Favorite filter deleted successfully');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/filters/{{filterId}}?userId={{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"filters",
+								"{{filterId}}"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Filter Lists & Queries",
+			"item": [
+				{
+					"name": "Get All User Filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"All filters belong to user\", function () {",
+									"    const filters = pm.response.json();",
+									"    filters.forEach(filter => {",
+									"        pm.expect(filter).to.have.property('filterId');",
+									"        pm.expect(filter).to.have.property('name');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/filters?userId={{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"filters"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Default Filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Response contains default filter\", function () {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response).to.have.property('filterId');",
+									"        pm.expect(response).to.have.property('isDefault', true);",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/filters/default?userId={{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"filters",
+								"default"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set Filter as Default",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Filter is now set as default\", function () {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response).to.have.property('isDefault', true);",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/filters/{{filterId}}/default?userId={{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"filters",
+								"{{filterId}}",
+								"default"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Filter Operations",
+			"item": [
+				{
+					"name": "Save Current Filter as Favorite",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Current filter saved as favorite\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('filterId');",
+									"    pm.expect(response).to.have.property('name', 'Current Momentum Strategy');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"portfolioIds\": [\"{{portfolioId}}\"],\n  \"symbols\": [\"AAPL\", \"TSLA\"],\n  \"strategies\": [\"momentum-trading\"],\n  \"startDate\": \"2020-01-01\",\n  \"endDate\": \"2020-12-31\",\n  \"minReturn\": null,\n  \"maxReturn\": null,\n  \"tradeStatus\": [\"OPEN\", \"CLOSED\"],\n  \"sortBy\": \"entryDate\",\n  \"sortDirection\": \"DESC\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/filters/save-current?userId={{userId}}&name=Current Momentum Strategy&description=Active momentum trading filter&isDefault=false",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"filters",
+								"save-current"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "name",
+									"value": "Current Momentum Strategy",
+									"description": "Name for the saved filter"
+								},
+								{
+									"key": "description",
+									"value": "Active momentum trading filter",
+									"description": "Optional description"
+								},
+								{
+									"key": "isDefault",
+									"value": "false",
+									"description": "Set as default filter"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Apply Favorite Filter to Get Metrics",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains metrics data\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('metrics');",
+									"});",
+									"",
+									"pm.test(\"Metrics applied with favorite filter\", function () {",
+									"    const response = pm.response.json();",
+									"    console.log('Metrics retrieved using favorite filter');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/filters/apply/{{filterId}}?userId={{userId}}&portfolioIds={{portfolioId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"filters",
+								"apply",
+								"{{filterId}}"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "portfolioIds",
+									"value": "{{portfolioId}}",
+									"description": "Optional portfolio IDs to override filter config"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8073"
+		},
+		{
+			"key": "userId",
+			"value": "sample-user-id"
+		},
+		{
+			"key": "portfolioId",
+			"value": "8a57024c-05c2-475b-a2c4-0545865efa4a"
+		},
+		{
+			"key": "filterId",
+			"value": "sample-filter-id"
+		}
+	]
+}

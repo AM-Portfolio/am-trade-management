@@ -1,5 +1,6 @@
 package am.trade.api.service;
 
+import am.trade.common.models.HeatmapRequest;
 import am.trade.common.models.ProfitLossHeatmapData;
 
 /**
@@ -36,4 +37,12 @@ public interface ProfitLossHeatmapService {
      * @return ProfitLossHeatmapData with daily granularity
      */
     ProfitLossHeatmapData getDailyHeatmap(String portfolioId, int year, int month, boolean includeTradeDetails);
+    
+    /**
+     * Get heatmap data based on the provided request parameters
+     * 
+     * @param request The heatmap request containing portfolioIds and other parameters
+     * @return ProfitLossHeatmapData with the specified granularity
+     */
+    ProfitLossHeatmapData getHeatmapData(HeatmapRequest request);
 }

@@ -1,5 +1,7 @@
 package am.trade.dashboard.service.metrics.feedback;
 
+import am.trade.dashboard.model.feeback.DecisionAnalysis;
+
 /**
  * Interface for analyzing trading decisions
  */

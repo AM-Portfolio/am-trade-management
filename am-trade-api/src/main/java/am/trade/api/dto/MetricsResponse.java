@@ -1,6 +1,12 @@
 package am.trade.api.dto;
 
-import am.trade.common.models.*;
+import am.trade.common.models.PerformanceMetrics;
+import am.trade.common.models.RiskMetrics;
+import am.trade.common.models.StrategyPerformanceMetrics;
+import am.trade.common.models.TradeDetails;
+import am.trade.common.models.TradeDistributionMetrics;
+import am.trade.common.models.TradePatternMetrics;
+import am.trade.common.models.TradeTimingMetrics;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +17,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Response DTO for trade metrics
  */
@@ -19,6 +27,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "Response object containing requested trade metrics")
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class MetricsResponse {
 
     @Schema(description = "List of portfolio IDs included in the metrics calculation")
@@ -32,6 +41,9 @@ public class MetricsResponse {
     
     @Schema(description = "Total number of trades included in the metrics calculation")
     private int totalTradesCount;
+    
+    @Schema(description = "List of trade details when includeTradeDetails is set to true in the request")
+    private List<TradeDetails> tradeDetails;
     
     @Schema(description = "Performance metrics if requested")
     private PerformanceMetrics performanceMetrics;

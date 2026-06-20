@@ -1,0 +1,148 @@
+{
+  "info": {
+    "name": "Trade Metrics API",
+    "description": "Collection for Trade Metrics API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Trade Metrics",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"portfolioIds\": [\"portfolio-001\", \"portfolio-002\"],\n  \"dateRange\": {\n    \"startDate\": \"2025-01-01\",\n    \"endDate\": \"2025-09-01\"\n  },\n  \"metricTypes\": [\"PERFORMANCE\", \"RISK\", \"DISTRIBUTION\"],\n  \"instruments\": [\"AAPL\", \"MSFT\", \"GOOGL\"],\n  \"instrumentFilters\": {\n    \"sectors\": [\"TECHNOLOGY\", \"HEALTHCARE\"],\n    \"marketCap\": \"LARGE\"\n  },\n  \"tradeCharacteristics\": {\n    \"minDuration\": 1,\n    \"maxDuration\": 30,\n    \"direction\": \"LONG\"\n  },\n  \"profitLossFilters\": {\n    \"minProfitLoss\": 1000,\n    \"maxProfitLoss\": 50000,\n    \"minPositionSize\": 5000,\n    \"maxPositionSize\": 100000\n  },\n  \"groupBy\": [\"STRATEGY\", \"SYMBOL\"],\n  \"includeTradeDetails\": true,\n  \"customFilters\": {\n    \"excludeWeekends\": true,\n    \"onlyRegularHours\": true\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/metrics",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "metrics"]
+        },
+        "description": "Get trade metrics with flexible filtering options"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Available Metric Types",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/metrics/types",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "metrics", "types"]
+        },
+        "description": "Get available metric types"
+      },
+      "response": []
+    },
+    {
+      "name": "Compare Metrics",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/metrics/compare?portfolioIds=portfolio-001,portfolio-002&metricTypes=PERFORMANCE,RISK&firstPeriodStart=2025-01-01&firstPeriodEnd=2025-03-31&secondPeriodStart=2025-04-01&secondPeriodEnd=2025-06-30",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "metrics", "compare"],
+          "query": [
+            {
+              "key": "portfolioIds",
+              "value": "portfolio-001,portfolio-002"
+            },
+            {
+              "key": "metricTypes",
+              "value": "PERFORMANCE,RISK"
+            },
+            {
+              "key": "firstPeriodStart",
+              "value": "2025-01-01"
+            },
+            {
+              "key": "firstPeriodEnd",
+              "value": "2025-03-31"
+            },
+            {
+              "key": "secondPeriodStart",
+              "value": "2025-04-01"
+            },
+            {
+              "key": "secondPeriodEnd",
+              "value": "2025-06-30"
+            }
+          ]
+        },
+        "description": "Get metrics comparison between two time periods"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Metrics Trends",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/metrics/trends?portfolioIds=portfolio-001,portfolio-002&metricTypes=PERFORMANCE,RISK&startDate=2025-01-01&endDate=2025-09-01&interval=MONTH",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "metrics", "trends"],
+          "query": [
+            {
+              "key": "portfolioIds",
+              "value": "portfolio-001,portfolio-002"
+            },
+            {
+              "key": "metricTypes",
+              "value": "PERFORMANCE,RISK"
+            },
+            {
+              "key": "startDate",
+              "value": "2025-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2025-09-01"
+            },
+            {
+              "key": "interval",
+              "value": "MONTH"
+            }
+          ]
+        },
+        "description": "Get metrics trends over time"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8083",
+      "type": "string"
+    }
+  ]
+}

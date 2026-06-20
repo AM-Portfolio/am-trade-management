@@ -1,0 +1,671 @@
+{
+	"info": {
+		"_postman_id": "tradesummarycontroller-{{$randomUUID}}",
+		"name": "TradeSummaryController Collection",
+		"description": "API collection for TradeSummaryController - Trade summary operations by calendar periods",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Time Period Analysis",
+			"item": [
+				{
+					"name": "Get Trade Details by Day",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an object\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('object');",
+									"});",
+									"",
+									"pm.test(\"Response contains trade details\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(Object.keys(response).length).to.be.greaterThan(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trade-summary/trades?periodType=DAY&startDate=2020-01-15&portfolioId={{portfolioId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trade-summary",
+								"trades"
+							],
+							"query": [
+								{
+									"key": "periodType",
+									"value": "DAY",
+									"description": "DAY, MONTH, QUARTER, FINANCIAL_YEAR, CUSTOM"
+								},
+								{
+									"key": "startDate",
+									"value": "2020-01-15",
+									"description": "Required for DAY and CUSTOM periods"
+								},
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}",
+									"description": "Optional portfolio filter"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trade Details by Month",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains monthly trade data\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trade-summary/trades?periodType=MONTH&year=2020&month=3&portfolioId={{portfolioId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trade-summary",
+								"trades"
+							],
+							"query": [
+								{
+									"key": "periodType",
+									"value": "MONTH"
+								},
+								{
+									"key": "year",
+									"value": "2020",
+									"description": "Required for MONTH period"
+								},
+								{
+									"key": "month",
+									"value": "3",
+									"description": "Month (1-12), required for MONTH period"
+								},
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trade Details by Quarter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains quarterly trade data\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trade-summary/trades?periodType=QUARTER&year=2020&quarter=2&portfolioId={{portfolioId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trade-summary",
+								"trades"
+							],
+							"query": [
+								{
+									"key": "periodType",
+									"value": "QUARTER"
+								},
+								{
+									"key": "year",
+									"value": "2020",
+									"description": "Required for QUARTER period"
+								},
+								{
+									"key": "quarter",
+									"value": "2",
+									"description": "Quarter (1-4), required for QUARTER period"
+								},
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trade Details by Financial Year",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains financial year trade data\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trade-summary/trades?periodType=FINANCIAL_YEAR&year=2020&portfolioId={{portfolioId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trade-summary",
+								"trades"
+							],
+							"query": [
+								{
+									"key": "periodType",
+									"value": "FINANCIAL_YEAR"
+								},
+								{
+									"key": "year",
+									"value": "2020",
+									"description": "Required for FINANCIAL_YEAR period"
+								},
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trade Details by Custom Date Range",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains custom period trade data\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trade-summary/trades?periodType=CUSTOM&startDate=2020-01-01&endDate=2020-12-31&portfolioId={{portfolioId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trade-summary",
+								"trades"
+							],
+							"query": [
+								{
+									"key": "periodType",
+									"value": "CUSTOM"
+								},
+								{
+									"key": "startDate",
+									"value": "2020-01-01",
+									"description": "Required for CUSTOM period"
+								},
+								{
+									"key": "endDate",
+									"value": "2020-12-31",
+									"description": "Required for CUSTOM period"
+								},
+								{
+									"key": "portfolioId",
+									"value": "{{portfolioId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Summary Management",
+			"item": [
+				{
+					"name": "Get Basic Trade Summary by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Response contains basic summary data\", function () {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response).to.have.property('id');",
+									"    });",
+									"    ",
+									"    // Save ID for other requests",
+									"    pm.environment.set('tradeSummaryId', pm.response.json().id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trade-summary/basic/{{tradeSummaryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trade-summary",
+								"basic",
+								"{{tradeSummaryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Detailed Trade Summary by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Response contains detailed summary data\", function () {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response).to.have.property('id');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trade-summary/detailed/{{tradeSummaryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trade-summary",
+								"detailed",
+								"{{tradeSummaryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Detailed Trade Summary by Basic ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Response contains detailed summary by basic ID\", function () {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response).to.have.property('id');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trade-summary/detailed/by-basic/{{tradeSummaryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trade-summary",
+								"detailed",
+								"by-basic",
+								"{{tradeSummaryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Composite Trade Summary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Response contains composite summary data\", function () {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response).to.have.property('id');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trade-summary/composite/{{tradeSummaryId}}?forceRecalculate=false",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trade-summary",
+								"composite",
+								"{{tradeSummaryId}}"
+							],
+							"query": [
+								{
+									"key": "forceRecalculate",
+									"value": "false",
+									"description": "Force recalculation of metrics"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Composite Trade Summary (Force Recalculate)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Response contains recalculated composite summary\", function () {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response).to.have.property('id');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trade-summary/composite/{{tradeSummaryId}}?forceRecalculate=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trade-summary",
+								"composite",
+								"{{tradeSummaryId}}"
+							],
+							"query": [
+								{
+									"key": "forceRecalculate",
+									"value": "true",
+									"description": "Force recalculation of metrics"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Owner-Based Operations",
+			"item": [
+				{
+					"name": "Get All Active Basic Summaries by Owner",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Response contains trade summaries for owner\", function () {",
+									"    const summaries = pm.response.json();",
+									"    console.log(`Retrieved ${summaries.length} trade summaries for owner`);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trade-summary/basic/by-owner/{{ownerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trade-summary",
+								"basic",
+								"by-owner",
+								"{{ownerId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8073"
+		},
+		{
+			"key": "portfolioId",
+			"value": "8a57024c-05c2-475b-a2c4-0545865efa4a"
+		},
+		{
+			"key": "tradeSummaryId",
+			"value": "sample-trade-summary-id"
+		},
+		{
+			"key": "ownerId",
+			"value": "sample-owner-id"
+		}
+	]
+}

@@ -2,7 +2,7 @@ package am.trade.dashboard.service.metrics;
 
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.TradingFeedback;
-import am.trade.dashboard.service.metrics.feedback.FeedbackGenerationException;
+import am.trade.dashboard.exception.FeedbackGenerationException;
 import am.trade.dashboard.service.metrics.feedback.TradingFeedbackFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

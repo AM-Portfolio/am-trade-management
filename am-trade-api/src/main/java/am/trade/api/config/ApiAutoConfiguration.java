@@ -12,8 +12,12 @@ import am.trade.services.config.TradeServicesAutoConfiguration;
  * Auto-configuration for API module
  */
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "am.trade.api", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -23,8 +27,24 @@ public class ApiAutoConfiguration {
     
     /**
      * Configures CORS for the API to allow cross-origin requests from the frontend
-     * @return WebMvcConfigurer with CORS configuration
+     * Uses CorsFilter which integrates better with Spring Security than WebMvcConfigurer
      */
-    // CORS configuration is now handled globally in LocalSecurityConfig
-    // and explicitly via @CrossOrigin on controllers
+    @Bean
+    public CorsFilter corsFilter(@Value("${am.cors.allowed-origin-patterns:http://localhost:*,https://localhost:*}") List<String> allowedOriginPatterns) {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        
+        config.setAllowCredentials(true);
+        if (allowedOriginPatterns != null) {
+            for (String pattern : allowedOriginPatterns) {
+                config.addAllowedOriginPattern(pattern);
+            }
+        }
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+        config.setMaxAge(3600L);
+        
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
+    }
 }

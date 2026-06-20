@@ -1,5 +1,6 @@
 package am.trade.api.validation;
 
+import com.am.security.context.UserContext;
 import am.trade.common.models.Attachment;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.TradeEntryExistReasoning;
@@ -24,10 +25,7 @@ public class TradeValidator {
      * @throws IllegalArgumentException if validation fails
      */
     public void validateRequiredFields(TradeDetails tradeDetails) {
-        if (tradeDetails.getUserId() == null || tradeDetails.getUserId().isEmpty()) {
-            log.error("User ID is required");
-            throw new IllegalArgumentException("User ID is required");
-        }
+        tradeDetails.setUserId(UserContext.getUserIdOrThrow());
         
         if (tradeDetails.getPortfolioId() == null || tradeDetails.getPortfolioId().isEmpty()) {
             log.error("Portfolio ID is required");
@@ -116,21 +114,21 @@ public class TradeValidator {
         
         boolean allValid = true;
         for (Attachment attachment : attachments) {
-            // Check for null or empty data
-            if (attachment.getData() == null || attachment.getData().isEmpty()) {
-                log.warn("Attachment data cannot be null or empty");
+            // Check for null or empty fileName
+            if (attachment.getFileName() == null || attachment.getFileName().isEmpty()) {
+                log.warn("Attachment fileName cannot be null or empty");
                 allValid = false;
             }
             
-            // Check for valid attachment type
-            if (attachment.getType() == null || attachment.getType().isEmpty()) {
-                log.warn("Attachment type cannot be null or empty");
+            // Check for valid fileType
+            if (attachment.getFileType() == null || attachment.getFileType().isEmpty()) {
+                log.warn("Attachment fileType cannot be null or empty");
                 allValid = false;
             }
             
-            // Check for valid name
-            if (attachment.getName() == null || attachment.getName().isEmpty()) {
-                log.warn("Attachment name cannot be null or empty");
+            // Check for valid fileUrl
+            if (attachment.getFileUrl() == null || attachment.getFileUrl().isEmpty()) {
+                log.warn("Attachment fileUrl cannot be null or empty");
                 allValid = false;
             }
         }

@@ -1,0 +1,16 @@
+{
+  "userId": "user123",
+  "metricsConfig": {
+    "portfolioIds": ["163d0143-4fcb-480c-ac20-622f14e0e293"],
+    "instruments": ["NIFTY", "BANKNIFTY"],
+    "dateRange": {
+      "startDate": "2025-01-01"
+    },
+    "instrumentFilters": {
+      "optionType": "CE"
+    },
+    "tradeCharacteristics": {
+      "positionTypes": ["LONG"]
+    }
+  }
+}

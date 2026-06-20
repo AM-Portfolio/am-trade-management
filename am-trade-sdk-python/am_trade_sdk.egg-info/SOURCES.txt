@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+am_trade_sdk.egg-info/PKG-INFO
+am_trade_sdk.egg-info/SOURCES.txt
+am_trade_sdk.egg-info/dependency_links.txt
+am_trade_sdk.egg-info/requires.txt
+am_trade_sdk.egg-info/top_level.txt
+sdk/__init__.py
+tests/test_trade_client.py

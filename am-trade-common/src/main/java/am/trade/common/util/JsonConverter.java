@@ -17,26 +17,27 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.springframework.stereotype.Component;
+
 /**
  * Utility class for JSON conversion operations
  * Provides methods to convert between JSON and model objects
  */
+@Component
 public class JsonConverter {
     private static final Logger logger = Logger.getLogger(JsonConverter.class.getName());
-    private static final ObjectMapper objectMapper = createObjectMapper();
+    private final ObjectMapper objectMapper;
 
     /**
      * Creates and configures an ObjectMapper instance
-     * @return Configured ObjectMapper
      */
-    private static ObjectMapper createObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule()); // Support for Java 8 date/time types
-        mapper.registerModule(new TradeManagementJacksonModule()); // Register our custom module for TradeTagCategories
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // Ignore unknown JSON properties
-        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false); // Use ISO-8601 date format
-        mapper.enable(SerializationFeature.INDENT_OUTPUT); // Pretty print JSON
-        return mapper;
+    public JsonConverter() {
+        this.objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule()); // Support for Java 8 date/time types
+        objectMapper.registerModule(new TradeManagementJacksonModule()); // Register our custom module for TradeTagCategories
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // Ignore unknown JSON properties
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false); // Use ISO-8601 date format
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT); // Pretty print JSON
     }
 
     /**
@@ -44,7 +45,7 @@ public class JsonConverter {
      * @param object Object to convert
      * @return JSON string representation
      */
-    public static String toJson(Object object) {
+    public String toJson(Object object) {
         try {
             return objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
@@ -60,7 +61,7 @@ public class JsonConverter {
      * @param <T> Type of the target object
      * @return Object of type T
      */
-    public static <T> T fromJson(String json, Class<T> valueType) {
+    public <T> T fromJson(String json, Class<T> valueType) {
         try {
             return objectMapper.readValue(json, valueType);
         } catch (JsonProcessingException e) {
@@ -76,7 +77,7 @@ public class JsonConverter {
      * @param <T> Type of the target object
      * @return Object of type T
      */
-    public static <T> T fromJsonFile(String filePath, Class<T> valueType) {
+    public <T> T fromJsonFile(String filePath, Class<T> valueType) {
         try {
             Path path = Paths.get(filePath);
             String json = Files.readString(path);
@@ -94,7 +95,7 @@ public class JsonConverter {
      * @param <T> Type of the target object
      * @return Object of type T
      */
-    public static <T> T fromJsonResource(String resourcePath, Class<T> valueType) {
+    public <T> T fromJsonResource(String resourcePath, Class<T> valueType) {
         try (InputStream is = JsonConverter.class.getClassLoader().getResourceAsStream(resourcePath)) {
             if (is == null) {
                 throw new IOException("Resource not found: " + resourcePath);
@@ -111,7 +112,7 @@ public class JsonConverter {
      * @param object Object to convert
      * @param filePath Path to the output file
      */
-    public static void toJsonFile(Object object, String filePath) {
+    public void toJsonFile(Object object, String filePath) {
         try {
             objectMapper.writeValue(new File(filePath), object);
         } catch (IOException e) {
@@ -127,7 +128,7 @@ public class JsonConverter {
      * @param <T> Type of the list elements
      * @return List of objects of type T
      */
-    public static <T> List<T> fromJsonToList(String json, Class<T> elementType) {
+    public <T> List<T> fromJsonToList(String json, Class<T> elementType) {
         try {
             return objectMapper.readValue(json,
                     objectMapper.getTypeFactory().constructCollectionType(List.class, elementType));
@@ -144,7 +145,7 @@ public class JsonConverter {
      * @param <T> Type of the list elements
      * @return List of objects of type T
      */
-    public static <T> List<T> fromJsonFileToList(String filePath, Class<T> elementType) {
+    public <T> List<T> fromJsonFileToList(String filePath, Class<T> elementType) {
         try {
             Path path = Paths.get(filePath);
             String json = Files.readString(path);
@@ -162,7 +163,7 @@ public class JsonConverter {
      * @param <T> Type of the list elements
      * @return List of objects of type T
      */
-    public static <T> List<T> fromJsonResourceToList(String resourcePath, Class<T> elementType) {
+    public <T> List<T> fromJsonResourceToList(String resourcePath, Class<T> elementType) {
         try (InputStream is = JsonConverter.class.getClassLoader().getResourceAsStream(resourcePath)) {
             if (is == null) {
                 throw new IOException("Resource not found: " + resourcePath);
@@ -179,7 +180,7 @@ public class JsonConverter {
      * Get the ObjectMapper instance for custom configuration
      * @return The ObjectMapper instance
      */
-    public static ObjectMapper getObjectMapper() {
+    public ObjectMapper getObjectMapper() {
         return objectMapper;
     }
 }

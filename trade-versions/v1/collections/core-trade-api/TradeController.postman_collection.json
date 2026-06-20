@@ -1,0 +1,410 @@
+{
+	"info": {
+		"_postman_id": "tradecontroller-{{$randomUUID}}",
+		"name": "TradeController Collection",
+		"description": "API collection for TradeController - Core trade operations including CRUD, filtering, and batch operations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Trade Details Operations",
+			"item": [
+				{
+					"name": "Get Trade Details by Portfolio and Symbols",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});",
+									"",
+									"if (pm.response.json().length > 0) {",
+									"    pm.test(\"Trade has required fields\", function () {",
+									"        const trade = pm.response.json()[0];",
+									"        pm.expect(trade).to.have.property('tradeId');",
+									"        pm.expect(trade).to.have.property('symbol');",
+									"        pm.expect(trade).to.have.property('portfolioId');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trades/details/portfolio/{{portfolioId}}?symbols=AAPL,TSLA",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trades",
+								"details",
+								"portfolio",
+								"{{portfolioId}}"
+							],
+							"query": [
+								{
+									"key": "symbols",
+									"value": "AAPL,TSLA",
+									"description": "Optional symbols filter"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add New Trade",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Trade created successfully\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('tradeId');",
+									"    pm.expect(response.symbol).to.eql('MSFT');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"symbol\": \"MSFT\",\n  \"side\": \"BUY\",\n  \"type\": \"MARKET\",\n  \"status\": \"EXECUTED\",\n  \"quantity\": 50,\n  \"price\": 300.00,\n  \"totalValue\": 15000.00,\n  \"portfolioId\": \"{{portfolioId}}\",\n  \"traderId\": \"{{traderId}}\",\n  \"tradeDate\": \"2025-01-11T15:00:00\",\n  \"userId\": \"{{traderId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trades/details",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trades",
+								"details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Existing Trade",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Trade updated successfully\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('tradeId');",
+									"    pm.expect(response.quantity).to.eql(75);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tradeId\": \"{{tradeId}}\",\n  \"symbol\": \"MSFT\",\n  \"side\": \"BUY\",\n  \"type\": \"MARKET\",\n  \"status\": \"EXECUTED\",\n  \"quantity\": 75,\n  \"price\": 305.00,\n  \"totalValue\": 22875.00,\n  \"portfolioId\": \"{{portfolioId}}\",\n  \"traderId\": \"{{traderId}}\",\n  \"userId\": \"{{traderId}}\",\n  \"tradeDate\": \"2025-01-11T15:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trades/details/{{tradeId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trades",
+								"details",
+								"{{tradeId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trade Details by Trade IDs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\"{{tradeId}}\", \"TRADE002\", \"TRADE003\"]"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trades/details/by-ids",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trades",
+								"details",
+								"by-ids"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Trade Filtering",
+			"item": [
+				{
+					"name": "Filter Trades by Multiple Criteria",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination structure\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('content');",
+									"    pm.expect(response).to.have.property('pageable');",
+									"    pm.expect(response).to.have.property('totalElements');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trades/filter?portfolioIds={{portfolioId}}&symbols=AAPL,TSLA&statuses=EXECUTED&startDate=2020-01-01&endDate=2025-12-31&page=0&size=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trades",
+								"filter"
+							],
+							"query": [
+								{
+									"key": "portfolioIds",
+									"value": "{{portfolioId}}"
+								},
+								{
+									"key": "symbols",
+									"value": "AAPL,TSLA"
+								},
+								{
+									"key": "statuses",
+									"value": "EXECUTED"
+								},
+								{
+									"key": "startDate",
+									"value": "2020-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-12-31"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Batch Operations",
+			"item": [
+				{
+					"name": "Add or Update Multiple Trades",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Batch size matches\", function () {",
+									"    pm.expect(pm.response.json().length).to.eql(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  {\n    \"symbol\": \"GOOGL\",\n    \"side\": \"BUY\",\n    \"type\": \"LIMIT\",\n    \"status\": \"EXECUTED\",\n    \"quantity\": 25,\n    \"price\": 2800.00,\n    \"totalValue\": 70000.00,\n    \"portfolioId\": \"{{portfolioId}}\",\n    \"traderId\": \"{{traderId}}\",\n    \"userId\": \"{{traderId}}\",\n    \"tradeDate\": \"2025-01-11T14:30:00\"\n  },\n  {\n    \"symbol\": \"AMZN\",\n    \"side\": \"SELL\",\n    \"type\": \"MARKET\",\n    \"status\": \"EXECUTED\",\n    \"quantity\": 10,\n    \"price\": 3200.00,\n    \"totalValue\": 32000.00,\n    \"portfolioId\": \"{{portfolioId}}\",\n    \"traderId\": \"{{traderId}}\",\n    \"userId\": \"{{traderId}}\",\n    \"tradeDate\": \"2025-01-11T14:45:00\"\n  }\n]"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/trades/details/batch",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trades",
+								"details",
+								"batch"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8073"
+		},
+		{
+			"key": "portfolioId",
+			"value": "8a57024c-05c2-475b-a2c4-0545865efa4a"
+		},
+		{
+			"key": "traderId",
+			"value": "ssd2658"
+		},
+		{
+			"key": "tradeId",
+			"value": "TRADE001",
+			"description": "Sample trade ID for testing"
+		}
+	]
+}

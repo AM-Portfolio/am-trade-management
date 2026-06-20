@@ -41,4 +41,6 @@ public class TradeEntryExistReasoningEntity {
         
     // Conflicting indicators or metrics
     private List<String> conflictingIndicators;
+
+    private String streategy;
 }

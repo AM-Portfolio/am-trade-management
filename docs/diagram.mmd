@@ -1,0 +1,27 @@
+graph TD
+    classDef default fill:#f9f,stroke:#333,stroke-width:2px;
+
+    Client((Frontend UI)) --> Controllers
+
+    subgraph AM_Trade_API
+        Controllers(Controllers Layer)
+        ApiServices(API Services Layer)
+        Controllers -->|Delegates Validation| ApiServices
+    end
+
+    subgraph AM_Trade_Services
+        BusinessServices(Core Business Logic)
+        ApiServices -->|Domain Models| BusinessServices
+    end
+
+    subgraph AM_Persistence
+        Repositories(Repository Layer)
+        BusinessServices -->|DB Entities| Repositories
+        ApiServices -->|Basic Saves| Repositories
+    end
+
+    Mongo[(MongoDB)]
+    Kafka[[Apache Kafka]]
+
+    Repositories -->|Persists| Mongo
+    BusinessServices -->|Metric Events| Kafka

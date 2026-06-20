@@ -1,0 +1,468 @@
+{
+	"info": {
+		"_postman_id": "tradereplaycontroller-{{$randomUUID}}",
+		"name": "TradeReplayController Collection",
+		"description": "API collection for TradeReplayController - Trade replay scenarios and analytics",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Replay Management",
+			"item": [
+				{
+					"name": "Create Trade Replay",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response contains replay data\", function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('replayId');",
+									"    pm.expect(response).to.have.property('symbol');",
+									"});",
+									"",
+									"// Save replay ID for other requests",
+									"if (pm.response.code === 201) {",
+									"    const replayId = pm.response.json().replayId;",
+									"    pm.environment.set('replayId', replayId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"symbol\": \"AAPL\",\n  \"portfolioId\": \"{{portfolioId}}\",\n  \"strategyId\": \"sample-strategy-id\",\n  \"originalTradeId\": \"sample-trade-id\",\n  \"startDate\": \"2020-01-01T09:30:00\",\n  \"endDate\": \"2020-01-01T16:00:00\",\n  \"initialCapital\": 10000.0,\n  \"replayType\": \"BACKTEST\",\n  \"parameters\": {\n    \"stopLoss\": 0.02,\n    \"takeProfit\": 0.05\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"trade-replays"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trade Replay by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Response contains replay details\", function () {",
+									"        const response = pm.response.json();",
+									"        pm.expect(response).to.have.property('id');",
+									"        pm.expect(response).to.have.property('symbol');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/{{replayId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"trade-replays",
+								"{{replayId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Trade Replay",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([204, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 204) {",
+									"    pm.test(\"Trade replay deleted successfully\", function () {",
+									"        console.log('Trade replay deleted successfully');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/{{replayId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"trade-replays",
+								"{{replayId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Search & Filter",
+			"item": [
+				{
+					"name": "Find Replays by Symbol",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"All replays have correct symbol\", function () {",
+									"    const replays = pm.response.json();",
+									"    replays.forEach(replay => {",
+									"        pm.expect(replay.symbol).to.equal('AAPL');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/symbol/AAPL",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"trade-replays",
+								"symbol",
+								"AAPL"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find Replays by Date Range",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Replays are within date range\", function () {",
+									"    const replays = pm.response.json();",
+									"    console.log(`Found ${replays.length} replays in date range`);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/date-range?startDate=2020-01-01T00:00:00&endDate=2020-12-31T23:59:59",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"trade-replays",
+								"date-range"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2020-01-01T00:00:00",
+									"description": "Start date in ISO format (YYYY-MM-DDTHH:MM:SS)"
+								},
+								{
+									"key": "endDate",
+									"value": "2020-12-31T23:59:59",
+									"description": "End date in ISO format (YYYY-MM-DDTHH:MM:SS)"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find Replays by Portfolio",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"All replays belong to portfolio\", function () {",
+									"    const replays = pm.response.json();",
+									"    replays.forEach(replay => {",
+									"        pm.expect(replay.portfolioId).to.equal(pm.environment.get('portfolioId'));",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/portfolio/{{portfolioId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"trade-replays",
+								"portfolio",
+								"{{portfolioId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find Replays by Strategy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"All replays use correct strategy\", function () {",
+									"    const replays = pm.response.json();",
+									"    replays.forEach(replay => {",
+									"        pm.expect(replay.strategyId).to.equal('sample-strategy-id');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/strategy/sample-strategy-id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"trade-replays",
+								"strategy",
+								"sample-strategy-id"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find Replays by Original Trade",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"All replays link to original trade\", function () {",
+									"    const replays = pm.response.json();",
+									"    replays.forEach(replay => {",
+									"        pm.expect(replay.originalTradeId).to.equal('sample-trade-id');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/trade-replays/trade/sample-trade-id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"trade-replays",
+								"trade",
+								"sample-trade-id"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8073"
+		},
+		{
+			"key": "portfolioId",
+			"value": "8a57024c-05c2-475b-a2c4-0545865efa4a"
+		},
+		{
+			"key": "replayId",
+			"value": "sample-replay-id"
+		}
+	]
+}

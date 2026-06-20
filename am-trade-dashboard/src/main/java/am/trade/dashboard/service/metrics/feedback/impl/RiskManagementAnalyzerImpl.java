@@ -1,7 +1,7 @@
 package am.trade.dashboard.service.metrics.feedback.impl;
 
 import am.trade.common.models.TradeDetails;
-import am.trade.dashboard.service.metrics.feedback.RiskManagementAnalysis;
+import am.trade.dashboard.model.feeback.RiskManagementAnalysis;
 import am.trade.dashboard.service.metrics.feedback.RiskManagementAnalyzer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

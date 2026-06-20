@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Model for analyzing the distribution of trades across various dimensions
  */
@@ -16,6 +18,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TradeDistributionMetrics {
     // Time-based distribution
     private Map<String, Integer> tradesByDay; // Day of week distribution

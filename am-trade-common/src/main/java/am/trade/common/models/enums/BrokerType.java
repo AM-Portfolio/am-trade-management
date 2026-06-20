@@ -1,10 +1,22 @@
 package am.trade.common.models.enums;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Broker platform used for executing trades")
 public enum BrokerType {
+    @Schema(description = "Dhan trading platform")
     DHAN("Dhan"),
+    
+    @Schema(description = "Zerodha trading platform")
     ZERODHA("Zerodha"),
+    
+    @Schema(description = "Mirae Asset MStock trading platform")
     MSTOCK("MStock"),
+    
+    @Schema(description = "Grow trading platform")
     GROW("Grow"),
+    
+    @Schema(description = "Kotak Securities trading platform")
     KOTAK("Kotak");
  
     private String brokerName;

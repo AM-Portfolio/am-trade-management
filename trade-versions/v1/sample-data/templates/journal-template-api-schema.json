@@ -1,0 +1,661 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Journal Template API Schema",
+    "description": "Complete JSON Schema for JournalTemplateController API",
+    "version": "1.0.0",
+    "definitions": {
+        "JournalTemplateCategory": {
+            "type": "string",
+            "enum": [
+                "DAILY_CHECKIN",
+                "PRE_MARKET",
+                "POST_MARKET",
+                "TRADE_RECAP",
+                "WEEKLY_REVIEW",
+                "MONTHLY_REVIEW",
+                "QUARTERLY_REVIEW",
+                "CUSTOM"
+            ],
+            "description": "Category of the journal template"
+        },
+        "TemplateFieldType": {
+            "type": "string",
+            "enum": [
+                "TEXT",
+                "TEXTAREA",
+                "CHECKBOX",
+                "CHECKBOX_LIST",
+                "DROPDOWN",
+                "DATE",
+                "TIME",
+                "NUMBER",
+                "IMAGE_UPLOAD"
+            ],
+            "description": "Type of template field"
+        },
+        "TemplateFieldRequest": {
+            "type": "object",
+            "required": [
+                "fieldId",
+                "fieldLabel",
+                "fieldType"
+            ],
+            "properties": {
+                "fieldId": {
+                    "type": "string",
+                    "description": "Unique identifier for the field"
+                },
+                "fieldLabel": {
+                    "type": "string",
+                    "description": "Display label for the field"
+                },
+                "fieldType": {
+                    "$ref": "#/definitions/TemplateFieldType"
+                },
+                "placeholder": {
+                    "type": "string",
+                    "description": "Placeholder text"
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "description": "Default value for the field"
+                },
+                "required": {
+                    "type": "boolean",
+                    "description": "Whether the field is required"
+                },
+                "order": {
+                    "type": "integer",
+                    "description": "Display order"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Options for dropdown or checkbox list"
+                },
+                "minLength": {
+                    "type": "integer"
+                },
+                "maxLength": {
+                    "type": "integer"
+                },
+                "validationPattern": {
+                    "type": "string",
+                    "description": "Regex pattern for validation"
+                },
+                "helpText": {
+                    "type": "string",
+                    "description": "Help text for the field"
+                }
+            }
+        },
+        "TemplateFieldResponse": {
+            "type": "object",
+            "properties": {
+                "fieldId": {
+                    "type": "string"
+                },
+                "fieldLabel": {
+                    "type": "string"
+                },
+                "fieldType": {
+                    "$ref": "#/definitions/TemplateFieldType"
+                },
+                "placeholder": {
+                    "type": "string"
+                },
+                "defaultValue": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "order": {
+                    "type": "integer"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "minLength": {
+                    "type": "integer"
+                },
+                "maxLength": {
+                    "type": "integer"
+                },
+                "validationPattern": {
+                    "type": "string"
+                },
+                "helpText": {
+                    "type": "string"
+                }
+            }
+        },
+        "JournalTemplateRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "category",
+                "createdBy"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Template name"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Template description"
+                },
+                "category": {
+                    "$ref": "#/definitions/JournalTemplateCategory"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TemplateFieldRequest"
+                    },
+                    "description": "Template field definitions"
+                },
+                "isSystemTemplate": {
+                    "type": "boolean",
+                    "description": "Whether this is a system template"
+                },
+                "isRecommended": {
+                    "type": "boolean",
+                    "description": "Whether this template is recommended"
+                },
+                "createdBy": {
+                    "type": "string",
+                    "description": "User ID of creator"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Tags for categorization"
+                },
+                "thumbnailUrl": {
+                    "type": "string",
+                    "description": "URL to template thumbnail"
+                }
+            }
+        },
+        "JournalTemplateResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Unique identifier"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "category": {
+                    "$ref": "#/definitions/JournalTemplateCategory"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TemplateFieldResponse"
+                    }
+                },
+                "isSystemTemplate": {
+                    "type": "boolean"
+                },
+                "isRecommended": {
+                    "type": "boolean"
+                },
+                "usageCount": {
+                    "type": "integer",
+                    "description": "Number of times template has been used"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "isFavorite": {
+                    "type": "boolean",
+                    "description": "Whether current user has favorited this template"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "thumbnailUrl": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }
+        },
+        "UseTemplateRequest": {
+            "type": "object",
+            "required": [
+                "userId",
+                "templateId"
+            ],
+            "properties": {
+                "userId": {
+                    "type": "string",
+                    "description": "User ID"
+                },
+                "templateId": {
+                    "type": "string",
+                    "description": "Template ID to use"
+                },
+                "fieldValues": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Field values filled by user (fieldId -> value)"
+                },
+                "tradeId": {
+                    "type": "string",
+                    "description": "Optional trade ID to associate with"
+                },
+                "customTitle": {
+                    "type": "string",
+                    "description": "Optional custom title for journal entry"
+                }
+            }
+        },
+        "ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "path": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "paths": {
+        "/api/v1/journal-templates": {
+            "post": {
+                "summary": "Create a new journal template",
+                "operationId": "createTemplate",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/JournalTemplateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/JournalTemplateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "summary": "Get all templates with optional filters",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/definitions/JournalTemplateCategory"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/JournalTemplateResponse"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/journal-templates/{templateId}": {
+            "get": {
+                "summary": "Get template by ID",
+                "parameters": [
+                    {
+                        "name": "templateId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/JournalTemplateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update template",
+                "parameters": [
+                    {
+                        "name": "templateId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/JournalTemplateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/JournalTemplateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete template",
+                "parameters": [
+                    {
+                        "name": "templateId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    },
+                    "400": {
+                        "description": "Cannot delete system template"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/api/v1/journal-templates/favorites": {
+            "get": {
+                "summary": "Get favorite templates",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/JournalTemplateResponse"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/journal-templates/recommended": {
+            "get": {
+                "summary": "Get recommended templates",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/JournalTemplateResponse"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/journal-templates/my-templates": {
+            "get": {
+                "summary": "Get user's custom templates",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/JournalTemplateResponse"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/journal-templates/{templateId}/favorite": {
+            "post": {
+                "summary": "Toggle favorite status",
+                "parameters": [
+                    {
+                        "name": "templateId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/JournalTemplateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/api/v1/journal-templates/{templateId}/use": {
+            "post": {
+                "summary": "Use template to create journal entry",
+                "parameters": [
+                    {
+                        "name": "templateId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/UseTemplateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Journal entry created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "description": "TradeJournalEntryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Template not found"
+                    }
+                }
+            }
+        }
+    }
+}

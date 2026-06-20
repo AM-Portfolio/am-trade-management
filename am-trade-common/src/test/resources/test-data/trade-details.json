@@ -1,0 +1,1385 @@
+{
+    "id": "0ebae32d-f58f-4c17-b976-abb1ad7b639f",
+    "userId": "SSD2658",
+    "brokerType": "ZERODHA",
+    "portfolioId": "MKU257_TES211889T1",
+    "timestamp": [
+        2025,
+        7,
+        7,
+        23,
+        37,
+        51,
+        825307300
+    ],
+    "trades": [
+        {
+            "basicInfo": {
+                "tradeId": "481679",
+                "orderId": "1000000002008683",
+                "tradeDate": [
+                    2020,
+                    9,
+                    23
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    23,
+                    9,
+                    34,
+                    51
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "COALINDIA",
+                "isin": "INE522F01014",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 2000,
+                "price": 119.95,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "4229065",
+                "orderId": "1000000015691380",
+                "tradeDate": [
+                    2020,
+                    8,
+                    27
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    8,
+                    27,
+                    14,
+                    47,
+                    14
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "CENTURYTEX",
+                "isin": "INE055A01016",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 3000,
+                "price": 374.15,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "52167698",
+                "orderId": "1200000005492639",
+                "tradeDate": [
+                    2020,
+                    7,
+                    30
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    7,
+                    30,
+                    13,
+                    22,
+                    44
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "PNB",
+                "isin": "INE160A01022",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 7000,
+                "price": 32.0,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "76326411",
+                "orderId": "1300000004493182",
+                "tradeDate": [
+                    2020,
+                    9,
+                    25
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    25,
+                    10,
+                    25,
+                    31
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "SUNPHARMA",
+                "isin": "INE044A01036",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 1400,
+                "price": 485.55,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "76354587",
+                "orderId": "1300000004576499",
+                "tradeDate": [
+                    2020,
+                    9,
+                    25
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    25,
+                    10,
+                    28,
+                    52
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "SUNPHARMA",
+                "isin": "INE044A01036",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 2800,
+                "price": 485.25,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "75415043",
+                "orderId": "1300000001464563",
+                "tradeDate": [
+                    2020,
+                    9,
+                    23
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    23,
+                    9,
+                    26,
+                    42
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "SUNPHARMA",
+                "isin": "INE044A01036",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 1000,
+                "price": 514.5,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "27340729",
+                "orderId": "1100000007126589",
+                "tradeDate": [
+                    2020,
+                    9,
+                    28
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    28,
+                    12,
+                    49,
+                    18
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "ITC",
+                "isin": "INE154A01025",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 1000,
+                "price": 172.8,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "75779695",
+                "orderId": "1300000002116713",
+                "tradeDate": [
+                    2020,
+                    9,
+                    7
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    7,
+                    9,
+                    53,
+                    56
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "TATAMTRDVR",
+                "isin": "IN9155A01020",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 12000,
+                "price": 60.2,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "4382262",
+                "orderId": "1000000016345438",
+                "tradeDate": [
+                    2020,
+                    8,
+                    27
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    8,
+                    27,
+                    15,
+                    1,
+                    4
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "CENTURYTEX",
+                "isin": "INE055A01016",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 377,
+                "price": 378.0,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "76016503",
+                "orderId": "1300000003440432",
+                "tradeDate": [
+                    2020,
+                    9,
+                    25
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    25,
+                    10,
+                    4,
+                    25
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "SUNPHARMA",
+                "isin": "INE044A01036",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 1400,
+                "price": 487.2,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "4503248",
+                "orderId": "1000000013478524",
+                "tradeDate": [
+                    2020,
+                    8,
+                    12
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    8,
+                    12,
+                    15,
+                    29,
+                    5
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "ARVIND",
+                "isin": "INE034A01011",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 5000,
+                "price": 34.95,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "50234106",
+                "orderId": "1200000000300826",
+                "tradeDate": [
+                    2020,
+                    8,
+                    10
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    8,
+                    10,
+                    9,
+                    24,
+                    28
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "PNB",
+                "isin": "INE160A01022",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 3000,
+                "price": 33.15,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "613915",
+                "orderId": "1000000002538490",
+                "tradeDate": [
+                    2020,
+                    9,
+                    23
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    23,
+                    9,
+                    44,
+                    53
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "COALINDIA",
+                "isin": "INE522F01014",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 2000,
+                "price": 120.09,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "50870407",
+                "orderId": "1200000003036897",
+                "tradeDate": [
+                    2020,
+                    7,
+                    30
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    7,
+                    30,
+                    10,
+                    30,
+                    53
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "PNB",
+                "isin": "INE160A01022",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 1000,
+                "price": 32.4,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "51040859",
+                "orderId": "1200000002384201",
+                "tradeDate": [
+                    2020,
+                    7,
+                    30
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    7,
+                    30,
+                    10,
+                    49,
+                    47
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "PNB",
+                "isin": "INE160A01022",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 8000,
+                "price": 32.6,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "51933740",
+                "orderId": "1200000006218796",
+                "tradeDate": [
+                    2020,
+                    7,
+                    30
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    7,
+                    30,
+                    12,
+                    57,
+                    57
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "PNB",
+                "isin": "INE160A01022",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 2000,
+                "price": 32.25,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "75454738",
+                "orderId": "1300000001825333",
+                "tradeDate": [
+                    2020,
+                    9,
+                    7
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    7,
+                    9,
+                    33,
+                    57
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "TATAMTRDVR",
+                "isin": "IN9155A01020",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 12000,
+                "price": 60.2,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "26047541",
+                "orderId": "1100000002852036",
+                "tradeDate": [
+                    2020,
+                    8,
+                    28
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    8,
+                    28,
+                    9,
+                    51,
+                    26
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "ITC",
+                "isin": "INE154A01025",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 1000,
+                "price": 195.1,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "78415403",
+                "orderId": "1300000011248538",
+                "tradeDate": [
+                    2020,
+                    9,
+                    18
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    18,
+                    14,
+                    56,
+                    5
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "SUNPHARMA",
+                "isin": "INE044A01036",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 2000,
+                "price": 522.0,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "26626887",
+                "orderId": "1100000005273924",
+                "tradeDate": [
+                    2020,
+                    9,
+                    23
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    23,
+                    11,
+                    27,
+                    41
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "ITC",
+                "isin": "INE154A01025",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 1000,
+                "price": 175.05,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "28276405",
+                "orderId": "1100000009447396",
+                "tradeDate": [
+                    2020,
+                    9,
+                    28
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    28,
+                    14,
+                    39,
+                    21
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "ITC",
+                "isin": "INE154A01025",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 1000,
+                "price": 173.15,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "4751155",
+                "orderId": "1000000017344566",
+                "tradeDate": [
+                    2020,
+                    8,
+                    27
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    8,
+                    27,
+                    15,
+                    20,
+                    49
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "CENTURYTEX",
+                "isin": "INE055A01016",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 3000,
+                "price": 367.6,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "4393941",
+                "orderId": "1000000016363554",
+                "tradeDate": [
+                    2020,
+                    8,
+                    27
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    8,
+                    27,
+                    15,
+                    1,
+                    51
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "CENTURYTEX",
+                "isin": "INE055A01016",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 2623,
+                "price": 379.0,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "2768088",
+                "orderId": "1000000009632981",
+                "tradeDate": [
+                    2020,
+                    7,
+                    30
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    7,
+                    30,
+                    13,
+                    24,
+                    11
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "COALINDIA",
+                "isin": "INE522F01014",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 700,
+                "price": 129.6,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "78378144",
+                "orderId": "1300000011158918",
+                "tradeDate": [
+                    2020,
+                    9,
+                    18
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    18,
+                    14,
+                    53,
+                    1
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "SUNPHARMA",
+                "isin": "INE044A01036",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 2000,
+                "price": 521.0,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "26944673",
+                "orderId": "1100000005225026",
+                "tradeDate": [
+                    2020,
+                    8,
+                    20
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    8,
+                    20,
+                    11,
+                    17,
+                    38
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "HIKAL",
+                "isin": "INE475B01022",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 139,
+                "price": 152.4,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "27419553",
+                "orderId": "1100000007844572",
+                "tradeDate": [
+                    2020,
+                    9,
+                    23
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    23,
+                    12,
+                    41,
+                    28
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "ITC",
+                "isin": "INE154A01025",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 1000,
+                "price": 173.75,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "27108416",
+                "orderId": "1100000005559955",
+                "tradeDate": [
+                    2020,
+                    8,
+                    20
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    8,
+                    20,
+                    11,
+                    33,
+                    42
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "HIKAL",
+                "isin": "INE475B01022",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 139,
+                "price": 152.95,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "29936408",
+                "orderId": "1100000012440711",
+                "tradeDate": [
+                    2020,
+                    8,
+                    27
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    8,
+                    27,
+                    15,
+                    27,
+                    30
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "ITC",
+                "isin": "INE154A01025",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 1000,
+                "price": 194.2,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "4590161",
+                "orderId": "1000000016842294",
+                "tradeDate": [
+                    2020,
+                    8,
+                    27
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    8,
+                    27,
+                    15,
+                    13,
+                    23
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "CENTURYTEX",
+                "isin": "INE055A01016",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 3000,
+                "price": 370.0,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "52366772",
+                "orderId": "1200000008673352",
+                "tradeDate": [
+                    2020,
+                    9,
+                    21
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    21,
+                    13,
+                    43,
+                    45
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "PVR",
+                "isin": "INE191H01014",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 100,
+                "price": 1144.0,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "841205",
+                "orderId": "1000000000751077",
+                "tradeDate": [
+                    2020,
+                    8,
+                    10
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    8,
+                    10,
+                    9,
+                    37,
+                    16
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "COALINDIA",
+                "isin": "INE522F01014",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 700,
+                "price": 130.5,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "51939401",
+                "orderId": "1200000007032791",
+                "tradeDate": [
+                    2020,
+                    9,
+                    21
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    21,
+                    12,
+                    50,
+                    58
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "PVR",
+                "isin": "INE191H01014",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 100,
+                "price": 1165.0,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "627174",
+                "orderId": "1000000001700972",
+                "tradeDate": [
+                    2020,
+                    8,
+                    20
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    8,
+                    20,
+                    9,
+                    42,
+                    34
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "ARVIND",
+                "isin": "INE034A01011",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 5000,
+                "price": 35.85,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "75451055",
+                "orderId": "1300000001568234",
+                "tradeDate": [
+                    2020,
+                    9,
+                    23
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    9,
+                    23,
+                    9,
+                    28,
+                    12
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "SELL"
+            },
+            "instrumentInfo": {
+                "symbol": "SUNPHARMA",
+                "isin": "INE044A01036",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "SELL",
+                "auction": "FALSE",
+                "quantity": 1000,
+                "price": 516.5,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        },
+        {
+            "basicInfo": {
+                "tradeId": "50625373",
+                "orderId": "1200000001945859",
+                "tradeDate": [
+                    2020,
+                    7,
+                    30
+                ],
+                "orderExecutionTime": [
+                    2020,
+                    7,
+                    30,
+                    10,
+                    1,
+                    26
+                ],
+                "brokerType": "ZERODHA",
+                "tradeType": "BUY"
+            },
+            "instrumentInfo": {
+                "symbol": "PNB",
+                "isin": "INE160A01022",
+                "exchange": "NSE",
+                "segment": "UNKNOWN",
+                "series": "EQ",
+                "fnoInfo": null
+            },
+            "executionInfo": {
+                "tradeType": "BUY",
+                "auction": "FALSE",
+                "quantity": 15000,
+                "price": 32.8,
+                "lotSize": null
+            },
+            "charges": null,
+            "financials": null
+        }
+    ]
+}
