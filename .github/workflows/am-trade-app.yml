@@ -6,6 +6,7 @@ on:
     paths:
       - "**/*.java"
       - "**/pom.xml"
+      - "**/src/main/resources/**"
       - "Dockerfile"
       - "helm/**"
       - ".github/workflows/*.yml"
