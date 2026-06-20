@@ -1,13 +1,22 @@
 package am.trade.api.service.impl;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import am.trade.common.models.EntryExitInfo;
+import am.trade.common.models.TradeMetrics;
+import am.trade.common.models.enums.TradePositionType;
 import am.trade.exceptions.TradeFieldValidationException;
 import am.trade.exceptions.model.ErrorDetail;
 
@@ -23,6 +32,9 @@ import am.trade.common.models.TradeDetails;
 import am.trade.common.models.enums.TradeStatus;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
+import am.trade.services.publisher.TradeHoldingEventPublisher;
+import am.trade.services.mapper.TradeHoldingEventMapper;
+import am.trade.models.kafka.TradeHoldingEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,11 +50,87 @@ public class TradeApiServiceImpl implements TradeApiService {
     private final TradeProcessingService tradeProcessingService;
     private final TradeDetailsService tradeDetailsService;
     private final TradeValidator tradeValidator;
+    private final TradeHoldingEventPublisher tradeHoldingEventPublisher;
+    private final TradeHoldingEventMapper tradeHoldingEventMapper;
     
     @Override
     public List<TradeDetails> getTradeDetailsByPortfolioAndSymbols(String portfolioId, List<String> symbols) {
         log.info("Service: Fetching trade details for portfolio: {} with symbols: {}", portfolioId, symbols);
-        return tradeManagementService.getTradesBySymbols(portfolioId, symbols);
+        List<TradeDetails> trades = tradeManagementService.getTradesBySymbols(portfolioId, symbols);
+
+        // Compute P&L at read-time for any closed trade whose metrics are missing or zero.
+        // This ensures the Holdings page always shows correct P&L even for trades that
+        // were saved before server-side metric calculation was in place.
+        for (TradeDetails trade : trades) {
+            boolean isClosed = trade.getStatus() == TradeStatus.WIN
+                            || trade.getStatus() == TradeStatus.LOSS
+                            || trade.getStatus() == TradeStatus.BREAK_EVEN;
+            boolean metricsAreMissing = trade.getMetrics() == null
+                            || trade.getMetrics().getProfitLoss() == null
+                            || trade.getMetrics().getProfitLoss().compareTo(BigDecimal.ZERO) == 0;
+
+            log.info("DEBUG TRADE {}: status={}, isClosed={}, metricsNull={}, metricsAreMissing={}, entryInfoNull={}, exitInfoNull={}", 
+                trade.getTradeId(), 
+                trade.getStatus(), isClosed, 
+                trade.getMetrics() == null, metricsAreMissing, 
+                trade.getEntryInfo() == null, trade.getExitInfo() == null);
+
+            if (isClosed && metricsAreMissing
+                    && trade.getEntryInfo() != null
+                    && trade.getExitInfo() != null) {
+                // compute P&L in-memory for the API response
+                TradeMetrics computed = computePnl(trade.getEntryInfo(), trade.getExitInfo(), trade.getTradePositionType());
+                trade.setMetrics(computed);
+                // Do NOT persist this back. GET requests must be idempotent and side-effect free.
+                // We compute the P&L inline for the payload only.
+                log.info("Computed inline P&L for {} trade {}: P&L={}, P&L%={}",
+                    trade.getStatus(), trade.getTradeId(),
+                    computed.getProfitLoss(), computed.getProfitLossPercentage());
+            }
+        }
+        return trades;
+    }
+
+    /**
+     * Calculate P&L metrics from raw entry/exit data.
+     * All nullable fields (fees, totalValue) are defaulted to ZERO so we never throw NPE.
+     */
+    private TradeMetrics computePnl(EntryExitInfo entry, EntryExitInfo exit, TradePositionType positionType) {
+        if (entry.getPrice() == null || exit.getPrice() == null || entry.getQuantity() == null) {
+            return TradeMetrics.builder()
+                    .profitLoss(BigDecimal.ZERO)
+                    .profitLossPercentage(BigDecimal.ZERO)
+                    .returnOnEquity(BigDecimal.ZERO)
+                    .build();
+        }
+
+        BigDecimal qty       = BigDecimal.valueOf(entry.getQuantity());
+        BigDecimal entryFees = entry.getFees()  != null ? entry.getFees()  : BigDecimal.ZERO;
+        BigDecimal exitFees  = exit.getFees()   != null ? exit.getFees()   : BigDecimal.ZERO;
+
+        BigDecimal profitLoss;
+        if (positionType == TradePositionType.SHORT) {
+            // SHORT: sell high, buy back low → profit = (entryPrice - exitPrice) × qty
+            profitLoss = entry.getPrice().subtract(exit.getPrice()).multiply(qty);
+        } else {
+            // LONG (default): buy low, sell high → profit = (exitPrice - entryPrice) × qty
+            profitLoss = exit.getPrice().subtract(entry.getPrice()).multiply(qty);
+        }
+        profitLoss = profitLoss.subtract(entryFees).subtract(exitFees);
+
+        BigDecimal investment = entry.getTotalValue() != null && entry.getTotalValue().compareTo(BigDecimal.ZERO) > 0
+                ? entry.getTotalValue()
+                : entry.getPrice().multiply(qty);
+
+        BigDecimal pnlPct = investment.compareTo(BigDecimal.ZERO) > 0
+                ? profitLoss.divide(investment, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100))
+                : BigDecimal.ZERO;
+
+        return TradeMetrics.builder()
+                .profitLoss(profitLoss)
+                .profitLossPercentage(pnlPct)
+                .returnOnEquity(pnlPct)
+                .build();
     }
     
     @Override
@@ -72,9 +160,26 @@ public class TradeApiServiceImpl implements TradeApiService {
                 List.of(savedTrade.getTradeId()), 
                 savedTrade.getPortfolioId(), 
                 savedTrade.getUserId());
+                
+            publishHoldingUpdateEvent(savedTrade, "ADD");
         }
         
         return savedTrade;
+    }
+    
+    private void publishHoldingUpdateEvent(TradeDetails tradeDetails, String updateType) {
+        log.info("Publishing portfolio update event for trade {} (status: {}, type: {})", 
+                 tradeDetails.getTradeId(), tradeDetails.getStatus(), updateType);
+        
+        try {
+            TradeHoldingEvent event = tradeHoldingEventMapper.toHoldingEvent(tradeDetails, updateType);
+            if (event != null) {
+                tradeHoldingEventPublisher.publishHoldingUpdate(event);
+            }
+        } catch (Exception e) {
+            log.error("Failed to publish holding update event for trade details: {}. Trade was saved successfully.", 
+                      tradeDetails.getTradeId(), e);
+        }
     }
     
     /**
@@ -118,6 +223,7 @@ public class TradeApiServiceImpl implements TradeApiService {
         
         // Get the original trade
         TradeDetails originalTrade = existingTradeOpt.get();
+        TradeStatus oldStatus = originalTrade.getStatus();
         
         // Validate non-editable fields
         validateNonEditableFields(originalTrade, tradeDetails);
@@ -141,6 +247,14 @@ public class TradeApiServiceImpl implements TradeApiService {
                 List.of(savedTrade.getTradeId()), 
                 savedTrade.getPortfolioId(), 
                 savedTrade.getUserId());
+                
+            if (oldStatus == TradeStatus.OPEN && savedTrade.getStatus() != TradeStatus.OPEN) {
+                publishHoldingUpdateEvent(savedTrade, "REMOVE");
+            } else if (oldStatus != TradeStatus.OPEN && savedTrade.getStatus() == TradeStatus.OPEN) {
+                publishHoldingUpdateEvent(savedTrade, "ADD");
+            } else if (oldStatus == TradeStatus.OPEN && savedTrade.getStatus() == TradeStatus.OPEN) {
+                publishHoldingUpdateEvent(savedTrade, "UPDATE");
+            }
         }
         
         return savedTrade;
@@ -188,7 +302,8 @@ public class TradeApiServiceImpl implements TradeApiService {
         if (updatedTrade.getEntryInfo() != null && originalTrade.getEntryInfo() != null) {
             // Check if price was modified
             if (updatedTrade.getEntryInfo().getPrice() != null && 
-                    !Objects.equals(updatedTrade.getEntryInfo().getPrice(), originalTrade.getEntryInfo().getPrice())) {
+                    (originalTrade.getEntryInfo().getPrice() == null ||
+                    updatedTrade.getEntryInfo().getPrice().compareTo(originalTrade.getEntryInfo().getPrice()) != 0)) {
                 exceptionBuilder.addFieldError("entryInfo.price", "Entry price cannot be modified");
                 hasErrors = true;
             }
@@ -236,6 +351,11 @@ public class TradeApiServiceImpl implements TradeApiService {
         // Preserve instrument info
         updatedTrade.setInstrumentInfo(originalTrade.getInstrumentInfo());
         
+        // Preserve status if missing
+        if (updatedTrade.getStatus() == null) {
+            updatedTrade.setStatus(originalTrade.getStatus());
+        }
+        
         // Preserve entry info core details (price, size)
         if (originalTrade.getEntryInfo() != null) {
             if (updatedTrade.getEntryInfo() == null) {
@@ -248,6 +368,12 @@ public class TradeApiServiceImpl implements TradeApiService {
         
         // Preserve trade executions list
         updatedTrade.setTradeExecutions(originalTrade.getTradeExecutions());
+        
+        // Preserve metrics — processTradeDetails will recalculate immediately after save.
+        // Without this, an update that omits the metrics field clears previously stored P&L.
+        if (updatedTrade.getMetrics() == null && originalTrade.getMetrics() != null) {
+            updatedTrade.setMetrics(originalTrade.getMetrics());
+        }
     }
     
     /**
@@ -309,6 +435,18 @@ public class TradeApiServiceImpl implements TradeApiService {
             // Validate all trades in batch
             validateTradesBatch(tradeDetailsList);
             
+            // Identify existing trades to map their old statuses
+            List<String> incomingIds = tradeDetailsList.stream()
+                .map(TradeDetails::getTradeId)
+                .filter(id -> id != null && !id.isEmpty())
+                .collect(Collectors.toList());
+                
+            Map<String, TradeStatus> oldStatusMap = new java.util.HashMap<>();
+            if (!incomingIds.isEmpty()) {
+                oldStatusMap = tradeDetailsService.findModelsByTradeIds(incomingIds).stream()
+                    .collect(Collectors.toMap(TradeDetails::getTradeId, TradeDetails::getStatus));
+            }
+
             // Generate trade IDs for new trades and prepare trades for saving
             prepareTradesForSaving(tradeDetailsList);
             
@@ -316,7 +454,30 @@ public class TradeApiServiceImpl implements TradeApiService {
             logBatchStatistics(tradeDetailsList);
             
             // Save all trades in a single operation
-            return tradeDetailsService.saveAllTradeDetails(tradeDetailsList);
+            List<TradeDetails> savedTrades = tradeDetailsService.saveAllTradeDetails(tradeDetailsList);
+            
+            // Publish events for each saved trade
+            if (savedTrades != null) {
+                for (TradeDetails savedTrade : savedTrades) {
+                    TradeStatus oldStatus = oldStatusMap.get(savedTrade.getTradeId());
+                    
+                    if (oldStatus == null) {
+                        // New trade
+                        publishHoldingUpdateEvent(savedTrade, "ADD");
+                    } else {
+                        // Existing trade
+                        if (oldStatus == TradeStatus.OPEN && savedTrade.getStatus() != TradeStatus.OPEN) {
+                            publishHoldingUpdateEvent(savedTrade, "REMOVE");
+                        } else if (oldStatus != TradeStatus.OPEN && savedTrade.getStatus() == TradeStatus.OPEN) {
+                            publishHoldingUpdateEvent(savedTrade, "ADD");
+                        } else if (oldStatus == TradeStatus.OPEN && savedTrade.getStatus() == TradeStatus.OPEN) {
+                            publishHoldingUpdateEvent(savedTrade, "UPDATE");
+                        }
+                    }
+                }
+            }
+            
+            return savedTrades;
         } catch (Exception e) {
             log.error("Error processing batch of trades: {}", e.getMessage(), e);
             throw e;

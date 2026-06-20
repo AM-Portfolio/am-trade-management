@@ -25,7 +25,7 @@ import java.util.Set;
  * REST controller for trade metrics operations with flexible filtering
  */
 @RestController
-@RequestMapping("/api/v1/metrics")
+@RequestMapping({"/api/v1/metrics", "/v1/metrics"})
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Trade Metrics", description = "Flexible trade metrics API with customizable filters")

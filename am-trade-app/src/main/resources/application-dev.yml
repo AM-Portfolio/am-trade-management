@@ -1,5 +1,10 @@
 # Development environment configuration
 
+spring:
+  autoconfigure:
+    exclude:
+      - com.am.security.config.SecurityAutoConfiguration
+
 # MongoDB development configuration
 # spring:
 #   data:
@@ -14,7 +19,7 @@
 app:
   persistence:
     mongodb:
-      uri: mongodb://admin:password@localhost:27017/portfolio?authSource=admin&retryWrites=false
+      uri: ${MONGODB_URI:mongodb://localhost:27017/portfolio?authSource=admin&retryWrites=false}
       database: portfolio
 # Logging configuration for development
 logging:

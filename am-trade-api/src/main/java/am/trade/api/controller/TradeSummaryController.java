@@ -32,7 +32,7 @@ import java.util.UUID;
  * REST controller for trade summary operations
  */
 @RestController
-@RequestMapping("/api/v1/trade-summary")
+@RequestMapping({"/api/v1/trade-summary", "/v1/trade-summary"})
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Trade Summary", description = "Trade summary operations by calendar periods")

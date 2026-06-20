@@ -57,6 +57,26 @@ public class GlobalExceptionHandler {
         
         return new ResponseEntity<>(errorResponse, ex.getStatusCode());
     }
+
+    /**
+     * Handle standard IllegalArgumentException (often used for validation)
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
+            IllegalArgumentException ex, HttpServletRequest request) {
+        log.error("Illegal argument exception: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .traceId(UUID.randomUUID().toString())
+                .build();
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
     
     /**
      * Handle validation errors from @Valid annotations

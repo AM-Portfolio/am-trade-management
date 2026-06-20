@@ -12,6 +12,8 @@ public class KafkaProperties {
     private String consumerGroupId = "am-trade-group";
     private String tradeEventsTopic = "trade-events";
     private String orderEventsTopic = "order-events";
+    private String holdingUpdateTopic = "am-holding-update";
+    private String portfolioUpdateTopic = "am-portfolio-update";
     private int retries = 3;
     private long retryBackoffMs = 1000;
     private int maxPollRecords = 500;

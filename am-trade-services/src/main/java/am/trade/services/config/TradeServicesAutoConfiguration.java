@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 
-import am.trade.models.mapper.TradeMapper;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.retry.RetryConfig;
 
@@ -20,15 +19,7 @@ import io.github.resilience4j.retry.RetryConfig;
 @ComponentScan(basePackages = "am.trade.services")
 public class TradeServicesAutoConfiguration {
     
-    /**
-     * Configure trade mapper if not already defined
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public TradeMapper tradeMapper() {
-        return new TradeMapper();
-    }
-    
+
     /**
      * Configure circuit breaker for trade service
      */

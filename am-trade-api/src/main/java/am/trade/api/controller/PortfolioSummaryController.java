@@ -26,7 +26,7 @@ import java.util.Map;
  * REST controller for portfolio summary operations
  */
 @RestController
-@RequestMapping("/api/v1/portfolio-summary")
+@RequestMapping({"/api/v1/portfolio-summary", "/v1/portfolio-summary"})
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Portfolio Summary", description = "Portfolio summary and analytics operations")

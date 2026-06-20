@@ -2,11 +2,15 @@ spring:
   application:
     name: am-trade-management
   profiles:
-    active: dev
+    active: local
     group:
       dev:
         - common
         - dev
+        - kafka
+      local:
+        - common
+        - local
         - kafka
       preprod:
         - common

@@ -25,18 +25,6 @@ public class ApiAutoConfiguration {
      * Configures CORS for the API to allow cross-origin requests from the frontend
      * @return WebMvcConfigurer with CORS configuration
      */
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**")
-                    .allowedOrigins("http://localhost:3000") // Frontend URL
-                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                    .allowedHeaders("*")
-                    .allowCredentials(true)
-                    .maxAge(3600); // 1 hour max age
-            }
-        };
-    }
+    // CORS configuration is now handled globally in LocalSecurityConfig
+    // and explicitly via @CrossOrigin on controllers
 }

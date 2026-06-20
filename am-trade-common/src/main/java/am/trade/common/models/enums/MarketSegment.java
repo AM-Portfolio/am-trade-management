@@ -13,6 +13,7 @@ public enum MarketSegment {
     MUTUAL_FUND,    // Mutual fund segment
     ETF,            // Exchange Traded Fund segment
     INDEX,           // Index segment
+    INDEX_SEGMENT,   // Index Segment from UI
     OPT, // Options,
     EQ, // Equities
     FUT, // Futures

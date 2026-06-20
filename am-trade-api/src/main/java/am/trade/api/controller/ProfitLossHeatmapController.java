@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
  * REST controller for profit/loss heatmap operations
  */
 @RestController
-@RequestMapping("/api/v1/heatmap")
+@RequestMapping({"/api/v1/heatmap", "/v1/heatmap"})
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Profit/Loss Heatmap", description = "Profit/Loss heatmap operations with various granularities")

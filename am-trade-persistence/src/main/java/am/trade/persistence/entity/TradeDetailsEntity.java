@@ -32,9 +32,21 @@ import lombok.NoArgsConstructor;
 @Document(collection = "trade_details")
 public class TradeDetailsEntity {
     
+    /**
+     * MongoDB internal document ID.
+     * Keep this separate from tradeId so that Spring Data's
+     * findByTradeId() queries a real indexed field, not _id.
+     */
     @Id
+    private String id;
+
+    /**
+     * Business trade ID — unique per trade, used in all application logic.
+     * Stored as a separate indexed field so queries like findByTradeId() work correctly.
+     */
+    @Indexed(unique = true)
     private String tradeId;
-    
+
     @Indexed
     private String portfolioId;
 

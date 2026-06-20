@@ -29,8 +29,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+
+
 @RestController
-@RequestMapping("/api/v1/trades")
+@RequestMapping({"/api/v1/trades", "/v1/trades"})
 @Tag(name = "Trade API", description = "API for trade operations")
 @RequiredArgsConstructor
 @Slf4j
@@ -67,8 +69,26 @@ public class TradeController {
     public ResponseEntity<TradeDetails> addTrade(
             @Parameter(description = "Trade details to add") @RequestBody @Validated TradeDetails tradeDetails) {
         
-        log.info("Adding new trade for portfolio: {} and symbol: {}", 
-                tradeDetails.getPortfolioId(), tradeDetails.getSymbol());
+        // Inject userId from context if missing
+        if (tradeDetails.getUserId() == null || tradeDetails.getUserId().isEmpty()) {
+            String contextUserId = com.am.security.context.UserContext.getUserId();
+            if (contextUserId != null && !contextUserId.isEmpty()) {
+                tradeDetails.setUserId(contextUserId);
+            } else {
+                // Fallback for local development when bypassing gateway
+                tradeDetails.setUserId("default-dev-user-id");
+            }
+        }
+
+        // Inject symbol from instrumentInfo if missing
+        if ((tradeDetails.getSymbol() == null || tradeDetails.getSymbol().isEmpty()) && 
+            tradeDetails.getInstrumentInfo() != null && 
+            tradeDetails.getInstrumentInfo().getSymbol() != null) {
+            tradeDetails.setSymbol(tradeDetails.getInstrumentInfo().getSymbol());
+        }
+
+        log.info("Adding new trade for portfolio: {} and symbol: {} by user: {}", 
+                tradeDetails.getPortfolioId(), tradeDetails.getSymbol(), tradeDetails.getUserId());
         
         // Let the global exception handler manage exceptions
         TradeDetails savedTrade = tradeApiService.addTrade(tradeDetails);

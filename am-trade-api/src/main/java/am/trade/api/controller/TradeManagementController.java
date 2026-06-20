@@ -20,7 +20,7 @@ import java.util.Map;
  * REST controller for trade management operations
  */
 @RestController
-@RequestMapping("/api/v1/trades")
+@RequestMapping({"/api/v1/trades", "/v1/trades"})
 @RequiredArgsConstructor
 @Slf4j
 public class TradeManagementController {

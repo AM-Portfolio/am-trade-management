@@ -140,14 +140,27 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     public TradeDetails saveTradeDetails(TradeDetails tradeDetails) {
         log.debug("Saving trade details: {}", tradeDetails);
         TradeDetailsEntity entity = tradeDetailsMapper.toTradeEntity(tradeDetails);
-         return tradeDetailsMapper.toTradeDetails(tradeDetailsRepository.save(entity));
+        
+        if (tradeDetails.getTradeId() != null) {
+            tradeDetailsRepository.findByTradeId(tradeDetails.getTradeId())
+                    .ifPresent(existing -> entity.setId(existing.getId()));
+        }
+        
+        return tradeDetailsMapper.toTradeDetails(tradeDetailsRepository.save(entity));
     }
     
     @Override
     public List<TradeDetails> saveAllTradeDetails(List<TradeDetails> tradeDetailsList) {
         log.debug("Saving {} trade details records", tradeDetailsList.size());
         List<TradeDetailsEntity> entities = tradeDetailsList.stream()
-                .map(tradeDetailsMapper::toTradeEntity)
+                .map(tradeDetails -> {
+                    TradeDetailsEntity entity = tradeDetailsMapper.toTradeEntity(tradeDetails);
+                    if (tradeDetails.getTradeId() != null) {
+                        tradeDetailsRepository.findByTradeId(tradeDetails.getTradeId())
+                                .ifPresent(existing -> entity.setId(existing.getId()));
+                    }
+                    return entity;
+                })
                 .collect(Collectors.toList());
         List<TradeDetailsEntity> savedEntities = tradeDetailsRepository.saveAll(entities);
         
@@ -171,24 +184,9 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     public List<TradeDetails> findByPortfolioIdInAndEntryInfoTimestampBetween(List<String> portfolioIds, LocalDateTime startDate, LocalDateTime endDate) {
         log.debug("Finding trade details by portfolio IDs: {} and entry date between {} and {}", portfolioIds, startDate, endDate);
         
-        // Use existing repository methods to implement this functionality
-        List<TradeDetailsEntity> entities = tradeDetailsRepository.findByPortfolioIdIn(portfolioIds);
+        List<TradeDetailsEntity> entities = tradeDetailsRepository.findByPortfolioIdInAndEntryInfoTimestampBetween(portfolioIds, startDate, endDate);
         
-        // Filter by entry date in memory since we don't have a direct repository method
-        List<TradeDetailsEntity> filteredEntities = entities.stream()
-                .filter(entity -> {
-                    // Access timestamp through entryInfo
-                    if (entity.getEntryInfo() == null) {
-                        return false;
-                    }
-                    LocalDateTime entryDate = entity.getEntryInfo().getTimestamp();
-                    return entryDate != null && 
-                           (entryDate.isEqual(startDate) || entryDate.isAfter(startDate)) && 
-                           (entryDate.isEqual(endDate) || entryDate.isBefore(endDate));
-                })
-                .collect(Collectors.toList());
-        
-        List<TradeDetails> tradeDetails = filteredEntities.stream()
+        List<TradeDetails> tradeDetails = entities.stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
                 

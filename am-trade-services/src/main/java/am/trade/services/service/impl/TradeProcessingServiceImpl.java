@@ -150,6 +150,41 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
      */
     private PortfolioMetrics calculatePortfolioMetrics(List<String> tradeIds) {
         List<TradeDetails> tradeDetails = tradeDetailsService.findModelsByTradeIds(tradeIds);
+
+        // ----------------------------------------------------------------
+        // STEP 1: Recalculate and persist P&L metrics for every CLOSED trade
+        // (WIN / LOSS / BREAK_EVEN) using the trade's own entryInfo + exitInfo.
+        // This guarantees that the TradeDetails document in MongoDB always holds
+        // the real P&L, so the UI can display it directly.
+        // OPEN trades are skipped — we have no live market price here, so
+        // storing zeros would overwrite any unrealized P&L already set.
+        // ----------------------------------------------------------------
+        List<TradeDetails> tradesToUpdate = new java.util.ArrayList<>();
+        for (TradeDetails trade : tradeDetails) {
+            boolean isClosed = trade.getStatus() == TradeStatus.WIN
+                            || trade.getStatus() == TradeStatus.LOSS
+                            || trade.getStatus() == TradeStatus.BREAK_EVEN;
+
+            if (isClosed && trade.getEntryInfo() != null && trade.getExitInfo() != null) {
+                TradeMetrics freshMetrics = calculateTradeMetrics(
+                    trade.getEntryInfo(),
+                    trade.getExitInfo(),
+                    trade.getTradePositionType()
+                );
+                trade.setMetrics(freshMetrics);
+                tradesToUpdate.add(trade);
+                log.info("Recalculated metrics for {} trade {}: P&L={}, P&L%={}",
+                    trade.getStatus(),
+                    trade.getTradeId(),
+                    freshMetrics.getProfitLoss(),
+                    freshMetrics.getProfitLossPercentage());
+            }
+        }
+        
+        if (!tradesToUpdate.isEmpty()) {
+            tradeDetailsService.saveAllTradeDetails(tradesToUpdate);
+        }
+
         // Initialize counters and accumulators
         int totalTrades = tradeIds.size();
         int winningTrades = 0;
@@ -325,47 +360,19 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
 
     @Override
     public TradeDetails getCurrentPosition(String symbol, String portfolioId) {
-        // This would typically involve querying a database or cache for the current position
-        // For now, we'll return null as a placeholder
-        log.info("Getting current position for symbol {} in portfolio {}", symbol, portfolioId);
-        return null;
-    }
-    
-    /**
-     * Sorts winning trades by profit in descending order (highest profit first)
-     * 
-     * @param trades List of all trades
-     * @return List of winning trades sorted by profit (highest to lowest)
-     */
-    private List<TradeDetails> sortWinningTrades(List<TradeDetails> trades) {
+        log.info("Getting current open position for symbol {} in portfolio {}", symbol, portfolioId);
+        
+        List<TradeDetails> trades = tradeDetailsService.findModelsBySymbol(symbol);
+        
         if (trades == null || trades.isEmpty()) {
-            return new ArrayList<>();
+            return null;
         }
         
         return trades.stream()
-                .filter(trade -> trade.getStatus() == TradeStatus.WIN)
-                .filter(trade -> trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null)
-                .sorted((t1, t2) -> t2.getMetrics().getProfitLoss().compareTo(t1.getMetrics().getProfitLoss()))
-                .collect(Collectors.toList());
-    }
-    
-    /**
-     * Sorts losing trades by loss amount in descending order (highest loss first)
-     * Loss amounts are typically negative, so we sort by the absolute value
-     * 
-     * @param trades List of all trades
-     * @return List of losing trades sorted by loss amount (highest to lowest)
-     */
-    private List<TradeDetails> sortLosingTrades(List<TradeDetails> trades) {
-        if (trades == null || trades.isEmpty()) {
-            return new ArrayList<>();
-        }
-        
-        return trades.stream()
-                .filter(trade -> trade.getStatus() == TradeStatus.LOSS)
-                .filter(trade -> trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null)
-                .sorted((t1, t2) -> t1.getMetrics().getProfitLoss().compareTo(t2.getMetrics().getProfitLoss()))
-                .collect(Collectors.toList());
+                .filter(t -> portfolioId.equals(t.getPortfolioId()))
+                .filter(t -> TradeStatus.OPEN.equals(t.getStatus()))
+                .findFirst()
+                .orElse(null);
     }
     
     /**
@@ -543,12 +550,14 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                     .multiply(BigDecimal.valueOf(entryInfo.getQuantity()));
         }
         
-        // Subtract fees
-        BigDecimal totalFees = entryInfo.getFees().add(exitInfo.getFees());
+        // Subtract fees — guard against null if the user didn't fill in fees
+        BigDecimal entryFees  = entryInfo.getFees()  != null ? entryInfo.getFees()  : BigDecimal.ZERO;
+        BigDecimal exitFees   = exitInfo.getFees()   != null ? exitInfo.getFees()   : BigDecimal.ZERO;
+        BigDecimal totalFees  = entryFees.add(exitFees);
         profitLoss = profitLoss.subtract(totalFees);
         
-        // Calculate profit/loss percentage
-        BigDecimal initialInvestment = entryInfo.getTotalValue();
+        // Calculate profit/loss percentage — guard against null totalValue
+        BigDecimal initialInvestment = entryInfo.getTotalValue() != null ? entryInfo.getTotalValue() : BigDecimal.ZERO;
         BigDecimal profitLossPercentage = initialInvestment.compareTo(BigDecimal.ZERO) > 0
                 ? profitLoss.divide(initialInvestment, DECIMAL_SCALE, ROUNDING_MODE).multiply(BigDecimal.valueOf(100))
                 : BigDecimal.ZERO;
@@ -568,15 +577,13 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             holdingTimeMinutes = holdingTime.toMinutes() % 60;
         }
         
-        // For now, we'll set risk amount and reward amount to simple values
-        // In a real implementation, these would be calculated based on stop loss and take profit levels
-        BigDecimal riskAmount = initialInvestment.multiply(BigDecimal.valueOf(0.02)); // Assume 2% risk
-        BigDecimal rewardAmount = profitLoss.compareTo(BigDecimal.ZERO) > 0 ? profitLoss : riskAmount.multiply(BigDecimal.valueOf(2));
+        // We do not have stop-loss or take-profit data in EntryExitInfo yet.
+        // Therefore, we cannot calculate actual risk/reward. Initialize to ZERO instead of making false assumptions.
+        BigDecimal riskAmount = BigDecimal.ZERO;
+        BigDecimal rewardAmount = profitLoss.compareTo(BigDecimal.ZERO) > 0 ? profitLoss : BigDecimal.ZERO;
         
         // Calculate risk/reward ratio
-        BigDecimal riskRewardRatio = riskAmount.compareTo(BigDecimal.ZERO) > 0 && rewardAmount.compareTo(BigDecimal.ZERO) > 0
-                ? rewardAmount.divide(riskAmount, DECIMAL_SCALE, ROUNDING_MODE)
-                : BigDecimal.ONE;
+        BigDecimal riskRewardRatio = BigDecimal.ZERO;
         
         return TradeMetrics.builder()
                 .profitLoss(profitLoss)
@@ -629,10 +636,12 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                 currentPosition -= quantity;
             }
             
-            // If position is completely closed (back to zero), end the current cycle
-            if (currentPosition == 0 && !currentCycle.isEmpty()) {
+            // If position is completely closed (back to zero) or flipped negative, end the current cycle
+            if (currentPosition <= 0 && !currentCycle.isEmpty()) {
                 tradeCycles.add(new ArrayList<>(currentCycle));
                 currentCycle.clear();
+                // Reset position to track the flipped position if it went negative
+                currentPosition = Math.abs(currentPosition);
             }
         }
         

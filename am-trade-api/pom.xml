@@ -50,6 +50,12 @@
             <version>${project.version}</version>
         </dependency>
         <!-- Dashboard module dependency is already included above -->
+        <!-- Security library for UserContext (used by GatewayUserContextFilter) -->
+        <dependency>
+            <groupId>com.am.libraries</groupId>
+            <artifactId>am-security-lib</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
     
     <build>
