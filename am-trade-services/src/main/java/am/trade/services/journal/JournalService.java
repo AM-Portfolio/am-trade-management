@@ -34,17 +34,17 @@ public class JournalService {
         log.info("Fetching journal entry: {}", id);
         return repository.findById(id)
                 .map(this::mapToDto)
-                .orElseThrow(() -> new RuntimeException("Journal entry not found: " + id));
+                .orElseThrow(() -> new am.trade.exceptions.TradeException("Journal entry not found: " + id, org.springframework.http.HttpStatus.NOT_FOUND));
     }
 
     public TradeJournalEntry updateJournalEntry(String id, TradeJournalEntry dto, String userId) {
         log.info("Updating journal entry: {}", id);
         
         JournalEntryEntity existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Journal entry not found: " + id));
+                .orElseThrow(() -> new am.trade.exceptions.TradeException("Journal entry not found: " + id, org.springframework.http.HttpStatus.NOT_FOUND));
                 
         if (!existing.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized to update this journal entry");
+            throw new am.trade.exceptions.TradeException("Unauthorized to update this journal entry", org.springframework.http.HttpStatus.FORBIDDEN);
         }
         
         existing.setTitle(dto.getTitle());
@@ -66,10 +66,10 @@ public class JournalService {
     public void deleteJournalEntry(String id, String userId) {
         log.info("Deleting journal entry: {}", id);
         JournalEntryEntity existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Journal entry not found: " + id));
+                .orElseThrow(() -> new am.trade.exceptions.TradeException("Journal entry not found: " + id, org.springframework.http.HttpStatus.NOT_FOUND));
                 
         if (!existing.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized to delete this journal entry");
+            throw new am.trade.exceptions.TradeException("Unauthorized to delete this journal entry", org.springframework.http.HttpStatus.FORBIDDEN);
         }
         
         repository.deleteById(id);

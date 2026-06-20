@@ -87,8 +87,10 @@ public class PortfolioUpdateConsumerService {
             log.info("Portfolio update processed and acknowledged for user: {}", event.getUserId());
 
         } catch (Exception e) {
-            // Log but don't acknowledge — Kafka will redeliver the message
+            // Log and rethrow so Kafka's DefaultErrorHandler can trigger retries
+            // and eventually route to DLT if retries are exhausted.
             log.error("Failed to process portfolio update message: {}", e.getMessage(), e);
+            throw e;
         }
     }
 

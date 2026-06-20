@@ -55,10 +55,10 @@ public class NotebookService {
     public NotebookItem getNotebookItem(String itemId, String userId) {
         log.info("Fetching notebook item: {}", itemId);
         NotebookItemEntity entity = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Notebook item not found: " + itemId));
+                .orElseThrow(() -> new am.trade.exceptions.TradeException("Notebook item not found: " + itemId, org.springframework.http.HttpStatus.NOT_FOUND));
                 
         if (!entity.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized");
+            throw new am.trade.exceptions.TradeException("Unauthorized", org.springframework.http.HttpStatus.FORBIDDEN);
         }
         return mapItemToDto(entity);
     }
@@ -67,10 +67,10 @@ public class NotebookService {
         log.info("Updating notebook item: {}", itemId);
         
         NotebookItemEntity existing = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Notebook item not found: " + itemId));
+                .orElseThrow(() -> new am.trade.exceptions.TradeException("Notebook item not found: " + itemId, org.springframework.http.HttpStatus.NOT_FOUND));
                 
         if (!existing.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized");
+            throw new am.trade.exceptions.TradeException("Unauthorized", org.springframework.http.HttpStatus.FORBIDDEN);
         }
         
         existing.setTitle(dto.getTitle());
@@ -88,10 +88,10 @@ public class NotebookService {
     public void deleteNotebookItem(String itemId, String userId) {
         log.info("Deleting notebook item: {}", itemId);
         NotebookItemEntity existing = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Notebook item not found: " + itemId));
+                .orElseThrow(() -> new am.trade.exceptions.TradeException("Notebook item not found: " + itemId, org.springframework.http.HttpStatus.NOT_FOUND));
                 
         if (!existing.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized");
+            throw new am.trade.exceptions.TradeException("Unauthorized", org.springframework.http.HttpStatus.FORBIDDEN);
         }
         
         itemRepository.deleteById(itemId);
@@ -122,10 +122,10 @@ public class NotebookService {
         log.info("Updating notebook tag: {}", tagId);
         
         NotebookTagEntity existing = tagRepository.findById(tagId)
-                .orElseThrow(() -> new RuntimeException("Notebook tag not found: " + tagId));
+                .orElseThrow(() -> new am.trade.exceptions.TradeException("Notebook tag not found: " + tagId, org.springframework.http.HttpStatus.NOT_FOUND));
                 
         if (!existing.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized");
+            throw new am.trade.exceptions.TradeException("Unauthorized", org.springframework.http.HttpStatus.FORBIDDEN);
         }
         
         existing.setName(dto.getName());
@@ -139,10 +139,10 @@ public class NotebookService {
     public void deleteNotebookTag(String tagId, String userId) {
         log.info("Deleting notebook tag: {}", tagId);
         NotebookTagEntity existing = tagRepository.findById(tagId)
-                .orElseThrow(() -> new RuntimeException("Notebook tag not found: " + tagId));
+                .orElseThrow(() -> new am.trade.exceptions.TradeException("Notebook tag not found: " + tagId, org.springframework.http.HttpStatus.NOT_FOUND));
                 
         if (!existing.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized");
+            throw new am.trade.exceptions.TradeException("Unauthorized", org.springframework.http.HttpStatus.FORBIDDEN);
         }
         
         tagRepository.deleteById(tagId);
