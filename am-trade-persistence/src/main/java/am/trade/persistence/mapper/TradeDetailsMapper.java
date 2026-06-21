@@ -51,13 +51,18 @@ public class TradeDetailsMapper {
             return null;
         }
         
+        // Provide safe defaults for legacy data missing required fields
+        String resolvedTradeId = entity.getTradeId() != null ? entity.getTradeId() : 
+                               (entity.getId() != null ? entity.getId() : "unknown-trade");
+        String resolvedPortfolioId = entity.getPortfolioId() != null ? entity.getPortfolioId() : "unknown-portfolio";
+        
         return TradeDetails.builder()
-                .tradeId(entity.getTradeId())
-                .portfolioId(entity.getPortfolioId())
+                .tradeId(resolvedTradeId)
+                .portfolioId(resolvedPortfolioId)
                 .symbol(entity.getSymbol())
                 .instrumentInfo(entity.getInstrumentInfo())
-                .tradePositionType(entity.getTradePositionType())
-                .status(entity.getStatus())
+                .tradePositionType(entity.getTradePositionType() != null ? entity.getTradePositionType() : am.trade.common.models.enums.TradePositionType.LONG)
+                .status(entity.getStatus() != null ? entity.getStatus() : am.trade.common.models.enums.TradeStatus.OPEN)
                 .entryInfo(entity.getEntryInfo())
                 .exitInfo(entity.getExitInfo())
                 .metrics(entity.getMetrics())
