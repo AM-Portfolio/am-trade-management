@@ -28,10 +28,15 @@ import am.trade.common.models.DerivativeInfo;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.enums.TradePositionType;
 import am.trade.common.models.enums.TradeStatus;
+import am.trade.models.kafka.TradeHoldingEvent;
+import am.trade.services.publisher.TradeHoldingEventPublisher;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import am.trade.services.service.PortfolioPersistenceService;
 import lombok.RequiredArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * Implementation of TradeApiService that handles trade API operations
@@ -48,6 +53,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     private final PortfolioPersistenceService portfolioPersistenceService;
     private final TradeValidator tradeValidator;
     private final FavoriteFilterService favoriteFilterService;
+    private final TradeHoldingEventPublisher tradeHoldingEventPublisher;
     
     @Override
     public List<TradeDetails> getTradeDetailsByPortfolioAndSymbols(String portfolioId, List<String> symbols) {
@@ -103,6 +109,36 @@ public class TradeApiServiceImpl implements TradeApiService {
                 List.of(savedTrade), 
                 savedTrade.getPortfolioId(), 
                 savedTrade.getUserId());
+                
+            // Notify Portfolio service via am-portfolio topic
+            try {
+                BigDecimal quantity = savedTrade.getEntryInfo() != null && savedTrade.getEntryInfo().getQuantity() != null
+                    ? BigDecimal.valueOf(savedTrade.getEntryInfo().getQuantity())
+                    : BigDecimal.ZERO;
+
+                BigDecimal price = savedTrade.getEntryInfo() != null && savedTrade.getEntryInfo().getPrice() != null
+                    ? savedTrade.getEntryInfo().getPrice()
+                    : BigDecimal.ZERO;
+
+                TradeHoldingEvent holdingEvent = TradeHoldingEvent.builder()
+                    .id(savedTrade.getTradeId())
+                    .userId(savedTrade.getUserId())
+                    .portfolioId(savedTrade.getPortfolioId())
+                    .symbol(savedTrade.getSymbol())
+                    .quantity(quantity)
+                    .averagePrice(price)
+                    .investmentAmount(price.multiply(quantity))
+                    .timestamp(LocalDateTime.now())
+                    .updateType("ADD")
+                    .build();
+
+                log.info("Publishing holding update to Portfolio for symbol: {}, portfolioId: {}",
+                         savedTrade.getSymbol(), savedTrade.getPortfolioId());
+                tradeHoldingEventPublisher.publishHoldingUpdate(holdingEvent);
+            } catch (Exception e) {
+                log.error("Failed to publish holding update for symbol: {}. Trade was saved successfully.",
+                          savedTrade.getSymbol(), e);
+            }
         }
         
         return savedTrade;
