@@ -15,6 +15,7 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
 import am.trade.kafka.model.TradeUpdateEvent;
+import am.trade.kafka.service.KafkaIdempotencyService;
 
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
@@ -49,16 +50,24 @@ public class TradeConsumerService {
      * Portfolio listens to this topic to recalculate holdings after each trade.
      */
     private final TradeHoldingEventPublisher tradeHoldingEventPublisher;
+    
+    /**
+     * Idempotency guard — prevents duplicate processing when Kafka redelivers messages.
+     * See {@link KafkaIdempotencyService} for the full explanation.
+     */
+    private final KafkaIdempotencyService kafkaIdempotencyService;
 
 
     public TradeConsumerService(ObjectMapper objectMapper,
                                 TradeProcessingService tradeProcessingService,
                                 TradeDetailsService tradeDetailsService,
-                                TradeHoldingEventPublisher tradeHoldingEventPublisher) {
+                                TradeHoldingEventPublisher tradeHoldingEventPublisher,
+                                KafkaIdempotencyService kafkaIdempotencyService) {
         this.objectMapper = objectMapper;
         this.tradeProcessingService = tradeProcessingService;
         this.tradeDetailsService = tradeDetailsService;
         this.tradeHoldingEventPublisher = tradeHoldingEventPublisher;
+        this.kafkaIdempotencyService = kafkaIdempotencyService;
     }
 
     @KafkaListener(topics = "${am.trade.kafka.trade.topic}", 
@@ -73,7 +82,20 @@ public class TradeConsumerService {
         TradeUpdateEvent event = objectMapper.readValue(message, TradeUpdateEvent.class);
         log.info("Converted to event: {}", event);
 
-        // Removed Idempotency check.
+        // Step 2: Idempotency check.
+        // If this message ID has already been successfully processed (e.g., Kafka redelivery),
+        // we skip it and acknowledge immediately. No duplicate trades.
+        String messageId = event.getId() != null ? event.getId().toString() : null;
+        // Use the @Value-injected fields — NOT hardcoded placeholder strings
+        String topic = topicName;
+        String groupId = consumerGroupId;
+
+        if (messageId != null && kafkaIdempotencyService.isAlreadyProcessed(messageId)) {
+            log.warn("Duplicate trade event detected — skipping. eventId: {}, userId: {}",
+                    messageId, event.getUserId());
+            acknowledgment.acknowledge();
+            return;
+        }
 
         // Step 3: Process the event — business logic lives here.
         // Any exception here will propagate to the DefaultErrorHandler which will:
@@ -81,9 +103,16 @@ public class TradeConsumerService {
         //   b) After all retries fail: publish to the .DLT topic and commit the offset
         processMessage(event);
 
+        // Step 4: Mark as processed AFTER successful processing.
+        // This order matters: if we marked it BEFORE processing and then crashed,
+        // we would permanently lose this trade (marked as done but never actually saved).
+        if (messageId != null) {
+            kafkaIdempotencyService.markAsProcessed(messageId, topic, groupId);
+        }
+
         // Step 5: Acknowledge the message (commit the Kafka offset).
         acknowledgment.acknowledge();
-        log.info("Trade event processed and acknowledged successfully. eventId: {}", event.getId());
+        log.info("Trade event processed and acknowledged successfully. eventId: {}", messageId);
     }
 
     private void processMessage(TradeUpdateEvent event) {
