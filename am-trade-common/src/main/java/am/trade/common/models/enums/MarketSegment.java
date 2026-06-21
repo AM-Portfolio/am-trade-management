@@ -87,11 +87,9 @@ public enum MarketSegment {
             case "INDEXSEGMENT":
                 return INDEX;
             default:
-                try {
-                    return MarketSegment.valueOf(value.toUpperCase().trim());
-                } catch (IllegalArgumentException e) {
-                    return UNKNOWN;
-                }
+                // Let it throw IllegalArgumentException if not found
+                // so the API rejects invalid requests with 400 Bad Request
+                return MarketSegment.valueOf(value.toUpperCase().trim());
         }
     }
 

@@ -42,27 +42,25 @@ public class TradeDetailsMapper {
     }
     
     /**
-     * Convert a TradeDetailsEntity to a TradeDetails
+     * Convert a TradeDetailsEntity to a TradeDetails.
+     * Maps faithfully from DB — does NOT inject fake defaults.
+     * Corrupt record filtering is handled by the service layer.
+     *
      * @param entity The persistence entity to convert
-     * @return The corresponding domain model
+     * @return The corresponding domain model, or null if entity is null
      */
     public TradeDetails toTradeDetails(TradeDetailsEntity entity) {
         if (entity == null) {
             return null;
         }
         
-        // Provide safe defaults for legacy data missing required fields
-        String resolvedTradeId = entity.getTradeId() != null ? entity.getTradeId() : 
-                               (entity.getId() != null ? entity.getId() : "unknown-trade");
-        String resolvedPortfolioId = entity.getPortfolioId() != null ? entity.getPortfolioId() : "unknown-portfolio";
-        
         return TradeDetails.builder()
-                .tradeId(resolvedTradeId)
-                .portfolioId(resolvedPortfolioId)
+                .tradeId(entity.getTradeId())
+                .portfolioId(entity.getPortfolioId())
                 .symbol(entity.getSymbol())
                 .instrumentInfo(entity.getInstrumentInfo())
-                .tradePositionType(entity.getTradePositionType() != null ? entity.getTradePositionType() : am.trade.common.models.enums.TradePositionType.LONG)
-                .status(entity.getStatus() != null ? entity.getStatus() : am.trade.common.models.enums.TradeStatus.OPEN)
+                .tradePositionType(entity.getTradePositionType())
+                .status(entity.getStatus())
                 .entryInfo(entity.getEntryInfo())
                 .exitInfo(entity.getExitInfo())
                 .metrics(entity.getMetrics())

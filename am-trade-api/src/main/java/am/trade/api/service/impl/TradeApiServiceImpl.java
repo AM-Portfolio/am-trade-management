@@ -58,6 +58,15 @@ public class TradeApiServiceImpl implements TradeApiService {
         String currentUserId = UserContext.getUserIdOrThrow();
         return trades.stream()
                 .filter(t -> currentUserId.equals(t.getUserId()))
+                .filter(t -> {
+                    boolean isValid = t.getTradeId() != null && t.getPortfolioId() != null && 
+                                      t.getStatus() != null && t.getTradePositionType() != null;
+                    if (!isValid) {
+                        log.warn("Filtering out corrupt trade record missing required fields. Trade ID: {}, Portfolio: {}", 
+                                 t.getTradeId(), t.getPortfolioId());
+                    }
+                    return isValid;
+                })
                 .collect(Collectors.toList());
     }
     
