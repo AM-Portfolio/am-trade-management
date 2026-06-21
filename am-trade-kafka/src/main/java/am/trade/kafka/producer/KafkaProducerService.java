@@ -20,7 +20,7 @@ public class KafkaProducerService implements TradeHoldingEventPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    @Value("${am.trade.kafka.holding-update.topic:am-holding-update}")
+    @Value("${am.trade.kafka.holding-update.topic:am-portfolio}")
     private String holdingUpdateTopic;
 
     public KafkaProducerService(KafkaTemplate<String, Object> kafkaTemplate) {

@@ -31,7 +31,7 @@ spring:
   application:
     name: am-trade-management
   profiles:
-    include: security
+    include: security,kafka
   config:
     import:
       - classpath:application-common.yml
