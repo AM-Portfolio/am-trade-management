@@ -71,27 +71,6 @@ public enum MarketSegment {
         this.isDerivative = isDerivative;
     }
 
-    /**
-     * Custom JSON deserializer that accepts alias strings from clients.
-     * For example, the UI sends "INDEX_SEGMENT" which maps to the INDEX enum value.
-     * This avoids adding duplicate enum values while staying tolerant of client naming.
-     */
-    @JsonCreator
-    public static MarketSegment fromString(String value) {
-        if (value == null) {
-            return UNKNOWN;
-        }
-        // Handle known aliases from the UI
-        switch (value.toUpperCase().trim()) {
-            case "INDEX_SEGMENT":
-            case "INDEXSEGMENT":
-                return INDEX;
-            default:
-                // Let it throw IllegalArgumentException if not found
-                // so the API rejects invalid requests with 400 Bad Request
-                return MarketSegment.valueOf(value.toUpperCase().trim());
-        }
-    }
 
     public String getDisplayName() {
         return displayName;
