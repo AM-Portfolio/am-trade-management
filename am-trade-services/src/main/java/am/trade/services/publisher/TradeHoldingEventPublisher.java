@@ -1,11 +1,10 @@
 package am.trade.services.publisher;
 
-import am.trade.models.kafka.TradeHoldingEvent;
+import am.trade.models.kafka.PortfolioSyncEvent;
 
 /**
- * Interface for publishing trade holding events.
- * Implemented by the Kafka module to break circular dependencies.
+ * Interface for publishing trade holding updates to Kafka
  */
 public interface TradeHoldingEventPublisher {
-    void publishHoldingUpdate(TradeHoldingEvent event);
+    void publishHoldingUpdate(PortfolioSyncEvent event);
 }

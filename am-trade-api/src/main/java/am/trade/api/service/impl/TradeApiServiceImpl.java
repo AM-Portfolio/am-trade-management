@@ -28,7 +28,7 @@ import am.trade.common.models.DerivativeInfo;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.enums.TradePositionType;
 import am.trade.common.models.enums.TradeStatus;
-import am.trade.models.kafka.TradeHoldingEvent;
+import am.trade.services.publisher.TradeHoldingEventPublisher;
 import am.trade.services.publisher.TradeHoldingEventPublisher;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
@@ -120,21 +120,32 @@ public class TradeApiServiceImpl implements TradeApiService {
                     ? savedTrade.getEntryInfo().getPrice()
                     : BigDecimal.ZERO;
 
-                TradeHoldingEvent holdingEvent = TradeHoldingEvent.builder()
-                    .id(savedTrade.getTradeId())
-                    .userId(savedTrade.getUserId())
-                    .portfolioId(savedTrade.getPortfolioId())
+                String assetType = savedTrade.getInstrumentInfo() != null && savedTrade.getInstrumentInfo().getSegment() != null 
+                    ? savedTrade.getInstrumentInfo().getSegment().name() 
+                    : "EQUITY";
+
+                String isin = savedTrade.getInstrumentInfo() != null ? savedTrade.getInstrumentInfo().getIsin() : null;
+
+                am.trade.models.kafka.EquityPosition equity = am.trade.models.kafka.EquityPosition.builder()
                     .symbol(savedTrade.getSymbol())
+                    .assetType(assetType)
                     .quantity(quantity)
-                    .averagePrice(price)
-                    .investmentAmount(price.multiply(quantity))
+                    .avgBuyingPrice(price)
+                    .investmentValue(price.multiply(quantity))
+                    .isin(isin)
+                    .build();
+
+                am.trade.models.kafka.PortfolioSyncEvent syncEvent = am.trade.models.kafka.PortfolioSyncEvent.builder()
+                    .id(savedTrade.getTradeId())
+                    .brokerType("MANUAL") // Manual entry from API
+                    .userId(savedTrade.getUserId())
+                    .equities(List.of(equity))
                     .timestamp(LocalDateTime.now())
-                    .updateType("ADD")
                     .build();
 
                 log.info("Publishing holding update to Portfolio for symbol: {}, portfolioId: {}",
                          savedTrade.getSymbol(), savedTrade.getPortfolioId());
-                tradeHoldingEventPublisher.publishHoldingUpdate(holdingEvent);
+                tradeHoldingEventPublisher.publishHoldingUpdate(syncEvent);
             } catch (Exception e) {
                 log.error("Failed to publish holding update for symbol: {}. Trade was saved successfully.",
                           savedTrade.getSymbol(), e);

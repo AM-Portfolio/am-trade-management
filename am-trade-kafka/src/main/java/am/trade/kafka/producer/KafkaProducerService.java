@@ -1,7 +1,7 @@
 package am.trade.kafka.producer;
 
 import am.trade.kafka.model.BaseEvent;
-import am.trade.models.kafka.TradeHoldingEvent;
+import am.trade.models.kafka.PortfolioSyncEvent;
 import am.trade.services.publisher.TradeHoldingEventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,7 +42,7 @@ public class KafkaProducerService implements TradeHoldingEventPublisher {
     }
 
     @Override
-    public void publishHoldingUpdate(TradeHoldingEvent event) {
+    public void publishHoldingUpdate(PortfolioSyncEvent event) {
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
@@ -56,19 +56,19 @@ public class KafkaProducerService implements TradeHoldingEventPublisher {
         }
     }
 
-    private void sendToKafka(TradeHoldingEvent event) {
-        log.info("Sending holding update event for symbol: {}, updateType: {}", 
-                 event.getSymbol(), event.getUpdateType());
+    private void sendToKafka(PortfolioSyncEvent event) {
+        log.info("Sending holding update event for userId: {}, equities count: {}", 
+                 event.getUserId(), event.getEquities() != null ? event.getEquities().size() : 0);
 
         CompletableFuture<SendResult<String, Object>> future = 
             kafkaTemplate.send(holdingUpdateTopic, event.getId(), event);
 
         future.whenComplete((result, ex) -> {
             if (ex == null) {
-                log.info("Holding update event sent successfully for symbol: {}", event.getSymbol());
+                log.info("Holding update event sent successfully for userId: {}", event.getUserId());
             } else {
-                log.error("Failed to send holding update event for symbol: {}", 
-                          event.getSymbol(), ex);
+                log.error("Failed to send holding update event for userId: {}", 
+                          event.getUserId(), ex);
             }
         });
     }

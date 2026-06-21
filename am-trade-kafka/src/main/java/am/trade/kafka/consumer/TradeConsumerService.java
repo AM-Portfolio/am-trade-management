@@ -21,7 +21,7 @@ import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import am.trade.services.publisher.TradeHoldingEventPublisher;
 import am.trade.common.models.TradeDetails;
-import am.trade.models.kafka.TradeHoldingEvent;
+import am.trade.services.publisher.TradeHoldingEventPublisher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -129,28 +129,20 @@ public class TradeConsumerService {
             event.getUserId()
         );
 
-        // Step 3: Notify Portfolio service via am-holding-update topic.
-        //
-        // WHY: Portfolio needs to recalculate holdings whenever Trade data changes.
-        // HOW: We send one TradeHoldingEvent per unique symbol so Portfolio can
-        //      recalculate its weighted average, P&L, etc. for that symbol.
-        //
-        // We group by symbol and take the LAST saved trade per symbol (most recent state).
-        // Portfolio does NOT need each individual execution — it re-reads all Trade records
-        // itself. We are just telling it: "Hey, symbol X has changed, please recalculate."
+        // Step 3: Notify Portfolio service via am-portfolio-update topic.
+        // Portfolio expects a batch synchronization payload (PortfolioSyncEvent)
+        // containing all the relevant equities.
+
         Map<String, TradeDetails> latestTradePerSymbol = savedTrades.stream()
             .filter(t -> t.getSymbol() != null)
             .collect(Collectors.toMap(
                 TradeDetails::getSymbol,
                 t -> t,
-                // If there are multiple trades for the same symbol, keep the one
-                // with the latest timestamp (or just the last one in the stream)
                 (existing, replacement) -> replacement
             ));
 
-        latestTradePerSymbol.values().forEach(trade -> {
-            try {
-                // Build the StockHoldingUpdateEvent format that Portfolio expects
+        List<am.trade.models.kafka.EquityPosition> equities = latestTradePerSymbol.values().stream()
+            .map(trade -> {
                 BigDecimal quantity = trade.getEntryInfo() != null && trade.getEntryInfo().getQuantity() != null
                     ? BigDecimal.valueOf(trade.getEntryInfo().getQuantity())
                     : BigDecimal.ZERO;
@@ -159,31 +151,47 @@ public class TradeConsumerService {
                     ? trade.getEntryInfo().getPrice()
                     : BigDecimal.ZERO;
 
-                TradeHoldingEvent holdingEvent = TradeHoldingEvent.builder()
-                    .id(trade.getTradeId())
-                    .userId(event.getUserId())
-                    .portfolioId(event.getPortfolioId())
+                String assetType = trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSegment() != null 
+                    ? trade.getInstrumentInfo().getSegment().name() 
+                    : "EQUITY";
+
+                String isin = trade.getInstrumentInfo() != null ? trade.getInstrumentInfo().getIsin() : null;
+
+                return am.trade.models.kafka.EquityPosition.builder()
                     .symbol(trade.getSymbol())
+                    .assetType(assetType)
                     .quantity(quantity)
-                    .averagePrice(price)
-                    .investmentAmount(price.multiply(quantity))
-                    .timestamp(LocalDateTime.now())
-                    .updateType("ADD")
+                    .avgBuyingPrice(price)
+                    .investmentValue(price.multiply(quantity))
+                    .isin(isin)
+                    // The Trade database does not store sector, industry, or marketCap natively.
+                    // Leaving them null for Portfolio to hydrate or ignore.
+                    .sector(null)
+                    .industry(null)
+                    .marketCap(null)
                     .build();
+            })
+            .collect(Collectors.toList());
 
-                log.info("Publishing holding update to Portfolio for symbol: {}, portfolioId: {}",
-                         trade.getSymbol(), event.getPortfolioId());
-                tradeHoldingEventPublisher.publishHoldingUpdate(holdingEvent);
+        try {
+            am.trade.models.kafka.PortfolioSyncEvent syncEvent = am.trade.models.kafka.PortfolioSyncEvent.builder()
+                .id(event.getId() != null ? event.getId().toString() : java.util.UUID.randomUUID().toString())
+                .brokerType(event.getBrokerType() != null ? event.getBrokerType().name() : "UNKNOWN")
+                .userId(event.getUserId())
+                .equities(equities)
+                .timestamp(LocalDateTime.now())
+                .build();
 
-            } catch (Exception e) {
-                // Do NOT let a notification failure break the entire batch.
-                // The trades are already saved — this is just a notification.
-                log.error("Failed to publish holding update for symbol: {}. Trades are still saved.",
-                          trade.getSymbol(), e);
-            }
-        });
+            log.info("Publishing batch holding update to Portfolio with {} equities. userId: {}",
+                     equities.size(), event.getUserId());
+                     
+            tradeHoldingEventPublisher.publishHoldingUpdate(syncEvent);
 
-        log.info("Successfully processed {} trades and notified Portfolio for {} symbols. portfolioId: {}",
-                 savedTrades.size(), latestTradePerSymbol.size(), event.getPortfolioId());
+        } catch (Exception e) {
+            log.error("Failed to publish batch holding update. Trades are still saved.", e);
+        }
+
+        log.info("Successfully processed {} trades and notified Portfolio. portfolioId: {}",
+                 savedTrades.size(), event.getPortfolioId());
     }
 }
