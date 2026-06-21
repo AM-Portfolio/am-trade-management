@@ -5,6 +5,23 @@ am:
   trade:
     kafka:
       enabled: true
+      holding-update:
+        topic: am-portfolio
+      producer:
+        enabled: true
+      portfolio-update:
+        topic: am-portfolio-update
+        consumer-group-id: am-trade-portfolio-update-group
+        consumer:
+          enabled: true
+      trade:
+        consumer:
+          enabled: true
+        topic: am-trade
+        consumer-group-id: am-trade-group
+      retries: 3
+      retry-backoff-ms: 1000
+      max-poll-records: 500
     api:
       enabled: true
     common:
@@ -31,7 +48,7 @@ spring:
   application:
     name: am-trade-management
   profiles:
-    include: security,kafka
+    include: security
   config:
     import:
       - classpath:application-common.yml
