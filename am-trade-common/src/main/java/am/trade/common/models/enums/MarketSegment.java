@@ -1,5 +1,6 @@
 package am.trade.common.models.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -68,6 +69,30 @@ public enum MarketSegment {
         this.displayName = displayName;
         this.description = description;
         this.isDerivative = isDerivative;
+    }
+
+    /**
+     * Custom JSON deserializer that accepts alias strings from clients.
+     * For example, the UI sends "INDEX_SEGMENT" which maps to the INDEX enum value.
+     * This avoids adding duplicate enum values while staying tolerant of client naming.
+     */
+    @JsonCreator
+    public static MarketSegment fromString(String value) {
+        if (value == null) {
+            return UNKNOWN;
+        }
+        // Handle known aliases from the UI
+        switch (value.toUpperCase().trim()) {
+            case "INDEX_SEGMENT":
+            case "INDEXSEGMENT":
+                return INDEX;
+            default:
+                try {
+                    return MarketSegment.valueOf(value.toUpperCase().trim());
+                } catch (IllegalArgumentException e) {
+                    return UNKNOWN;
+                }
+        }
     }
 
     public String getDisplayName() {
