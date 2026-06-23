@@ -37,30 +37,38 @@ public class KafkaConfig {
     @Autowired
     private org.springframework.boot.autoconfigure.kafka.KafkaProperties kafkaProperties;
 
-    @Value("${KAFKA_SASL_JAAS_CONFIG:}")
-    private String jaasConfig;
+    @Value("${KAFKA_SASL_USERNAME:kafkaUser}")
+    private String kafkaUsername;
+
+    @Value("${KAFKA_SASL_PASSWORD:}")
+    private String kafkaPassword;
 
     private Map<String, Object> getSecurityProperties() {
         Map<String, Object> props = new HashMap<>();
         Map<String, String> properties = kafkaProperties.getProperties();
         String protocol = properties.get("security.protocol");
-        
+
         if (protocol != null && (protocol.equals("SASL_SSL") || protocol.equals("SASL_PLAINTEXT"))) {
             props.put("security.protocol", protocol);
             props.put("sasl.mechanism", properties.get("sasl.mechanism"));
             
-            // Prioritize explicitly injected JAAS config to avoid Map placeholder resolution bugs
-            if (jaasConfig != null && !jaasConfig.isEmpty()) {
-                props.put("sasl.jaas.config", jaasConfig);
+            // Build JAAS config programmatically to bypass Spring YAML escaping and JAAS parser bugs
+            if (kafkaPassword != null && !kafkaPassword.isEmpty()) {
+                String builtJaas = String.format("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"%s\" password=\"%s\";", 
+                                                 kafkaUsername, kafkaPassword);
+                props.put("sasl.jaas.config", builtJaas);
             } else {
                 props.put("sasl.jaas.config", properties.get("sasl.jaas.config"));
             }
-            log.debug("✅ DEBUG KAFKA ENV: System.getenv(KAFKA_SECURITY_PROTOCOL)={}", System.getenv("KAFKA_SECURITY_PROTOCOL"));
+            log.debug("✅ DEBUG KAFKA ENV: System.getenv(KAFKA_SECURITY_PROTOCOL)={}",
+                    System.getenv("KAFKA_SECURITY_PROTOCOL"));
             log.debug("✅ DEBUG KAFKA PROP: properties.get(security.protocol)={}", protocol);
-            log.debug("✅ DEBUG KAFKA ENV: System.getenv(KAFKA_SASL_MECHANISM)={}", System.getenv("KAFKA_SASL_MECHANISM"));
+            log.debug("✅ DEBUG KAFKA ENV: System.getenv(KAFKA_SASL_MECHANISM)={}",
+                    System.getenv("KAFKA_SASL_MECHANISM"));
             log.debug("✅ DEBUG KAFKA: Successfully injected SASL configuration: {}", protocol);
         } else {
-            log.debug("⚠️ DEBUG KAFKA: No SASL configuration found, defaulting to PLAINTEXT. Protocol was: {}", protocol);
+            log.debug("⚠️ DEBUG KAFKA: No SASL configuration found, defaulting to PLAINTEXT. Protocol was: {}",
+                    protocol);
         }
         return props;
     }
@@ -87,15 +95,22 @@ public class KafkaConfig {
     }
 
     /**
-     * Dead Letter Publishing Recoverer — the "penalty box" for unprocessable messages.
+     * Dead Letter Publishing Recoverer — the "penalty box" for unprocessable
+     * messages.
      *
-     * <p>When the {@link DefaultErrorHandler} gives up on a message (after exhausting
-     * all retries), it calls this recoverer. The recoverer publishes the raw, failed
+     * <p>
+     * When the {@link DefaultErrorHandler} gives up on a message (after exhausting
+     * all retries), it calls this recoverer. The recoverer publishes the raw,
+     * failed
      * message to a new Kafka topic named: {@code [original-topic].DLT}
      *
-     * <p>Example: a bad message on {@code am-trade-update} → goes to {@code am-trade-update.DLT}
+     * <p>
+     * Example: a bad message on {@code am-trade-update} → goes to
+     * {@code am-trade-update.DLT}
      *
-     * <p>This keeps the main consumer moving without losing the bad message — an engineer
+     * <p>
+     * This keeps the main consumer moving without losing the bad message — an
+     * engineer
      * can inspect the DLT topic later, fix the bug, and replay the messages.
      *
      * @param kafkaTemplate the producer template used to publish to the DLT topic
@@ -108,14 +123,17 @@ public class KafkaConfig {
     /**
      * Error handler that retries failed messages before sending them to the DLT.
      *
-     * <p><b>Retry policy (FixedBackOff):</b>
+     * <p>
+     * <b>Retry policy (FixedBackOff):</b>
      * <ul>
-     *   <li>3 retry attempts, each 1 second apart</li>
-     *   <li>After all retries are exhausted, the recoverer publishes to the DLT</li>
-     *   <li>The offset is then committed so the consumer can continue</li>
+     * <li>3 retry attempts, each 1 second apart</li>
+     * <li>After all retries are exhausted, the recoverer publishes to the DLT</li>
+     * <li>The offset is then committed so the consumer can continue</li>
      * </ul>
      *
-     * <p><b>Why 3 retries?</b> Transient errors (DB blip, network timeout) often resolve
+     * <p>
+     * <b>Why 3 retries?</b> Transient errors (DB blip, network timeout) often
+     * resolve
      * within a few seconds. 3 retries with 1s gaps catches most of these without
      * hammering the system. Permanent errors (bad JSON, missing field) fail all 3
      * retries and correctly land in the DLT.
@@ -124,7 +142,8 @@ public class KafkaConfig {
      */
     @Bean
     public DefaultErrorHandler defaultErrorHandler(DeadLetterPublishingRecoverer recoverer) {
-        // FixedBackOff(intervalMs, maxAttempts): retry up to 3 times, waiting 1 second between each
+        // FixedBackOff(intervalMs, maxAttempts): retry up to 3 times, waiting 1 second
+        // between each
         FixedBackOff backOff = new FixedBackOff(1000L, 3L);
         return new DefaultErrorHandler(recoverer, backOff);
     }
@@ -135,8 +154,10 @@ public class KafkaConfig {
             DefaultErrorHandler errorHandler) {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(kafkaConsumerFactory());
-        // MANUAL_IMMEDIATE: offset is committed only after acknowledgment.acknowledge() is called.
-        // Without this, acknowledgment() calls are no-ops and failed messages are permanently lost.
+        // MANUAL_IMMEDIATE: offset is committed only after acknowledgment.acknowledge()
+        // is called.
+        // Without this, acknowledgment() calls are no-ops and failed messages are
+        // permanently lost.
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         // Wire in the error handler — handles retries and DLT publishing on failure
         factory.setCommonErrorHandler(errorHandler);
@@ -166,7 +187,8 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic tradeHoldingUpdateTopic() {
-        // Topic name is driven by application-kafka.yml so Trade and Portfolio always agree.
+        // Topic name is driven by application-kafka.yml so Trade and Portfolio always
+        // agree.
         return new NewTopic(holdingUpdateTopic, 3, (short) 1);
     }
 
