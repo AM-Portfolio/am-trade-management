@@ -15,7 +15,7 @@ spring:
     properties:
       security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
       sasl.mechanism: ${KAFKA_SASL_MECHANISM:}
-      sasl.jaas.config: ${KAFKA_JAAS_CONFIG:}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_SASL_USERNAME:kafkaUser}" password="${KAFKA_SASL_PASSWORD}";}
 
 # Kafka Topics
 am:
