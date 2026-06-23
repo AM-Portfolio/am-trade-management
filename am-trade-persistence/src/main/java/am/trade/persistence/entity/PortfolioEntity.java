@@ -57,4 +57,7 @@ public class PortfolioEntity {
 
     // Asset allocation
     private List<AssetAllocation> assetAllocations;
+
+    // Aggregated holdings updated via Kafka
+    private List<HoldingEntity> holdings;
 }
