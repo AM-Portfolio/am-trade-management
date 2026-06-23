@@ -37,6 +37,9 @@ public class KafkaConfig {
     @Autowired
     private org.springframework.boot.autoconfigure.kafka.KafkaProperties kafkaProperties;
 
+    @Value("${KAFKA_SASL_JAAS_CONFIG:}")
+    private String jaasConfig;
+
     private Map<String, Object> getSecurityProperties() {
         Map<String, Object> props = new HashMap<>();
         Map<String, String> properties = kafkaProperties.getProperties();
@@ -45,7 +48,13 @@ public class KafkaConfig {
         if (protocol != null && (protocol.equals("SASL_SSL") || protocol.equals("SASL_PLAINTEXT"))) {
             props.put("security.protocol", protocol);
             props.put("sasl.mechanism", properties.get("sasl.mechanism"));
-            props.put("sasl.jaas.config", properties.get("sasl.jaas.config"));
+            
+            // Prioritize explicitly injected JAAS config to avoid Map placeholder resolution bugs
+            if (jaasConfig != null && !jaasConfig.isEmpty()) {
+                props.put("sasl.jaas.config", jaasConfig);
+            } else {
+                props.put("sasl.jaas.config", properties.get("sasl.jaas.config"));
+            }
             log.debug("✅ DEBUG KAFKA ENV: System.getenv(KAFKA_SECURITY_PROTOCOL)={}", System.getenv("KAFKA_SECURITY_PROTOCOL"));
             log.debug("✅ DEBUG KAFKA PROP: properties.get(security.protocol)={}", protocol);
             log.debug("✅ DEBUG KAFKA ENV: System.getenv(KAFKA_SASL_MECHANISM)={}", System.getenv("KAFKA_SASL_MECHANISM"));
