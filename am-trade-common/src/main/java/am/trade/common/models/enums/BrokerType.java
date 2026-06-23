@@ -17,7 +17,13 @@ public enum BrokerType {
     GROW("Grow"),
     
     @Schema(description = "Kotak Securities trading platform")
-    KOTAK("Kotak");
+    KOTAK("Kotak"),
+    
+    @Schema(description = "Angel One trading platform")
+    ANGEL_ONE("Angel One"),
+    
+    @Schema(description = "Manually entered trade")
+    MANUAL("Manual");
  
     private String brokerName;
  
@@ -61,6 +67,14 @@ public enum BrokerType {
  
     public boolean isKotak() {
        return "Kotak".equals(this.brokerName);
+    }
+
+    public boolean isAngelOne() {
+       return "Angel One".equals(this.brokerName);
+    }
+
+    public boolean isManual() {
+       return "Manual".equals(this.brokerName);
     }
  }
  
