@@ -57,6 +57,9 @@ public enum MarketSegment {
     @Schema(description = "Futures and Options segment (legacy)")
     FO("F&O", "Futures and Options segment", true),
 
+    @Schema(description = "Index segment (legacy code)")
+    INDEX_SEGMENT("Index", "Index segment (legacy)", false),
+
     // Default
     @Schema(description = "Unknown market segment")
     UNKNOWN("Unknown", "Unknown market segment", false);

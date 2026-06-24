@@ -24,7 +24,10 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
 @Configuration
+@ConditionalOnProperty(name = "am.trade.kafka.enabled", havingValue = "true", matchIfMissing = false)
 @Slf4j
 public class KafkaConfig {
 
@@ -37,12 +40,6 @@ public class KafkaConfig {
     @Autowired
     private org.springframework.boot.autoconfigure.kafka.KafkaProperties kafkaProperties;
 
-    @Value("${KAFKA_SASL_USERNAME:kafkaUser}")
-    private String kafkaUsername;
-
-    @Value("${KAFKA_SASL_PASSWORD:}")
-    private String kafkaPassword;
-
     private Map<String, Object> getSecurityProperties() {
         Map<String, Object> props = new HashMap<>();
         Map<String, String> properties = kafkaProperties.getProperties();
@@ -51,15 +48,7 @@ public class KafkaConfig {
         if (protocol != null && (protocol.equals("SASL_SSL") || protocol.equals("SASL_PLAINTEXT"))) {
             props.put("security.protocol", protocol);
             props.put("sasl.mechanism", properties.get("sasl.mechanism"));
-            
-            // Build JAAS config programmatically to bypass Spring YAML escaping and JAAS parser bugs
-            if (kafkaPassword != null && !kafkaPassword.isEmpty()) {
-                String builtJaas = String.format("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"%s\" password=\"%s\";", 
-                                                 kafkaUsername, kafkaPassword);
-                props.put("sasl.jaas.config", builtJaas);
-            } else {
                 props.put("sasl.jaas.config", properties.get("sasl.jaas.config"));
-            }
             log.debug("✅ DEBUG KAFKA ENV: System.getenv(KAFKA_SECURITY_PROTOCOL)={}",
                     System.getenv("KAFKA_SECURITY_PROTOCOL"));
             log.debug("✅ DEBUG KAFKA PROP: properties.get(security.protocol)={}", protocol);
