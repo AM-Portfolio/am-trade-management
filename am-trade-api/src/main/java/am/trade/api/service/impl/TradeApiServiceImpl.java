@@ -28,10 +28,15 @@ import am.trade.common.models.DerivativeInfo;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.enums.TradePositionType;
 import am.trade.common.models.enums.TradeStatus;
+import am.trade.services.publisher.TradeHoldingEventPublisher;
+import am.trade.services.publisher.TradeHoldingEventPublisher;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import am.trade.services.service.PortfolioPersistenceService;
 import lombok.RequiredArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * Implementation of TradeApiService that handles trade API operations
@@ -48,6 +53,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     private final PortfolioPersistenceService portfolioPersistenceService;
     private final TradeValidator tradeValidator;
     private final FavoriteFilterService favoriteFilterService;
+    private final TradeHoldingEventPublisher tradeHoldingEventPublisher;
     
     @Override
     public List<TradeDetails> getTradeDetailsByPortfolioAndSymbols(String portfolioId, List<String> symbols) {
@@ -58,6 +64,15 @@ public class TradeApiServiceImpl implements TradeApiService {
         String currentUserId = UserContext.getUserIdOrThrow();
         return trades.stream()
                 .filter(t -> currentUserId.equals(t.getUserId()))
+                .filter(t -> {
+                    boolean isValid = t.getTradeId() != null && t.getPortfolioId() != null && 
+                                      t.getStatus() != null && t.getTradePositionType() != null;
+                    if (!isValid) {
+                        log.warn("Filtering out corrupt trade record missing required fields. Trade ID: {}, Portfolio: {}", 
+                                 t.getTradeId(), t.getPortfolioId());
+                    }
+                    return isValid;
+                })
                 .collect(Collectors.toList());
     }
     
@@ -94,6 +109,47 @@ public class TradeApiServiceImpl implements TradeApiService {
                 List.of(savedTrade), 
                 savedTrade.getPortfolioId(), 
                 savedTrade.getUserId());
+                
+            // Notify Portfolio service via am-portfolio topic
+            try {
+                BigDecimal quantity = savedTrade.getEntryInfo() != null && savedTrade.getEntryInfo().getQuantity() != null
+                    ? BigDecimal.valueOf(savedTrade.getEntryInfo().getQuantity())
+                    : BigDecimal.ZERO;
+
+                BigDecimal price = savedTrade.getEntryInfo() != null && savedTrade.getEntryInfo().getPrice() != null
+                    ? savedTrade.getEntryInfo().getPrice()
+                    : BigDecimal.ZERO;
+
+                String assetType = savedTrade.getInstrumentInfo() != null && savedTrade.getInstrumentInfo().getSegment() != null 
+                    ? savedTrade.getInstrumentInfo().getSegment().name() 
+                    : "EQUITY";
+
+                String isin = savedTrade.getInstrumentInfo() != null ? savedTrade.getInstrumentInfo().getIsin() : null;
+
+                am.trade.models.kafka.EquityPosition equity = am.trade.models.kafka.EquityPosition.builder()
+                    .symbol(savedTrade.getSymbol())
+                    .assetType(assetType)
+                    .quantity(quantity)
+                    .avgBuyingPrice(price)
+                    .investmentValue(price.multiply(quantity))
+                    .isin(isin)
+                    .build();
+
+                am.trade.models.kafka.PortfolioSyncEvent syncEvent = am.trade.models.kafka.PortfolioSyncEvent.builder()
+                    .id(savedTrade.getTradeId())
+                    .brokerType("MANUAL") // Manual entry from API
+                    .userId(savedTrade.getUserId())
+                    .equities(List.of(equity))
+                    .timestamp(LocalDateTime.now())
+                    .build();
+
+                log.info("Publishing holding update to Portfolio for symbol: {}, portfolioId: {}",
+                         savedTrade.getSymbol(), savedTrade.getPortfolioId());
+                tradeHoldingEventPublisher.publishHoldingUpdate(syncEvent);
+            } catch (Exception e) {
+                log.error("Failed to publish holding update for symbol: {}. Trade was saved successfully.",
+                          savedTrade.getSymbol(), e);
+            }
         }
         
         return savedTrade;

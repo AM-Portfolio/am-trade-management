@@ -118,6 +118,23 @@ k8s/
 .docker/
 !docker-compose*.yml
 !Dockerfile
+# Personal Notes
+daily_notes*.md
+
+# Local Scripts
+*.ps1
+
+# Scratch / Temporary Test files
+*Test.class
+*Test.java
+local-hosts.txt
+client.properties
+
+# Local Environment Configs
+application-local.yml
+application-vps.yml
+.env.dev
+.env.prod
 .env.docker
 
 # Backup files (may contain credentials)

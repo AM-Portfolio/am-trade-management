@@ -1,6 +1,7 @@
 package am.trade.common.models.enums;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 @Schema(description = "Broker platform used for executing trades")
 public enum BrokerType {
@@ -17,7 +18,16 @@ public enum BrokerType {
     GROW("Grow"),
     
     @Schema(description = "Kotak Securities trading platform")
-    KOTAK("Kotak");
+    KOTAK("Kotak"),
+    
+    @Schema(description = "Angel One trading platform")
+    ANGEL_ONE("Angel One"),
+    
+    @Schema(description = "Manually entered trade")
+    MANUAL("Manual"),
+    
+    @Schema(description = "Unknown or unsupported broker")
+    OTHER("Other");
  
     private String brokerName;
  
@@ -25,6 +35,22 @@ public enum BrokerType {
        this.brokerName = brokerName;
     }
  
+    /**
+     * Tolerant Reader: Parse incoming broker strings.
+     * If the string does not match any known enum, fallback to OTHER instead of crashing.
+     */
+    @JsonCreator
+    public static BrokerType fromString(String value) {
+        if (value == null) {
+            return OTHER;
+        }
+        try {
+            return BrokerType.valueOf(value.toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            return OTHER;
+        }
+    }
+
     public static BrokerType fromCode(String code) {
        BrokerType[] var1 = values();
        int var2 = var1.length;
@@ -61,6 +87,14 @@ public enum BrokerType {
  
     public boolean isKotak() {
        return "Kotak".equals(this.brokerName);
+    }
+
+    public boolean isAngelOne() {
+       return "Angel One".equals(this.brokerName);
+    }
+
+    public boolean isManual() {
+       return "Manual".equals(this.brokerName);
     }
  }
  

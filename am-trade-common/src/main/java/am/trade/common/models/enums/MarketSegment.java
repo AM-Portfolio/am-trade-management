@@ -1,5 +1,6 @@
 package am.trade.common.models.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -56,6 +57,9 @@ public enum MarketSegment {
     @Schema(description = "Futures and Options segment (legacy)")
     FO("F&O", "Futures and Options segment", true),
 
+    @Schema(description = "Index segment (legacy code)")
+    INDEX_SEGMENT("Index", "Index segment (legacy)", false),
+
     // Default
     @Schema(description = "Unknown market segment")
     UNKNOWN("Unknown", "Unknown market segment", false);
@@ -69,6 +73,25 @@ public enum MarketSegment {
         this.description = description;
         this.isDerivative = isDerivative;
     }
+
+    /**
+     * Custom JSON deserializer that accepts alias strings from clients.
+     * The UI currently sends "INDEXSEGMENT" which must map to the INDEX enum value.
+     */
+    @JsonCreator
+    public static MarketSegment fromString(String value) {
+        if (value == null) {
+            return UNKNOWN;
+        }
+        switch (value.toUpperCase().trim()) {
+            case "INDEX_SEGMENT":
+            case "INDEXSEGMENT":
+                return INDEX;
+            default:
+                return MarketSegment.valueOf(value.toUpperCase().trim());
+        }
+    }
+
 
     public String getDisplayName() {
         return displayName;

@@ -35,18 +35,11 @@ spring:
   config:
     import:
       - classpath:application-common.yml
-      - optional:file:/vault/secrets/app
-      - optional:file:/vault/secrets/mongo
-      - optional:file:/vault/secrets/kafka
-      - optional:file:/vault/secrets/redis
   data:
     mongodb:
       uri: ${MONGODB_URI}
       database: ${MONGODB_DATABASE:trade}
       auto-index-creation: false
-      # ssl:
-      #   enabled: true
-      #   invalid-hostname-allowed: false
     jackson:
       default-property-inclusion: non_null
       serialization:

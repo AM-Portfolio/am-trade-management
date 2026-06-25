@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * Data Transfer Object for Trade
- * Triggering CI/CD on feature branch 
  */
 @Data
 @NoArgsConstructor

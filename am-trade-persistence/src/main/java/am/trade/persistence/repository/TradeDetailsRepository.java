@@ -69,7 +69,10 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
     @Query("{'portfolioId': {$in: ?0}}")
     Page<TradeDetailsEntity> findByPortfolioIdIn(List<String> portfolioIds, Pageable pageable);
     
-    @Query("{'portfolio_id': ?0, 'trade_date': {$gte: ?1, $lte: ?2}}")
+    @Query("{'portfolioId': {$in: ?0}, 'entryInfo.timestamp': {$gte: ?1, $lte: ?2}}")
+    List<TradeDetailsEntity> findByPortfolioIdInAndEntryInfoTimestampBetween(List<String> portfolioIds, LocalDateTime startDate, LocalDateTime endDate);
+    
+    @Query("{'portfolioId': ?0, 'entryInfo.timestamp': {$gte: ?1, $lte: ?2}}")
     Page<TradeDetailsEntity> findByPortfolioIdAndTradeDateBetween(String portfolioId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
     
     @Query("{'tradeId': {$in: ?0}}")

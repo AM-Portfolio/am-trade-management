@@ -32,3 +32,4 @@ public class TradeManagementApplication {
         SpringApplication.run(TradeManagementApplication.class, args);
     }
 }
+

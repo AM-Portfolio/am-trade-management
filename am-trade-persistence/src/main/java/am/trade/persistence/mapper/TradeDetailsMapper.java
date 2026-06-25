@@ -42,9 +42,12 @@ public class TradeDetailsMapper {
     }
     
     /**
-     * Convert a TradeDetailsEntity to a TradeDetails
+     * Convert a TradeDetailsEntity to a TradeDetails.
+     * Maps faithfully from DB — does NOT inject fake defaults.
+     * Corrupt record filtering is handled by the service layer.
+     *
      * @param entity The persistence entity to convert
-     * @return The corresponding domain model
+     * @return The corresponding domain model, or null if entity is null
      */
     public TradeDetails toTradeDetails(TradeDetailsEntity entity) {
         if (entity == null) {

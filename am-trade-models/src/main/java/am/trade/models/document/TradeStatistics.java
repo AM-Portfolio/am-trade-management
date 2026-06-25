@@ -62,10 +62,9 @@ public class TradeStatistics extends BaseDocument {
     @Field("strategy_id")
     private String strategyId;
     
-    // List of executed trades for this statistics record
-    @DocumentReference(lazy = true)
-    @Field("executed_trades")
-    private List<Trade> executedTrades;
+    // List of executed trade IDs for this statistics record
+    @Field("executed_trade_ids")
+    private List<String> executedTradeIds;
     
     // Grouped statistics
     @Field("trade_counts")
