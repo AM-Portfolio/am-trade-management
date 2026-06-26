@@ -1,0 +1,30 @@
+{
+  "portfolioId": "mock-pf-002",
+  "status": "OPEN",
+  "tradePositionType": "LONG",
+  "instrumentInfo": {
+    "symbol": "TEST"
+  },
+  "entryInfo": {
+    "price": 100,
+    "quantity": 10,
+    "timestamp": "2026-06-25T19:00:00"
+  },
+  "tradeExecutions": [
+    {
+      "basicInfo": {
+        "tradeId": null,
+        "orderId": null,
+        "tradeDate": null,
+        "orderExecutionTime": null,
+        "brokerType": "ZERODHA",
+        "tradeType": null
+      },
+      "instrumentInfo": null,
+      "executionInfo": null,
+      "fnoInfo": null,
+      "charges": null,
+      "financials": null
+    }
+  ]
+}

@@ -12,7 +12,7 @@ spring:
         jwt:
           secret-key: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_SECRET_KEY}
   autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration, org.springframework.boot.actuate.autoconfigure.tracing.OpenTelemetryTracingAutoConfiguration
+    exclude: org.springframework.boot.actuate.autoconfigure.tracing.OpenTelemetryTracingAutoConfiguration
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://admin:password123@localhost:27017/trade?authSource=admin}
@@ -45,6 +45,6 @@ am:
         - "ROLE_ADMIN"
   trade:
     kafka:
-      enabled: false
+      enabled: true
     security:
       local-default-user-id: ${AM_TRADE_LOCAL_USER_ID:local-dev-user}
