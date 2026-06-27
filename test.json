@@ -1,1 +1,0 @@
-{"portfolioId": "test-pf-001", "symbol": "RELIANCE", "instrumentInfo": { "symbol": "RELIANCE", "segment": "EQUITY" }, "tradePositionType": "LONG", "status": "OPEN", "entryInfo": { "price": 100, "quantity": 10, "timestamp": "2026-06-25T10:00:00" }, "tradeExecutions": []}

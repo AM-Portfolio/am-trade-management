@@ -140,3 +140,11 @@ application-vps.yml
 # Backup files (may contain credentials)
 *.bak
 *.backup
+
+# Local test payloads and checklists
+DEPLOYMENT_CHECKLIST.md
+dart_payload.json
+payload.json
+test.json
+test_futures.json
+am-trade-app/src/main/resources/application-local.yml
