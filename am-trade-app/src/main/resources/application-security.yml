@@ -1,7 +1,7 @@
 # Security configuration for trade management app
 am:
   security:
-    enabled: true
+    enabled: false
     public-paths:
       - "/actuator/**"
     proxy-name: "trade"
