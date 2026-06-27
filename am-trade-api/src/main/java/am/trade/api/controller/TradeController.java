@@ -100,11 +100,6 @@ public class TradeController {
             return ResponseEntity.badRequest().build();
         }
 
-        // Validate required fields
-        if (tradeDetails.getUserId() == null || tradeDetails.getUserId().isEmpty()) {
-            log.error("User ID is required");
-            return ResponseEntity.badRequest().build();
-        }
 
         TradeDetails updatedTrade = tradeApiService.updateTrade(tradeId, tradeDetails);
         return ResponseEntity.ok(updatedTrade);

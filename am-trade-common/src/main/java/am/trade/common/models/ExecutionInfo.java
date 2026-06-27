@@ -2,6 +2,7 @@ package am.trade.common.models;
 
 import java.math.BigDecimal;
 
+import am.trade.models.enums.OrderType;
 import am.trade.common.models.enums.TradeType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,4 +22,6 @@ public class ExecutionInfo {
     private Integer quantity;
     private BigDecimal price;
     private Integer lotSize;
+    private OrderType orderType;
 }
+

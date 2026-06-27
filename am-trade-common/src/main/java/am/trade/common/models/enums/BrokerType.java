@@ -26,6 +26,15 @@ public enum BrokerType {
     @Schema(description = "Manually entered trade")
     MANUAL("Manual"),
     
+    @Schema(description = "Upstox trading platform")
+    UPSTOX("Upstox"),
+    
+    @Schema(description = "ICICI Direct trading platform")
+    ICICI("ICICI Direct"),
+    
+    @Schema(description = "HDFC Securities trading platform")
+    HDFC("HDFC Securities"),
+    
     @Schema(description = "Unknown or unsupported broker")
     OTHER("Other");
  
@@ -91,6 +100,18 @@ public enum BrokerType {
 
     public boolean isAngelOne() {
        return "Angel One".equals(this.brokerName);
+    }
+
+    public boolean isUpstox() {
+       return "Upstox".equals(this.brokerName);
+    }
+
+    public boolean isIcici() {
+       return "ICICI Direct".equals(this.brokerName);
+    }
+
+    public boolean isHdfc() {
+       return "HDFC Securities".equals(this.brokerName);
     }
 
     public boolean isManual() {

@@ -83,12 +83,26 @@ public enum MarketSegment {
         if (value == null) {
             return UNKNOWN;
         }
-        switch (value.toUpperCase().trim()) {
+        
+        String normalized = value.toUpperCase().trim();
+        switch (normalized) {
             case "INDEX_SEGMENT":
             case "INDEXSEGMENT":
                 return INDEX;
+            case "INDEXFUTURES":
+                return INDEX_FUTURES;
+            case "INDEXOPTIONS":
+                return INDEX_OPTIONS;
+            case "EQUITYFUTURES":
+                return EQUITY_FUTURES;
+            case "EQUITYOPTIONS":
+                return EQUITY_OPTIONS;
             default:
-                return MarketSegment.valueOf(value.toUpperCase().trim());
+                try {
+                    return MarketSegment.valueOf(normalized);
+                } catch (IllegalArgumentException e) {
+                    return UNKNOWN;
+                }
         }
     }
 

@@ -5,7 +5,13 @@ public enum BrokerType {
     ZERODHA("Zerodha"),
     MSTOCK("MStock"),
     GROW("Grow"),
-    KOTAK("Kotak");
+    KOTAK("Kotak"),
+    ANGEL_ONE("Angel One"),
+    UPSTOX("Upstox"),
+    ICICI("ICICI Direct"),
+    HDFC("HDFC Securities"),
+    MANUAL("Manual"),
+    OTHER("Other");
  
     private String brokerName;
  
@@ -49,6 +55,26 @@ public enum BrokerType {
  
     public boolean isKotak() {
        return "Kotak".equals(this.brokerName);
+    }
+
+    public boolean isAngelOne() {
+       return "Angel One".equals(this.brokerName);
+    }
+
+    public boolean isUpstox() {
+       return "Upstox".equals(this.brokerName);
+    }
+
+    public boolean isIcici() {
+       return "ICICI Direct".equals(this.brokerName);
+    }
+
+    public boolean isHdfc() {
+       return "HDFC Securities".equals(this.brokerName);
+    }
+
+    public boolean isManual() {
+       return "Manual".equals(this.brokerName);
     }
  }
  

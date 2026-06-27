@@ -1,7 +1,7 @@
 # Application specific common settings
 am:
   cors:
-    allowed-origin-patterns: http://localhost:*,https://localhost:*,https://*.replit.dev,https://*
+    allowed-origin-patterns: ${CORS_ALLOWED_ORIGINS:http://localhost:*,https://localhost:*,https://*.replit.dev,https://*}
   trade:
     kafka:
       enabled: true
@@ -28,6 +28,8 @@ server:
   port: 8080
 
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: am-trade-management
   profiles:
@@ -35,9 +37,13 @@ spring:
   config:
     import:
       - classpath:application-common.yml
+      - optional:file:/vault/secrets/app
+      - optional:file:/vault/secrets/mongo
+      - optional:file:/vault/secrets/kafka
+      - optional:file:/vault/secrets/redis
   data:
     mongodb:
-      uri: ${MONGODB_URI}
+      uri: ${MONGODB_URI:mongodb://localhost:27017/trade}
       database: ${MONGODB_DATABASE:trade}
       auto-index-creation: false
     jackson:
@@ -48,14 +54,22 @@ spring:
         fail-on-unknown-properties: false
       date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka.dev.svc.cluster.local:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     properties:
-      security.protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_PLAINTEXT}
-      sasl.mechanism: ${KAFKA_SASL_MECHANISM:SCRAM-SHA-256}
-      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_SASL_USERNAME:kafkaUser}" password="${KAFKA_SASL_PASSWORD}";}
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:}
+      max.block.ms: 2000
     consumer:
       group-id: am-trade-management
       auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     trade-topic: ${KAFKA_TOPICS_TRADE_EVENTS:am-trade}
 
 # Management/Actuator Configuration

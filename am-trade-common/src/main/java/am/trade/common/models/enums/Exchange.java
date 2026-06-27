@@ -13,6 +13,12 @@ public enum Exchange {
     @Schema(description = "Bombay Stock Exchange (India)")
     BSE,
     
+    @Schema(description = "Multi Commodity Exchange of India")
+    MCX,
+    
+    @Schema(description = "National Commodity and Derivatives Exchange")
+    NCDEX,
+    
     @Schema(description = "New York Stock Exchange")
     NYSE,
     
