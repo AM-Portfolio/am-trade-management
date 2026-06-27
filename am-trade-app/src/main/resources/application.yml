@@ -37,7 +37,7 @@ spring:
       - classpath:application-common.yml
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://admin:password123@localhost:27017/trade?authSource=admin}
+      uri: ${MONGODB_URI:mongodb://localhost:27017/trade}
       database: ${MONGODB_DATABASE:trade}
       auto-index-creation: false
     jackson:
