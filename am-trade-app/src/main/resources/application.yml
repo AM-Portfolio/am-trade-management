@@ -1,7 +1,7 @@
 # Application specific common settings
 am:
   cors:
-    allowed-origin-patterns: http://localhost:*,https://localhost:*,https://*.replit.dev,https://*
+    allowed-origin-patterns: ${CORS_ALLOWED_ORIGINS:http://localhost:*,https://localhost:*,https://*.replit.dev}
   trade:
     kafka:
       enabled: true
@@ -37,7 +37,7 @@ spring:
       - classpath:application-common.yml
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/trade}
+      uri: ${MONGODB_URI}
       database: ${MONGODB_DATABASE:trade}
       auto-index-creation: false
     jackson:
@@ -53,6 +53,7 @@ spring:
       security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
       sasl.mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
       sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:}
+      max.block.ms: 2000
     consumer:
       group-id: am-trade-management
       auto-offset-reset: latest

@@ -1,6 +1,6 @@
 # Redis
 REDIS_HOSTNAME: localhost
-REDIS_PASSWORD: password123
+REDIS_PASSWORD: ${REDIS_PASSWORD:}
 REDIS_PORT: 6379
 
 spring:

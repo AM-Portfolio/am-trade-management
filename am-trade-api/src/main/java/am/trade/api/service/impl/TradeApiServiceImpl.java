@@ -111,60 +111,150 @@ public class TradeApiServiceImpl implements TradeApiService {
                     savedTrade.getPortfolioId(),
                     savedTrade.getUserId());
 
-            // Notify Portfolio service via am-portfolio topic
+            // Notify Portfolio service via am-portfolio topic.
+            // For an open trade this emits a single BUY event.
+            // For a closed trade (WIN/LOSS/BREAK_EVEN) that is saved with exitInfo already
+            // populated, we emit BUY first (the entry) then SELL (the exit). The helper
+            // method reads exitInfo automatically, so we only need to determine the action.
             try {
-                BigDecimal quantity = savedTrade.getEntryInfo() != null
-                        && savedTrade.getEntryInfo().getQuantity() != null
-                                ? BigDecimal.valueOf(savedTrade.getEntryInfo().getQuantity())
-                                : BigDecimal.ZERO;
+                boolean isClosed = savedTrade.getExitInfo() != null
+                        && savedTrade.getExitInfo().getQuantity() != null;
 
-                BigDecimal price = savedTrade.getEntryInfo() != null && savedTrade.getEntryInfo().getPrice() != null
-                        ? savedTrade.getEntryInfo().getPrice()
-                        : BigDecimal.ZERO;
+                publishPortfolioSyncEvent(savedTrade, "BUY");
 
-                String assetType = savedTrade.getInstrumentInfo() != null
-                        && savedTrade.getInstrumentInfo().getSegment() != null
-                                ? savedTrade.getInstrumentInfo().getSegment().name()
-                                : "EQUITY";
-
-                String isin = savedTrade.getInstrumentInfo() != null ? savedTrade.getInstrumentInfo().getIsin() : null;
-
-                am.trade.models.kafka.EquityPosition equity = am.trade.models.kafka.EquityPosition.builder()
-                        .symbol(savedTrade.getSymbol())
-                        .assetType(assetType)
-                        .quantity(quantity)
-                        .avgBuyingPrice(price)
-                        .investmentValue(price.multiply(quantity))
-                        .isin(isin)
-                        .build();
-
-                String brokerType = "OTHER";
-                if (savedTrade.getTradeExecutions() != null && !savedTrade.getTradeExecutions().isEmpty()) {
-                    am.trade.common.models.TradeModel execution = savedTrade.getTradeExecutions().get(0);
-                    if (execution != null && execution.getBasicInfo() != null
-                            && execution.getBasicInfo().getBrokerType() != null) {
-                        brokerType = execution.getBasicInfo().getBrokerType().name();
-                    }
+                if (isClosed) {
+                    // Also fire SELL so am-portfolio can record the exit
+                    publishPortfolioSyncEvent(savedTrade, "SELL");
                 }
-
-                am.trade.models.kafka.PortfolioSyncEvent syncEvent = am.trade.models.kafka.PortfolioSyncEvent.builder()
-                        .id(savedTrade.getTradeId())
-                        .brokerType(brokerType) // Extracted from trade executions
-                        .userId(savedTrade.getUserId())
-                        .equities(List.of(equity))
-                        .timestamp(LocalDateTime.now())
-                        .build();
-
-                log.info("Publishing holding update to Portfolio for symbol: {}, portfolioId: {}",
-                        savedTrade.getSymbol(), savedTrade.getPortfolioId());
-                tradeHoldingEventPublisher.publishHoldingUpdate(syncEvent);
             } catch (Exception e) {
-                log.error("Failed to publish holding update for symbol: {}. Trade was saved successfully.",
+                log.error("Failed to publish portfolio sync event for symbol: {}. Trade was saved successfully.",
                         savedTrade.getSymbol(), e);
             }
         }
 
         return savedTrade;
+    }
+
+    /**
+     * Publishes a holding update event to the am-portfolio Kafka topic.
+     *
+     * <p>For an OPEN trade, only the entry (BUY) details are populated.
+     * For a closed trade (WIN / LOSS / BREAK_EVEN), both the entry details
+     * AND the exit (sell) details plus realised P&L are included so the
+     * am-portfolio consumer can correctly update holdings and record P&L.</p>
+     *
+     * @param savedTrade the fully-saved trade record
+     * @param action     "BUY", "SELL", or "UPDATE"
+     */
+    private void publishPortfolioSyncEvent(TradeDetails savedTrade, String action) {
+        // ── Instrument metadata ──────────────────────────────────────────────
+        String assetType = savedTrade.getInstrumentInfo() != null
+                && savedTrade.getInstrumentInfo().getSegment() != null
+                        ? savedTrade.getInstrumentInfo().getSegment().name()
+                        : "EQUITY";
+
+        String isin = savedTrade.getInstrumentInfo() != null
+                ? savedTrade.getInstrumentInfo().getIsin()
+                : null;
+
+        // ── Trade status ─────────────────────────────────────────────────────
+        // A trade is only truly "closed" if it has exitInfo with a quantity.
+        // If exitInfo is absent the position is open — regardless of whatever
+        // the status field says.  This guard prevents data inconsistencies
+        // (e.g. a trade saved with status=WIN but no exitInfo) from leaking
+        // into the Kafka message and breaking portfolio calculations.
+        boolean hasExitInfo = savedTrade.getExitInfo() != null
+                && savedTrade.getExitInfo().getQuantity() != null;
+
+        String tradeStatus;
+        if (!hasExitInfo) {
+            // No exit recorded → position is still open
+            tradeStatus = "OPEN";
+        } else if (savedTrade.getStatus() != null) {
+            tradeStatus = savedTrade.getStatus().name();
+        } else {
+            // exitInfo exists but status was not set — log a warning
+            log.warn("Trade {} has exitInfo but no status set. Defaulting tradeStatus to OPEN in Kafka event.",
+                    savedTrade.getTradeId());
+            tradeStatus = "OPEN";
+        }
+
+        // ── Entry (BUY) details ──────────────────────────────────────────────
+        BigDecimal entryQuantity = savedTrade.getEntryInfo() != null
+                && savedTrade.getEntryInfo().getQuantity() != null
+                        ? BigDecimal.valueOf(savedTrade.getEntryInfo().getQuantity())
+                        : BigDecimal.ZERO;
+
+        BigDecimal entryPrice = savedTrade.getEntryInfo() != null
+                && savedTrade.getEntryInfo().getPrice() != null
+                        ? savedTrade.getEntryInfo().getPrice()
+                        : BigDecimal.ZERO;
+
+        BigDecimal investmentValue = entryPrice.multiply(entryQuantity);
+
+        // ── Exit (SELL) details — only for closed trades ─────────────────────
+        BigDecimal sellQuantity = null;
+        BigDecimal sellPrice = null;
+        BigDecimal saleValue = null;
+        BigDecimal profitLoss = null;
+
+        if (savedTrade.getExitInfo() != null && savedTrade.getExitInfo().getQuantity() != null) {
+            sellQuantity = BigDecimal.valueOf(savedTrade.getExitInfo().getQuantity());
+            sellPrice = savedTrade.getExitInfo().getPrice() != null
+                    ? savedTrade.getExitInfo().getPrice()
+                    : BigDecimal.ZERO;
+            saleValue = sellPrice.multiply(sellQuantity);
+
+            // Proportional investment cost for the sold quantity
+            // (handles partial sells where sellQuantity < entryQuantity)
+            BigDecimal proportionalCost = entryQuantity.compareTo(BigDecimal.ZERO) != 0
+                    ? investmentValue.multiply(sellQuantity).divide(entryQuantity, 2, java.math.RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+            profitLoss = saleValue.subtract(proportionalCost);
+        }
+
+        // ── Build the equity position payload ────────────────────────────────
+        am.trade.models.kafka.EquityPosition equity = am.trade.models.kafka.EquityPosition.builder()
+                .symbol(savedTrade.getSymbol())
+                .assetType(assetType)
+                .quantity(entryQuantity)
+                .avgBuyingPrice(entryPrice)
+                .investmentValue(investmentValue)
+                .sellQuantity(sellQuantity)
+                .sellPrice(sellPrice)
+                .saleValue(saleValue)
+                .profitLoss(profitLoss)
+                .tradeStatus(tradeStatus)
+                .action(action)
+                .isin(isin)
+                .build();
+
+        // ── Resolve broker type from first trade execution ───────────────────
+        String brokerType = "OTHER";
+        if (savedTrade.getTradeExecutions() != null && !savedTrade.getTradeExecutions().isEmpty()) {
+            am.trade.common.models.TradeModel execution = savedTrade.getTradeExecutions().get(0);
+            if (execution != null && execution.getBasicInfo() != null
+                    && execution.getBasicInfo().getBrokerType() != null) {
+                brokerType = execution.getBasicInfo().getBrokerType().name();
+            }
+        }
+
+        // ── Build and publish the event ──────────────────────────────────────
+        am.trade.models.kafka.PortfolioSyncEvent syncEvent = am.trade.models.kafka.PortfolioSyncEvent.builder()
+                .id(savedTrade.getTradeId())
+                .brokerType(brokerType)
+                .userId(savedTrade.getUserId())
+                .equities(List.of(equity))
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        log.info("Publishing portfolio sync event for symbol: {}, action: {}, tradeStatus: {}, portfolioId: {}",
+                savedTrade.getSymbol(), action, tradeStatus, savedTrade.getPortfolioId());
+        try {
+            tradeHoldingEventPublisher.publishHoldingUpdate(syncEvent);
+        } catch (Exception e) {
+            log.error("Failed to publish portfolio sync event for trade: {}. Error: {}", savedTrade.getTradeId(), e.getMessage());
+        }
     }
 
     /**
@@ -240,6 +330,25 @@ public class TradeApiServiceImpl implements TradeApiService {
                     List.of(savedTrade),
                     savedTrade.getPortfolioId(),
                     savedTrade.getUserId());
+
+            // Determine the correct action and emit the Kafka event.
+            // The helper reads all fields (entryInfo, exitInfo, status) from savedTrade itself.
+            boolean isNewSell = savedTrade.getExitInfo() != null
+                    && savedTrade.getExitInfo().getQuantity() != null
+                    && originalTrade.getExitInfo() == null;
+
+            boolean isExitQuantityChanged = savedTrade.getExitInfo() != null
+                    && savedTrade.getExitInfo().getQuantity() != null
+                    && originalTrade.getExitInfo() != null
+                    && !originalTrade.getExitInfo().getQuantity().equals(savedTrade.getExitInfo().getQuantity());
+
+            if (isNewSell || isExitQuantityChanged) {
+                // A sell event just happened or the sold quantity changed
+                publishPortfolioSyncEvent(savedTrade, "SELL");
+            } else {
+                // Metadata edit only — no position change
+                publishPortfolioSyncEvent(savedTrade, "UPDATE");
+            }
         }
 
         return savedTrade;
@@ -260,12 +369,6 @@ public class TradeApiServiceImpl implements TradeApiService {
 
         boolean hasErrors = false;
 
-        // Check symbol - non-editable
-        if (updatedTrade.getSymbol() != null && !updatedTrade.getSymbol().equals(originalTrade.getSymbol())) {
-            exceptionBuilder.addFieldError("symbol", "Symbol cannot be modified");
-            hasErrors = true;
-        }
-
         // Check portfolio ID - non-editable
         if (updatedTrade.getPortfolioId() != null && !updatedTrade.getPortfolioId().isEmpty()
                 && !updatedTrade.getPortfolioId().equals(originalTrade.getPortfolioId())) {
@@ -279,43 +382,13 @@ public class TradeApiServiceImpl implements TradeApiService {
             hasErrors = true;
         }
 
-        // Check trade position type - non-editable
-        if (updatedTrade.getTradePositionType() != null
-                && !updatedTrade.getTradePositionType().equals(originalTrade.getTradePositionType())) {
-            exceptionBuilder.addFieldError("tradePositionType", "Trade position type (long/short) cannot be modified");
-            hasErrors = true;
-        }
-
-        // Check entry info - non-editable core fields
-        if (updatedTrade.getEntryInfo() != null && originalTrade.getEntryInfo() != null) {
-            // Check if price was modified
-            if (updatedTrade.getEntryInfo().getPrice() != null &&
-                    !Objects.equals(updatedTrade.getEntryInfo().getPrice(), originalTrade.getEntryInfo().getPrice())) {
-                exceptionBuilder.addFieldError("entryInfo.price", "Entry price cannot be modified");
-                hasErrors = true;
-            }
-
-            // Check if quantity was modified
-            if (updatedTrade.getEntryInfo().getQuantity() != null &&
-                    !Objects.equals(updatedTrade.getEntryInfo().getQuantity(),
-                            originalTrade.getEntryInfo().getQuantity())) {
-                exceptionBuilder.addFieldError("entryInfo.quantity", "Position quantity cannot be modified");
-                hasErrors = true;
-            }
-        }
-
-        // Check instrument info - non-editable
-        if (updatedTrade.getInstrumentInfo() != null && originalTrade.getInstrumentInfo() != null &&
-                !Objects.equals(updatedTrade.getInstrumentInfo(), originalTrade.getInstrumentInfo())) {
-            exceptionBuilder.addFieldError("instrumentInfo", "Instrument information cannot be modified");
-            hasErrors = true;
-        }
-
         // If any non-editable fields were modified, throw the validation exception with
         // all errors
         if (hasErrors) {
-            log.warn("Attempt to modify non-editable fields for trade {}", originalTrade.getTradeId());
-            throw exceptionBuilder.build();
+            TradeFieldValidationException exception = exceptionBuilder.build();
+            log.warn("Attempt to modify non-editable fields for trade {}. Errors: {}", 
+                     originalTrade.getTradeId(), exception.getErrors());
+            throw exception;
         }
     }
 
@@ -332,47 +405,18 @@ public class TradeApiServiceImpl implements TradeApiService {
         // Preserve portfolio ID
         updatedTrade.setPortfolioId(originalTrade.getPortfolioId());
 
-        // Preserve symbol
-        updatedTrade.setSymbol(originalTrade.getSymbol());
-
-        // Preserve trade position type (long/short)
-        updatedTrade.setTradePositionType(originalTrade.getTradePositionType());
-
-        // Preserve instrument info
-        updatedTrade.setInstrumentInfo(originalTrade.getInstrumentInfo());
-
-        // Preserve entry info core details (price, size)
-        if (originalTrade.getEntryInfo() != null) {
-            if (updatedTrade.getEntryInfo() == null) {
-                updatedTrade.setEntryInfo(originalTrade.getEntryInfo());
-            } else {
-                updatedTrade.getEntryInfo().setPrice(originalTrade.getEntryInfo().getPrice());
-                updatedTrade.getEntryInfo().setQuantity(originalTrade.getEntryInfo().getQuantity());
-            }
+        // Entry info core details (price, size) are now editable.
+        // We only preserve entry info if it was completely stripped out by mistake
+        if (originalTrade.getEntryInfo() != null && updatedTrade.getEntryInfo() == null) {
+            updatedTrade.setEntryInfo(originalTrade.getEntryInfo());
         }
 
-        // Handle trade executions update (especially brokerType)
-        if (updatedTrade.getTradeExecutions() != null && !updatedTrade.getTradeExecutions().isEmpty()) {
-            am.trade.common.models.TradeModel.BasicInfo newBasicInfo = updatedTrade.getTradeExecutions().get(0).getBasicInfo();
-            if (newBasicInfo != null && newBasicInfo.getBrokerType() != null) {
-                // If original has executions, update the broker type of the first one
-                if (originalTrade.getTradeExecutions() != null && !originalTrade.getTradeExecutions().isEmpty()) {
-                    am.trade.common.models.TradeModel firstExecution = originalTrade.getTradeExecutions().get(0);
-                    if (firstExecution.getBasicInfo() == null) {
-                        firstExecution.setBasicInfo(new am.trade.common.models.TradeModel.BasicInfo());
-                    }
-                    firstExecution.getBasicInfo().setBrokerType(newBasicInfo.getBrokerType());
-                    updatedTrade.setTradeExecutions(originalTrade.getTradeExecutions());
-                } else {
-                    // Original had no executions, use the new ones but ensure tradeId is set
-                    for (am.trade.common.models.TradeModel execution : updatedTrade.getTradeExecutions()) {
-                        if (execution.getBasicInfo() != null && execution.getBasicInfo().getTradeId() == null) {
-                            execution.getBasicInfo().setTradeId(originalTrade.getTradeId());
-                        }
-                    }
+        // Use updated trade executions completely, just ensure tradeId is set properly
+        if (updatedTrade.getTradeExecutions() != null) {
+            for (am.trade.common.models.TradeModel execution : updatedTrade.getTradeExecutions()) {
+                if (execution.getBasicInfo() != null) {
+                    execution.getBasicInfo().setTradeId(originalTrade.getTradeId());
                 }
-            } else {
-                updatedTrade.setTradeExecutions(originalTrade.getTradeExecutions());
             }
         } else {
             updatedTrade.setTradeExecutions(originalTrade.getTradeExecutions());

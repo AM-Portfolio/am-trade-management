@@ -72,17 +72,21 @@ public class TradeDetails {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private TradeEntryExistReasoning exitReasoning;
 
+    @JsonIgnore
     public LocalDate getTradeDate() {
+        if (entryInfo == null || entryInfo.getTimestamp() == null) return null;
         return entryInfo.getTimestamp().toLocalDate();
     }
 
+    @JsonIgnore
     public LocalDate getTradeEndDate() {
-        return exitInfo != null ? exitInfo.getTimestamp().toLocalDate() : null;
+        if (exitInfo == null || exitInfo.getTimestamp() == null) return null;
+        return exitInfo.getTimestamp().toLocalDate();
     }
     
 
-    @JsonIgnore
     public String getSymbol() {
+        if (instrumentInfo == null) return symbol;
         return instrumentInfo.getSymbol();
     }
     /**
