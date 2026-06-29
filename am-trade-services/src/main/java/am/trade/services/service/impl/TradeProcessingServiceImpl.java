@@ -66,6 +66,11 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                 .exchange(modelInstrumentInfo.getExchange())
                 .segment(modelInstrumentInfo.getSegment())
                 .series(modelInstrumentInfo.getSeries())
+                .description(modelInstrumentInfo.getDescription())
+                .currency(modelInstrumentInfo.getCurrency())
+                .lotSize(modelInstrumentInfo.getLotSize())
+                .derivativeInfo(modelInstrumentInfo.getDerivativeInfo())
+                .indexType(modelInstrumentInfo.getIndexType())
                 .build();
     }
 
@@ -582,6 +587,12 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         
         // Calculate profit/loss percentage — guard against null totalValue
         BigDecimal initialInvestment = entryInfo.getTotalValue() != null ? entryInfo.getTotalValue() : BigDecimal.ZERO;
+        
+        // Compute initialInvestment if not provided but price and quantity are available
+        if (initialInvestment.compareTo(BigDecimal.ZERO) == 0 && entryInfo.getPrice() != null && entryInfo.getQuantity() != null) {
+            initialInvestment = entryInfo.getPrice().multiply(BigDecimal.valueOf(entryInfo.getQuantity()));
+        }
+        
         BigDecimal profitLossPercentage = initialInvestment.compareTo(BigDecimal.ZERO) > 0
                 ? profitLoss.divide(initialInvestment, DECIMAL_SCALE, ROUNDING_MODE).multiply(BigDecimal.valueOf(100))
                 : BigDecimal.ZERO;
