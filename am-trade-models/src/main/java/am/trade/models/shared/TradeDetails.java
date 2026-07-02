@@ -1,7 +1,7 @@
 package am.trade.models.shared;
 
-import am.trade.models.shared.enums.TradePositionType;
-import am.trade.models.shared.enums.TradeStatus;
+import am.trade.models.enums.TradePositionType;
+import am.trade.models.enums.TradeStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

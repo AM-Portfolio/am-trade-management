@@ -3,7 +3,7 @@ package am.trade.api.controller;
 import com.am.security.context.UserContext;
 import am.trade.api.dto.*;
 import am.trade.api.service.JournalTemplateService;
-import am.trade.common.models.enums.JournalTemplateCategory;
+import am.trade.models.enums.JournalTemplateCategory;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

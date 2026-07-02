@@ -3,7 +3,7 @@ package am.trade.common.models;
 import java.math.BigDecimal;
 
 import am.trade.models.enums.OrderType;
-import am.trade.common.models.enums.TradeType;
+import am.trade.models.enums.TradeType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

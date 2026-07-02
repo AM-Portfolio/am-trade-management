@@ -22,7 +22,7 @@ import com.am.security.context.UserContext;
 import am.trade.api.dto.FilterTradeDetailsRequest;
 import am.trade.api.dto.FilterTradeDetailsResponse;
 import am.trade.common.models.TradeDetails;
-import am.trade.common.models.enums.TradeStatus;
+import am.trade.models.enums.TradeStatus;
 import am.trade.api.service.TradeApiService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

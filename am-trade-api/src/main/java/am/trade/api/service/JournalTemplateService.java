@@ -4,7 +4,7 @@ import am.trade.api.dto.JournalTemplateRequest;
 import am.trade.api.dto.JournalTemplateResponse;
 import am.trade.api.dto.UseTemplateRequest;
 import am.trade.api.dto.TradeJournalEntryResponse;
-import am.trade.common.models.enums.JournalTemplateCategory;
+import am.trade.models.enums.JournalTemplateCategory;
 
 import java.util.List;
 

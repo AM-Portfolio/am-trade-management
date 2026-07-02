@@ -1,6 +1,6 @@
 package am.trade.models.shared;
 
-import am.trade.models.shared.enums.AssetClass;
+import am.trade.models.enums.AssetClass;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -4,7 +4,7 @@ import am.trade.api.dto.NotebookItemRequest;
 import am.trade.api.dto.NotebookItemResponse;
 import am.trade.api.dto.NotebookTagRequest;
 import am.trade.api.dto.NotebookTagResponse;
-import am.trade.common.models.enums.NotebookItemType;
+import am.trade.models.enums.NotebookItemType;
 
 import java.util.List;
 

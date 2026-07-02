@@ -26,8 +26,8 @@ import am.trade.api.validation.TradeValidator;
 import am.trade.common.models.Attachment;
 import am.trade.common.models.DerivativeInfo;
 import am.trade.common.models.TradeDetails;
-import am.trade.common.models.enums.TradePositionType;
-import am.trade.common.models.enums.TradeStatus;
+import am.trade.models.enums.TradePositionType;
+import am.trade.models.enums.TradeStatus;
 import am.trade.services.publisher.TradeHoldingEventPublisher;
 import am.trade.services.publisher.TradeHoldingEventPublisher;
 import am.trade.services.service.TradeDetailsService;
@@ -83,6 +83,9 @@ public class TradeApiServiceImpl implements TradeApiService {
             return null;
         }
 
+        // Securely inject the authenticated user's ID
+        tradeDetails.setUserId(UserContext.getUserIdOrThrow());
+
         log.info("Service: Adding new trade for portfolio: {} and symbol: {} by user: {}",
                 tradeDetails.getPortfolioId(), tradeDetails.getSymbol(), tradeDetails.getUserId());
 
@@ -94,7 +97,6 @@ public class TradeApiServiceImpl implements TradeApiService {
             tradeDetails.setTradeId(UUID.randomUUID().toString());
         }
 
-        logTradeComponents(tradeDetails);
 
         // Ensure trade position type is set to LONG by default if missing to allow
         // calculations
@@ -257,30 +259,6 @@ public class TradeApiServiceImpl implements TradeApiService {
         }
     }
 
-    /**
-     * Log information about trade components for debugging
-     * 
-     * @param tradeDetails The trade details to log information about
-     */
-    private void logTradeComponents(TradeDetails tradeDetails) {
-        // Log if psychology data is present
-        if (tradeDetails.getPsychologyData() != null) {
-            log.info("Trade psychology data provided for trade");
-        }
-
-        // Log if entry reasoning is present
-        if (tradeDetails.getEntryReasoning() != null) {
-            log.info("Trade entry reasoning provided for trade");
-        }
-
-        // Log if attachments are present
-        if (tradeDetails.getAttachments() != null && !tradeDetails.getAttachments().isEmpty()) {
-            log.info("Trade analysis images provided for trade: {} images", tradeDetails.getAttachments().size());
-            // Validate attachments if needed
-            // tradeValidator.validateAttachments(tradeDetails.getAttachments());
-        }
-    }
-
     @Override
     public TradeDetails updateTrade(String tradeId, TradeDetails tradeDetails) {
         if (tradeId == null || tradeId.isEmpty() || tradeDetails == null) {
@@ -319,9 +297,6 @@ public class TradeApiServiceImpl implements TradeApiService {
 
         // Handle attachments merging
         handleAttachmentsMerging(tradeId, tradeDetails, originalTrade);
-
-        // Log trade components for debugging
-        logTradeComponents(tradeDetails);
 
         // Save and process trade
         TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);

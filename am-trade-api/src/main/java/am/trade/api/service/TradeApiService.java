@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import am.trade.api.dto.FilterTradeDetailsRequest;
 import am.trade.api.dto.FilterTradeDetailsResponse;
 import am.trade.common.models.TradeDetails;
-import am.trade.common.models.enums.TradeStatus;
+import am.trade.models.enums.TradeStatus;
 
 /**
  * Service interface for handling trade API operations

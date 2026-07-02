@@ -1,4 +1,4 @@
-package am.trade.common.models.enums;
+package am.trade.models.enums;
 
 /**
  * Categories for journal templates

@@ -1,4 +1,4 @@
-package am.trade.common.models.enums;
+package am.trade.models.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

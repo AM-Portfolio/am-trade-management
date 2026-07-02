@@ -1,6 +1,6 @@
 package am.trade.common.models;
 
-import am.trade.common.models.enums.TemplateFieldType;
+import am.trade.models.enums.TemplateFieldType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.UUID;
 
 import am.trade.common.models.TradeModel;
-import am.trade.common.models.enums.BrokerType;
-import am.trade.common.models.enums.FNOTradeType;
+import am.trade.models.enums.BrokerType;
+import am.trade.models.enums.FNOTradeType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

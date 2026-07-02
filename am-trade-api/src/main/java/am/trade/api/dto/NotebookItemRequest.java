@@ -1,6 +1,6 @@
 package am.trade.api.dto;
 
-import am.trade.common.models.enums.NotebookItemType;
+import am.trade.models.enums.NotebookItemType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

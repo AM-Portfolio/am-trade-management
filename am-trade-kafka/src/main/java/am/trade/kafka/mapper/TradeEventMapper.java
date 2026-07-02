@@ -189,10 +189,10 @@ public class TradeEventMapper {
         return date;
     }
 
-    public OrderSide mapTradeTypeToOrderSide(am.trade.common.models.enums.TradeType tradeType) {
+    public OrderSide mapTradeTypeToOrderSide(am.trade.models.enums.TradeType tradeType) {
         if (tradeType == null) {
             return OrderSide.BUY; // Default to BUY if not specified
         }
-        return tradeType == am.trade.common.models.enums.TradeType.BUY ? OrderSide.BUY : OrderSide.SELL;
+        return tradeType == am.trade.models.enums.TradeType.BUY ? OrderSide.BUY : OrderSide.SELL;
     }
 }

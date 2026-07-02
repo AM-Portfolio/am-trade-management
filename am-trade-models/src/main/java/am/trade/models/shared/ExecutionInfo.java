@@ -2,7 +2,7 @@ package am.trade.models.shared;
 
 import java.math.BigDecimal;
 
-import am.trade.models.shared.enums.TradeType;
+import am.trade.models.enums.TradeType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

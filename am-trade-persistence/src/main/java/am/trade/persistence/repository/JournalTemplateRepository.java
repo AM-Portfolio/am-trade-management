@@ -1,7 +1,7 @@
 package am.trade.persistence.repository;
 
 import am.trade.common.models.JournalTemplate;
-import am.trade.common.models.enums.JournalTemplateCategory;
+import am.trade.models.enums.JournalTemplateCategory;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

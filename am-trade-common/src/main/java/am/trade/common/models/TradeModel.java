@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import am.trade.common.models.enums.BrokerType;
-import am.trade.common.models.enums.TradeType;
+import am.trade.models.enums.BrokerType;
+import am.trade.models.enums.TradeType;
 import am.trade.common.util.TradeModelDeserializer;
 
 import com.fasterxml.jackson.annotation.JsonInclude;

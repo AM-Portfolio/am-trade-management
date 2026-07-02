@@ -15,8 +15,8 @@ import am.trade.common.models.TradeEntryExistReasoning;
 import am.trade.common.models.TradeMetrics;
 import am.trade.common.models.TradeModel;
 import am.trade.common.models.TradePsychologyData;
-import am.trade.common.models.enums.TradePositionType;
-import am.trade.common.models.enums.TradeStatus;
+import am.trade.models.enums.TradePositionType;
+import am.trade.models.enums.TradeStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

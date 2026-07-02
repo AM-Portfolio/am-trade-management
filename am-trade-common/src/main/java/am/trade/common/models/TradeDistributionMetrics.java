@@ -1,6 +1,6 @@
 package am.trade.common.models;
 
-import am.trade.common.models.enums.AssetClass;
+import am.trade.models.enums.AssetClass;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

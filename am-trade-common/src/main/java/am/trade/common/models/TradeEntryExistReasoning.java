@@ -1,7 +1,7 @@
 package am.trade.common.models;
 
-import am.trade.common.models.enums.TechnicalEntryReason;
-import am.trade.common.models.enums.FundamentalEntryReason;
+import am.trade.models.enums.TechnicalEntryReason;
+import am.trade.models.enums.FundamentalEntryReason;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

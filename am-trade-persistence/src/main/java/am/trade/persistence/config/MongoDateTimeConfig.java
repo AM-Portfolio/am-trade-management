@@ -15,11 +15,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 
-import am.trade.common.models.enums.EntryPsychology;
-import am.trade.common.models.enums.ExitPsychology;
-import am.trade.common.models.enums.FundamentalEntryReason;
-import am.trade.common.models.enums.TechnicalEntryReason;
-import am.trade.common.models.enums.TradeBehaviorPattern;
+import am.trade.models.enums.EntryPsychology;
+import am.trade.models.enums.ExitPsychology;
+import am.trade.models.enums.FundamentalEntryReason;
+import am.trade.models.enums.TechnicalEntryReason;
+import am.trade.models.enums.TradeBehaviorPattern;
 
 /**
  * MongoDB configuration for handling LocalDateTime in IST timezone and flexible enum conversions
