@@ -97,7 +97,6 @@ public class TradeApiServiceImpl implements TradeApiService {
             tradeDetails.setTradeId(UUID.randomUUID().toString());
         }
 
-
         // Ensure trade position type is set to LONG by default if missing to allow
         // calculations
         if (tradeDetails.getTradePositionType() == null) {
@@ -243,7 +242,7 @@ public class TradeApiServiceImpl implements TradeApiService {
 
         // ── Build and publish the event ──────────────────────────────────────
         am.trade.models.kafka.PortfolioSyncEvent syncEvent = am.trade.models.kafka.PortfolioSyncEvent.builder()
-                .id(savedTrade.getTradeId())
+                .id(savedTrade.getPortfolioId())
                 .brokerType(brokerType)
                 .userId(savedTrade.getUserId())
                 .equities(List.of(equity))
