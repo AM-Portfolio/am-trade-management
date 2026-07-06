@@ -1,0 +1,151 @@
+package am.trade.kafka.consumer;
+
+import am.trade.common.models.EntryExitInfo;
+import am.trade.common.models.TradeDetails;
+import am.trade.models.enums.TradePositionType;
+import am.trade.models.enums.TradeStatus;
+import am.trade.models.kafka.inbound.InboundEquityModel;
+import am.trade.models.kafka.inbound.PortfolioUpdateInboundEvent;
+import am.trade.services.service.TradeDetailsService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Kafka consumer that listens to portfolio update events published by am-portfolio.
+ *
+ * <p>When am-portfolio updates holdings (e.g., via the Document Parser or manual entry),
+ * it publishes a {@code PortfolioUpdateEvent} to the {@code am-portfolio-update} topic.
+ * This consumer picks up those events and creates baseline "Imported Holding" trades
+ * in the Trade database for any symbols that don't already have a trade entry.</p>
+ *
+ * <h3>Why we use {@link TradeDetailsService} instead of {@code TradeApiService}:</h3>
+ * <ol>
+ *   <li>{@code TradeApiService.addTrade()} calls {@code UserContext.getUserIdOrThrow()},
+ *       which requires an authenticated HTTP user. Kafka consumers have NO HTTP context,
+ *       so this would throw at runtime.</li>
+ *   <li>{@code TradeApiService.addTrade()} publishes a {@code PortfolioSyncEvent} back
+ *       to am-portfolio after saving. This would create an infinite message loop:
+ *       Portfolio → Trade → Portfolio → Trade → ...</li>
+ * </ol>
+ *
+ * <p>By using the lower-level {@link TradeDetailsService#saveTradeDetails}, we bypass
+ * both the security context and the sync-back event, which is correct because this
+ * is an internal system process — not a user action.</p>
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@ConditionalOnProperty(name = "am.trade.kafka.portfolio-update.consumer.enabled", havingValue = "true", matchIfMissing = false)
+public class PortfolioUpdateConsumerService {
+
+    private final ObjectMapper objectMapper;
+    private final TradeDetailsService tradeDetailsService;
+
+    @KafkaListener(
+            topics = "${am.trade.kafka.portfolio-update.topic:am-portfolio-update}",
+            groupId = "${am.trade.kafka.portfolio-update.consumer-group-id:am-trade-portfolio-update-group}",
+            containerFactory = "kafkaListenerContainerFactory"
+    )
+    public void consume(String message, Acknowledgment acknowledgment) throws Exception {
+        log.info("Received portfolio update message: {}", message);
+
+        PortfolioUpdateInboundEvent event = objectMapper.readValue(message, PortfolioUpdateInboundEvent.class);
+
+        // ── INFINITE LOOP GUARD ──────────────────────────────────────────────
+        // When am-trade-management saves a trade, it publishes a PortfolioSyncEvent
+        // to am-portfolio. am-portfolio processes it and re-broadcasts the updated
+        // portfolio with source="TRADE". If we process that re-broadcast, we'd
+        // create duplicate trades and loop forever.
+        if ("TRADE".equalsIgnoreCase(event.getSource())) {
+            log.info("Ignoring portfolio update from source='TRADE' (originated from us). EventId: {}", event.getId());
+            acknowledgment.acknowledge();
+            return;
+        }
+
+        processInboundPortfolioEvent(event);
+
+        acknowledgment.acknowledge();
+        log.info("Portfolio update message processed and acknowledged successfully");
+    }
+
+    private void processInboundPortfolioEvent(PortfolioUpdateInboundEvent event) {
+        if (event.getPortfolioId() == null || event.getEquities() == null || event.getEquities().isEmpty()) {
+            log.warn("PortfolioUpdateInboundEvent has no portfolioId or equities. Skipping. EventId: {}", event.getId());
+            return;
+        }
+
+        String portfolioId = event.getPortfolioId();
+        String userId = event.getUserId();
+
+        if (userId == null || userId.isBlank()) {
+            log.error("PortfolioUpdateInboundEvent has no userId. Cannot create trades without an owner. Skipping.");
+            return;
+        }
+
+        // Fetch ALL existing trades for this portfolio once, rather than querying per symbol.
+        // This is far more efficient when a portfolio has 50+ holdings.
+        List<TradeDetails> existingTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+
+        for (InboundEquityModel equity : event.getEquities()) {
+            if (equity.getSymbol() == null || equity.getQuantity() == null || equity.getQuantity() <= 0) {
+                log.debug("Skipping equity with null/zero symbol or quantity: {}", equity);
+                continue;
+            }
+
+            String symbol = equity.getSymbol().toUpperCase();
+
+            // Dedup check: skip if any trade already exists for this symbol in this portfolio
+            boolean alreadyExists = existingTrades.stream()
+                    .anyMatch(t -> symbol.equalsIgnoreCase(t.getSymbol()));
+
+            if (alreadyExists) {
+                log.debug("Trade already exists for symbol {} in portfolio {}. Skipping.", symbol, portfolioId);
+                continue;
+            }
+
+            log.info("Creating baseline 'Imported Holding' trade for portfolioId: {}, symbol: {}, userId: {}",
+                    portfolioId, symbol, userId);
+
+            TradeDetails trade = new TradeDetails();
+            trade.setTradeId(UUID.randomUUID().toString());
+            trade.setPortfolioId(portfolioId);
+            trade.setUserId(userId);
+            trade.setSymbol(symbol);
+            trade.setStatus(TradeStatus.OPEN);
+            trade.setTradePositionType(TradePositionType.LONG);
+            trade.setStrategy("Imported Holding");
+
+            // Instrument Info
+            am.trade.common.models.InstrumentInfo instrumentInfo = new am.trade.common.models.InstrumentInfo();
+            instrumentInfo.setSymbol(symbol);
+            instrumentInfo.setIsin(equity.getIsin());
+            trade.setInstrumentInfo(instrumentInfo);
+
+            // Entry Info
+            EntryExitInfo entryInfo = new EntryExitInfo();
+            entryInfo.setQuantity(equity.getQuantity().intValue());
+            entryInfo.setPrice(equity.getAvgBuyingPrice() != null
+                    ? BigDecimal.valueOf(equity.getAvgBuyingPrice())
+                    : BigDecimal.ZERO);
+            trade.setEntryInfo(entryInfo);
+
+            try {
+                TradeDetails saved = tradeDetailsService.saveTradeDetails(trade);
+                log.info("Successfully created baseline trade for {} — tradeId: {}", symbol, saved.getTradeId());
+            } catch (Exception e) {
+                // Log and continue to the next equity. Don't let one failure block the rest.
+                log.error("Failed to create baseline trade for symbol {} in portfolio {}: {}",
+                        symbol, portfolioId, e.getMessage(), e);
+            }
+        }
+    }
+}
