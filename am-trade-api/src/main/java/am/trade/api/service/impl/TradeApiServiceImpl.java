@@ -239,7 +239,23 @@ public class TradeApiServiceImpl implements TradeApiService {
                 brokerType = execution.getBasicInfo().getBrokerType().name();
             }
         }
-
+        
+        // Fallback: resolve from the portfolio metadata if it's still OTHER
+        if ("OTHER".equals(brokerType)) {
+            Optional<am.trade.common.models.PortfolioModel> portfolioOpt = portfolioPersistenceService.findByPortfolioId(savedTrade.getPortfolioId());
+            if (portfolioOpt.isPresent() && portfolioOpt.get().getName() != null) {
+                // If the name is something like "Zerodha", we can extract it.
+                // Or better, since trade doesn't have a brokerType field on PortfolioModel,
+                // we can just extract it from the name if it matches a known broker.
+                String pfName = portfolioOpt.get().getName().toUpperCase();
+                for (am.trade.models.enums.BrokerType bt : am.trade.models.enums.BrokerType.values()) {
+                    if (pfName.contains(bt.name()) || pfName.contains(bt.getCode().toUpperCase())) {
+                        brokerType = bt.name();
+                        break;
+                    }
+                }
+            }
+        }
         // ── Build and publish the event ──────────────────────────────────────
         am.trade.models.kafka.PortfolioSyncEvent syncEvent = am.trade.models.kafka.PortfolioSyncEvent.builder()
                 .id(savedTrade.getPortfolioId())
