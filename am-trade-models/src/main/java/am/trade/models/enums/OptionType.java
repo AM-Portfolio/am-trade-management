@@ -1,13 +1,20 @@
-package am.trade.models.shared.enums;
+package am.trade.models.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Arrays;
 
+@Schema(description = "Type of option contract")
 public enum OptionType {
+    @Schema(description = "Call Option (CE) - Right to buy")
     CALL("CE", "Call Option"),
+    
+    @Schema(description = "Put Option (PE) - Right to sell")
     PUT("PE", "Put Option"),
+    
+    @Schema(description = "Not Applicable - Not an option instrument")
     NONE(null, "Not Applicable");
 
     private final String value;

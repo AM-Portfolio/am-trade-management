@@ -30,15 +30,19 @@ public class KafkaProducerService implements TradeHoldingEventPublisher {
     public <T extends BaseEvent> void sendEvent(String topic, T event) {
         log.info("Sending event to topic {}: {}", topic, event);
         
-        CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, event.getEventId(), event);
-        
-        future.whenComplete((result, ex) -> {
-            if (ex == null) {
-                log.debug("Successfully sent event to topic {}: {}", topic, event);
-            } else {
-                log.error("Error sending event to topic {}: {}", topic, event, ex);
-            }
-        });
+        try {
+            CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, event.getEventId(), event);
+            
+            future.whenComplete((result, ex) -> {
+                if (ex == null) {
+                    log.debug("Successfully sent event to topic {}: {}", topic, event);
+                } else {
+                    log.error("Error sending event to topic {}: {}", topic, event, ex);
+                }
+            });
+        } catch (Exception e) {
+            log.error("Synchronous exception when sending event to topic {}: {}", topic, e.getMessage(), e);
+        }
     }
 
     @Override
@@ -60,16 +64,21 @@ public class KafkaProducerService implements TradeHoldingEventPublisher {
         log.info("Sending holding update event for userId: {}, equities count: {}", 
                  event.getUserId(), event.getEquities() != null ? event.getEquities().size() : 0);
 
-        CompletableFuture<SendResult<String, Object>> future = 
-            kafkaTemplate.send(holdingUpdateTopic, event.getId(), event);
+        try {
+            CompletableFuture<SendResult<String, Object>> future = 
+                kafkaTemplate.send(holdingUpdateTopic, event.getId(), event);
 
-        future.whenComplete((result, ex) -> {
-            if (ex == null) {
-                log.info("Holding update event sent successfully for userId: {}", event.getUserId());
-            } else {
-                log.error("Failed to send holding update event for userId: {}", 
-                          event.getUserId(), ex);
-            }
-        });
+            future.whenComplete((result, ex) -> {
+                if (ex == null) {
+                    log.info("Holding update event sent successfully for userId: {}", event.getUserId());
+                } else {
+                    log.error("Failed to send holding update event for userId: {}", 
+                              event.getUserId(), ex);
+                }
+            });
+        } catch (Exception e) {
+            log.error("Synchronous exception when sending holding update event for userId: {}: {}", 
+                      event.getUserId(), e.getMessage(), e);
+        }
     }
 }

@@ -8,7 +8,7 @@ import am.trade.api.dto.NotebookTagResponse;
 import am.trade.api.service.NotebookService;
 import am.trade.common.models.NotebookItem;
 import am.trade.common.models.NotebookTag;
-import am.trade.common.models.enums.NotebookItemType;
+import am.trade.models.enums.NotebookItemType;
 import am.trade.persistence.repository.NotebookItemRepository;
 import am.trade.persistence.repository.NotebookTagRepository;
 import lombok.RequiredArgsConstructor;

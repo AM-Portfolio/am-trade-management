@@ -1,9 +1,9 @@
 package am.trade.common.models;
 
-import am.trade.common.models.enums.EntryPsychology;
-import am.trade.common.models.enums.ExitPsychology;
-import am.trade.common.models.enums.TradeBehaviorPattern;
-import am.trade.common.models.enums.TradeTagCategories;
+import am.trade.models.enums.EntryPsychology;
+import am.trade.models.enums.ExitPsychology;
+import am.trade.models.enums.TradeBehaviorPattern;
+import am.trade.models.enums.TradeTagCategories;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

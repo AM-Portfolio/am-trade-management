@@ -5,8 +5,8 @@ import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import am.trade.common.models.enums.FNOTradeType;
-import am.trade.common.models.enums.OptionType;
+import am.trade.models.enums.FNOTradeType;
+import am.trade.models.enums.OptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

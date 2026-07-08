@@ -1,7 +1,7 @@
 package am.trade.models.shared;
 
-import am.trade.models.shared.enums.TechnicalEntryReason;
-import am.trade.models.shared.enums.FundamentalEntryReason;
+import am.trade.models.enums.TechnicalEntryReason;
+import am.trade.models.enums.FundamentalEntryReason;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

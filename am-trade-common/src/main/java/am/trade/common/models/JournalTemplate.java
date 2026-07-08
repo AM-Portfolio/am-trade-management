@@ -1,6 +1,6 @@
 package am.trade.common.models;
 
-import am.trade.common.models.enums.JournalTemplateCategory;
+import am.trade.models.enums.JournalTemplateCategory;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

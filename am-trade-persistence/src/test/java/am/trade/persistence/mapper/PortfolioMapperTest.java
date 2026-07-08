@@ -14,8 +14,8 @@
 
 // import am.trade.common.models.PortfolioModel;
 // import am.trade.common.models.TradeDetails;
-// import am.trade.common.models.enums.TradePositionType;
-// import am.trade.common.models.enums.TradeStatus;
+// import am.trade.models.enums.TradePositionType;
+// import am.trade.models.enums.TradeStatus;
 // import am.trade.persistence.entity.PortfolioEntity;
 // import am.trade.persistence.entity.TradeDetailsEntity;
 

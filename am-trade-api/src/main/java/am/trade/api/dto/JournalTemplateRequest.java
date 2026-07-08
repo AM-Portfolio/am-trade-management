@@ -1,6 +1,6 @@
 package am.trade.api.dto;
 
-import am.trade.common.models.enums.JournalTemplateCategory;
+import am.trade.models.enums.JournalTemplateCategory;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

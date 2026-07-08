@@ -3,8 +3,8 @@ package am.trade.models.shared;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import am.trade.models.shared.enums.FNOTradeType;
-import am.trade.models.shared.enums.OptionType;
+import am.trade.models.enums.FNOTradeType;
+import am.trade.models.enums.OptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

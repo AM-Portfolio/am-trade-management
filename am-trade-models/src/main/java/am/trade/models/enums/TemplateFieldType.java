@@ -1,4 +1,4 @@
-package am.trade.common.models.enums;
+package am.trade.models.enums;
 
 /**
  * Types of fields that can be used in journal templates

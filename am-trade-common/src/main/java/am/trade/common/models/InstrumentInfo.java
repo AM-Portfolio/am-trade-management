@@ -1,9 +1,9 @@
 package am.trade.common.models;
 
-import am.trade.common.models.enums.Exchange;
-import am.trade.common.models.enums.IndexType;
-import am.trade.common.models.enums.MarketSegment;
-import am.trade.common.models.enums.SeriesType;
+import am.trade.models.enums.Exchange;
+import am.trade.models.enums.IndexType;
+import am.trade.models.enums.MarketSegment;
+import am.trade.models.enums.SeriesType;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

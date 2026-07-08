@@ -1,11 +1,11 @@
 package am.trade.common.jackson;
 
-import am.trade.common.models.enums.EntryPsychology;
-import am.trade.common.models.enums.ExitPsychology;
-import am.trade.common.models.enums.FundamentalEntryReason;
-import am.trade.common.models.enums.TechnicalEntryReason;
-import am.trade.common.models.enums.TradeBehaviorPattern;
-import am.trade.common.models.enums.TradeTagCategories;
+import am.trade.models.enums.EntryPsychology;
+import am.trade.models.enums.ExitPsychology;
+import am.trade.models.enums.FundamentalEntryReason;
+import am.trade.models.enums.TechnicalEntryReason;
+import am.trade.models.enums.TradeBehaviorPattern;
+import am.trade.models.enums.TradeTagCategories;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 /**

@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import am.trade.common.models.enums.TradeStatus;
+import am.trade.models.enums.TradeStatus;
 import am.trade.common.models.HeatmapRequest;
 import am.trade.common.models.PeriodProfitLossData;
 import am.trade.common.models.ProfitLossHeatmapData;

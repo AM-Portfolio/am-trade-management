@@ -76,12 +76,10 @@ public class PortfolioSummaryController {
     public ResponseEntity<?> getPortfolioSummaryByOwnerIdFallback(
             @Parameter(description = "Owner ID") @PathVariable String ownerId) {
         
-        String portfolioId = "by-owner/" + ownerId;
-        
         try {
-            log.info("Fallback: Fetching portfolio summary for constructed portfolioId: {}", portfolioId);
-            PortfolioModel portfolioSummary = portfolioSummaryService.getPortfolioSummary(portfolioId);
-            return ResponseEntity.ok(portfolioSummary);
+            log.info("Fetching portfolio summaries for ownerId: {}", ownerId);
+            List<PortfolioModel> portfolioSummaries = portfolioSummaryService.getPortfolioSummariesByOwnerId(ownerId);
+            return ResponseEntity.ok(portfolioSummaries);
         } catch (IllegalArgumentException e) {
             log.error("Invalid portfolio ID: {}", e.getMessage());
             return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/v1/portfolio-summary/by-owner/" + ownerId));

@@ -2,7 +2,7 @@ package am.trade.dashboard.service.metrics;
 
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.TradeDistributionMetrics;
-import am.trade.common.models.enums.AssetClass;
+import am.trade.models.enums.AssetClass;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

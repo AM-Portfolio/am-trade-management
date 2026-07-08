@@ -1,4 +1,4 @@
-package am.trade.common.models.enums;
+package am.trade.models.enums;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -12,6 +12,12 @@ public enum Exchange {
     
     @Schema(description = "Bombay Stock Exchange (India)")
     BSE,
+    
+    @Schema(description = "Multi Commodity Exchange of India")
+    MCX,
+    
+    @Schema(description = "National Commodity and Derivatives Exchange")
+    NCDEX,
     
     @Schema(description = "New York Stock Exchange")
     NYSE,

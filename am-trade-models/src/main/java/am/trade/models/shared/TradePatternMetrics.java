@@ -1,8 +1,8 @@
 package am.trade.models.shared;
 
-import am.trade.models.shared.enums.EntryPsychology;
-import am.trade.models.shared.enums.ExitPsychology;
-import am.trade.models.shared.enums.TradeBehaviorPattern;
+import am.trade.models.enums.EntryPsychology;
+import am.trade.models.enums.ExitPsychology;
+import am.trade.models.enums.TradeBehaviorPattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

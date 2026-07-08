@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.Order;
 
 /**
  * Global exception handler for the trade management application
@@ -28,7 +30,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
  */
 @Slf4j
 @RestControllerAdvice
-@ConditionalOnProperty(prefix = "am.api.core.exception-handler", name = "enabled", havingValue = "false", matchIfMissing = true)
 public class GlobalExceptionHandler {
 
     /**
@@ -41,33 +42,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, ex.getStatus());
     }
     
+    
     /**
-     * Handle Spring's ResponseStatusException
+     * Handle business validation exceptions like TradeFieldValidationException
      */
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ErrorResponse> handleResponseStatusException(
-            ResponseStatusException ex, HttpServletRequest request) {
-        log.error("Response status exception occurred: {}", ex.getMessage(), ex);
-        
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(ex.getStatusCode().value())
-                .error(ex.getStatusCode().toString())
-                .message(ex.getReason())
-                .path(request.getRequestURI())
-                .traceId(UUID.randomUUID().toString())
-                .build();
-        
-        return new ResponseEntity<>(errorResponse, ex.getStatusCode());
-    }
-
-    /**
-     * Handle standard IllegalArgumentException (often used for validation)
-     */
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
-            IllegalArgumentException ex, HttpServletRequest request) {
-        log.error("Illegal argument exception: {}", ex.getMessage());
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(
+            ValidationException ex, HttpServletRequest request) {
+        log.error("Validation exception occurred: {}", ex.getMessage());
         
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
@@ -76,59 +58,10 @@ public class GlobalExceptionHandler {
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
                 .traceId(UUID.randomUUID().toString())
+                .errors(ex.getErrors())
                 .build();
         
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-    
-    /**
-     * Handle validation errors from @Valid annotations
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(
-            MethodArgumentNotValidException ex, HttpServletRequest request) {
-        log.error("Validation exception occurred: {}", ex.getMessage(), ex);
-        
-        BindingResult result = ex.getBindingResult();
-        List<ErrorDetail> validationErrors = new ArrayList<>();
-        
-        for (FieldError fieldError : result.getFieldErrors()) {
-            validationErrors.add(new ErrorDetail(
-                    fieldError.getField(),
-                    fieldError.getDefaultMessage(),
-                    "VALIDATION_ERROR"
-            ));
-        }
-        
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
-                .message("Validation failed")
-                .path(request.getRequestURI())
-                .traceId(UUID.randomUUID().toString())
-                .errors(validationErrors)
-                .build();
-        
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-    
-    /**
-     * Handle all other uncaught exceptions
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
-        log.error("Unexpected exception occurred: {}", ex.getMessage(), ex);
-        
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
-                .message("An unexpected error occurred: " + ex.getMessage())
-                .path(request.getRequestURI())
-                .traceId(UUID.randomUUID().toString())
-                .build();
-        
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
+

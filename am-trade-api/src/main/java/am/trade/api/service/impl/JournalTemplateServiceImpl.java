@@ -5,7 +5,7 @@ import am.trade.api.service.JournalTemplateService;
 import am.trade.api.service.TradeJournalService;
 import am.trade.common.models.JournalTemplate;
 import am.trade.common.models.TemplateField;
-import am.trade.common.models.enums.JournalTemplateCategory;
+import am.trade.models.enums.JournalTemplateCategory;
 import am.trade.persistence.repository.JournalTemplateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

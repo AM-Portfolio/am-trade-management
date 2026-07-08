@@ -1,4 +1,4 @@
-package am.trade.common.models.enums;
+package am.trade.models.enums;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

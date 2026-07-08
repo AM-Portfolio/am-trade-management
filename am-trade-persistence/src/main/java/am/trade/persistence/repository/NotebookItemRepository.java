@@ -1,7 +1,7 @@
 package am.trade.persistence.repository;
 
 import am.trade.common.models.NotebookItem;
-import am.trade.common.models.enums.NotebookItemType;
+import am.trade.models.enums.NotebookItemType;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
