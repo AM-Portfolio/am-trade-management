@@ -175,7 +175,7 @@ public class TradeConsumerService {
 
         try {
             am.trade.models.kafka.PortfolioSyncEvent syncEvent = am.trade.models.kafka.PortfolioSyncEvent.builder()
-                .id(event.getId() != null ? event.getId().toString() : java.util.UUID.randomUUID().toString())
+                .id(event.getPortfolioId() != null ? event.getPortfolioId() : java.util.UUID.randomUUID().toString())
                 .brokerType(event.getBrokerType() != null ? event.getBrokerType().name() : "UNKNOWN")
                 .userId(event.getUserId())
                 .equities(equities)

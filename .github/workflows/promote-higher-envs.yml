@@ -28,6 +28,8 @@ jobs:
       id-token: write
     uses: AM-Portfolio/am-pipelines/.github/workflows/central-deploy.yml@main
     with:
+      service_name: "am-trade-management"
+      working_directory: "."
       image_name: "am-trade-management-service"
       image_tag: ${{ github.event.inputs.image_tag }}
       namespace: "am-apps-dev"
@@ -43,6 +45,8 @@ jobs:
       id-token: write
     uses: AM-Portfolio/am-pipelines/.github/workflows/central-deploy.yml@main
     with:
+      service_name: "am-trade-management"
+      working_directory: "."
       image_name: "am-trade-management-service"
       image_tag: ${{ github.event.inputs.image_tag }}
       namespace: "am-apps-preprod"
@@ -59,6 +63,8 @@ jobs:
       id-token: write
     uses: AM-Portfolio/am-pipelines/.github/workflows/central-deploy.yml@main
     with:
+      service_name: "am-trade-management"
+      working_directory: "."
       image_name: "am-trade-management-service"
       image_tag: ${{ github.event.inputs.image_tag }}
       namespace: "am-apps-prod"
