@@ -68,7 +68,11 @@ public class MarketDataApiClient {
                         try {
                             Object value = dataToProcess.get(key);
                             MarketDataResponse response = mapper.convertValue(value, MarketDataResponse.class);
-                            currentPrices.put(String.valueOf(key), response.getLastPrice());
+                            String symbolKey = String.valueOf(key);
+                            if (symbolKey.contains(":")) {
+                                symbolKey = symbolKey.substring(symbolKey.lastIndexOf(":") + 1);
+                            }
+                            currentPrices.put(symbolKey, response.getLastPrice());
                         } catch (Exception e) {
                             log.error("Error converting response for symbol {}", key, e);
                         }
