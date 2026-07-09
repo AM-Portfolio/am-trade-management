@@ -56,3 +56,7 @@ management:
     export:
       prometheus:
         enabled: true
+
+market-data:
+  api:
+    baseUrl: https://am.asrax.in/market
