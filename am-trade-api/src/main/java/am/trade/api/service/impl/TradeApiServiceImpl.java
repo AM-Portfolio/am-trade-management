@@ -85,6 +85,10 @@ public class TradeApiServiceImpl implements TradeApiService {
 
         // Securely inject the authenticated user's ID
         tradeDetails.setUserId(UserContext.getUserIdOrThrow());
+        
+        if (tradeDetails.getSymbol() != null) {
+            tradeDetails.setSymbol(tradeDetails.getSymbol().trim().toUpperCase());
+        }
 
         log.info("Service: Adding new trade for portfolio: {} and symbol: {} by user: {}",
                 tradeDetails.getPortfolioId(), tradeDetails.getSymbol(), tradeDetails.getUserId());

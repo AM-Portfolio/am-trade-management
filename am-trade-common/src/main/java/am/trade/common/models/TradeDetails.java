@@ -43,6 +43,9 @@ public class TradeDetails {
     private EntryExitInfo entryInfo;
     private EntryExitInfo exitInfo;
     
+    // Live price for open trades
+    private BigDecimal currentPrice;
+    
     // Trade metrics
     private TradeMetrics metrics;
     
@@ -98,13 +101,20 @@ public class TradeDetails {
      */
     @JsonIgnore
     public BigDecimal calculateProfitLossPerUnit() {
-        if (entryInfo == null || entryInfo.getPrice() == null || 
-            exitInfo == null || exitInfo.getPrice() == null) {
+        if (entryInfo == null || entryInfo.getPrice() == null) {
             return BigDecimal.ZERO;
         }
         
         BigDecimal entryPrice = entryInfo.getPrice();
-        BigDecimal exitPrice = exitInfo.getPrice();
+        BigDecimal exitPrice;
+        
+        if (exitInfo != null && exitInfo.getPrice() != null) {
+            exitPrice = exitInfo.getPrice();
+        } else if (currentPrice != null) {
+            exitPrice = currentPrice;
+        } else {
+            return BigDecimal.ZERO;
+        }
         
         if (TradePositionType.LONG.equals(tradePositionType)) {
             // For LONG: exit - entry
@@ -169,13 +179,20 @@ public class TradeDetails {
      */
     @JsonIgnore
     public BigDecimal calculateProfitLossPercentage() {
-        if (entryInfo == null || entryInfo.getPrice() == null || 
-            exitInfo == null || exitInfo.getPrice() == null) {
+        if (entryInfo == null || entryInfo.getPrice() == null) {
             return BigDecimal.ZERO;
         }
         
         BigDecimal entryPrice = entryInfo.getPrice();
-        BigDecimal exitPrice = exitInfo.getPrice();
+        BigDecimal exitPrice;
+        
+        if (exitInfo != null && exitInfo.getPrice() != null) {
+            exitPrice = exitInfo.getPrice();
+        } else if (currentPrice != null) {
+            exitPrice = currentPrice;
+        } else {
+            return BigDecimal.ZERO;
+        }
         
         if (entryPrice.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
