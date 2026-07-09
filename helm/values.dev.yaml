@@ -69,3 +69,4 @@ ingress:
 
 env:
   SPRING_PROFILES_ACTIVE: "dev"
+  MARKET_DATA_API_URL: "http://am-market-data:8080"
