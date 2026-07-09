@@ -38,4 +38,7 @@ server:
     mime-types: application/json,application/xml,text/html,text/plain
     min-response-size: 2048
 
-
+market-data:
+  api:
+    baseUrl: ${MARKET_DATA_API_URL:https://am.asrax.in/market}
+    ohlcEndpoint: /v1/market-data/ohlc
