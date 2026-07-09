@@ -24,7 +24,12 @@ public class MarketDataApiClient {
 
     public MarketDataApiClient(MarketDataApiConfig config, RestTemplateBuilder restTemplateBuilder) {
         this.config = config;
-        this.restTemplate = restTemplateBuilder.rootUri(config.getBaseUrl()).build();
+        this.restTemplate = restTemplateBuilder
+                .rootUri(config.getBaseUrl())
+                .defaultHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                .defaultHeader("Accept", "application/json")
+                .defaultHeader("Content-Type", "application/json")
+                .build();
     }
 
     public Map<String, Double> getCurrentPrices(List<String> symbols) {
