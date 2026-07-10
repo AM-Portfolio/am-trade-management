@@ -340,33 +340,30 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                         }
                         
                         // Recalculate profit/loss with live price
-                        java.math.BigDecimal profitLoss = trade.calculateTotalProfitLoss();
-                        
-                        if (trade.getMetrics() == null) {
-                            trade.setMetrics(new am.trade.common.models.TradeMetrics());
-                        }
-                        trade.getMetrics().setProfitLoss(profitLoss);
-                        
-                        if (trade.getEntryInfo() != null && trade.getEntryInfo().getPrice() != null 
-                                && trade.getEntryInfo().getPrice().compareTo(java.math.BigDecimal.ZERO) > 0) {
-                            
-                            java.math.BigDecimal entryPrice = trade.getEntryInfo().getPrice();
+                        java.math.BigDecimal entryPrice = trade.getEntryInfo() != null ? trade.getEntryInfo().getPrice() : null;
+                        if (entryPrice != null && trade.getEntryInfo().getQuantity() != null) {
                             java.math.BigDecimal currentPrc = trade.getCurrentPrice();
-                            java.math.BigDecimal percentage;
+                            java.math.BigDecimal profitLossPerUnit = java.math.BigDecimal.ZERO;
                             
                             if (am.trade.models.enums.TradePositionType.LONG.equals(trade.getTradePositionType())) {
-                                percentage = currentPrc.subtract(entryPrice)
-                                        .divide(entryPrice, 4, java.math.RoundingMode.HALF_UP)
-                                        .multiply(new java.math.BigDecimal("100"));
+                                profitLossPerUnit = currentPrc.subtract(entryPrice);
                             } else if (am.trade.models.enums.TradePositionType.SHORT.equals(trade.getTradePositionType())) {
-                                percentage = entryPrice.subtract(currentPrc)
-                                        .divide(entryPrice, 4, java.math.RoundingMode.HALF_UP)
-                                        .multiply(new java.math.BigDecimal("100"));
-                            } else {
-                                percentage = java.math.BigDecimal.ZERO;
+                                profitLossPerUnit = entryPrice.subtract(currentPrc);
                             }
                             
-                            trade.getMetrics().setProfitLossPercentage(percentage);
+                            java.math.BigDecimal profitLoss = profitLossPerUnit.multiply(new java.math.BigDecimal(trade.getEntryInfo().getQuantity()));
+                            
+                            if (trade.getMetrics() == null) {
+                                trade.setMetrics(new am.trade.common.models.TradeMetrics());
+                            }
+                            trade.getMetrics().setProfitLoss(profitLoss);
+                            
+                            if (entryPrice.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                                java.math.BigDecimal percentage = profitLossPerUnit
+                                        .divide(entryPrice, 4, java.math.RoundingMode.HALF_UP)
+                                        .multiply(new java.math.BigDecimal("100"));
+                                trade.getMetrics().setProfitLossPercentage(percentage);
+                            }
                         }
                     }
                 });
