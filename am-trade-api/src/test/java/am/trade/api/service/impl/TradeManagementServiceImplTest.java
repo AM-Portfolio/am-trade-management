@@ -33,13 +33,15 @@ class TradeManagementServiceImplTest {
     private am.trade.persistence.mapper.TradeDetailsMapper tradeDetailsMapper;
     @Mock
     private am.trade.common.logger.AppLogger appLogger;
+    @Mock
+    private am.trade.api.client.MarketDataApiClient marketDataApiClient;
 
     private TradeManagementServiceImpl tradeManagementService;
 
     @BeforeEach
     void setUp() {
         tradeManagementService = new TradeManagementServiceImpl(tradeDetailsService, portfolioRepository,
-                tradeDetailsMapper, appLogger);
+                tradeDetailsMapper, appLogger, marketDataApiClient);
     }
 
     @Test

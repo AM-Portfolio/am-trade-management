@@ -42,3 +42,7 @@ am:
       metrics:
         collection-interval-seconds: 60
         retention-days: 90
+
+market-data:
+  api:
+    baseUrl: https://am.asrax.in/market

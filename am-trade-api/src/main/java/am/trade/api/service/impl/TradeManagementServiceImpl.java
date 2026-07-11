@@ -5,6 +5,7 @@ import am.trade.common.models.TradeSummary;
 import am.trade.models.enums.TradeStatus;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.api.service.TradeManagementService;
+import am.trade.api.client.MarketDataApiClient;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -46,6 +47,7 @@ public class TradeManagementServiceImpl implements TradeManagementService {
     private final PortfolioRepository portfolioRepository;
     private final TradeDetailsMapper tradeDetailsMapper;
     private final AppLogger log;
+    private final MarketDataApiClient marketDataApiClient;
 
     @Override
     public Map<String, List<TradeDetails>> getTradeDetailsByDay(LocalDate date, String portfolioId) {
@@ -148,6 +150,8 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                 .collect(Collectors.toList());
 
         log.info("Retained {} trades after date filtering", filteredTrades.size());
+        
+        enrichWithLivePrices(filteredTrades);
 
         // Group trades by portfolio ID
         return filteredTrades.stream()
@@ -158,12 +162,16 @@ public class TradeManagementServiceImpl implements TradeManagementService {
 
     @Override
     public Page<TradeDetails> getTradeDetailsByPortfolio(String portfolioId, Pageable pageable) {
-        return tradeDetailsService.findModelsByPortfolioId(portfolioId, pageable);
+        Page<TradeDetails> page = tradeDetailsService.findModelsByPortfolioId(portfolioId, pageable);
+        enrichWithLivePrices(page.getContent());
+        return page;
     }
 
     @Override
     public List<TradeDetails> getAllTradesByTradePortfolioId(String portfolioId) {
-        return tradeDetailsService.findModelsByPortfolioId(portfolioId);
+        List<TradeDetails> trades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+        enrichWithLivePrices(trades);
+        return trades;
     }
 
     @Override
@@ -173,7 +181,7 @@ public class TradeManagementServiceImpl implements TradeManagementService {
 
         List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
 
-        return allTrades.stream()
+        List<TradeDetails> filteredTrades = allTrades.stream()
                 .filter(trade -> {
                     LocalDateTime tradeDate = trade.getEntryInfo() != null ? trade.getEntryInfo().getTimestamp() : null;
 
@@ -182,6 +190,9 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                             !tradeDate.isAfter(endDateTime);
                 })
                 .collect(Collectors.toList());
+                
+        enrichWithLivePrices(filteredTrades);
+        return filteredTrades;
     }
 
     @Override
@@ -201,11 +212,14 @@ public class TradeManagementServiceImpl implements TradeManagementService {
         List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
 
         // Filter by symbols (case-insensitive)
-        return allTrades.stream()
+        List<TradeDetails> filteredTrades = allTrades.stream()
                 .filter(trade -> trade.getSymbol() != null &&
                         symbols.stream()
                                 .anyMatch(symbol -> trade.getSymbol().equalsIgnoreCase(symbol)))
                 .collect(Collectors.toList());
+                
+        enrichWithLivePrices(filteredTrades);
+        return filteredTrades;
     }
 
     @Override
@@ -284,8 +298,79 @@ public class TradeManagementServiceImpl implements TradeManagementService {
         }
 
         List<TradeDetails> pagedTrades = filteredTrades.subList(start, end);
+        
+        enrichWithLivePrices(pagedTrades);
 
         return new PageImpl<>(pagedTrades, pageable, filteredTrades.size());
+    }
+    
+    private void enrichWithLivePrices(List<TradeDetails> trades) {
+        if (trades == null || trades.isEmpty()) {
+            return;
+        }
+
+        List<TradeDetails> openTrades = trades.stream()
+                .filter(t -> TradeStatus.OPEN.equals(t.getStatus()) && t.getSymbol() != null)
+                .collect(Collectors.toList());
+
+        if (openTrades.isEmpty()) {
+            return;
+        }
+
+        List<String> symbols = openTrades.stream()
+                .map(trade -> trade.getSymbol() != null ? trade.getSymbol().trim() : null)
+                .filter(s -> s != null && !s.isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+
+        try {
+            Map<String, Double> livePrices = marketDataApiClient.getCurrentPrices(symbols);
+            log.info("Live prices received from API: {}", livePrices);
+            
+            if (livePrices != null && !livePrices.isEmpty()) {
+                openTrades.forEach(trade -> {
+                    String cleanSymbol = trade.getSymbol() != null ? trade.getSymbol().trim() : null;
+                    Double price = cleanSymbol != null ? livePrices.get(cleanSymbol) : null;
+                    if (price != null) {
+                        trade.setCurrentPrice(java.math.BigDecimal.valueOf(price));
+                        
+                        // Default to LONG if tradePositionType is null
+                        if (trade.getTradePositionType() == null) {
+                            trade.setTradePositionType(am.trade.models.enums.TradePositionType.LONG);
+                        }
+                        
+                        // Recalculate profit/loss with live price
+                        java.math.BigDecimal entryPrice = trade.getEntryInfo() != null ? trade.getEntryInfo().getPrice() : null;
+                        if (entryPrice != null && trade.getEntryInfo().getQuantity() != null) {
+                            java.math.BigDecimal currentPrc = trade.getCurrentPrice();
+                            java.math.BigDecimal profitLossPerUnit = java.math.BigDecimal.ZERO;
+                            
+                            if (am.trade.models.enums.TradePositionType.LONG.equals(trade.getTradePositionType())) {
+                                profitLossPerUnit = currentPrc.subtract(entryPrice);
+                            } else if (am.trade.models.enums.TradePositionType.SHORT.equals(trade.getTradePositionType())) {
+                                profitLossPerUnit = entryPrice.subtract(currentPrc);
+                            }
+                            
+                            java.math.BigDecimal profitLoss = profitLossPerUnit.multiply(new java.math.BigDecimal(trade.getEntryInfo().getQuantity()));
+                            
+                            if (trade.getMetrics() == null) {
+                                trade.setMetrics(new am.trade.common.models.TradeMetrics());
+                            }
+                            trade.getMetrics().setProfitLoss(profitLoss);
+                            
+                            if (entryPrice.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                                java.math.BigDecimal percentage = profitLossPerUnit
+                                        .divide(entryPrice, 4, java.math.RoundingMode.HALF_UP)
+                                        .multiply(new java.math.BigDecimal("100"));
+                                trade.getMetrics().setProfitLossPercentage(percentage);
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (Exception e) {
+            log.error("Error enriching trades with live prices", e);
+        }
     }
 
 }
