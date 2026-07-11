@@ -330,7 +330,14 @@ public class TradeManagementServiceImpl implements TradeManagementService {
             if (livePrices != null && !livePrices.isEmpty()) {
                 openTrades.forEach(trade -> {
                     String cleanSymbol = trade.getSymbol() != null ? trade.getSymbol().trim() : null;
+                    if (cleanSymbol != null && cleanSymbol.contains(":")) {
+                        cleanSymbol = cleanSymbol.substring(cleanSymbol.lastIndexOf(":") + 1);
+                    }
                     Double price = cleanSymbol != null ? livePrices.get(cleanSymbol) : null;
+                    if (price == null && trade.getSymbol() != null) {
+                        // Fallback in case MarketDataApiClient didn't strip it
+                        price = livePrices.get(trade.getSymbol().trim());
+                    }
                     if (price != null) {
                         trade.setCurrentPrice(java.math.BigDecimal.valueOf(price));
                         
