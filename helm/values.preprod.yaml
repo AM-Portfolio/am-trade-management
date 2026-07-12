@@ -19,13 +19,14 @@ global:
         path: "apps/data/preprod/infra/redis"
       app:
         path: "apps/data/preprod/services/am-trade-management"
+      market-data:
+        path: "apps/data/preprod/services/am-market-data"
       identity-oidc:
         path: "apps/data/preprod/services/am-identity"
       service-oauth:
         path: "apps/data/preprod/services/am-trade-management"
 env:
   SPRING_PROFILES_ACTIVE: "preprod"
-  AM_MARKET_DATA_API_URL: "http://am-market-data:8080"
 
 ingress:
   enabled: true
