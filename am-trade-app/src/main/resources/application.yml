@@ -40,6 +40,7 @@ spring:
       - optional:file:/vault/secrets/mongo
       - optional:file:/vault/secrets/kafka
       - optional:file:/vault/secrets/redis
+      - optional:file:/vault/secrets/market-data
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://localhost:27017/trade}

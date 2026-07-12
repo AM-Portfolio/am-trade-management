@@ -27,6 +27,8 @@ global:
         path: "apps/data/dev/infra/redis"
       app:
         path: "apps/data/dev/services/am-trade-management"
+      market-data:
+        path: "apps/data/dev/services/am-market-data"
       identity-oidc:
         path: "apps/data/dev/services/am-identity"
       service-oauth:
@@ -69,4 +71,3 @@ ingress:
 
 env:
   SPRING_PROFILES_ACTIVE: "dev"
-  AM_MARKET_DATA_API_URL: "http://am-market-data:8080"

@@ -1,5 +1,7 @@
 package am.trade.api.client;
 
+import com.am.security.context.UserContext;
+
 import am.trade.api.config.MarketDataApiConfig;
 import am.trade.common.models.market.MarketDataResponse;
 import am.trade.common.models.market.MarketDataResponseWrapper;
@@ -29,6 +31,13 @@ public class MarketDataApiClient {
                 .defaultHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                 .defaultHeader("Accept", "application/json")
                 .defaultHeader("Content-Type", "application/json")
+                .additionalInterceptors((request, body, execution) -> {
+                    String token = UserContext.getToken();
+                    if (token != null) {
+                        request.getHeaders().setBearerAuth(token);
+                    }
+                    return execution.execute(request, body);
+                })
                 .build();
     }
 
