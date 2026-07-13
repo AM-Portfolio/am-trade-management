@@ -75,7 +75,7 @@
         {
             "key": "base_url",
             "value": "http://localhost:8040",
-            "description": "Environment base URL: \nLocal: http://localhost:8040\nDev: https://dev.am.munish.org/trades\nPreprod: https://am.asrax.in/trades\nProd: https://am.munish.org/trades"
+            "description": "Environment base URL: \nLocal: http://localhost:8040\nDev: https://am-dev.asrax.in/trade\nPreprod: https://am-preprod.asrax.in/trade\nProd: https://am.asrax.in/trade"
         },
         {
             "key": "jwt_token",
