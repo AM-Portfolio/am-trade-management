@@ -85,22 +85,12 @@ env:
   OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://otel-collector.monitoring.svc.cluster.local:4318/v1/traces"
   TRACING_SAMPLING_PROBABILITY: "0.1"
 
-# Ingress configuration
+# Ingress configuration (env overlays set hosts)
 ingress:
-  enabled: true
-  className: "nginx"
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-  hosts:
-    - host: trade.preprod.am-portfolio.com
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: trade-tls
-      hosts:
-        - trade.preprod.am-portfolio.com
+  enabled: false
+  className: "traefik"
+  annotations: {}
+  hosts: []
 
 # Config block required by universal-chart templates.
 # batchSearch is not used by this service — set to disabled to prevent

@@ -1,7 +1,8 @@
 # Pre-production configuration for am-trade-management.
-# Aligned with am-market industry standards.
+# Preprod app host only — am.asrax.in reserved for prod
 
 environment: "preprod"
+replicaCount: 1
 
 global:
   vault:
@@ -30,10 +31,19 @@ env:
 
 ingress:
   enabled: true
+  className: "traefik"
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      am-apps-preprod-global-cors@kubernetescrd,
+      am-apps-preprod-strip-prefix-apps@kubernetescrd
   hosts:
-    - host: trade.preprod.amportfolio.com
+    - host: am-preprod.asrax.in
       paths:
-        - path: /
+        - path: /trade
+          pathType: Prefix
+        - path: /trades
           pathType: Prefix
 
 resources:
