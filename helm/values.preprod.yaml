@@ -1,5 +1,5 @@
 # Pre-production configuration for am-trade-management.
-# Dual-host: am-preprod (target) + am.asrax.in (current preprod until Phase 4)
+# Preprod app host only — am.asrax.in reserved for prod
 
 environment: "preprod"
 replicaCount: 1
@@ -40,12 +40,6 @@ ingress:
       am-apps-preprod-strip-prefix-apps@kubernetescrd
   hosts:
     - host: am-preprod.asrax.in
-      paths:
-        - path: /trade
-          pathType: Prefix
-        - path: /trades
-          pathType: Prefix
-    - host: am.asrax.in
       paths:
         - path: /trade
           pathType: Prefix
