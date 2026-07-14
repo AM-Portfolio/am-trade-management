@@ -30,3 +30,4 @@ jobs:
       use_release_version: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' }}
       advance_snapshot: true
     secrets: inherit
+
