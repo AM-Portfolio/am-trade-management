@@ -10,6 +10,7 @@ import am.trade.services.config.TradeServicesAutoConfiguration;
 
 /**
  * Auto-configuration for API module
+ * (Triggering pipeline test)
  */
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.cors.CorsConfiguration;
