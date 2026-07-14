@@ -4,7 +4,7 @@ am:
     allowed-origin-patterns: https://am-dev.asrax.in,https://*.asrax.in
 
 MONGODB_URI: ${MONGODB_URI}
-MONGODB_DATABASE: ${MONGODB_DATABASE}
+MONGODB_DATABASE: ${MONGODB_DATABASE:trade}
 
 # MongoDB production configuration
 spring:
