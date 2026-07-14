@@ -34,7 +34,11 @@ public class MarketDataApiClient {
                 .additionalInterceptors((request, body, execution) -> {
                     String token = UserContext.getToken();
                     if (token != null) {
-                        request.getHeaders().setBearerAuth(token);
+                        if (token.startsWith("Bearer ")) {
+                            request.getHeaders().set("Authorization", token);
+                        } else {
+                            request.getHeaders().setBearerAuth(token);
+                        }
                     }
                     return execution.execute(request, body);
                 })
