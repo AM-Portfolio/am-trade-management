@@ -9,6 +9,8 @@ global:
   vault:
     enabled: true
     secrets:
+      auth:
+        path: "apps/data/prod/services/am-auth"
       infra:
         path: "apps/data/prod/infra/shared-api"
       mongo:
@@ -28,6 +30,7 @@ global:
 
 env:
   SPRING_PROFILES_ACTIVE: "prod"
+  MONGODB_DATABASE: "trade"
   KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
   KAFKA_SASL_MECHANISM: "SCRAM-SHA-512"
 
