@@ -101,7 +101,13 @@ public class TradeConsumerService {
         // Any exception here will propagate to the DefaultErrorHandler which will:
         //   a) Retry up to 3 times (1 second apart)
         //   b) After all retries fail: publish to the .DLT topic and commit the offset
-        processMessage(event);
+        try {
+            processMessage(event);
+        } catch (Exception e) {
+            log.error("Failed processing trade eventId={} userId={} portfolioId={}: {}",
+                    messageId, event.getUserId(), event.getPortfolioId(), e.toString(), e);
+            throw e;
+        }
 
         // Step 4: Mark as processed AFTER successful processing.
         // This order matters: if we marked it BEFORE processing and then crashed,
@@ -118,14 +124,21 @@ public class TradeConsumerService {
     private void processMessage(TradeUpdateEvent event) {
         log.info("Processing trade update event with {} trades for user: {}", event.getTrades().size(), event.getUserId());
 
+        String portfolioId = event.getPortfolioId();
+        if (portfolioId == null || portfolioId.isBlank()) {
+            portfolioId = event.getId() != null ? event.getId().toString() : java.util.UUID.randomUUID().toString();
+            log.warn("Trade event had null portfolioId — using fallback portfolioId={} for eventId={}",
+                    portfolioId, event.getId());
+        }
+
         // Step 1: Convert raw TradeModels to TradeDetails and persist them
-        List<TradeDetails> tradeDetails = tradeProcessingService.processTradeModels(event.getTrades(), event.getPortfolioId());
+        List<TradeDetails> tradeDetails = tradeProcessingService.processTradeModels(event.getTrades(), portfolioId);
         List<TradeDetails> savedTrades = tradeDetailsService.saveAllTradeDetails(tradeDetails);
 
         // Step 2: Run portfolio aggregation (e.g., compute net position per symbol)
         tradeProcessingService.processTradeDetails(
             savedTrades.stream().map(TradeDetails::getTradeId).collect(Collectors.toList()),
-            event.getPortfolioId(),
+            portfolioId,
             event.getUserId()
         );
 
@@ -175,7 +188,7 @@ public class TradeConsumerService {
 
         try {
             am.trade.models.kafka.PortfolioSyncEvent syncEvent = am.trade.models.kafka.PortfolioSyncEvent.builder()
-                .id(event.getPortfolioId() != null ? event.getPortfolioId() : java.util.UUID.randomUUID().toString())
+                .id(portfolioId)
                 .brokerType(event.getBrokerType() != null ? event.getBrokerType().name() : "UNKNOWN")
                 .userId(event.getUserId())
                 .equities(equities)
@@ -192,6 +205,6 @@ public class TradeConsumerService {
         }
 
         log.info("Successfully processed {} trades and notified Portfolio. portfolioId: {}",
-                 savedTrades.size(), event.getPortfolioId());
+                 savedTrades.size(), portfolioId);
     }
 }

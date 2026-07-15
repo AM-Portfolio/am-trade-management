@@ -63,7 +63,7 @@ spring:
       max.block.ms: 2000
     consumer:
       group-id: am-trade-management
-      auto-offset-reset: latest
+      auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:

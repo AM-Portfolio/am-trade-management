@@ -316,6 +316,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
 
         // Group trades by symbol to handle multiple securities
         Map<String, List<TradeModel>> tradesBySymbol = trades.stream()
+                .filter(trade -> trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSymbol() != null)
                 .collect(Collectors.groupingBy(trade -> trade.getInstrumentInfo().getSymbol()));
         
         // Process each group of trades separately
@@ -324,9 +325,11 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             String symbol = entry.getKey();
             List<TradeModel> symbolTrades = entry.getValue();
             
-            // Sort trades by execution time
+            // Sort trades by execution time (nulls last)
             List<TradeModel> sortedTrades = symbolTrades.stream()
-                    .sorted(Comparator.comparing(trade -> trade.getBasicInfo().getOrderExecutionTime()))
+                    .sorted(Comparator.comparing(
+                            trade -> trade.getBasicInfo() != null ? trade.getBasicInfo().getOrderExecutionTime() : null,
+                            Comparator.nullsLast(Comparator.naturalOrder())))
                     .collect(Collectors.toList());
             
             if (sortedTrades.isEmpty()) {
@@ -461,6 +464,9 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         for (TradeModel trade : entryTrades) {
             BigDecimal quantity = BigDecimal.valueOf(trade.getExecutionInfo().getQuantity());
             BigDecimal price = trade.getExecutionInfo().getPrice();
+            if (price == null) {
+                price = BigDecimal.ZERO;
+            }
             
             totalQuantity = totalQuantity.add(quantity);
             weightedPriceSum = weightedPriceSum.add(price.multiply(quantity));
@@ -470,7 +476,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             totalValue = totalValue.add(tradeValue);
             
             // Sum up fees if available
-            if (trade.getCharges() != null) {
+            if (trade.getCharges() != null && trade.getCharges().getTotalTaxes() != null) {
                 totalFees = totalFees.add(trade.getCharges().getTotalTaxes());
             }
         }
@@ -520,6 +526,9 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         for (TradeModel trade : exitTrades) {
             BigDecimal quantity = BigDecimal.valueOf(trade.getExecutionInfo().getQuantity());
             BigDecimal price = trade.getExecutionInfo().getPrice();
+            if (price == null) {
+                price = BigDecimal.ZERO;
+            }
             
             totalQuantity = totalQuantity.add(quantity);
             weightedPriceSum = weightedPriceSum.add(price.multiply(quantity));
@@ -529,7 +538,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             totalValue = totalValue.add(tradeValue);
             
             // Sum up fees if available
-            if (trade.getCharges() != null) {
+            if (trade.getCharges() != null && trade.getCharges().getTotalTaxes() != null) {
                 totalFees = totalFees.add(trade.getCharges().getTotalTaxes());
             }
         }
