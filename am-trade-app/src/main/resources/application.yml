@@ -36,6 +36,7 @@ spring:
   config:
     import:
       - classpath:application-common.yml
+      - classpath:application-kafka.yml
       - optional:file:/vault/secrets/app
       - optional:file:/vault/secrets/mongo
       - optional:file:/vault/secrets/kafka
