@@ -31,8 +31,18 @@ global:
 env:
   SPRING_PROFILES_ACTIVE: "prod"
   MONGODB_DATABASE: "trade"
-  KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
-  KAFKA_SASL_MECHANISM: "SCRAM-SHA-512"
+  # Match prod Kafka (same as portfolio/doc): SCRAM over PLAINTEXT listener
+  KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
+  KAFKA_SASL_MECHANISM: "SCRAM-SHA-256"
+  # Ensure trade consumer is on even if jar predates application-kafka.yml import
+  AM_TRADE_KAFKA_TRADE_CONSUMER_ENABLED: "true"
+  AM_TRADE_KAFKA_TRADE_TOPIC: "am-trade"
+  AM_TRADE_KAFKA_TRADE_CONSUMER_GROUP_ID: "am-trade-group"
+  SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: "earliest"
+  AM_TRADE_KAFKA_HOLDING_UPDATE_TOPIC: "am-portfolio"
+  AM_TRADE_KAFKA_PORTFOLIO_UPDATE_CONSUMER_ENABLED: "true"
+  AM_TRADE_KAFKA_PORTFOLIO_UPDATE_TOPIC: "am-portfolio-update"
+  AM_TRADE_KAFKA_PORTFOLIO_UPDATE_CONSUMER_GROUP_ID: "am-trade-portfolio-update-group"
 
 ingress:
   enabled: true

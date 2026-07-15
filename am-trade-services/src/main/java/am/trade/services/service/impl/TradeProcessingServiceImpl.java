@@ -316,6 +316,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
 
         // Group trades by symbol to handle multiple securities
         Map<String, List<TradeModel>> tradesBySymbol = trades.stream()
+                .filter(trade -> trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSymbol() != null)
                 .collect(Collectors.groupingBy(trade -> trade.getInstrumentInfo().getSymbol()));
         
         // Process each group of trades separately
@@ -324,9 +325,11 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             String symbol = entry.getKey();
             List<TradeModel> symbolTrades = entry.getValue();
             
-            // Sort trades by execution time
+            // Sort trades by execution time (nulls last)
             List<TradeModel> sortedTrades = symbolTrades.stream()
-                    .sorted(Comparator.comparing(trade -> trade.getBasicInfo().getOrderExecutionTime()))
+                    .sorted(Comparator.comparing(
+                            trade -> trade.getBasicInfo() != null ? trade.getBasicInfo().getOrderExecutionTime() : null,
+                            Comparator.nullsLast(Comparator.naturalOrder())))
                     .collect(Collectors.toList());
             
             if (sortedTrades.isEmpty()) {
@@ -346,17 +349,11 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                 TradeModel firstTrade = tradeCycle.get(0);
                 TradePositionType tradePositionType = determineTradeType(firstTrade);
                 
-                // Process the trades to build entry and exit information
+                // Process the trades to build entry and exit information.
+                // calculateEntryInfo/calculateExitInfo already select BUY vs SELL by position type —
+                // do NOT swap for SHORT (that turns open shorts into entryInfo=null → NPE in metrics).
                 EntryExitInfo entryInfo = calculateEntryInfo(tradeCycle, tradePositionType);
                 EntryExitInfo exitInfo = calculateExitInfo(tradeCycle, tradePositionType);
-                
-                // For SHORT positions, swap entry and exit info since the first trade is a SELL (entry) and last trade is a BUY (exit)
-                // which is the reverse of LONG positions
-                if (tradePositionType == TradePositionType.SHORT) {
-                    EntryExitInfo temp = entryInfo;
-                    entryInfo = exitInfo;
-                    exitInfo = temp;
-                }
                 
                 // Calculate trade metrics
                 TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
@@ -461,6 +458,9 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         for (TradeModel trade : entryTrades) {
             BigDecimal quantity = BigDecimal.valueOf(trade.getExecutionInfo().getQuantity());
             BigDecimal price = trade.getExecutionInfo().getPrice();
+            if (price == null) {
+                price = BigDecimal.ZERO;
+            }
             
             totalQuantity = totalQuantity.add(quantity);
             weightedPriceSum = weightedPriceSum.add(price.multiply(quantity));
@@ -470,7 +470,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             totalValue = totalValue.add(tradeValue);
             
             // Sum up fees if available
-            if (trade.getCharges() != null) {
+            if (trade.getCharges() != null && trade.getCharges().getTotalTaxes() != null) {
                 totalFees = totalFees.add(trade.getCharges().getTotalTaxes());
             }
         }
@@ -520,6 +520,9 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         for (TradeModel trade : exitTrades) {
             BigDecimal quantity = BigDecimal.valueOf(trade.getExecutionInfo().getQuantity());
             BigDecimal price = trade.getExecutionInfo().getPrice();
+            if (price == null) {
+                price = BigDecimal.ZERO;
+            }
             
             totalQuantity = totalQuantity.add(quantity);
             weightedPriceSum = weightedPriceSum.add(price.multiply(quantity));
@@ -529,7 +532,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             totalValue = totalValue.add(tradeValue);
             
             // Sum up fees if available
-            if (trade.getCharges() != null) {
+            if (trade.getCharges() != null && trade.getCharges().getTotalTaxes() != null) {
                 totalFees = totalFees.add(trade.getCharges().getTotalTaxes());
             }
         }
@@ -556,8 +559,16 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         EntryExitInfo exitInfo,
             TradePositionType tradePositionType) {
         
-        // If position is still open (no exit info), return basic metrics
-        if (exitInfo == null) {
+        // If position is still open (no exit) or entry missing, return basic metrics
+        if (entryInfo == null || exitInfo == null) {
+            return TradeMetrics.builder()
+                    .profitLoss(BigDecimal.ZERO)
+                    .profitLossPercentage(BigDecimal.ZERO)
+                    .returnOnEquity(BigDecimal.ZERO)
+                    .build();
+        }
+        
+        if (entryInfo.getPrice() == null || exitInfo.getPrice() == null) {
             return TradeMetrics.builder()
                     .profitLoss(BigDecimal.ZERO)
                     .profitLossPercentage(BigDecimal.ZERO)
@@ -571,12 +582,12 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             // For LONG positions: (exitPrice - entryPrice) * quantity
             profitLoss = exitInfo.getPrice()
                     .subtract(entryInfo.getPrice())
-                    .multiply(BigDecimal.valueOf(entryInfo.getQuantity()));
+                    .multiply(BigDecimal.valueOf(entryInfo.getQuantity() != null ? entryInfo.getQuantity() : 0));
         } else {
             // For SHORT positions: (entryPrice - exitPrice) * quantity
             profitLoss = entryInfo.getPrice()
                     .subtract(exitInfo.getPrice())
-                    .multiply(BigDecimal.valueOf(entryInfo.getQuantity()));
+                    .multiply(BigDecimal.valueOf(entryInfo.getQuantity() != null ? entryInfo.getQuantity() : 0));
         }
         
         // Subtract fees — guard against null if the user didn't fill in fees
@@ -693,8 +704,8 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         EntryExitInfo exitInfo,
         TradeMetrics metrics) {
         
-        // If no exit info, position is still open
-        if (exitInfo == null) {
+        // If no exit or entry info, position is still open / incomplete
+        if (entryInfo == null || exitInfo == null) {
             return TradeStatus.OPEN;
         }
         
