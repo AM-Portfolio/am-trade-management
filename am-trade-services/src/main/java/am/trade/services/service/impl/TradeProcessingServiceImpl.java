@@ -349,17 +349,11 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                 TradeModel firstTrade = tradeCycle.get(0);
                 TradePositionType tradePositionType = determineTradeType(firstTrade);
                 
-                // Process the trades to build entry and exit information
+                // Process the trades to build entry and exit information.
+                // calculateEntryInfo/calculateExitInfo already select BUY vs SELL by position type —
+                // do NOT swap for SHORT (that turns open shorts into entryInfo=null → NPE in metrics).
                 EntryExitInfo entryInfo = calculateEntryInfo(tradeCycle, tradePositionType);
                 EntryExitInfo exitInfo = calculateExitInfo(tradeCycle, tradePositionType);
-                
-                // For SHORT positions, swap entry and exit info since the first trade is a SELL (entry) and last trade is a BUY (exit)
-                // which is the reverse of LONG positions
-                if (tradePositionType == TradePositionType.SHORT) {
-                    EntryExitInfo temp = entryInfo;
-                    entryInfo = exitInfo;
-                    exitInfo = temp;
-                }
                 
                 // Calculate trade metrics
                 TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
@@ -565,8 +559,16 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         EntryExitInfo exitInfo,
             TradePositionType tradePositionType) {
         
-        // If position is still open (no exit info), return basic metrics
-        if (exitInfo == null) {
+        // If position is still open (no exit) or entry missing, return basic metrics
+        if (entryInfo == null || exitInfo == null) {
+            return TradeMetrics.builder()
+                    .profitLoss(BigDecimal.ZERO)
+                    .profitLossPercentage(BigDecimal.ZERO)
+                    .returnOnEquity(BigDecimal.ZERO)
+                    .build();
+        }
+        
+        if (entryInfo.getPrice() == null || exitInfo.getPrice() == null) {
             return TradeMetrics.builder()
                     .profitLoss(BigDecimal.ZERO)
                     .profitLossPercentage(BigDecimal.ZERO)
@@ -580,12 +582,12 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             // For LONG positions: (exitPrice - entryPrice) * quantity
             profitLoss = exitInfo.getPrice()
                     .subtract(entryInfo.getPrice())
-                    .multiply(BigDecimal.valueOf(entryInfo.getQuantity()));
+                    .multiply(BigDecimal.valueOf(entryInfo.getQuantity() != null ? entryInfo.getQuantity() : 0));
         } else {
             // For SHORT positions: (entryPrice - exitPrice) * quantity
             profitLoss = entryInfo.getPrice()
                     .subtract(exitInfo.getPrice())
-                    .multiply(BigDecimal.valueOf(entryInfo.getQuantity()));
+                    .multiply(BigDecimal.valueOf(entryInfo.getQuantity() != null ? entryInfo.getQuantity() : 0));
         }
         
         // Subtract fees — guard against null if the user didn't fill in fees
@@ -702,8 +704,8 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         EntryExitInfo exitInfo,
         TradeMetrics metrics) {
         
-        // If no exit info, position is still open
-        if (exitInfo == null) {
+        // If no exit or entry info, position is still open / incomplete
+        if (entryInfo == null || exitInfo == null) {
             return TradeStatus.OPEN;
         }
         

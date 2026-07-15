@@ -177,8 +177,9 @@ public class TradeConsumerService {
                     .avgBuyingPrice(price)
                     .investmentValue(price.multiply(quantity))
                     .isin(isin)
-                    // The Trade database does not store sector, industry, or marketCap natively.
-                    // Leaving them null for Portfolio to hydrate or ignore.
+                    // Snapshot sync — portfolio treats missing action as full replace;
+                    // set BUY so incremental path also applies if snapshot branch is absent.
+                    .action("BUY")
                     .sector(null)
                     .industry(null)
                     .marketCap(null)
