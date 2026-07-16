@@ -51,6 +51,12 @@
             <artifactId>am-security-lib</artifactId>
             <version>1.1.0</version>
         </dependency>
+        <!-- Core observability — branch snapshot until main publish -->
+        <dependency>
+            <groupId>com.am.libraries</groupId>
+            <artifactId>am-observability-lib</artifactId>
+            <version>1.1.1-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
@@ -68,10 +74,7 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
             <scope>runtime</scope>
         </dependency>
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-tracing-bridge-brave</artifactId>
-        </dependency>
+        <!-- OTel bridge + OTLP come from am-observability-lib (not Brave) -->
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
