@@ -27,8 +27,6 @@ global:
         path: "apps/data/dev/infra/redis"
       app:
         path: "apps/data/dev/services/am-trade-management"
-      market-data:
-        path: "apps/data/dev/services/am-market-data"
       identity-oidc:
         path: "apps/data/dev/services/am-identity"
       service-oauth:
