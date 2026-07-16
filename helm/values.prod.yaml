@@ -9,6 +9,8 @@ global:
   vault:
     enabled: true
     secrets:
+      otel:
+        path: "apps/data/prod/infra/observability"
       auth:
         path: "apps/data/prod/services/am-auth"
       infra:
