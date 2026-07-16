@@ -1,6 +1,7 @@
 name: AM Trade Management CI/Dev
 
 on:
+  workflow_dispatch:
   push:
     branches: ["main", "develop", "dev", "feature/**", "hotfix/**", "fix/**"]
     paths:
