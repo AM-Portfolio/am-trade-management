@@ -88,6 +88,10 @@ management:
       group:
         readiness:
           include: mongo,redis,kafka,readinessState,diskSpace
+  metrics:
+    tags:
+      # Required for Grafana Technical / Services Service dropdown
+      application: ${spring.application.name}
   health:
     livenessstate:
       enabled: true
@@ -99,6 +103,20 @@ management:
       enabled: true
     kafka:
       enabled: true
+  tracing:
+    enabled: true
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+    propagation:
+      type: w3c
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
+
+otel:
+  service:
+    name: ${spring.application.name}
+    namespace: am-trade-management
 
 # Logging configuration
 logging:
