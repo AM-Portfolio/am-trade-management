@@ -12,6 +12,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PortfolioSyncEvent {
+    @Builder.Default
+    private String eventType = "TRADE_SYNC";
+    
     private String id; // Matches the portfolioId or sync transaction ID
     private String brokerType;
     private String userId;
