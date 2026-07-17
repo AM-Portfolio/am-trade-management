@@ -40,5 +40,5 @@ server:
 
 market-data:
   api:
-    baseUrl: ${AM_MARKET_DATA_API_URL:https://am-dev.asrax.in/market}
+    baseUrl: ${AM_MARKET_DATA_API_URL:http://am-market-data:8080}
     ohlcEndpoint: /v1/market-data/ohlc
