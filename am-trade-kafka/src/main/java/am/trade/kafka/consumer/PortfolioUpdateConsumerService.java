@@ -11,6 +11,7 @@ import am.trade.services.service.PortfolioService;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -132,6 +133,7 @@ public class PortfolioUpdateConsumerService {
         // Fetch ALL existing trades for this portfolio once, rather than querying per symbol.
         // This is far more efficient when a portfolio has 50+ holdings.
         List<TradeDetails> existingTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+        List<TradeDetails> newTrades = new ArrayList<>();
 
         for (InboundEquityModel equity : event.getEquities()) {
             if (equity.getSymbol() == null || equity.getQuantity() == null || equity.getQuantity() <= 0) {
@@ -179,14 +181,16 @@ public class PortfolioUpdateConsumerService {
                     : entryInfo.getPrice().multiply(BigDecimal.valueOf(entryInfo.getQuantity())));
             trade.setEntryInfo(entryInfo);
 
+            newTrades.add(trade);
+        }
+        
+        if (!newTrades.isEmpty()) {
             try {
-                TradeDetails saved = tradeDetailsService.saveTradeDetails(trade);
-                log.info("Successfully created baseline trade for {} — tradeId: {}", symbol, saved.getTradeId());
-                existingTrades.add(saved);
+                List<TradeDetails> savedList = tradeDetailsService.saveAllTradeDetails(newTrades);
+                existingTrades.addAll(savedList);
+                log.info("Successfully created {} baseline trades in batch", savedList.size());
             } catch (Exception e) {
-                // Log and continue to the next equity. Don't let one failure block the rest.
-                log.error("Failed to create baseline trade for symbol {} in portfolio {}: {}",
-                        symbol, portfolioId, e.getMessage(), e);
+                log.error("Failed to batch save baseline trades for portfolio {}: {}", portfolioId, e.getMessage(), e);
             }
         }
 
