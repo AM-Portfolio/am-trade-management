@@ -9,6 +9,7 @@ import am.trade.models.kafka.inbound.InboundEquityModel;
 import am.trade.models.kafka.inbound.PortfolioUpdateInboundEvent;
 import am.trade.services.service.PortfolioService;
 import am.trade.services.service.TradeDetailsService;
+import am.trade.services.service.TradeProcessingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,7 @@ public class PortfolioUpdateConsumerService {
     private final ObjectMapper objectMapper;
     private final TradeDetailsService tradeDetailsService;
     private final PortfolioService portfolioService;
+    private final TradeProcessingService tradeProcessingService;
 
     @KafkaListener(
             topics = "${am.trade.kafka.portfolio-update.topic:am-portfolio-update}",
@@ -172,16 +174,28 @@ public class PortfolioUpdateConsumerService {
             entryInfo.setPrice(equity.getAvgBuyingPrice() != null
                     ? BigDecimal.valueOf(equity.getAvgBuyingPrice())
                     : BigDecimal.ZERO);
+            entryInfo.setTotalValue(equity.getInvestmentValue() != null
+                    ? BigDecimal.valueOf(equity.getInvestmentValue())
+                    : entryInfo.getPrice().multiply(BigDecimal.valueOf(entryInfo.getQuantity())));
             trade.setEntryInfo(entryInfo);
 
             try {
                 TradeDetails saved = tradeDetailsService.saveTradeDetails(trade);
                 log.info("Successfully created baseline trade for {} — tradeId: {}", symbol, saved.getTradeId());
+                existingTrades.add(saved);
             } catch (Exception e) {
                 // Log and continue to the next equity. Don't let one failure block the rest.
                 log.error("Failed to create baseline trade for symbol {} in portfolio {}: {}",
                         symbol, portfolioId, e.getMessage(), e);
             }
+        }
+
+        // Link all existing and new trades to the portfolio and calculate metrics
+        try {
+            tradeProcessingService.processTradeDetailsWithObjects(existingTrades, portfolioId, userId);
+            log.info("Successfully updated portfolio {} metrics and linked {} trades", portfolioId, existingTrades.size());
+        } catch (Exception e) {
+            log.error("Failed to link trades and calculate metrics for portfolio {}: {}", portfolioId, e.getMessage(), e);
         }
     }
 }
