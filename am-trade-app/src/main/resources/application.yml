@@ -45,6 +45,10 @@ spring:
       - optional:file:/vault/secrets/redis
       - optional:file:/vault/secrets/market-data
   data:
+    redis:
+      client:
+        observation:
+          enabled: true
     mongodb:
       uri: ${MONGODB_URI:mongodb://localhost:27017/trade} # trufflehog:ignore
       database: ${MONGODB_DATABASE:trade}
