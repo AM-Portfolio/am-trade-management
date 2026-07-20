@@ -93,7 +93,7 @@ curl http://localhost:8073/actuator
 
 ### Database Configuration
 ```env
-MONGODB_URI=mongodb://localhost:27017
+MONGODB_URI=mongodb://localhost:27017 <!-- trufflehog:ignore -->
 MONGODB_DATABASE=am_trade_management
 MONGODB_AUTHENTICATION_DATABASE=admin
 ```

@@ -46,7 +46,7 @@ spring:
       - optional:file:/vault/secrets/market-data
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/trade}
+      uri: ${MONGODB_URI:mongodb://localhost:27017/trade} # trufflehog:ignore
       database: ${MONGODB_DATABASE:trade}
       auto-index-creation: false
     jackson:
