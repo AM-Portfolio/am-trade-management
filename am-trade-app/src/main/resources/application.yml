@@ -120,6 +120,19 @@ otel:
     name: ${spring.application.name}
     namespace: am-trade-management
 
+# Observability properties (am.observability.*)
+# Prevents Tempo log flooding from high-frequency k8s health probes
+am:
+  observability:
+    enabled: true
+    request-log:
+      enabled: true
+      ignore-paths:
+        - /actuator/**
+        - /favicon.ico
+        - /swagger-ui/**
+        - /api-docs/**
+
 # Logging configuration
 logging:
   level:
