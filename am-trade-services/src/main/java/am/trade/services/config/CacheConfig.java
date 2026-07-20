@@ -1,50 +1,74 @@
 package am.trade.services.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.beans.factory.annotation.Value;
+import java.util.concurrent.TimeUnit;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Configuration for caching using Caffeine cache provider
- * Sets up caches for trade summaries and metrics with configurable expiry and size
+ * Configuration for caching using Caffeine cache provider.
+ * Provides separate cache specifications for different data domains to allow fine‑grained TTLs and sizes.
  */
 @Configuration
 @EnableCaching
 public class CacheConfig {
 
-    @Value("${cache.trade-summary.expiry-minutes:60}")
-    private long tradeSummaryCacheExpiryMinutes;
+    // ----- Trade Details By Day Cache -----
+    @Value("${cache.trade-details-by-day.expiry-minutes:10}")
+    private long tradeDetailsByDayExpiryMinutes;
+    @Value("${cache.trade-details-by-day.max-size:2000}")
+    private long tradeDetailsByDayMaxSize;
 
-    @Value("${cache.trade-summary.max-size:1000}")
-    private long tradeSummaryCacheMaxSize;
+    // ----- Trade Details By Month Cache -----
+    @Value("${cache.trade-details-by-month.expiry-minutes:60}")
+    private long tradeDetailsByMonthExpiryMinutes;
+    @Value("${cache.trade-details-by-month.max-size:2000}")
+    private long tradeDetailsByMonthMaxSize;
 
-    /**
-     * Configure the cache manager with Caffeine cache provider
-     *
-     * @return Configured cache manager
-     */
+    // ----- Portfolio Trades Cache (short‑lived) -----
+    @Value("${cache.portfolio-trades.expiry-minutes:5}")
+    private long portfolioTradesExpiryMinutes;
+    @Value("${cache.portfolio-trades.max-size:1000}")
+    private long portfolioTradesMaxSize;
+
+    // ----- Trades By Date Range Cache -----
+    @Value("${cache.trades-by-date-range.expiry-minutes:5}")
+    private long tradesByDateRangeExpiryMinutes;
+    @Value("${cache.trades-by-date-range.max-size:2000}")
+    private long tradesByDateRangeMaxSize;
+
+    // ----- Trades By Symbols Cache -----
+    @Value("${cache.trades-by-symbols.expiry-minutes:10}")
+    private long tradesBySymbolsExpiryMinutes;
+    @Value("${cache.trades-by-symbols.max-size:2000}")
+    private long tradesBySymbolsMaxSize;
+
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager("tradeSummaryCache");
-        cacheManager.setCaffeine(caffeineCacheBuilder());
-        return cacheManager;
+        SimpleCacheManager manager = new SimpleCacheManager();
+        manager.setCaches(Arrays.asList(
+                caffeineCache("tradeDetailsByDay", tradeDetailsByDayExpiryMinutes, tradeDetailsByDayMaxSize),
+                caffeineCache("tradeDetailsByMonth", tradeDetailsByMonthExpiryMinutes, tradeDetailsByMonthMaxSize),
+                caffeineCache("portfolioTrades", portfolioTradesExpiryMinutes, portfolioTradesMaxSize),
+                caffeineCache("tradesByDateRange", tradesByDateRangeExpiryMinutes, tradesByDateRangeMaxSize),
+                caffeineCache("tradesBySymbols", tradesBySymbolsExpiryMinutes, tradesBySymbolsMaxSize)
+        ));
+        return manager;
     }
 
-    /**
-     * Configure Caffeine cache with expiry and maximum size
-     *
-     * @return Caffeine cache builder
-     */
-    private Caffeine<Object, Object> caffeineCacheBuilder() {
-        return Caffeine.newBuilder()
-                .expireAfterWrite(tradeSummaryCacheExpiryMinutes, TimeUnit.MINUTES)
-                .maximumSize(tradeSummaryCacheMaxSize)
-                .recordStats();
+    private CaffeineCache caffeineCache(String name, long expiryMinutes, long maxSize) {
+        return new CaffeineCache(name,
+                Caffeine.newBuilder()
+                        .expireAfterWrite(expiryMinutes, TimeUnit.MINUTES)
+                        .maximumSize(maxSize)
+                        .recordStats()
+                        .build());
     }
 }

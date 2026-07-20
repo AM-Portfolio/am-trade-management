@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import am.trade.common.models.Attachment;
@@ -32,6 +34,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "trade_details")
+@CompoundIndexes({
+    @CompoundIndex(name = "portfolio_entry_ts_idx", def = "{'portfolioId': 1, 'entryInfo.timestamp': 1}"),
+    @CompoundIndex(name = "portfolio_symbol_idx", def = "{'portfolioId': 1, 'symbol': 1}"),
+    @CompoundIndex(name = "portfolio_status_idx", def = "{'portfolioId': 1, 'status': 1}")
+})
 public class TradeDetailsEntity {
     
     /**

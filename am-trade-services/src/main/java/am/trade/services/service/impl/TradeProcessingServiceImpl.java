@@ -9,6 +9,7 @@ import am.trade.common.models.TradeModel;
 import am.trade.models.enums.TradePositionType;
 import am.trade.models.enums.TradeStatus;
 import am.trade.models.enums.TradeType;
+import am.trade.services.metrics.TradeBusinessMetrics;
 import am.trade.services.service.PortfolioPersistenceService;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
@@ -40,10 +41,15 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
 
     private final TradeDetailsService tradeDetailsService;
     private final PortfolioPersistenceService portfolioPersistenceService;
-    
-    public TradeProcessingServiceImpl(TradeDetailsService tradeDetailsService, PortfolioPersistenceService portfolioPersistenceService) {
+    private final TradeBusinessMetrics tradeBusinessMetrics;
+
+    public TradeProcessingServiceImpl(
+            TradeDetailsService tradeDetailsService,
+            PortfolioPersistenceService portfolioPersistenceService,
+            TradeBusinessMetrics tradeBusinessMetrics) {
         this.tradeDetailsService = tradeDetailsService;
         this.portfolioPersistenceService = portfolioPersistenceService;
+        this.tradeBusinessMetrics = tradeBusinessMetrics;
     }
 
     private static final int DECIMAL_SCALE = 4;
@@ -79,34 +85,41 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         if (tradeIds == null || tradeIds.isEmpty()) {
             return;
         }
-        
-        // Check if portfolio already exists
-        Optional<PortfolioModel> existingPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId);
-        
-        Set<String> uniqueTradeIds = new HashSet<>();
-        
-        if (existingPortfolio.isPresent()) {
-            // Combine existing trades with new ones
-            List<String> existingTrades = existingPortfolio.get().getTradeIds();
-            if (existingTrades != null && !existingTrades.isEmpty()) {
-                log.info("Combining {} existing trades with {} new trades for portfolio {}", 
-                        existingTrades.size(), tradeIds.size(), portfolioId);
-                
-                // Add all existing trades to the set to ensure uniqueness
-                uniqueTradeIds.addAll(existingTrades);
+
+        // Relying on am-observability-lib zero-config for HTTP/MongoDB tracing; no custom spans needed.
+        try {
+            // Check if portfolio already exists
+            Optional<PortfolioModel> existingPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId);
+
+            Set<String> uniqueTradeIds = new HashSet<>();
+
+            if (existingPortfolio.isPresent()) {
+                // Combine existing trades with new ones
+                List<String> existingTrades = existingPortfolio.get().getTradeIds();
+                if (existingTrades != null && !existingTrades.isEmpty()) {
+                    log.info("Combining {} existing trades with {} new trades for portfolio {}",
+                            existingTrades.size(), tradeIds.size(), portfolioId);
+
+                    // Add all existing trades to the set to ensure uniqueness
+                    uniqueTradeIds.addAll(existingTrades);
+                }
             }
+
+            // Add all new trades to the set (duplicates will be automatically eliminated)
+            uniqueTradeIds.addAll(tradeIds);
+
+            log.info("After removing duplicates: {} unique trades for portfolio {}",
+                    uniqueTradeIds.size(), portfolioId);
+
+            // Convert back to list for further processing
+            List<String> allTradeIds = new ArrayList<>(uniqueTradeIds);
+
+            processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId, userId);
+            tradeBusinessMetrics.recordTradeProcessed("success", "unknown");
+        } catch (Exception e) {
+            tradeBusinessMetrics.recordTradeProcessed("failure", "unknown");
+            throw e;
         }
-        
-        // Add all new trades to the set (duplicates will be automatically eliminated)
-        uniqueTradeIds.addAll(tradeIds);
-        
-        log.info("After removing duplicates: {} unique trades for portfolio {}", 
-                uniqueTradeIds.size(), portfolioId);
-                
-        // Convert back to list for further processing
-        List<String> allTradeIds = new ArrayList<>(uniqueTradeIds);
-        
-        processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId, userId);
     }
 
     @Override
@@ -308,78 +321,93 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
     }
 
     @Override
-    public List<TradeDetails> 
-    processTradeModels(List<TradeModel> trades, String portfolioId) {
+    public List<TradeDetails> processTradeModels(List<TradeModel> trades, String portfolioId) {
         if (trades == null || trades.isEmpty()) {
             return new ArrayList<>();
         }
 
-        // Group trades by symbol to handle multiple securities
-        Map<String, List<TradeModel>> tradesBySymbol = trades.stream()
-                .filter(trade -> trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSymbol() != null)
-                .collect(Collectors.groupingBy(trade -> trade.getInstrumentInfo().getSymbol()));
-        
-        // Process each group of trades separately
-        List<TradeDetails> result = new ArrayList<>();
-        for (Map.Entry<String, List<TradeModel>> entry : tradesBySymbol.entrySet()) {
-            String symbol = entry.getKey();
-            List<TradeModel> symbolTrades = entry.getValue();
-            
-            // Sort trades by execution time (nulls last)
-            List<TradeModel> sortedTrades = symbolTrades.stream()
-                    .sorted(Comparator.comparing(
-                            trade -> trade.getBasicInfo() != null ? trade.getBasicInfo().getOrderExecutionTime() : null,
-                            Comparator.nullsLast(Comparator.naturalOrder())))
-                    .collect(Collectors.toList());
-            
-            if (sortedTrades.isEmpty()) {
-                continue;
-            }
-            
-            // Identify separate trade cycles (buy-sell cycles) within the same symbol
-            List<List<TradeModel>> tradeCycles = identifyTradeCycles(sortedTrades);
-            
-            // Process each trade cycle separately
-            for (List<TradeModel> tradeCycle : tradeCycles) {
-                if (tradeCycle.isEmpty()) {
+        // Measure total processing time for the Grafana trade_processing_duration_seconds panel.
+        long startNanos = System.nanoTime();
+        try {
+            // Group trades by symbol to handle multiple securities
+            Map<String, List<TradeModel>> tradesBySymbol = trades.stream()
+                    .filter(trade -> trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSymbol() != null)
+                    .collect(Collectors.groupingBy(trade -> trade.getInstrumentInfo().getSymbol()));
+
+            // Process each group of trades separately
+            List<TradeDetails> result = new ArrayList<>();
+            for (Map.Entry<String, List<TradeModel>> entry : tradesBySymbol.entrySet()) {
+                String symbol = entry.getKey();
+                List<TradeModel> symbolTrades = entry.getValue();
+
+                // Sort trades by execution time (nulls last)
+                List<TradeModel> sortedTrades = symbolTrades.stream()
+                        .sorted(Comparator.comparing(
+                                trade -> trade.getBasicInfo() != null ? trade.getBasicInfo().getOrderExecutionTime() : null,
+                                Comparator.nullsLast(Comparator.naturalOrder())))
+                        .collect(Collectors.toList());
+
+                if (sortedTrades.isEmpty()) {
                     continue;
                 }
-                
-                // Get the first trade to determine if it's a LONG or SHORT position
-                TradeModel firstTrade = tradeCycle.get(0);
-                TradePositionType tradePositionType = determineTradeType(firstTrade);
-                
-                // Process the trades to build entry and exit information.
-                // calculateEntryInfo/calculateExitInfo already select BUY vs SELL by position type —
-                // do NOT swap for SHORT (that turns open shorts into entryInfo=null → NPE in metrics).
-                EntryExitInfo entryInfo = calculateEntryInfo(tradeCycle, tradePositionType);
-                EntryExitInfo exitInfo = calculateExitInfo(tradeCycle, tradePositionType);
-                
-                // Calculate trade metrics
-                TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
-                
-                // Determine trade status
-                TradeStatus status = determineTradeStatus(entryInfo, exitInfo, metrics);
-                
-                // Build the complete trade model
-                TradeDetails tradeDetails = TradeDetails.builder()
-                        .tradeId(UUID.randomUUID().toString()) // Generate a unique ID for the trade
-                        .portfolioId(portfolioId)
-                        .symbol(symbol)
-                        .instrumentInfo(convertToInstrumentInfo(firstTrade.getInstrumentInfo()))
-                        .tradePositionType(tradePositionType)
-                        .status(status)
-                        .entryInfo(entryInfo)
-                        .exitInfo(exitInfo)
-                        .metrics(metrics)
-                        .tradeExecutions(tradeCycle)
-                        .build();
-                
-                result.add(tradeDetails);
+
+                // Identify separate trade cycles (buy-sell cycles) within the same symbol
+                List<List<TradeModel>> tradeCycles = identifyTradeCycles(sortedTrades);
+
+                // Process each trade cycle separately
+                for (List<TradeModel> tradeCycle : tradeCycles) {
+                    if (tradeCycle.isEmpty()) {
+                        continue;
+                    }
+
+                    // Get the first trade to determine if it's a LONG or SHORT position
+                    TradeModel firstTrade = tradeCycle.get(0);
+                    TradePositionType tradePositionType = determineTradeType(firstTrade);
+
+                    // Process the trades to build entry and exit information.
+                    // calculateEntryInfo/calculateExitInfo already select BUY vs SELL by position type —
+                    // do NOT swap for SHORT (that turns open shorts into entryInfo=null → NPE in metrics).
+                    EntryExitInfo entryInfo = calculateEntryInfo(tradeCycle, tradePositionType);
+                    EntryExitInfo exitInfo = calculateExitInfo(tradeCycle, tradePositionType);
+
+                    // Calculate trade metrics
+                    TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
+
+                    // Determine trade status
+                    TradeStatus status = determineTradeStatus(entryInfo, exitInfo, metrics);
+
+                    // Build the complete trade model
+                    TradeDetails tradeDetails = TradeDetails.builder()
+                            .tradeId(UUID.randomUUID().toString()) // Generate a unique ID for the trade
+                            .portfolioId(portfolioId)
+                            .symbol(symbol)
+                            .instrumentInfo(convertToInstrumentInfo(firstTrade.getInstrumentInfo()))
+                            .tradePositionType(tradePositionType)
+                            .status(status)
+                            .entryInfo(entryInfo)
+                            .exitInfo(exitInfo)
+                            .metrics(metrics)
+                            .tradeExecutions(tradeCycle)
+                            .build();
+
+                    result.add(tradeDetails);
+
+                    // Record one counter per completed trade, tagged by position type and status.
+                    tradeBusinessMetrics.recordTradeProcessed(
+                            "success",
+                            tradePositionType != null ? tradePositionType.name() : "unknown");
+                }
             }
+
+            return result;
+        } catch (Exception e) {
+            // Record failure counter so Grafana shows failure rate, not just absence of successes.
+            tradeBusinessMetrics.recordTradeProcessed("failure", "unknown");
+            throw e;
+        } finally {
+            // Always record duration — even on failure — so latency percentiles are never skewed.
+            tradeBusinessMetrics.recordProcessingDuration(System.nanoTime() - startNanos);
         }
-        
-        return result;
     }
 
 

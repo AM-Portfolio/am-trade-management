@@ -28,6 +28,8 @@ import am.trade.persistence.repository.PortfolioRepository;
 import am.trade.persistence.entity.PortfolioEntity;
 import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.mapper.TradeDetailsMapper;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.Optional;
 import java.util.ArrayList;
 
@@ -50,6 +52,7 @@ public class TradeManagementServiceImpl implements TradeManagementService {
     private final MarketDataApiClient marketDataApiClient;
 
     @Override
+    @org.springframework.cache.annotation.Cacheable(value = "tradeDetailsByDay", key = "#portfolioId + '_' + #date.toString()", sync = true)
     public Map<String, List<TradeDetails>> getTradeDetailsByDay(LocalDate date, String portfolioId) {
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime endOfDay = date.plusDays(1).atStartOfDay().minusNanos(1);
@@ -58,6 +61,7 @@ public class TradeManagementServiceImpl implements TradeManagementService {
     }
 
     @Override
+    @org.springframework.cache.annotation.Cacheable(value = "tradeDetailsByMonth", key = "#portfolioId + '_' + #year + '_' + #month", sync = true)
     public Map<String, List<TradeDetails>> getTradeDetailsByMonth(int year, int month, String portfolioId) {
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.plusMonths(1).minusDays(1);
@@ -99,64 +103,25 @@ public class TradeManagementServiceImpl implements TradeManagementService {
 
     private Map<String, List<TradeDetails>> getTradeDetailsByDateTimeRange(LocalDateTime startDateTime,
             LocalDateTime endDateTime, String portfolioId) {
-        List<TradeDetails> trades = new ArrayList<>();
+        List<TradeDetails> trades;
 
-        log.info("Filtering trades between {} and {}", startDateTime, endDateTime);
+        log.info("Fetching trades from DB between {} and {} for portfolio {}", startDateTime, endDateTime, portfolioId);
 
-        // If portfolio ID is provided, filter by it
         if (portfolioId != null && !portfolioId.isEmpty()) {
-            // Fetch embedded trades directly from PortfolioEntity
-            Optional<PortfolioEntity> portfolioOpt = portfolioRepository.findByPortfolioId(portfolioId);
-
-            if (portfolioOpt.isPresent()) {
-                PortfolioEntity portfolio = portfolioOpt.get();
-                List<String> tradeIds = portfolio.getTrades();
-
-                if (tradeIds != null && !tradeIds.isEmpty()) {
-                    log.info("Found {} trade IDs in portfolio {}", tradeIds.size(), portfolioId);
-                    // Fetch trades by ID
-                    trades = tradeDetailsService.findModelsByTradeIds(tradeIds);
-                } else {
-                    log.warn("Portfolio {} has null or empty trades list", portfolioId);
-                }
-            } else {
-                log.warn("Portfolio {} not found in database", portfolioId);
-                // Fallback attempt: try standard service
-                log.info("Attempting fallback to TradeDetailsService for portfolio {}", portfolioId);
-                trades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
-            }
+            trades = tradeDetailsService.findByPortfolioIdInAndEntryInfoTimestampBetween(
+                java.util.List.of(portfolioId), startDateTime, endDateTime);
         } else {
-            // Get all trades in the date range - this service method likely handles
-            // filtering already?
-            // If findModelsByEntryDateBetween handles it, we might double filter, but
-            // that's safe.
             trades = tradeDetailsService.findModelsByEntryDateBetween(startDateTime, endDateTime);
         }
 
-        // Apply date filtering to the collected trades
-        List<TradeDetails> filteredTrades = trades.stream()
-                .filter(trade -> {
-                    LocalDateTime tradeDate = trade.getEntryInfo() != null
-                            ? trade.getEntryInfo().getTimestamp()
-                            : null;
-
-                    if (tradeDate != null) {
-                        return !tradeDate.isBefore(startDateTime) && !tradeDate.isAfter(endDateTime);
-                    } else {
-                        log.debug("Trade {} skipped. No entry timestamp.", trade.getTradeId());
-                        return false;
-                    }
-                })
-                .collect(Collectors.toList());
-
-        log.info("Retained {} trades after date filtering", filteredTrades.size());
+        log.info("Retrieved {} trades from DB after date filtering", trades.size());
         
-        enrichWithLivePrices(filteredTrades);
+        enrichWithLivePrices(trades);
 
-        // Group trades by portfolio ID
-        return filteredTrades.stream()
+        // Group trades by portfolio ID (handle potential nulls)
+        return trades.stream()
                 .collect(Collectors.groupingBy(
-                        TradeDetails::getPortfolioId,
+                        trade -> trade.getPortfolioId() != null ? trade.getPortfolioId() : "UNASSIGNED",
                         Collectors.toList()));
     }
 
@@ -168,6 +133,7 @@ public class TradeManagementServiceImpl implements TradeManagementService {
     }
 
     @Override
+    @org.springframework.cache.annotation.Cacheable(value = "portfolioTrades", key = "#portfolioId", sync = true)
     public List<TradeDetails> getAllTradesByTradePortfolioId(String portfolioId) {
         List<TradeDetails> trades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
         enrichWithLivePrices(trades);
@@ -175,29 +141,22 @@ public class TradeManagementServiceImpl implements TradeManagementService {
     }
 
     @Override
+    @org.springframework.cache.annotation.Cacheable(value = "tradesByDateRange", key = "#portfolioId + '_' + #startDate.toString() + '_' + #endDate.toString()", sync = true)
     public List<TradeDetails> getTradesByDateRange(String portfolioId, LocalDate startDate, LocalDate endDate) {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay().minusNanos(1);
 
-        List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
-
-        List<TradeDetails> filteredTrades = allTrades.stream()
-                .filter(trade -> {
-                    LocalDateTime tradeDate = trade.getEntryInfo() != null ? trade.getEntryInfo().getTimestamp() : null;
-
-                    return tradeDate != null &&
-                            !tradeDate.isBefore(startDateTime) &&
-                            !tradeDate.isAfter(endDateTime);
-                })
-                .collect(Collectors.toList());
+        List<TradeDetails> trades = tradeDetailsService.findByPortfolioIdInAndEntryInfoTimestampBetween(
+                java.util.List.of(portfolioId), startDateTime, endDateTime);
                 
-        enrichWithLivePrices(filteredTrades);
-        return filteredTrades;
+        enrichWithLivePrices(trades);
+        return trades;
     }
 
     @Override
+    @org.springframework.cache.annotation.Cacheable(value = "tradesBySymbols", key = "#portfolioId + '_' + (#symbols != null ? #symbols.toString() : 'ALL')", sync = true)
     public List<TradeDetails> getTradesBySymbols(String portfolioId, List<String> symbols) {
-        log.info("Fetching trades for portfolio: {} filtered by symbols: {}", portfolioId, symbols);
+        log.debug("Getting trades by symbols for portfolioId: {}, symbols: {}", portfolioId, symbols);
 
         if (portfolioId == null || portfolioId.isEmpty()) {
             throw new IllegalArgumentException("Portfolio ID cannot be null or empty");
@@ -208,15 +167,8 @@ public class TradeManagementServiceImpl implements TradeManagementService {
             return getAllTradesByTradePortfolioId(portfolioId);
         }
 
-        // Get all trades for the portfolio
-        List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
-
-        // Filter by symbols (case-insensitive)
-        List<TradeDetails> filteredTrades = allTrades.stream()
-                .filter(trade -> trade.getSymbol() != null &&
-                        symbols.stream()
-                                .anyMatch(symbol -> trade.getSymbol().equalsIgnoreCase(symbol)))
-                .collect(Collectors.toList());
+        // Push symbol filtering to the database — avoids loading all trades into memory
+        List<TradeDetails> filteredTrades = tradeDetailsService.findModelsByPortfolioIdAndSymbolIn(portfolioId, symbols);
                 
         enrichWithLivePrices(filteredTrades);
         return filteredTrades;
@@ -324,9 +276,13 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                 .collect(Collectors.toList());
 
         try {
-            Map<String, Double> livePrices = marketDataApiClient.getCurrentPrices(symbols);
-            log.info("Live prices received from API: {}", livePrices);
-            
+            // Perform the API call asynchronously with a timeout to avoid blocking the request thread.
+            CompletableFuture<Map<String, Double>> future = CompletableFuture.supplyAsync(() ->
+                marketDataApiClient.getCurrentPrices(symbols)
+            );
+            Map<String, Double> livePrices = future.get(200, TimeUnit.MILLISECONDS);
+            log.info("Live prices received from API (async): {}", livePrices);
+
             if (livePrices != null && !livePrices.isEmpty()) {
                 openTrades.forEach(trade -> {
                     String cleanSymbol = trade.getSymbol() != null ? trade.getSymbol().trim() : null;
@@ -340,31 +296,31 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                     }
                     if (price != null) {
                         trade.setCurrentPrice(java.math.BigDecimal.valueOf(price));
-                        
+
                         // Default to LONG if tradePositionType is null
                         if (trade.getTradePositionType() == null) {
                             trade.setTradePositionType(am.trade.models.enums.TradePositionType.LONG);
                         }
-                        
+
                         // Recalculate profit/loss with live price
                         java.math.BigDecimal entryPrice = trade.getEntryInfo() != null ? trade.getEntryInfo().getPrice() : null;
                         if (entryPrice != null && trade.getEntryInfo().getQuantity() != null) {
                             java.math.BigDecimal currentPrc = trade.getCurrentPrice();
                             java.math.BigDecimal profitLossPerUnit = java.math.BigDecimal.ZERO;
-                            
+
                             if (am.trade.models.enums.TradePositionType.LONG.equals(trade.getTradePositionType())) {
                                 profitLossPerUnit = currentPrc.subtract(entryPrice);
                             } else if (am.trade.models.enums.TradePositionType.SHORT.equals(trade.getTradePositionType())) {
                                 profitLossPerUnit = entryPrice.subtract(currentPrc);
                             }
-                            
+
                             java.math.BigDecimal profitLoss = profitLossPerUnit.multiply(new java.math.BigDecimal(trade.getEntryInfo().getQuantity()));
-                            
+
                             if (trade.getMetrics() == null) {
                                 trade.setMetrics(new am.trade.common.models.TradeMetrics());
                             }
                             trade.getMetrics().setProfitLoss(profitLoss);
-                            
+
                             if (entryPrice.compareTo(java.math.BigDecimal.ZERO) > 0) {
                                 java.math.BigDecimal percentage = profitLossPerUnit
                                         .divide(entryPrice, 4, java.math.RoundingMode.HALF_UP)
@@ -376,7 +332,8 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                 });
             }
         } catch (Exception e) {
-            log.error("Error enriching trades with live prices", e);
+            // If the async call times out or fails, we simply skip live price enrichment.
+            log.warn("Live price enrichment timed out or failed; proceeding without live prices", e);
         }
     }
 

@@ -16,6 +16,7 @@ import am.trade.services.config.TradeServicesAutoConfiguration;
  * Main application class for Trade Management System
  */
 @SpringBootApplication(scanBasePackages = { "am.trade" })
+@org.springframework.cache.annotation.EnableCaching
 @Import({
         KafkaConfig.class,
         am.trade.kafka.config.LocalKafkaConfig.class,
