@@ -203,14 +203,6 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     }
 
     @Override
-    public List<TradeDetails> findModelsByPortfolioIdAndSymbolIn(String portfolioId, List<String> symbols) {
-        log.debug("Finding trade details by portfolio ID: {} and symbols: {}", portfolioId, symbols);
-        return tradeDetailsRepository.findByPortfolioIdAndSymbolIn(portfolioId, symbols).stream()
-                .map(tradeDetailsMapper::toTradeDetails)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public List<TradeDetails> findByUserIdAndEntryInfoTimestampBetween(String userId, LocalDateTime startDate,
             LocalDateTime endDate) {
         log.debug("Finding trade details by user ID: {} and entry date between {} and {}", userId, startDate, endDate);

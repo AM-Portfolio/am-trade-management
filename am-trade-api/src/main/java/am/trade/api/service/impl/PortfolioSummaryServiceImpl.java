@@ -1,4 +1,4 @@
- package am.trade.api.service.impl;
+package am.trade.api.service.impl;
 
 import am.trade.api.service.PortfolioSummaryService;
 import am.trade.common.models.PortfolioModel;
@@ -32,7 +32,6 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
     private final TradeDetailsService tradeDetailsService;
 
     @Override
-    @org.springframework.cache.annotation.Cacheable(value = "portfolioSummary", key = "#portfolioId", sync = true)
     public PortfolioModel getPortfolioSummary(String portfolioId) {
         log.debug("Getting portfolio summary for portfolioId: {}", portfolioId);
         
@@ -52,7 +51,6 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
     }
 
     @Override
-    @org.springframework.cache.annotation.Cacheable(value = "assetAllocation", key = "#portfolioId", sync = true)
     public List<AssetAllocation> getAssetAllocation(String portfolioId) {
         log.debug("Getting asset allocation for portfolioId: {}", portfolioId);
         
@@ -72,7 +70,6 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
     }
 
     @Override
-    @org.springframework.cache.annotation.Cacheable(value = "portfolioPerformance", key = "#portfolioId + '_' + #startDate.toString() + '_' + #endDate.toString()", sync = true)
     public Map<LocalDate, Double> getPortfolioPerformance(String portfolioId, LocalDate startDate, LocalDate endDate) {
         log.debug("Getting portfolio performance for portfolioId: {} from {} to {}", portfolioId, startDate, endDate);
         
@@ -108,7 +105,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         List<TradeDetails> relevantTrades = trades.stream()
             .filter(trade -> {
                 LocalDate tradeDate = trade.getTradeDate();
-                return tradeDate != null && !tradeDate.isBefore(startDate) && !tradeDate.isAfter(endDate);
+                return !tradeDate.isBefore(startDate) && !tradeDate.isAfter(endDate);
             })
             .collect(Collectors.toList());
         
