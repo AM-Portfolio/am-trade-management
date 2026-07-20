@@ -15,6 +15,8 @@ import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.Observation;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -42,14 +44,17 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
     private final TradeDetailsService tradeDetailsService;
     private final PortfolioPersistenceService portfolioPersistenceService;
     private final TradeBusinessMetrics tradeBusinessMetrics;
+    private final ObservationRegistry observationRegistry;
 
     public TradeProcessingServiceImpl(
             TradeDetailsService tradeDetailsService,
             PortfolioPersistenceService portfolioPersistenceService,
-            TradeBusinessMetrics tradeBusinessMetrics) {
+            TradeBusinessMetrics tradeBusinessMetrics,
+            ObservationRegistry observationRegistry) {
         this.tradeDetailsService = tradeDetailsService;
         this.portfolioPersistenceService = portfolioPersistenceService;
         this.tradeBusinessMetrics = tradeBusinessMetrics;
+        this.observationRegistry = observationRegistry;
     }
 
     private static final int DECIMAL_SCALE = 4;
@@ -352,7 +357,9 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                 }
 
                 // Identify separate trade cycles (buy-sell cycles) within the same symbol
-                List<List<TradeModel>> tradeCycles = identifyTradeCycles(sortedTrades);
+                List<List<TradeModel>> tradeCycles = Observation.createNotStarted("trade.cycle.identification", observationRegistry)
+                        .contextualName("identifyTradeCycles")
+                        .observe(() -> identifyTradeCycles(sortedTrades));
 
                 // Process each trade cycle separately
                 for (List<TradeModel> tradeCycle : tradeCycles) {
@@ -365,10 +372,13 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                     TradePositionType tradePositionType = determineTradeType(firstTrade);
 
                     // Process the trades to build entry and exit information.
-                    // calculateEntryInfo/calculateExitInfo already select BUY vs SELL by position type —
-                    // do NOT swap for SHORT (that turns open shorts into entryInfo=null → NPE in metrics).
-                    EntryExitInfo entryInfo = calculateEntryInfo(tradeCycle, tradePositionType);
-                    EntryExitInfo exitInfo = calculateExitInfo(tradeCycle, tradePositionType);
+                    EntryExitInfo entryInfo = Observation.createNotStarted("trade.cycle.entry_info", observationRegistry)
+                            .contextualName("calculateEntryInfo")
+                            .observe(() -> calculateEntryInfo(tradeCycle, tradePositionType));
+                            
+                    EntryExitInfo exitInfo = Observation.createNotStarted("trade.cycle.exit_info", observationRegistry)
+                            .contextualName("calculateExitInfo")
+                            .observe(() -> calculateExitInfo(tradeCycle, tradePositionType));
 
                     // Calculate trade metrics
                     TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);

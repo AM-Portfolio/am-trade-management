@@ -20,6 +20,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import io.micrometer.observation.annotation.Observed;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/by-owner")
+    @Observed(name = "portfolio.summary.by.owner", contextualName = "get-portfolio-summaries")
     public ResponseEntity<?> getPortfolioSummariesForAuthenticatedUser() {
         String ownerId = UserContext.getUserIdOrThrow();
         try {
@@ -73,6 +75,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/by-owner/{ownerId}")
+    @Observed(name = "portfolio.summary.by.owner.id", contextualName = "get-portfolio-summary-fallback")
     public ResponseEntity<?> getPortfolioSummaryByOwnerIdFallback(
             @Parameter(description = "Owner ID") @PathVariable String ownerId) {
         
@@ -102,6 +105,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/{portfolioId}")
+    @Observed(name = "portfolio.summary.by.id", contextualName = "get-portfolio-summary")
     public ResponseEntity<PortfolioModel> getPortfolioSummary(
             @Parameter(description = "Portfolio ID") @PathVariable String portfolioId) {
 
@@ -126,6 +130,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/{portfolioId}/asset-allocation")
+    @Observed(name = "portfolio.asset.allocation", contextualName = "get-asset-allocation")
     public ResponseEntity<List<AssetAllocation>> getAssetAllocation(
             @Parameter(description = "Portfolio ID") @PathVariable String portfolioId) {
 
@@ -149,6 +154,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/{portfolioId}/performance")
+    @Observed(name = "portfolio.performance", contextualName = "get-portfolio-performance")
     public ResponseEntity<Map<LocalDate, Double>> getPortfolioPerformance(
             @Parameter(description = "Portfolio ID") @PathVariable String portfolioId,
             @Parameter(description = "Start date in ISO format (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -176,6 +182,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/compare")
+    @Observed(name = "portfolio.compare", contextualName = "compare-portfolios")
     public ResponseEntity<Map<String, PortfolioModel>> comparePortfolios(
             @Parameter(description = "List of portfolio IDs to compare") @RequestParam List<String> portfolioIds) {
 
@@ -201,6 +208,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/{portfolioId}/recalculate")
+    @Observed(name = "portfolio.recalculate", contextualName = "recalculate-portfolio")
     public ResponseEntity<?> recalculatePortfolio(
             @Parameter(description = "Portfolio ID") @PathVariable String portfolioId) {
         String userId = UserContext.getUserIdOrThrow();

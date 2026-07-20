@@ -3,6 +3,8 @@ am:
   cors:
     allowed-origin-patterns: ${CORS_ALLOWED_ORIGINS:http://localhost:*,https://localhost:*,https://*.replit.dev,https://*}
   trade:
+    cache:
+      enabled: true
     kafka:
       enabled: true
     api:

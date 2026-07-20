@@ -10,6 +10,7 @@ import am.trade.services.service.TradeDetailsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -161,6 +162,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
     }
     
     @Override
+    @Cacheable(value = "portfolioSummary", key = "#ownerId")
     public List<PortfolioModel> getPortfolioSummariesByOwnerId(String ownerId) {
         log.debug("Getting portfolio summaries for ownerId: {}", ownerId);
         

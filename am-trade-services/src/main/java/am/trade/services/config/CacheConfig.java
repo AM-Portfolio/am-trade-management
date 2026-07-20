@@ -1,50 +1,51 @@
 package am.trade.services.config;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Configuration for caching using Caffeine cache provider
- * Sets up caches for trade summaries and metrics with configurable expiry and size
+ * Configuration for caching using Redis.
+ * This can be toggled on or off via am.trade.cache.enabled
  */
 @Configuration
 @EnableCaching
+@ConditionalOnProperty(name = "am.trade.cache.enabled", havingValue = "true")
 public class CacheConfig {
 
-    @Value("${cache.trade-summary.expiry-minutes:60}")
-    private long tradeSummaryCacheExpiryMinutes;
+    @Value("${cache.trade-details.expiry-minutes:10}")
+    private long tradeDetailsExpiryMinutes;
 
-    @Value("${cache.trade-summary.max-size:1000}")
-    private long tradeSummaryCacheMaxSize;
+    @Value("${cache.portfolio-summary.expiry-minutes:5}")
+    private long portfolioSummaryExpiryMinutes;
 
-    /**
-     * Configure the cache manager with Caffeine cache provider
-     *
-     * @return Configured cache manager
-     */
     @Bean
-    public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager("tradeSummaryCache");
-        cacheManager.setCaffeine(caffeineCacheBuilder());
-        return cacheManager;
-    }
+    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
+                .entryTtl(Duration.ofMinutes(10));
 
-    /**
-     * Configure Caffeine cache with expiry and maximum size
-     *
-     * @return Caffeine cache builder
-     */
-    private Caffeine<Object, Object> caffeineCacheBuilder() {
-        return Caffeine.newBuilder()
-                .expireAfterWrite(tradeSummaryCacheExpiryMinutes, TimeUnit.MINUTES)
-                .maximumSize(tradeSummaryCacheMaxSize)
-                .recordStats();
+        Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+        
+        cacheConfigurations.put("tradeDetails", defaultConfig.entryTtl(Duration.ofMinutes(tradeDetailsExpiryMinutes)));
+        cacheConfigurations.put("portfolioSummary", defaultConfig.entryTtl(Duration.ofMinutes(portfolioSummaryExpiryMinutes)));
+        cacheConfigurations.put("tradeDomainCache", defaultConfig.entryTtl(Duration.ofMinutes(10)));
+
+        return RedisCacheManager.builder(redisConnectionFactory)
+                .cacheDefaults(defaultConfig)
+                .withInitialCacheConfigurations(cacheConfigurations)
+                .build();
     }
 }
