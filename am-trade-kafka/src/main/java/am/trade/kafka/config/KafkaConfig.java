@@ -153,6 +153,7 @@ public class KafkaConfig {
         // Without this, acknowledgment() calls are no-ops and failed messages are
         // permanently lost.
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+        factory.getContainerProperties().setObservationEnabled(true);
         // Wire in the error handler — handles retries and DLT publishing on failure
         factory.setCommonErrorHandler(errorHandler);
         return factory;
@@ -172,7 +173,9 @@ public class KafkaConfig {
     @Bean(name = "kafkaTemplate")
     @Primary
     public KafkaTemplate<String, Object> kafkaTemplate() {
-        return new KafkaTemplate<>(kafkaProducerFactory());
+        KafkaTemplate<String, Object> template = new KafkaTemplate<>(kafkaProducerFactory());
+        template.setObservationEnabled(true);
+        return template;
     }
 
     // Topic Definitions
