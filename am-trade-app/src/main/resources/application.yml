@@ -127,3 +127,4 @@ logging:
     am.trade: INFO
     org.springframework.data.mongodb: INFO
     org.springframework.web: INFO
+# trigger ci
