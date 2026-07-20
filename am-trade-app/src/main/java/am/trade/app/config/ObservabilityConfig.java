@@ -6,7 +6,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Explicit observability configuration to enable @Observed AOP processing.
+ * Central observability wiring:
+ * 1. Enables @Observed annotation support via AOP
+ * 2. MongoDB and Redis tracing are wired in their own config beans.
+ * Relies on am-observability-lib zero-config for HTTP, @Service, and request-log filtering.
  */
 @Configuration
 public class ObservabilityConfig {
