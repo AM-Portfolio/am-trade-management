@@ -10,7 +10,7 @@ namespace: am-apps-preprod
 owners: [trade]
 signals:
   bundle: tier-a-java-core
-  domain: [trade_processed_total, trade_processing_duration_seconds]
+  domain: [trade_processed_total]
   include: []
 dashboard:
   technical:
