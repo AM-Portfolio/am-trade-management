@@ -8,9 +8,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import am.trade.persistence.mapper.PortfolioMapper;
 import am.trade.persistence.mapper.TradeDetailsMapper;
-import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
-import io.micrometer.observation.ObservationRegistry;
-import org.springframework.data.mongodb.observability.MongoObservationCommandListener;
 
 /**
  * Auto-configuration class for the persistence module
@@ -34,12 +31,4 @@ public class PersistenceAutoConfiguration {
         return new PortfolioMapper(new TradeDetailsMapper());
     }
 
-    /**
-     * Registers MongoDB Command Listener to emit traces to Tempo for every driver operation.
-     */
-    @Bean
-    public MongoClientSettingsBuilderCustomizer mongoObservationCustomizer(ObservationRegistry observationRegistry) {
-        return clientSettingsBuilder -> clientSettingsBuilder
-                .addCommandListener(new MongoObservationCommandListener(observationRegistry));
-    }
 }
