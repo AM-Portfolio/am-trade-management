@@ -205,8 +205,8 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                 .inc("metrics.losingTrades", losingTradesDelta)
                 .inc("metrics.breakEvenTrades", breakEvenTradesDelta)
                 .inc("metrics.openPositions", openPositionsDelta)
-                .inc("metrics.totalProfit", profitDelta)
-                .inc("metrics.totalLoss", lossDelta)
+                .inc("metrics.totalProfit", profitDelta.doubleValue())
+                .inc("metrics.totalLoss", lossDelta.doubleValue())
                 .set("lastUpdatedDate", LocalDateTime.now());
 
         update.push("trades").each(tradeIds.toArray());
@@ -230,13 +230,13 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                 case WIN:
                     update.inc("metrics.winningTrades", -1);
                     if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
-                        update.inc("metrics.totalProfit", oldTrade.getMetrics().getProfitLoss().negate());
+                        update.inc("metrics.totalProfit", oldTrade.getMetrics().getProfitLoss().negate().doubleValue());
                     }
                     break;
                 case LOSS:
                     update.inc("metrics.losingTrades", -1);
                     if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
-                        update.inc("metrics.totalLoss", oldTrade.getMetrics().getProfitLoss().abs().negate());
+                        update.inc("metrics.totalLoss", oldTrade.getMetrics().getProfitLoss().abs().negate().doubleValue());
                     }
                     break;
                 case BREAK_EVEN:
@@ -257,13 +257,13 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             case WIN:
                 update.inc("metrics.winningTrades", 1);
                 if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
-                    update.inc("metrics.totalProfit", newTrade.getMetrics().getProfitLoss());
+                    update.inc("metrics.totalProfit", newTrade.getMetrics().getProfitLoss().doubleValue());
                 }
                 break;
             case LOSS:
                 update.inc("metrics.losingTrades", 1);
                 if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
-                    update.inc("metrics.totalLoss", newTrade.getMetrics().getProfitLoss().abs());
+                    update.inc("metrics.totalLoss", newTrade.getMetrics().getProfitLoss().abs().doubleValue());
                 }
                 break;
             case BREAK_EVEN:
