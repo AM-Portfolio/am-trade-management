@@ -71,3 +71,4 @@ ingress:
 
 env:
   SPRING_PROFILES_ACTIVE: "dev"
+  AM_TRADE_CACHE_ENABLED: "false"
