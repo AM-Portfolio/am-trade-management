@@ -13,7 +13,7 @@ am:
     allowed-origin-patterns: ${CORS_ALLOWED_ORIGINS:http://localhost:*,https://localhost:*,https://*.replit.dev,https://*}
   trade:
     cache:
-      enabled: true
+      enabled: false
     kafka:
       enabled: true
     api:
@@ -44,6 +44,8 @@ spring:
   profiles:
     active: local
     include: security
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration, org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration, org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration
   config:
     import:
       - classpath:application-common.yml
@@ -51,7 +53,6 @@ spring:
       - optional:file:/vault/secrets/app
       - optional:file:/vault/secrets/mongo
       - optional:file:/vault/secrets/kafka
-      - optional:file:/vault/secrets/redis
       - optional:file:/vault/secrets/market-data
   data:
     mongodb:
