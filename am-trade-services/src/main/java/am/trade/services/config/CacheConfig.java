@@ -40,7 +40,7 @@ import java.util.Map;
  */
 @Configuration
 @EnableCaching
-@ConditionalOnExpression("false") // FORCED OFF BY USER REQUEST
+@ConditionalOnProperty(name = "am.trade.cache.enabled", havingValue = "force-disabled-by-user") // FORCED OFF BY USER REQUEST
 public class CacheConfig {
 
     @Value("${cache.trade-details.expiry-minutes:10}")
