@@ -40,6 +40,12 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
     
     List<TradeDetailsEntity> findByPortfolioId(String portfolioId);
     
+    @Query("{'portfolioId': ?0, 'symbol': {$in: ?1}}")
+    List<TradeDetailsEntity> findByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols);
+    
+    @Query("{'portfolioId': ?0, 'symbol': {$in: ?1}}")
+    Page<TradeDetailsEntity> findByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols, Pageable pageable);
+    
     @Query("{'symbol': ?0, 'entryInfo.timestamp': {$gte: ?1, $lte: ?2}}")
     List<TradeDetailsEntity> findBySymbolAndEntryDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate);
     

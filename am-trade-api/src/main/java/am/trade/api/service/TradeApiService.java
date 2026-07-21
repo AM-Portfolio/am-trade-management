@@ -26,6 +26,16 @@ public interface TradeApiService {
     List<TradeDetails> getTradeDetailsByPortfolioAndSymbols(String portfolioId, List<String> symbols);
     
     /**
+     * Get trade details by portfolio ID and optional symbols with pagination
+     * 
+     * @param portfolioId The portfolio ID
+     * @param symbols Optional list of symbols to filter by
+     * @param pageable Pagination information
+     * @return Page of trade details
+     */
+    Page<TradeDetails> getTradeDetailsByPortfolioAndSymbolsPage(String portfolioId, List<String> symbols, Pageable pageable);
+    
+    /**
      * Add a new trade
      * 
      * @param tradeDetails The trade details to add

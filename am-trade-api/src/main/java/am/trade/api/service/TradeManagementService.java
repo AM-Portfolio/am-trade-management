@@ -102,6 +102,16 @@ public interface TradeManagementService {
     List<TradeDetails> getTradesBySymbols(String portfolioId, List<String> symbols);
     
     /**
+     * Get trades for a specific portfolio filtered by symbols with pagination
+     * 
+     * @param portfolioId The portfolio ID
+     * @param symbols List of symbols to filter by
+     * @param pageable Pagination information
+     * @return Page of trade details for the specified portfolio and symbols
+     */
+    Page<TradeDetails> getTradesBySymbolsPage(String portfolioId, List<String> symbols, Pageable pageable);
+    
+    /**
      * Get trades based on multiple filter criteria
      * 
      * @param portfolioIds List of portfolio IDs to filter by (optional)

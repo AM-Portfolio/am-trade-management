@@ -208,18 +208,37 @@ public class TradeManagementServiceImpl implements TradeManagementService {
             return getAllTradesByTradePortfolioId(portfolioId);
         }
 
-        // Get all trades for the portfolio
-        List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
-
-        // Filter by symbols (case-insensitive)
-        List<TradeDetails> filteredTrades = allTrades.stream()
-                .filter(trade -> trade.getSymbol() != null &&
-                        symbols.stream()
-                                .anyMatch(symbol -> trade.getSymbol().equalsIgnoreCase(symbol)))
+        // Convert input symbols to upper case for case-insensitive matching in MongoDB
+        List<String> upperCaseSymbols = symbols.stream()
+                .map(String::toUpperCase)
                 .collect(Collectors.toList());
+
+        // Use database-side filtering
+        List<TradeDetails> filteredTrades = tradeDetailsService.findModelsByPortfolioIdAndSymbolInIgnoreCase(portfolioId, upperCaseSymbols);
                 
         enrichWithLivePrices(filteredTrades);
         return filteredTrades;
+    }
+
+    @Override
+    public Page<TradeDetails> getTradesBySymbolsPage(String portfolioId, List<String> symbols, Pageable pageable) {
+        log.info("Fetching paginated trades for portfolio: {} filtered by symbols: {}", portfolioId, symbols);
+
+        if (portfolioId == null || portfolioId.isEmpty()) {
+            throw new IllegalArgumentException("Portfolio ID cannot be null or empty");
+        }
+
+        if (symbols == null || symbols.isEmpty()) {
+            return getTradeDetailsByPortfolio(portfolioId, pageable);
+        }
+
+        List<String> upperCaseSymbols = symbols.stream()
+                .map(String::toUpperCase)
+                .collect(Collectors.toList());
+
+        Page<TradeDetails> page = tradeDetailsService.findModelsByPortfolioIdAndSymbolInIgnoreCase(portfolioId, upperCaseSymbols, pageable);
+        enrichWithLivePrices(page.getContent());
+        return page;
     }
 
     @Override

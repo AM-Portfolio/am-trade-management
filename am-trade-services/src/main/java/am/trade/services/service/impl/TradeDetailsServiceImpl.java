@@ -99,6 +99,24 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<TradeDetails> findModelsByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols) {
+        log.debug("Finding trade details by portfolio ID: {} and symbols: {}", portfolioId, symbols);
+        return tradeDetailsRepository.findByPortfolioIdAndSymbolInIgnoreCase(portfolioId, symbols).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<TradeDetails> findModelsByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols, Pageable pageable) {
+        log.debug("Finding trade details by portfolio ID: {} and symbols: {} with pagination", portfolioId, symbols);
+        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findByPortfolioIdAndSymbolInIgnoreCase(portfolioId, symbols, pageable);
+        List<TradeDetails> models = entityPage.getContent().stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
+    }
     
     @Override
     public List<TradeDetails> findModelsBySymbolAndEntryDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate) {
