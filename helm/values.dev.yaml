@@ -72,3 +72,4 @@ ingress:
 env:
   SPRING_PROFILES_ACTIVE: "dev"
   AM_TRADE_CACHE_ENABLED: "false"
+  SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration"

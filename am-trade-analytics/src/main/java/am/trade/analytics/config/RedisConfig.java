@@ -11,6 +11,7 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
  * Redis configuration for trade sampling strategy
  */
 @Configuration
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "am.trade.cache.enabled", havingValue = "true", matchIfMissing = true)
 public class RedisConfig {
 
     /**
