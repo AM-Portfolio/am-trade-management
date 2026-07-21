@@ -93,9 +93,9 @@ curl http://localhost:8073/actuator
 
 ### Database Configuration
 ```env
-MONGODB_URI=mongodb://localhost:27017 <!-- trufflehog:ignore -->
+MONGODB_HOST=localhost
+MONGODB_PORT=27017
 MONGODB_DATABASE=am_trade_management
-MONGODB_AUTHENTICATION_DATABASE=admin
 ```
 
 ### Redis Configuration
