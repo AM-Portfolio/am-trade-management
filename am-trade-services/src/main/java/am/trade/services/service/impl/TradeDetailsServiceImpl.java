@@ -213,6 +213,26 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     }
 
     @Override
+    public Page<TradeDetails> findByFilters(
+            List<String> portfolioIds,
+            List<String> symbols,
+            List<TradeStatus> statuses,
+            List<String> strategies,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Pageable pageable) {
+        log.debug("Finding trade details by filters with pagination");
+        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findByFilters(
+                portfolioIds, symbols, statuses, strategies, startDate, endDate, pageable);
+                
+        List<TradeDetails> models = entityPage.getContent().stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+                
+        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
+    }
+
+    @Override
     public List<TradeDetails> findByPortfolioIdIn(List<String> portfolioIds) {
         log.debug("Finding trade details by portfolio IDs: {}", portfolioIds);
         return tradeDetailsRepository.findByPortfolioIdIn(portfolioIds).stream()

@@ -58,6 +58,15 @@ public interface TradeDetailsService {
      * @return The list of saved trade details models with any generated IDs
      */
     List<TradeDetails> saveAllTradeDetails(List<TradeDetails> tradeDetailsList);
+
+    Page<TradeDetails> findByFilters(
+            List<String> portfolioIds,
+            List<String> symbols,
+            List<TradeStatus> statuses,
+            List<String> strategies,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Pageable pageable);
     
     /**
      * Find trade details by multiple trade IDs in a single database call

@@ -206,57 +206,22 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                 "Fetching trades with filters - portfolioIds: {}, symbols: {}, statuses: {}, startDate: {}, endDate: {}, strategies: {}",
                 portfolioIds, symbols, statuses, startDate, endDate, strategies);
 
-        // Collect all trades from the specified portfolios
-        List<TradeDetails> allTrades;
-
         if (portfolioIds == null || portfolioIds.isEmpty()) {
-            // If no portfolio IDs provided, get all trades from all portfolios
-            // This would require a method to get all trades, which might not be efficient
-            // Consider implementing a repository method for this or limiting the scope
             throw new IllegalArgumentException("At least one portfolio ID must be provided");
-        } else {
-            // Use DB filtering if dates are provided
-            if (startDate != null || endDate != null) {
-                LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : LocalDateTime.of(1970, 1, 1, 0, 0);
-                LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay().minusNanos(1) : LocalDateTime.now().plusYears(100);
-                allTrades = tradeDetailsService.findByPortfolioIdInAndEntryInfoTimestampBetween(portfolioIds, startDateTime, endDateTime);
-            } else {
-                allTrades = tradeDetailsService.findByPortfolioIdIn(portfolioIds);
-            }
         }
 
-        // Apply filters
-        List<TradeDetails> filteredTrades = allTrades.stream()
-                // Filter by symbols if provided
-                .filter(trade -> symbols == null || symbols.isEmpty() ||
-                        (trade.getSymbol() != null &&
-                                symbols.stream().anyMatch(symbol -> trade.getSymbol().equalsIgnoreCase(symbol))))
+        LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
+        LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay().minusNanos(1) : null;
 
-                // Filter by statuses if provided
-                .filter(trade -> statuses == null || statuses.isEmpty() ||
-                        (trade.getStatus() != null && statuses.contains(trade.getStatus())))
+        Page<TradeDetails> pagedTrades = tradeDetailsService.findByFilters(
+                portfolioIds, symbols, statuses, strategies, startDateTime, endDateTime, pageable);
 
-                // Filter by strategies if provided
-                .filter(trade -> strategies == null || strategies.isEmpty() ||
-                        (trade.getStrategy() != null &&
-                                strategies.stream()
-                                        .anyMatch(strategy -> trade.getStrategy().equalsIgnoreCase(strategy))))
-                .collect(Collectors.toList());
-
-        // Apply pagination
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), filteredTrades.size());
-
-        // Handle case where start might be beyond the list size
-        if (start > filteredTrades.size()) {
-            return new PageImpl<>(List.of(), pageable, filteredTrades.size());
+        List<TradeDetails> content = pagedTrades.getContent();
+        if (!content.isEmpty()) {
+            enrichWithLivePrices(content);
         }
 
-        List<TradeDetails> pagedTrades = filteredTrades.subList(start, end);
-        
-        enrichWithLivePrices(pagedTrades);
-
-        return new PageImpl<>(pagedTrades, pageable, filteredTrades.size());
+        return pagedTrades;
     }
     
     private void enrichWithLivePrices(List<TradeDetails> trades) {

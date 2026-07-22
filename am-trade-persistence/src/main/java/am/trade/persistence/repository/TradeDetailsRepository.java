@@ -17,7 +17,7 @@ import am.trade.persistence.entity.TradeDetailsEntity;
  * Repository interface for Trade document
  */
 @Repository
-public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEntity, String> {
+public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEntity, String>, TradeDetailsRepositoryCustom {
 
     Optional<TradeDetailsEntity> findById(String id);
     

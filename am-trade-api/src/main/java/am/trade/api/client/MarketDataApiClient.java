@@ -17,6 +17,9 @@ import org.springframework.beans.factory.annotation.Value;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -28,18 +31,10 @@ public class MarketDataApiClient {
     @Value("${am.trade.market-data.l1-cache.enabled:true}")
     private boolean isL1CacheEnabled;
 
-    private static class CachedPrice {
-        final Double price;
-        final java.time.Instant timestamp;
-
-        CachedPrice(Double price, java.time.Instant timestamp) {
-            this.price = price;
-            this.timestamp = timestamp;
-        }
-    }
-
-    private final java.util.concurrent.ConcurrentHashMap<String, CachedPrice> localCache = new java.util.concurrent.ConcurrentHashMap<>();
-    private static final long CACHE_TTL_SECONDS = 300; // 5 minutes
+    private final Cache<String, Double> localCache = Caffeine.newBuilder()
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .maximumSize(10_000)
+            .build();
 
     public MarketDataApiClient(MarketDataApiConfig config, RestTemplateBuilder restTemplateBuilder) {
         this.config = config;
@@ -78,9 +73,9 @@ public class MarketDataApiClient {
                 if (cleanSymbol != null && cleanSymbol.contains(":")) {
                     cleanSymbol = cleanSymbol.substring(cleanSymbol.lastIndexOf(":") + 1);
                 }
-                CachedPrice cached = localCache.get(cleanSymbol);
-                if (cached != null && now.isBefore(cached.timestamp.plusSeconds(CACHE_TTL_SECONDS))) {
-                    result.put(cleanSymbol, cached.price);
+                Double cachedPrice = localCache.getIfPresent(cleanSymbol);
+                if (cachedPrice != null) {
+                    result.put(cleanSymbol, cachedPrice);
                 } else {
                     missingSymbols.add(symbol); // Request with original symbol format
                 }
@@ -137,7 +132,7 @@ public class MarketDataApiClient {
                             
                             if (isL1CacheEnabled) {
                                 // Update local cache
-                                localCache.put(symbolKey, new CachedPrice(price, now));
+                                localCache.put(symbolKey, price);
                             }
                         } catch (Exception e) {
                             log.error("Error converting response for symbol {}", key, e);
