@@ -225,25 +225,9 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
             LocalDateTime endDate) {
         log.debug("Finding trade details by user ID: {} and entry date between {} and {}", userId, startDate, endDate);
         
-        // Use the repository method to get trades by user ID
-        List<TradeDetailsEntity> userEntities = tradeDetailsRepository.findByUserId(userId);
+        List<TradeDetailsEntity> entities = tradeDetailsRepository.findByUserIdAndEntryInfoTimestampBetween(userId, startDate, endDate);
         
-        // Filter by entry date in memory
-        List<TradeDetailsEntity> dateFilteredEntities = userEntities.stream()
-                .filter(entity -> {
-                    // Access timestamp through entryInfo
-                    if (entity.getEntryInfo() == null) {
-                        return false;
-                    }
-                    LocalDateTime entryDate = entity.getEntryInfo().getTimestamp();
-                    return entryDate != null && 
-                           (entryDate.isEqual(startDate) || entryDate.isAfter(startDate)) && 
-                           (entryDate.isEqual(endDate) || entryDate.isBefore(endDate));
-                })
-                .collect(Collectors.toList());
-        
-        // Map entities to domain models
-        List<TradeDetails> userTradeDetails = dateFilteredEntities.stream()
+        List<TradeDetails> userTradeDetails = entities.stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
                 
@@ -257,31 +241,14 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
         log.debug("Finding trade details by user ID: {} and symbol: {} with date range: {} to {}", 
                 userId, symbol, startDate, endDate);
         
-        // Get all trades by user ID
-        List<TradeDetailsEntity> userEntities = tradeDetailsRepository.findByUserId(userId);
+        List<TradeDetailsEntity> entities;
+        if (startDate == null || endDate == null) {
+            entities = tradeDetailsRepository.findByUserIdAndSymbol(userId, symbol);
+        } else {
+            entities = tradeDetailsRepository.findByUserIdAndSymbolAndEntryInfoTimestampBetween(userId, symbol, startDate, endDate);
+        }
         
-        // Filter by symbol and date range in memory
-        List<TradeDetailsEntity> filteredEntities = userEntities.stream()
-                .filter(entity -> entity.getSymbol().equals(symbol))
-                .filter(entity -> {
-                    // If no date range specified, include all trades
-                    if (startDate == null || endDate == null) {
-                        return true;
-                    }
-                    
-                    // Otherwise filter by entry date
-                    if (entity.getEntryInfo() == null) {
-                        return false;
-                    }
-                    LocalDateTime entryDate = entity.getEntryInfo().getTimestamp();
-                    return entryDate != null && 
-                           (entryDate.isEqual(startDate) || entryDate.isAfter(startDate)) && 
-                           (entryDate.isEqual(endDate) || entryDate.isBefore(endDate));
-                })
-                .collect(Collectors.toList());
-        
-        // Map entities to domain models
-        List<TradeDetails> tradeDetails = filteredEntities.stream()
+        List<TradeDetails> tradeDetails = entities.stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
                 
@@ -293,16 +260,9 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     public List<TradeDetails> findByUserIdAndSymbol(String userId, String symbol) {
         log.debug("Finding trade details by user ID: {} and symbol: {}", userId, symbol);
         
-        // Get all trades by user ID
-        List<TradeDetailsEntity> userEntities = tradeDetailsRepository.findByUserId(userId);
+        List<TradeDetailsEntity> entities = tradeDetailsRepository.findByUserIdAndSymbol(userId, symbol);
         
-        // Filter by symbol in memory
-        List<TradeDetailsEntity> filteredEntities = userEntities.stream()
-                .filter(entity -> entity.getSymbol().equals(symbol))
-                .collect(Collectors.toList());
-        
-        // Map entities to domain models
-        List<TradeDetails> tradeDetails = filteredEntities.stream()
+        List<TradeDetails> tradeDetails = entities.stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
                 
@@ -316,32 +276,21 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
         log.debug("Finding trade details by user ID: {} and strategy: {} with date range: {} to {}", 
                 userId, strategy, startDate, endDate);
         
-        // Get all trades by user ID
-        List<TradeDetailsEntity> userEntities = tradeDetailsRepository.findByUserId(userId);
+        List<TradeDetailsEntity> entities;
+        if (startDate == null || endDate == null) {
+            entities = tradeDetailsRepository.findByUserId(userId);
+        } else {
+            entities = tradeDetailsRepository.findByUserIdAndEntryInfoTimestampBetween(userId, startDate, endDate);
+        }
         
-        // Filter by strategy and date range in memory
-        List<TradeDetailsEntity> filteredEntities = userEntities.stream()
+        // Filter by strategy in memory
+        List<TradeDetailsEntity> filteredEntities = entities.stream()
                 .filter(entity -> {
                     // Check if the entity has entry reasoning with the specified strategy
                     if (entity.getEntryReasoning() == null) {
                         return false;
                     }
                     return strategy.equals(entity.getEntryReasoning().getStreategy());
-                })
-                .filter(entity -> {
-                    // If no date range specified, include all trades
-                    if (startDate == null || endDate == null) {
-                        return true;
-                    }
-                    
-                    // Otherwise filter by entry date
-                    if (entity.getEntryInfo() == null) {
-                        return false;
-                    }
-                    LocalDateTime entryDate = entity.getEntryInfo().getTimestamp();
-                    return entryDate != null && 
-                           (entryDate.isEqual(startDate) || entryDate.isAfter(startDate)) && 
-                           (entryDate.isEqual(endDate) || entryDate.isBefore(endDate));
                 })
                 .collect(Collectors.toList());
         
@@ -351,6 +300,20 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
                 .collect(Collectors.toList());
                 
         log.info("Found {} trades matching user ID, strategy, and date range criteria", tradeDetails.size());
+        return tradeDetails;
+    }
+    
+    @Override
+    public List<TradeDetails> findByPortfolioIdAndEntryInfoTimestampBetween(String portfolioId, LocalDateTime startDate, LocalDateTime endDate) {
+        log.debug("Finding trade details by portfolio ID: {} and entry date between {} and {}", portfolioId, startDate, endDate);
+        
+        List<TradeDetailsEntity> entities = tradeDetailsRepository.findByPortfolioIdAndEntryInfoTimestampBetween(portfolioId, startDate, endDate);
+        
+        List<TradeDetails> tradeDetails = entities.stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+                
+        log.info("Found {} trades matching portfolio ID and date range criteria", tradeDetails.size());
         return tradeDetails;
     }
 }

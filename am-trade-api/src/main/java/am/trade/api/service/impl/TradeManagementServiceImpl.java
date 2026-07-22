@@ -179,17 +179,7 @@ public class TradeManagementServiceImpl implements TradeManagementService {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay().minusNanos(1);
 
-        List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
-
-        List<TradeDetails> filteredTrades = allTrades.stream()
-                .filter(trade -> {
-                    LocalDateTime tradeDate = trade.getEntryInfo() != null ? trade.getEntryInfo().getTimestamp() : null;
-
-                    return tradeDate != null &&
-                            !tradeDate.isBefore(startDateTime) &&
-                            !tradeDate.isAfter(endDateTime);
-                })
-                .collect(Collectors.toList());
+        List<TradeDetails> filteredTrades = tradeDetailsService.findByPortfolioIdAndEntryInfoTimestampBetween(portfolioId, startDateTime, endDateTime);
                 
         enrichWithLivePrices(filteredTrades);
         return filteredTrades;
@@ -264,10 +254,14 @@ public class TradeManagementServiceImpl implements TradeManagementService {
             // Consider implementing a repository method for this or limiting the scope
             throw new IllegalArgumentException("At least one portfolio ID must be provided");
         } else {
-            // Get trades from all specified portfolios
-            allTrades = portfolioIds.stream()
-                    .flatMap(portfolioId -> tradeDetailsService.findModelsByPortfolioId(portfolioId).stream())
-                    .collect(Collectors.toList());
+            // Use DB filtering if dates are provided
+            if (startDate != null || endDate != null) {
+                LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : LocalDateTime.of(1970, 1, 1, 0, 0);
+                LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay().minusNanos(1) : LocalDateTime.now().plusYears(100);
+                allTrades = tradeDetailsService.findByPortfolioIdInAndEntryInfoTimestampBetween(portfolioIds, startDateTime, endDateTime);
+            } else {
+                allTrades = tradeDetailsService.findByPortfolioIdIn(portfolioIds);
+            }
         }
 
         // Apply filters
@@ -286,25 +280,6 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                         (trade.getStrategy() != null &&
                                 strategies.stream()
                                         .anyMatch(strategy -> trade.getStrategy().equalsIgnoreCase(strategy))))
-
-                // Filter by date range if provided
-                .filter(trade -> {
-                    // If no date range provided, include all trades
-                    if (startDate == null && endDate == null) {
-                        return true;
-                    }
-
-                    LocalDate tradeDate = trade.getTradeDate();
-                    if (tradeDate == null) {
-                        return false; // Skip trades without a date
-                    }
-
-                    // Check if the trade date is within the specified range
-                    boolean afterStartDate = startDate == null || !tradeDate.isBefore(startDate);
-                    boolean beforeEndDate = endDate == null || !tradeDate.isAfter(endDate);
-
-                    return afterStartDate && beforeEndDate;
-                })
                 .collect(Collectors.toList());
 
         // Apply pagination

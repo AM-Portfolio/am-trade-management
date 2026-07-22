@@ -92,4 +92,16 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
      */
     @Query("{'userId': ?0}")
     List<TradeDetailsEntity> findByUserId(String userId);
+
+    @Query("{'portfolioId': ?0, 'entryInfo.timestamp': {$gte: ?1, $lte: ?2}}")
+    List<TradeDetailsEntity> findByPortfolioIdAndEntryInfoTimestampBetween(String portfolioId, LocalDateTime startDate, LocalDateTime endDate);
+
+    @Query("{'userId': ?0, 'entryInfo.timestamp': {$gte: ?1, $lte: ?2}}")
+    List<TradeDetailsEntity> findByUserIdAndEntryInfoTimestampBetween(String userId, LocalDateTime startDate, LocalDateTime endDate);
+    
+    @Query("{'userId': ?0, 'symbol': ?1}")
+    List<TradeDetailsEntity> findByUserIdAndSymbol(String userId, String symbol);
+    
+    @Query("{'userId': ?0, 'symbol': ?1, 'entryInfo.timestamp': {$gte: ?2, $lte: ?3}}")
+    List<TradeDetailsEntity> findByUserIdAndSymbolAndEntryInfoTimestampBetween(String userId, String symbol, LocalDateTime startDate, LocalDateTime endDate);
 }

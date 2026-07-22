@@ -25,18 +25,35 @@ public class MongoIndexConfig {
         tradeOps.ensureIndex(new Index()
                 .on("portfolioId", Sort.Direction.ASC)
                 .on("symbol", Sort.Direction.ASC)
-                .named("idx_trade_portfolio_symbol"));
+                .named("idx_trade_portfolio_symbol")
+                .background());
 
         // Index 2: Powers pagination queries sorted by entry date (most common sort)
         tradeOps.ensureIndex(new Index()
                 .on("portfolioId", Sort.Direction.ASC)
                 .on("entryInfo.timestamp", Sort.Direction.DESC)
-                .named("idx_trade_portfolio_date"));
+                .named("idx_trade_portfolio_date")
+                .background());
 
         // Index 3: Powers the Filter API (status is the primary discriminator)
         tradeOps.ensureIndex(new Index()
                 .on("portfolioId", Sort.Direction.ASC)
                 .on("status", Sort.Direction.ASC)
-                .named("idx_trade_portfolio_status"));
+                .named("idx_trade_portfolio_status")
+                .background());
+
+        // Index 4: Powers Journal/Analytics by user id and date
+        tradeOps.ensureIndex(new Index()
+                .on("userId", Sort.Direction.ASC)
+                .on("entryInfo.timestamp", Sort.Direction.DESC)
+                .named("idx_trade_user_date")
+                .background());
+
+        // Index 5: Powers Journal/Analytics by user id and symbol
+        tradeOps.ensureIndex(new Index()
+                .on("userId", Sort.Direction.ASC)
+                .on("symbol", Sort.Direction.ASC)
+                .named("idx_trade_user_symbol")
+                .background());
     }
 }
