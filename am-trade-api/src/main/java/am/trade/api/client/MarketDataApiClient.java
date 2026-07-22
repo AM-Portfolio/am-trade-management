@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,22 @@ public class MarketDataApiClient {
 
     private final MarketDataApiConfig config;
     private final RestTemplate restTemplate;
+
+    @Value("${am.trade.market-data.l1-cache.enabled:true}")
+    private boolean isL1CacheEnabled;
+
+    private static class CachedPrice {
+        final Double price;
+        final java.time.Instant timestamp;
+
+        CachedPrice(Double price, java.time.Instant timestamp) {
+            this.price = price;
+            this.timestamp = timestamp;
+        }
+    }
+
+    private final java.util.concurrent.ConcurrentHashMap<String, CachedPrice> localCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long CACHE_TTL_SECONDS = 300; // 5 minutes
 
     public MarketDataApiClient(MarketDataApiConfig config, RestTemplateBuilder restTemplateBuilder) {
         this.config = config;
@@ -50,7 +67,37 @@ public class MarketDataApiClient {
             return new HashMap<>();
         }
 
-        String symbolsParam = String.join(",", symbols);
+        Map<String, Double> result = new HashMap<>();
+        List<String> missingSymbols = new java.util.ArrayList<>();
+        java.time.Instant now = java.time.Instant.now();
+
+        if (isL1CacheEnabled) {
+            // 1. Check local cache
+            for (String symbol : symbols) {
+                String cleanSymbol = symbol;
+                if (cleanSymbol != null && cleanSymbol.contains(":")) {
+                    cleanSymbol = cleanSymbol.substring(cleanSymbol.lastIndexOf(":") + 1);
+                }
+                CachedPrice cached = localCache.get(cleanSymbol);
+                if (cached != null && now.isBefore(cached.timestamp.plusSeconds(CACHE_TTL_SECONDS))) {
+                    result.put(cleanSymbol, cached.price);
+                } else {
+                    missingSymbols.add(symbol); // Request with original symbol format
+                }
+            }
+
+            // 2. If all symbols are cached, return immediately
+            if (missingSymbols.isEmpty()) {
+                log.debug("All symbols retrieved from local cache.");
+                return result;
+            }
+        } else {
+            // Feature flag disabled, fetch everything
+            missingSymbols.addAll(symbols);
+        }
+
+        // 3. Fetch missing symbols from upstream
+        String symbolsParam = String.join(",", missingSymbols);
         OhlcDataRequest request = OhlcDataRequest.builder()
                 .symbols(symbolsParam)
                 .timeFrame("1D")
@@ -84,17 +131,27 @@ public class MarketDataApiClient {
                             if (symbolKey.contains(":")) {
                                 symbolKey = symbolKey.substring(symbolKey.lastIndexOf(":") + 1);
                             }
-                            currentPrices.put(symbolKey, response.getLastPrice());
+                            
+                            Double price = response.getLastPrice();
+                            currentPrices.put(symbolKey, price);
+                            
+                            if (isL1CacheEnabled) {
+                                // Update local cache
+                                localCache.put(symbolKey, new CachedPrice(price, now));
+                            }
                         } catch (Exception e) {
                             log.error("Error converting response for symbol {}", key, e);
                         }
                     }
                 }
             }
-            return currentPrices;
+            
+            // Merge newly fetched prices into the result
+            result.putAll(currentPrices);
+            return result;
         } catch (Exception e) {
             log.error("Failed to fetch market data from API for symbols: {}", symbolsParam, e);
-            return new HashMap<>();
+            return result; // Return whatever we found in the cache
         }
     }
 }
