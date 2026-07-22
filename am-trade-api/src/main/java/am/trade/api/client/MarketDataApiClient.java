@@ -54,7 +54,7 @@ public class MarketDataApiClient {
         OhlcDataRequest request = OhlcDataRequest.builder()
                 .symbols(symbolsParam)
                 .timeFrame("1D")
-                .refresh(true)
+                .refresh(false) // Set to false to avoid hammering the upstream market data provider on every request
                 .indexSymbol(false)
                 .build();
 
