@@ -99,62 +99,23 @@ public class TradeManagementServiceImpl implements TradeManagementService {
 
     private Map<String, List<TradeDetails>> getTradeDetailsByDateTimeRange(LocalDateTime startDateTime,
             LocalDateTime endDateTime, String portfolioId) {
-        List<TradeDetails> trades = new ArrayList<>();
+        List<TradeDetails> trades;
 
         log.info("Filtering trades between {} and {}", startDateTime, endDateTime);
 
         // If portfolio ID is provided, filter by it
         if (portfolioId != null && !portfolioId.isEmpty()) {
-            // Fetch embedded trades directly from PortfolioEntity
-            Optional<PortfolioEntity> portfolioOpt = portfolioRepository.findByPortfolioId(portfolioId);
-
-            if (portfolioOpt.isPresent()) {
-                PortfolioEntity portfolio = portfolioOpt.get();
-                List<String> tradeIds = portfolio.getTrades();
-
-                if (tradeIds != null && !tradeIds.isEmpty()) {
-                    log.info("Found {} trade IDs in portfolio {}", tradeIds.size(), portfolioId);
-                    // Fetch trades by ID
-                    trades = tradeDetailsService.findModelsByTradeIds(tradeIds);
-                } else {
-                    log.warn("Portfolio {} has null or empty trades list", portfolioId);
-                }
-            } else {
-                log.warn("Portfolio {} not found in database", portfolioId);
-                // Fallback attempt: try standard service
-                log.info("Attempting fallback to TradeDetailsService for portfolio {}", portfolioId);
-                trades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
-            }
+            trades = tradeDetailsService.findByPortfolioIdAndEntryInfoTimestampBetween(portfolioId, startDateTime, endDateTime);
         } else {
-            // Get all trades in the date range - this service method likely handles
-            // filtering already?
-            // If findModelsByEntryDateBetween handles it, we might double filter, but
-            // that's safe.
             trades = tradeDetailsService.findModelsByEntryDateBetween(startDateTime, endDateTime);
         }
 
-        // Apply date filtering to the collected trades
-        List<TradeDetails> filteredTrades = trades.stream()
-                .filter(trade -> {
-                    LocalDateTime tradeDate = trade.getEntryInfo() != null
-                            ? trade.getEntryInfo().getTimestamp()
-                            : null;
-
-                    if (tradeDate != null) {
-                        return !tradeDate.isBefore(startDateTime) && !tradeDate.isAfter(endDateTime);
-                    } else {
-                        log.debug("Trade {} skipped. No entry timestamp.", trade.getTradeId());
-                        return false;
-                    }
-                })
-                .collect(Collectors.toList());
-
-        log.info("Retained {} trades after date filtering", filteredTrades.size());
+        log.info("Retained {} trades after date filtering", trades.size());
         
-        enrichWithLivePrices(filteredTrades);
+        enrichWithLivePrices(trades);
 
         // Group trades by portfolio ID
-        return filteredTrades.stream()
+        return trades.stream()
                 .collect(Collectors.groupingBy(
                         TradeDetails::getPortfolioId,
                         Collectors.toList()));
