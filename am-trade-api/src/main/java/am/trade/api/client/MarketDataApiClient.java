@@ -64,9 +64,8 @@ public class MarketDataApiClient {
             Map rawMap = restTemplate.postForObject(
                     config.getOhlcEndpoint(),
                     request,
-                    Map.class
-            );
-            
+                    Map.class);
+
             log.info("Raw market data response for symbols {}: {}", symbolsParam, rawMap);
 
             Map<String, Double> currentPrices = new HashMap<>();
@@ -76,7 +75,7 @@ public class MarketDataApiClient {
                     Map<?, ?> dataToProcess = (Map<?, ?>) actualData;
                     ObjectMapper mapper = new ObjectMapper();
                     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                    
+
                     for (Object key : dataToProcess.keySet()) {
                         try {
                             Object value = dataToProcess.get(key);
