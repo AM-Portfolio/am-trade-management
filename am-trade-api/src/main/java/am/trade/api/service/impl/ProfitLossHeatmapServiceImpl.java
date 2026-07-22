@@ -23,6 +23,8 @@ import am.trade.api.service.ProfitLossHeatmapService;
 import am.trade.api.service.TradeManagementService;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.cache.annotation.Cacheable;
+
 @Service
 @Slf4j
 public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
@@ -34,6 +36,7 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
     }
     
     @Override
+    @Cacheable(cacheNames = "analyticsCache", key = "#portfolioId")
     public ProfitLossHeatmapData getYearlyHeatmap(String portfolioId, boolean includeTradeDetails) {
         log.info("Generating yearly profit/loss heatmap for portfolio: {}", portfolioId);
         

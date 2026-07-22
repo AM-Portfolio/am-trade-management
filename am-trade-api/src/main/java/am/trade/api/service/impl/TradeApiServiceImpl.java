@@ -102,6 +102,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     }
 
     @Override
+    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
     public TradeDetails addTrade(TradeDetails tradeDetails) {
         if (tradeDetails == null) {
             log.error("Cannot add null trade");
@@ -304,6 +305,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     }
 
     @Override
+    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
     public TradeDetails updateTrade(String tradeId, TradeDetails tradeDetails) {
         if (tradeId == null || tradeId.isEmpty() || tradeDetails == null) {
             log.error("Cannot update trade: invalid trade ID or trade details");
@@ -497,6 +499,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     }
 
     @Override
+    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
     public List<TradeDetails> addOrUpdateTrades(List<TradeDetails> tradeDetailsList) {
         if (tradeDetailsList == null || tradeDetailsList.isEmpty()) {
             log.warn("Empty or null trade details list provided");

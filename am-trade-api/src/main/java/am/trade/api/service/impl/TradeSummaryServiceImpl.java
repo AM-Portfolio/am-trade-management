@@ -134,6 +134,7 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
     }
 
     @Override
+    @org.springframework.cache.annotation.Cacheable(cacheNames = "analyticsCache")
     public Map<String, List<TradeDetails>> getTradeDetailsByTimePeriod(
             String periodType,
             LocalDate startDate,

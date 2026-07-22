@@ -209,7 +209,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                 .inc("metrics.totalLoss", lossDelta.doubleValue())
                 .set("lastUpdatedDate", LocalDateTime.now());
 
-        update.addToSet("trades").each(tradeIds.toArray());
+        update.push("trades").each(tradeIds.toArray());
 
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where("portfolioId").is(portfolioId)),
@@ -249,7 +249,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         } else {
             // It's a new trade, so totalTrades increases by 1
             update.inc("metrics.totalTrades", 1);
-            update.addToSet("trades", newTrade.getTradeId());
+            update.push("trades", newTrade.getTradeId());
         }
 
         // Apply new metrics
