@@ -19,6 +19,13 @@ public class MongoIndexConfig {
     public void createIndexes() {
         IndexOperations tradeOps = mongoTemplate.indexOps(TradeDetailsEntity.class);
 
+        // Index 0: Powers business key lookups (PUT/POST)
+        tradeOps.ensureIndex(new Index()
+                .on("tradeId", Sort.Direction.ASC)
+                .named("idx_trade_trade_id")
+                .unique()
+                .background());
+
         // Index 1: Powers GET /v1/trades/details/portfolio/{portfolioId}
         // Satisfies queries on portfolioId alone (prefix rule)
         // AND queries on portfolioId + symbol (the filtered symbol search)
