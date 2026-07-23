@@ -29,9 +29,6 @@ service:
 security:
   automountServiceAccountToken: true
 
-serviceAccount:
-  create: true
-  name: "am-backend-sa"
 
 # Vault Secret Injection Configuration
 vault:
