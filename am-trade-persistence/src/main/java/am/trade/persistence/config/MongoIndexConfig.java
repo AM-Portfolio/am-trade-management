@@ -20,11 +20,15 @@ public class MongoIndexConfig {
         IndexOperations tradeOps = mongoTemplate.indexOps(TradeDetailsEntity.class);
 
         // Index 0: Powers business key lookups (PUT/POST)
-        tradeOps.ensureIndex(new Index()
-                .on("tradeId", Sort.Direction.ASC)
-                .named("idx_trade_trade_id")
-                .unique()
-                .background());
+        try {
+            tradeOps.ensureIndex(new Index()
+                    .on("tradeId", Sort.Direction.ASC)
+                    .named("idx_trade_trade_id")
+                    .unique()
+                    .background());
+        } catch (Exception e) {
+            System.err.println("WARNING: Failed to create unique index on tradeId. This is likely because the K6 load test inserted duplicate trades before the index existed. Please clear duplicates from the am-apps-dev database to enable the index.");
+        }
 
         // Index 1: Powers GET /v1/trades/details/portfolio/{portfolioId}
         // Satisfies queries on portfolioId alone (prefix rule)
