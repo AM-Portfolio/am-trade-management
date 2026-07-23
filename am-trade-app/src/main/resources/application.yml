@@ -50,10 +50,13 @@ spring:
     import:
       - classpath:application-common.yml
       - classpath:application-kafka.yml
-      - optional:file:/vault/secrets/app
+      - optional:file:/vault/secrets/auth
       - optional:file:/vault/secrets/mongo
       - optional:file:/vault/secrets/kafka
       - optional:file:/vault/secrets/market-data
+      - optional:file:/vault/secrets/redis
+      - optional:file:/vault/secrets/identity-oidc
+      - optional:file:/vault/secrets/service-oauth
   data:
     mongodb:
       host: ${MONGODB_HOST:localhost}
