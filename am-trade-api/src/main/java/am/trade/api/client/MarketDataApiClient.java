@@ -31,12 +31,9 @@ public class MarketDataApiClient {
     @Value("${am.trade.market-data.l1-cache.enabled:true}")
     private boolean isL1CacheEnabled;
 
-    private final Cache<String, Double> localCache = Caffeine.newBuilder()
-            .expireAfterWrite(5, TimeUnit.MINUTES)
-            .maximumSize(10_000)
-            .build();
+    private final com.github.benmanes.caffeine.cache.LoadingCache<String, Double> localCache;
 
-    public MarketDataApiClient(MarketDataApiConfig config, RestTemplateBuilder restTemplateBuilder) {
+    public MarketDataApiClient(MarketDataApiConfig config, org.springframework.boot.web.client.RestTemplateBuilder restTemplateBuilder) {
         this.config = config;
         this.restTemplate = restTemplateBuilder
                 .rootUri(config.getBaseUrl())
@@ -55,6 +52,21 @@ public class MarketDataApiClient {
                     return execution.execute(request, body);
                 })
                 .build();
+                
+        this.localCache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()
+                .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)
+                .maximumSize(10_000)
+                .build(new com.github.benmanes.caffeine.cache.CacheLoader<String, Double>() {
+                    @Override
+                    public Double load(String key) {
+                        return fetchFromApi(java.util.Collections.singletonList(key)).get(key);
+                    }
+
+                    @Override
+                    public Map<String, Double> loadAll(Iterable<? extends String> keys) {
+                        return fetchFromApi(keys);
+                    }
+                });
     }
 
     public Map<String, Double> getCurrentPrices(List<String> symbols) {
@@ -78,10 +90,10 @@ public class MarketDataApiClient {
         }
 
         if (isL1CacheEnabled) {
-            // Caffeine's getAll takes an Iterable of keys and a Function that fetches missing keys.
-            // It automatically handles concurrent requests, prevents cache stampedes natively, 
-            // and merges the cached and fetched results lock-free!
-            Map<String, Double> result = localCache.getAll(cleanSymbols, this::fetchFromApi);
+            // Caffeine LoadingCache automatically coalesces concurrent bulk requests (Cache Stampede protection).
+            // Threads requesting the exact same missing keys will block on the single thread that is fetching them,
+            // instead of all trying to fetch them concurrently.
+            Map<String, Double> result = localCache.getAll(cleanSymbols);
             return result != null ? result : new HashMap<>();
         } else {
             return fetchFromApi(cleanSymbols);

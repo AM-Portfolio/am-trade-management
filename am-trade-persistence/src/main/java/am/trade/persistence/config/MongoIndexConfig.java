@@ -39,6 +39,15 @@ public class MongoIndexConfig {
                 .named("idx_trade_portfolio_symbol")
                 .background());
 
+        // Index 1b: Powers GET /v2/trades/details/portfolio/{portfolioId}
+        // with the new User ID pushdown optimization
+        tradeOps.ensureIndex(new Index()
+                .on("userId", Sort.Direction.ASC)
+                .on("portfolioId", Sort.Direction.ASC)
+                .on("symbol", Sort.Direction.ASC)
+                .named("idx_trade_user_portfolio_symbol")
+                .background());
+
         // Index 2: Powers pagination queries sorted by entry date (most common sort)
         tradeOps.ensureIndex(new Index()
                 .on("portfolioId", Sort.Direction.ASC)
