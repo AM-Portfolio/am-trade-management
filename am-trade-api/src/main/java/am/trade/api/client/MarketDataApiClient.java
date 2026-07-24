@@ -82,24 +82,43 @@ public class MarketDataApiClient {
             return new HashMap<>();
         }
 
-        // Clean symbols and filter out nulls
         List<String> cleanSymbols = symbols.stream()
-                .filter(java.util.Objects::nonNull)
+                .filter(s -> s != null && !s.trim().isEmpty())
+                .map(symbol -> {
+                    // Remove provider prefix if present (e.g., "NSE:RELIANCE" -> "RELIANCE")
+                    if (symbol.contains(":")) {
+                        return symbol.substring(symbol.lastIndexOf(":") + 1);
+                    }
+                    return symbol;
+                })
                 .collect(java.util.stream.Collectors.toList());
 
         if (cleanSymbols.isEmpty()) {
             return new HashMap<>();
         }
 
+        Map<String, Double> filteredResult = new HashMap<>();
         if (isL1CacheEnabled) {
-            // Caffeine LoadingCache automatically coalesces concurrent bulk requests (Cache Stampede protection).
-            // Threads requesting the exact same missing keys will block on the single thread that is fetching them,
-            // instead of all trying to fetch them concurrently.
             Map<String, Double> result = localCache.getAll(cleanSymbols);
-            return result != null ? result : new HashMap<>();
+            if (result != null) {
+                // Filter out negative cache values (-1.0)
+                result.forEach((k, v) -> {
+                    if (v != null && v >= 0.0) {
+                        filteredResult.put(k, v);
+                    }
+                });
+            }
         } else {
-            return fetchFromApi(cleanSymbols);
+            Map<String, Double> result = fetchFromApi(cleanSymbols);
+            if (result != null) {
+                result.forEach((k, v) -> {
+                    if (v != null && v >= 0.0) {
+                        filteredResult.put(k, v);
+                    }
+                });
+            }
         }
+        return filteredResult;
     }
 
     private Map<String, Double> fetchFromApi(Iterable<? extends String> missingSymbols) {
@@ -147,10 +166,18 @@ public class MarketDataApiClient {
                     });
                 }
             }
-            return currentPrices;
         } catch (RestClientException e) {
             log.error("Failed to fetch market data from API for symbols: {}", symbolsParam, e);
-            throw new MarketDataUnavailableException("Failed to fetch market data for symbols: " + symbolsParam, e);
+            // Do not throw MarketDataUnavailableException here; instead, let the negative caching below 
+            // populate the failed symbols with -1.0 so Caffeine doesn't infinitely retry and cause cache penetration.
         }
+
+        // NEGATIVE CACHING: Prevent Cache Penetration by caching missing/failed keys as -1.0
+        // This ensures Caffeine doesn't retry them constantly if the upstream is down or missing data.
+        for (String sym : missingSymbols) {
+            currentPrices.putIfAbsent(sym, -1.0);
+        }
+
+        return currentPrices;
     }
 }
