@@ -79,30 +79,43 @@ public class MarketDataApiClient {
             return new HashMap<>();
         }
 
-        // Clean symbols (remove exchange prefix if present) and filter out nulls
         List<String> cleanSymbols = symbols.stream()
-                .filter(java.util.Objects::nonNull)
+                .filter(s -> s != null && !s.trim().isEmpty())
                 .map(symbol -> {
+                    // Remove provider prefix if present (e.g., "NSE:RELIANCE" -> "RELIANCE")
                     if (symbol.contains(":")) {
                         return symbol.substring(symbol.lastIndexOf(":") + 1);
                     }
                     return symbol;
                 })
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
 
         if (cleanSymbols.isEmpty()) {
             return new HashMap<>();
         }
 
+        Map<String, Double> filteredResult = new HashMap<>();
         if (isL1CacheEnabled) {
-            // Caffeine LoadingCache automatically coalesces concurrent bulk requests (Cache Stampede protection).
-            // Threads requesting the exact same missing keys will block on the single thread that is fetching them,
-            // instead of all trying to fetch them concurrently.
             Map<String, Double> result = localCache.getAll(cleanSymbols);
-            return result != null ? result : new HashMap<>();
+            if (result != null) {
+                // Filter out negative cache values (-1.0)
+                result.forEach((k, v) -> {
+                    if (v != null && v >= 0.0) {
+                        filteredResult.put(k, v);
+                    }
+                });
+            }
         } else {
-            return fetchFromApi(cleanSymbols);
+            Map<String, Double> result = fetchFromApi(cleanSymbols);
+            if (result != null) {
+                result.forEach((k, v) -> {
+                    if (v != null && v >= 0.0) {
+                        filteredResult.put(k, v);
+                    }
+                });
+            }
         }
+        return filteredResult;
     }
 
     private Map<String, Double> fetchFromApi(Iterable<? extends String> missingSymbols) {
@@ -123,11 +136,14 @@ public class MarketDataApiClient {
         log.debug("Fetching OHLC data for {} from {}", symbolsParam, config.getOhlcEndpoint());
 
         try {
-            Map rawMap = restTemplate.postForObject(
+            org.springframework.http.ResponseEntity<Map<String, Object>> responseEntity = restTemplate.exchange(
                     config.getOhlcEndpoint(),
-                    request,
-                    Map.class);
+                    org.springframework.http.HttpMethod.POST,
+                    new org.springframework.http.HttpEntity<>(request),
+                    new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {}
+            );
 
+            Map<String, Object> rawMap = responseEntity.getBody();
             log.debug("Raw market data response for symbols {}: {}", symbolsParam, rawMap);
 
             if (rawMap != null) {
@@ -139,6 +155,7 @@ public class MarketDataApiClient {
                         try {
                             Object value = dataToProcess.get(key);
                             MarketDataResponse response = MAPPER.convertValue(value, MarketDataResponse.class);
+
                             String symbolKey = String.valueOf(key);
                             if (symbolKey.contains(":")) {
                                 symbolKey = symbolKey.substring(symbolKey.lastIndexOf(":") + 1);
@@ -147,20 +164,23 @@ public class MarketDataApiClient {
                             Double price = response.getLastPrice();
                             if (price != null) {
                                 currentPrices.put(symbolKey, price);
-                            } else {
-                                log.warn("Received null price for symbol {}", symbolKey);
                             }
-                            
                         } catch (Exception e) {
-                            log.error("Error converting response for symbol {}", key, e);
+                            log.warn("Failed to parse market data response for key: {}", key, e);
                         }
                     }
                 }
             }
-            return currentPrices;
         } catch (Exception e) {
             log.error("Failed to fetch market data from API for symbols: {}", symbolsParam, e);
-            return currentPrices;
         }
+
+        // NEGATIVE CACHING: Prevent Cache Penetration by caching missing/failed keys as -1.0
+        // This ensures Caffeine doesn't retry them constantly if the upstream is down or missing data.
+        for (String sym : missingSymbols) {
+            currentPrices.putIfAbsent(sym, -1.0);
+        }
+
+        return currentPrices;
     }
 }
