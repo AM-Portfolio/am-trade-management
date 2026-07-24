@@ -5,13 +5,13 @@
     <parent>
         <groupId>am.trade</groupId>
         <artifactId>am-trade-management</artifactId>
-        <version>1.0.14-SNAPSHOT</version>
+        <version>1.0.15-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
 
     <artifactId>am-trade-persistence</artifactId>
-    <version>1.0.14-SNAPSHOT</version>
+    <version>1.0.15-SNAPSHOT</version>
     <name>AM Trade Persistence</name>
     <description>Persistence module for AM Trade Management System</description>
 
