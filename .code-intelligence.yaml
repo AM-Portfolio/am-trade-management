@@ -1,0 +1,44 @@
+enabled: true
+tool: gitnexus
+phase: local
+versions:
+  gitnexus: 1.6.9
+  graphifyy: 0.4.11
+production:
+  branch: main
+  embeddings: false
+  ci: false
+  mode: verify
+local:
+  sync_on_commit: true
+  sync_on_save: false
+  index_workspace: true
+  watch_debounce_sec: 30
+gitnexus:
+  skipAgentsMd: true
+  skipSkills: true
+  group_path: am-trade-management
+capabilities:
+  domain: services
+  surfaces:
+  - http
+  - kafka
+  - stomp
+  - libs
+  - config
+  - redis
+  pdg: true
+  scan:
+    scan_roots:
+    - .
+  topics:
+  - TRADE_UPDATE
+  - PORTFOLIO_UPDATE
+  - STOCK_UPDATE
+  config_prefixes:
+  - am.trade
+  flows:
+  - slug: trade-streaming
+    tier: A
+    query: redis trade subscribe kafka
+    entry_contract: STOMP /app/trade/subscribe

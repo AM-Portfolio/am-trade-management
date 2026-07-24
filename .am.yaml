@@ -1,0 +1,15 @@
+name: am-trade-management
+release: am-trade-management
+image: ghcr.io/am-portfolio/am-trade-management
+runtime: java
+language: java
+dockerfile: Dockerfile
+context: .
+github:
+  repo: AM-Portfolio/am-trade-management
+  deploy_workflow: am-trade-app.yml
+  service: am-trade-management
+  ref: main
+deploy:
+  via: helm
+  rebuild: on-change
