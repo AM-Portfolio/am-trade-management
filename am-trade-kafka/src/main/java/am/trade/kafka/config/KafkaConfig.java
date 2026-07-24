@@ -37,7 +37,7 @@ public class KafkaConfig {
     @Value("${spring.kafka.consumer.group-id:am-trade-group}")
     private String groupId;
 
-    @Value("${spring.kafka.consumer.auto-offset-reset:earliest}")
+    @Value("${spring.kafka.consumer.auto-offset-reset:latest}")
     private String autoOffsetReset;
 
     @Autowired
