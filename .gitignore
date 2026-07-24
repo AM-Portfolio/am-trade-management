@@ -148,3 +148,6 @@ payload.json
 test.json
 test_futures.json
 am-trade-app/src/main/resources/application-local.yml
+
+# SPT Test Files
+spt/

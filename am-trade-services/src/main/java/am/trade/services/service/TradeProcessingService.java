@@ -41,6 +41,16 @@ public interface TradeProcessingService {
     void processTradeDetailsWithObjects(List<TradeDetails> trades, String portfolioId, String userId);
     
     /**
+     * Apply delta updates atomically to a portfolio for new trades
+     */
+    void applyTradesDelta(List<TradeDetails> trades, String portfolioId, String userId);
+
+    /**
+     * Apply delta updates atomically for an updated trade (reversing old contribution)
+     */
+    void applyTradeUpdateDelta(TradeDetails oldTrade, TradeDetails newTrade, String portfolioId, String userId);
+    
+    /**
      * Get the current status of an open position
      * 
      * @param symbol The trading symbol

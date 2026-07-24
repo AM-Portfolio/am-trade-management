@@ -30,4 +30,5 @@ public class PersistenceAutoConfiguration {
     public PortfolioMapper portfolioMapper() {
         return new PortfolioMapper(new TradeDetailsMapper());
     }
+
 }

@@ -30,7 +30,12 @@ public interface TradeDetailsService {
     List<TradeDetails> findModelsByStatus(TradeStatus status);
     
     List<TradeDetails> findModelsByPortfolioId(String portfolioId);
+    List<TradeDetails> findByPortfolioIdAndEntryInfoTimestampBetween(String portfolioId, LocalDateTime startDate, LocalDateTime endDate);
     List<TradeDetails> findByPortfolioIdIn(List<String> portfolioIds);
+    
+    List<TradeDetails> findModelsByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols);
+    
+    Page<TradeDetails> findModelsByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols, Pageable pageable);
     
     List<TradeDetails> findModelsBySymbolAndEntryDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate);
     
@@ -53,6 +58,15 @@ public interface TradeDetailsService {
      * @return The list of saved trade details models with any generated IDs
      */
     List<TradeDetails> saveAllTradeDetails(List<TradeDetails> tradeDetailsList);
+
+    Page<TradeDetails> findByFilters(
+            List<String> portfolioIds,
+            List<String> symbols,
+            List<TradeStatus> statuses,
+            List<String> strategies,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Pageable pageable);
     
     /**
      * Find trade details by multiple trade IDs in a single database call

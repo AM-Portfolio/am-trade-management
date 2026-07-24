@@ -33,6 +33,7 @@ import am.trade.services.publisher.TradeHoldingEventPublisher;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import am.trade.services.service.PortfolioPersistenceService;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
@@ -43,6 +44,7 @@ import java.time.LocalDateTime;
  */
 @Service
 @RequiredArgsConstructor
+@Observed(name = "trade.service", contextualName = "trade-api-service")
 public class TradeApiServiceImpl implements TradeApiService {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeApiServiceImpl.class);
 
@@ -77,6 +79,30 @@ public class TradeApiServiceImpl implements TradeApiService {
     }
 
     @Override
+    public Page<TradeDetails> getTradeDetailsByPortfolioAndSymbolsPage(String portfolioId, List<String> symbols, Pageable pageable) {
+        log.info("Service: Fetching paginated trade details for portfolio: {} with symbols: {}", portfolioId, symbols);
+        Page<TradeDetails> tradePage = tradeManagementService.getTradesBySymbolsPage(portfolioId, symbols, pageable);
+
+        // Verify ownership and valid structure
+        String currentUserId = UserContext.getUserIdOrThrow();
+        List<TradeDetails> validTrades = tradePage.getContent().stream()
+                .filter(t -> currentUserId.equals(t.getUserId()))
+                .filter(t -> {
+                    boolean isValid = t.getTradeId() != null && t.getPortfolioId() != null &&
+                            t.getStatus() != null && t.getTradePositionType() != null;
+                    if (!isValid) {
+                        log.warn("Filtering out corrupt trade record missing required fields. Trade ID: {}, Portfolio: {}",
+                                t.getTradeId(), t.getPortfolioId());
+                    }
+                    return isValid;
+                })
+                .collect(Collectors.toList());
+
+        return new org.springframework.data.domain.PageImpl<>(validTrades, pageable, tradePage.getTotalElements());
+    }
+
+    @Override
+    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
     public TradeDetails addTrade(TradeDetails tradeDetails) {
         if (tradeDetails == null) {
             log.error("Cannot add null trade");
@@ -111,7 +137,7 @@ public class TradeApiServiceImpl implements TradeApiService {
         // Save trade details and process for portfolio aggregation
         TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
         if (savedTrade != null) {
-            tradeProcessingService.processTradeDetailsWithObjects(
+            tradeProcessingService.applyTradesDelta(
                     List.of(savedTrade),
                     savedTrade.getPortfolioId(),
                     savedTrade.getUserId());
@@ -279,6 +305,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     }
 
     @Override
+    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
     public TradeDetails updateTrade(String tradeId, TradeDetails tradeDetails) {
         if (tradeId == null || tradeId.isEmpty() || tradeDetails == null) {
             log.error("Cannot update trade: invalid trade ID or trade details");
@@ -320,10 +347,7 @@ public class TradeApiServiceImpl implements TradeApiService {
         // Save and process trade
         TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
         if (savedTrade != null) {
-            tradeProcessingService.processTradeDetailsWithObjects(
-                    List.of(savedTrade),
-                    savedTrade.getPortfolioId(),
-                    savedTrade.getUserId());
+            tradeProcessingService.applyTradeUpdateDelta(originalTrade, savedTrade, savedTrade.getPortfolioId(), savedTrade.getUserId());
 
             // Determine the correct action and emit the Kafka event.
             // The helper reads all fields (entryInfo, exitInfo, status) from savedTrade itself.
@@ -475,6 +499,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     }
 
     @Override
+    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
     public List<TradeDetails> addOrUpdateTrades(List<TradeDetails> tradeDetailsList) {
         if (tradeDetailsList == null || tradeDetailsList.isEmpty()) {
             log.warn("Empty or null trade details list provided");
