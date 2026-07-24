@@ -119,6 +119,26 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     }
     
     @Override
+    public Page<TradeDetails> findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase(String userId, String portfolioId, List<String> symbols, Pageable pageable) {
+        log.debug("Finding trade details by user ID: {}, portfolio ID: {} and symbols: {} with pagination", userId, portfolioId, symbols);
+        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findByUserIdAndPortfolioIdAndSymbolInIgnoreCase(userId, portfolioId, symbols, pageable);
+        List<TradeDetails> models = entityPage.getContent().stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
+    }
+
+    @Override
+    public Page<TradeDetails> findModelsByUserIdAndPortfolioId(String userId, String portfolioId, Pageable pageable) {
+        log.debug("Finding trade details by user ID: {}, portfolio ID: {} with pagination", userId, portfolioId);
+        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findByUserIdAndPortfolioId(userId, portfolioId, pageable);
+        List<TradeDetails> models = entityPage.getContent().stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
+    }
+    
+    @Override
     public List<TradeDetails> findModelsBySymbolAndEntryDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate) {
         log.debug("Finding trade details by symbol: {} and entry date between {} and {}", symbol, startDate, endDate);
         return tradeDetailsRepository.findBySymbolAndEntryDateBetween(symbol, startDate, endDate).stream()

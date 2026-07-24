@@ -62,114 +62,90 @@ public class MarketDataApiClient {
             return new HashMap<>();
         }
 
-        Map<String, Double> result = new HashMap<>();
-        List<String> missingSymbols = new java.util.ArrayList<>();
-        java.time.Instant now = java.time.Instant.now();
+        // Clean symbols (remove exchange prefix if present) and filter out nulls
+        List<String> cleanSymbols = symbols.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(symbol -> {
+                    if (symbol.contains(":")) {
+                        return symbol.substring(symbol.lastIndexOf(":") + 1);
+                    }
+                    return symbol;
+                })
+                .collect(java.util.stream.Collectors.toList());
 
-        if (isL1CacheEnabled) {
-            // 1. Check local cache
-            for (String symbol : symbols) {
-                String cleanSymbol = symbol;
-                if (cleanSymbol != null && cleanSymbol.contains(":")) {
-                    cleanSymbol = cleanSymbol.substring(cleanSymbol.lastIndexOf(":") + 1);
-                }
-                Double cachedPrice = localCache.getIfPresent(cleanSymbol);
-                if (cachedPrice != null) {
-                    result.put(cleanSymbol, cachedPrice);
-                } else {
-                    missingSymbols.add(symbol); // Request with original symbol format
-                }
-            }
-
-            // 2. If all symbols are cached, return immediately
-            if (missingSymbols.isEmpty()) {
-                log.debug("All symbols retrieved from local cache.");
-                return result;
-            }
-        } else {
-            // Feature flag disabled, fetch everything
-            missingSymbols.addAll(symbols);
+        if (cleanSymbols.isEmpty()) {
+            return new HashMap<>();
         }
 
-        // 3. Fetch missing symbols from upstream with double-checked locking to prevent cache stampedes
-        synchronized (this) {
-            if (isL1CacheEnabled) {
-                List<String> stillMissing = new java.util.ArrayList<>();
-                for (String symbol : missingSymbols) {
-                    String cleanSymbol = symbol;
-                    if (cleanSymbol != null && cleanSymbol.contains(":")) {
-                        cleanSymbol = cleanSymbol.substring(cleanSymbol.lastIndexOf(":") + 1);
-                    }
-                    Double cachedPrice = localCache.getIfPresent(cleanSymbol);
-                    if (cachedPrice != null) {
-                        result.put(cleanSymbol, cachedPrice);
-                    } else {
-                        stillMissing.add(symbol);
-                    }
-                }
-                missingSymbols = stillMissing;
-                
-                if (missingSymbols.isEmpty()) {
-                    return result;
-                }
-            }
+        if (isL1CacheEnabled) {
+            // Caffeine's getAll takes an Iterable of keys and a Function that fetches missing keys.
+            // It automatically handles concurrent requests, prevents cache stampedes natively, 
+            // and merges the cached and fetched results lock-free!
+            Map<String, Double> result = localCache.getAll(cleanSymbols, this::fetchFromApi);
+            return result != null ? result : new HashMap<>();
+        } else {
+            return fetchFromApi(cleanSymbols);
+        }
+    }
 
-            String symbolsParam = String.join(",", missingSymbols);
-            OhlcDataRequest request = OhlcDataRequest.builder()
-                    .symbols(symbolsParam)
-                    .timeFrame("1D")
-                    .refresh(false) // Set to false to avoid hammering the upstream market data provider on every request
-                    .indexSymbol(false)
-                    .build();
+    private Map<String, Double> fetchFromApi(Iterable<? extends String> missingSymbols) {
+        Map<String, Double> currentPrices = new HashMap<>();
+        String symbolsParam = String.join(",", missingSymbols);
+        
+        if (symbolsParam.isEmpty()) {
+            return currentPrices;
+        }
 
-            log.debug("Fetching OHLC data for {} from {}", symbolsParam, config.getOhlcEndpoint());
+        OhlcDataRequest request = OhlcDataRequest.builder()
+                .symbols(symbolsParam)
+                .timeFrame("1D")
+                .refresh(false)
+                .indexSymbol(false)
+                .build();
 
-            try {
-                Map rawMap = restTemplate.postForObject(
-                        config.getOhlcEndpoint(),
-                        request,
-                        Map.class);
+        log.debug("Fetching OHLC data for {} from {}", symbolsParam, config.getOhlcEndpoint());
 
-                log.info("Raw market data response for symbols {}: {}", symbolsParam, rawMap);
+        try {
+            Map rawMap = restTemplate.postForObject(
+                    config.getOhlcEndpoint(),
+                    request,
+                    Map.class);
 
-                Map<String, Double> currentPrices = new HashMap<>();
-                if (rawMap != null) {
-                    Object actualData = rawMap.containsKey("data") ? rawMap.get("data") : rawMap;
-                    if (actualData instanceof Map) {
-                        Map<?, ?> dataToProcess = (Map<?, ?>) actualData;
-                        ObjectMapper mapper = new ObjectMapper();
-                        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            log.info("Raw market data response for symbols {}: {}", symbolsParam, rawMap);
 
-                        for (Object key : dataToProcess.keySet()) {
-                            try {
-                                Object value = dataToProcess.get(key);
-                                MarketDataResponse response = mapper.convertValue(value, MarketDataResponse.class);
-                                String symbolKey = String.valueOf(key);
-                                if (symbolKey.contains(":")) {
-                                    symbolKey = symbolKey.substring(symbolKey.lastIndexOf(":") + 1);
-                                }
-                                
-                                Double price = response.getLastPrice();
-                                currentPrices.put(symbolKey, price);
-                                
-                                if (isL1CacheEnabled) {
-                                    // Update local cache
-                                    localCache.put(symbolKey, price);
-                                }
-                            } catch (Exception e) {
-                                log.error("Error converting response for symbol {}", key, e);
+            if (rawMap != null) {
+                Object actualData = rawMap.containsKey("data") ? rawMap.get("data") : rawMap;
+                if (actualData instanceof Map) {
+                    Map<?, ?> dataToProcess = (Map<?, ?>) actualData;
+                    ObjectMapper mapper = new ObjectMapper();
+                    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+                    for (Object key : dataToProcess.keySet()) {
+                        try {
+                            Object value = dataToProcess.get(key);
+                            MarketDataResponse response = mapper.convertValue(value, MarketDataResponse.class);
+                            String symbolKey = String.valueOf(key);
+                            if (symbolKey.contains(":")) {
+                                symbolKey = symbolKey.substring(symbolKey.lastIndexOf(":") + 1);
                             }
+                            
+                            Double price = response.getLastPrice();
+                            if (price != null) {
+                                currentPrices.put(symbolKey, price);
+                            } else {
+                                log.warn("Received null price for symbol {}", symbolKey);
+                            }
+                            
+                        } catch (Exception e) {
+                            log.error("Error converting response for symbol {}", key, e);
                         }
                     }
                 }
-                
-                // Merge newly fetched prices into the result
-                result.putAll(currentPrices);
-                return result;
-            } catch (Exception e) {
-                log.error("Failed to fetch market data from API for symbols: {}", symbolsParam, e);
-                return result; // Return whatever we found in the cache
             }
+            return currentPrices;
+        } catch (Exception e) {
+            log.error("Failed to fetch market data from API for symbols: {}", symbolsParam, e);
+            return currentPrices;
         }
     }
 }

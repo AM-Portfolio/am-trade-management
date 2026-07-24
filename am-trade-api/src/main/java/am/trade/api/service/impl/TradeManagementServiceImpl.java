@@ -172,22 +172,25 @@ public class TradeManagementServiceImpl implements TradeManagementService {
     }
 
     @Override
-    public Page<TradeDetails> getTradesBySymbolsPage(String portfolioId, List<String> symbols, Pageable pageable) {
-        log.info("Fetching paginated trades for portfolio: {} filtered by symbols: {}", portfolioId, symbols);
+    public Page<TradeDetails> getTradesBySymbolsPage(String userId, String portfolioId, List<String> symbols, Pageable pageable) {
+        log.info("Fetching paginated trades for user: {} portfolio: {} filtered by symbols: {}", userId, portfolioId, symbols);
 
         if (portfolioId == null || portfolioId.isEmpty()) {
             throw new IllegalArgumentException("Portfolio ID cannot be null or empty");
         }
 
         if (symbols == null || symbols.isEmpty()) {
-            return getTradeDetailsByPortfolio(portfolioId, pageable);
+            Page<TradeDetails> page = tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId, pageable);
+            enrichWithLivePrices(page.getContent());
+            return page;
         }
 
         List<String> upperCaseSymbols = symbols.stream()
+                .filter(java.util.Objects::nonNull)
                 .map(String::toUpperCase)
                 .collect(Collectors.toList());
 
-        Page<TradeDetails> page = tradeDetailsService.findModelsByPortfolioIdAndSymbolInIgnoreCase(portfolioId, upperCaseSymbols, pageable);
+        Page<TradeDetails> page = tradeDetailsService.findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase(userId, portfolioId, upperCaseSymbols, pageable);
         enrichWithLivePrices(page.getContent());
         return page;
     }

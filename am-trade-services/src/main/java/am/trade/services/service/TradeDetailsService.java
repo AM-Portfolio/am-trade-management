@@ -37,6 +37,10 @@ public interface TradeDetailsService {
     
     Page<TradeDetails> findModelsByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols, Pageable pageable);
     
+    Page<TradeDetails> findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase(String userId, String portfolioId, List<String> symbols, Pageable pageable);
+    
+    Page<TradeDetails> findModelsByUserIdAndPortfolioId(String userId, String portfolioId, Pageable pageable);
+    
     List<TradeDetails> findModelsBySymbolAndEntryDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate);
     
     List<TradeDetails> findModelsBySymbolAndExitDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate);

@@ -43,6 +43,12 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
     @Query("{'portfolioId': ?0, 'symbol': {$in: ?1}}")
     List<TradeDetailsEntity> findByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols);
     
+    @Query("{'userId': ?0, 'portfolioId': ?1, 'symbol': {$in: ?2}}")
+    Page<TradeDetailsEntity> findByUserIdAndPortfolioIdAndSymbolInIgnoreCase(String userId, String portfolioId, List<String> symbols, Pageable pageable);
+    
+    @Query("{'userId': ?0, 'portfolioId': ?1}")
+    Page<TradeDetailsEntity> findByUserIdAndPortfolioId(String userId, String portfolioId, Pageable pageable);
+    
     @Query("{'portfolioId': ?0, 'symbol': {$in: ?1}}")
     Page<TradeDetailsEntity> findByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols, Pageable pageable);
     
