@@ -25,6 +25,9 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class MarketDataApiClient {
 
+    private static final ObjectMapper MAPPER = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
     private final MarketDataApiConfig config;
     private final RestTemplate restTemplate;
 
@@ -37,6 +40,8 @@ public class MarketDataApiClient {
         this.config = config;
         this.restTemplate = restTemplateBuilder
                 .rootUri(config.getBaseUrl())
+                .setConnectTimeout(java.time.Duration.ofSeconds(3))
+                .setReadTimeout(java.time.Duration.ofSeconds(10))
                 .defaultHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                 .defaultHeader("Accept", "application/json")
                 .defaultHeader("Content-Type", "application/json")
@@ -123,19 +128,17 @@ public class MarketDataApiClient {
                     request,
                     Map.class);
 
-            log.info("Raw market data response for symbols {}: {}", symbolsParam, rawMap);
+            log.debug("Raw market data response for symbols {}: {}", symbolsParam, rawMap);
 
             if (rawMap != null) {
                 Object actualData = rawMap.containsKey("data") ? rawMap.get("data") : rawMap;
                 if (actualData instanceof Map) {
                     Map<?, ?> dataToProcess = (Map<?, ?>) actualData;
-                    ObjectMapper mapper = new ObjectMapper();
-                    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
                     for (Object key : dataToProcess.keySet()) {
                         try {
                             Object value = dataToProcess.get(key);
-                            MarketDataResponse response = mapper.convertValue(value, MarketDataResponse.class);
+                            MarketDataResponse response = MAPPER.convertValue(value, MarketDataResponse.class);
                             String symbolKey = String.valueOf(key);
                             if (symbolKey.contains(":")) {
                                 symbolKey = symbolKey.substring(symbolKey.lastIndexOf(":") + 1);
