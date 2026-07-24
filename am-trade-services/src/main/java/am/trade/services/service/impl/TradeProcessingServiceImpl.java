@@ -160,125 +160,132 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
     }
 
     @Override
+    @org.springframework.scheduling.annotation.Async("tradeProcessingExecutor")
     public void applyTradesDelta(List<TradeDetails> trades, String portfolioId, String userId) {
         if (trades == null || trades.isEmpty()) {
             return;
         }
 
-        int winningTradesDelta = 0;
-        int losingTradesDelta = 0;
-        int breakEvenTradesDelta = 0;
-        int openPositionsDelta = 0;
-        BigDecimal profitDelta = BigDecimal.ZERO;
-        BigDecimal lossDelta = BigDecimal.ZERO;
+        try {
+                int winningTradesDelta = 0;
+                int losingTradesDelta = 0;
+                int breakEvenTradesDelta = 0;
+                int openPositionsDelta = 0;
+                BigDecimal profitDelta = BigDecimal.ZERO;
+                BigDecimal lossDelta = BigDecimal.ZERO;
 
-        List<String> tradeIds = new ArrayList<>();
-
-        for (TradeDetails trade : trades) {
-            tradeIds.add(trade.getTradeId());
-
-            switch (trade.getStatus()) {
-                case WIN:
-                    winningTradesDelta++;
-                    if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
-                        profitDelta = profitDelta.add(trade.getMetrics().getProfitLoss());
+                for (TradeDetails trade : trades) {
+                    switch (trade.getStatus()) {
+                        case WIN:
+                            winningTradesDelta++;
+                            if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
+                                profitDelta = profitDelta.add(trade.getMetrics().getProfitLoss());
+                            }
+                            break;
+                        case LOSS:
+                            losingTradesDelta++;
+                            if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
+                                lossDelta = lossDelta.add(trade.getMetrics().getProfitLoss().abs());
+                            }
+                            break;
+                        case BREAK_EVEN:
+                            breakEvenTradesDelta++;
+                            break;
+                        case OPEN:
+                            openPositionsDelta++;
+                            break;
                     }
-                    break;
-                case LOSS:
-                    losingTradesDelta++;
-                    if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
-                        lossDelta = lossDelta.add(trade.getMetrics().getProfitLoss().abs());
-                    }
-                    break;
-                case BREAK_EVEN:
-                    breakEvenTradesDelta++;
-                    break;
-                case OPEN:
-                    openPositionsDelta++;
-                    break;
+                }
+
+                Update update = new Update()
+                        .inc("metrics.totalTrades", trades.size())
+                        .inc("metrics.winningTrades", winningTradesDelta)
+                        .inc("metrics.losingTrades", losingTradesDelta)
+                        .inc("metrics.breakEvenTrades", breakEvenTradesDelta)
+                        .inc("metrics.openPositions", openPositionsDelta)
+                        .inc("metrics.totalProfit", profitDelta.doubleValue())
+                        .inc("metrics.totalLoss", lossDelta.doubleValue())
+                        .set("lastUpdatedDate", LocalDateTime.now());
+
+                // We no longer push trade IDs to an unbounded array in PortfolioEntity
+                // to avoid MongoDB document size limits and write contention overhead.
+
+                mongoTemplate.updateFirst(
+                        Query.query(Criteria.where("portfolioId").is(portfolioId)),
+                        update,
+                        PortfolioEntity.class
+                );
+            } catch (Exception e) {
+                log.error("Error applying trades delta asynchronously for portfolio {}: {}", portfolioId, e.getMessage(), e);
             }
-        }
-
-        Update update = new Update()
-                .inc("metrics.totalTrades", trades.size())
-                .inc("metrics.winningTrades", winningTradesDelta)
-                .inc("metrics.losingTrades", losingTradesDelta)
-                .inc("metrics.breakEvenTrades", breakEvenTradesDelta)
-                .inc("metrics.openPositions", openPositionsDelta)
-                .inc("metrics.totalProfit", profitDelta.doubleValue())
-                .inc("metrics.totalLoss", lossDelta.doubleValue())
-                .set("lastUpdatedDate", LocalDateTime.now());
-
-        update.push("trades").each(tradeIds.toArray());
-
-        mongoTemplate.updateFirst(
-                Query.query(Criteria.where("portfolioId").is(portfolioId)),
-                update,
-                PortfolioEntity.class
-        );
     }
 
     @Override
+    @org.springframework.scheduling.annotation.Async("tradeProcessingExecutor")
     public void applyTradeUpdateDelta(TradeDetails oldTrade, TradeDetails newTrade, String portfolioId, String userId) {
         if (newTrade == null) return;
 
-        Update update = new Update().set("lastUpdatedDate", LocalDateTime.now());
+        try {
+                Update update = new Update().set("lastUpdatedDate", LocalDateTime.now());
 
-        // Reverse old metrics if present
-        if (oldTrade != null) {
-            switch (oldTrade.getStatus()) {
-                case WIN:
-                    update.inc("metrics.winningTrades", -1);
-                    if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
-                        update.inc("metrics.totalProfit", oldTrade.getMetrics().getProfitLoss().negate().doubleValue());
+                // Reverse old metrics if present
+                if (oldTrade != null) {
+                    switch (oldTrade.getStatus()) {
+                        case WIN:
+                            update.inc("metrics.winningTrades", -1);
+                            if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
+                                update.inc("metrics.totalProfit", oldTrade.getMetrics().getProfitLoss().negate().doubleValue());
+                            }
+                            break;
+                        case LOSS:
+                            update.inc("metrics.losingTrades", -1);
+                            if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
+                                update.inc("metrics.totalLoss", oldTrade.getMetrics().getProfitLoss().abs().negate().doubleValue());
+                            }
+                            break;
+                        case BREAK_EVEN:
+                            update.inc("metrics.breakEvenTrades", -1);
+                            break;
+                        case OPEN:
+                            update.inc("metrics.openPositions", -1);
+                            break;
                     }
-                    break;
-                case LOSS:
-                    update.inc("metrics.losingTrades", -1);
-                    if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
-                        update.inc("metrics.totalLoss", oldTrade.getMetrics().getProfitLoss().abs().negate().doubleValue());
-                    }
-                    break;
-                case BREAK_EVEN:
-                    update.inc("metrics.breakEvenTrades", -1);
-                    break;
-                case OPEN:
-                    update.inc("metrics.openPositions", -1);
-                    break;
+                } else {
+                    // It's a new trade, so totalTrades increases by 1
+                    update.inc("metrics.totalTrades", 1);
+                    // We no longer push trade IDs to an unbounded array in PortfolioEntity
+                }
+
+                // Apply new metrics
+                switch (newTrade.getStatus()) {
+                    case WIN:
+                        update.inc("metrics.winningTrades", 1);
+                        if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
+                            update.inc("metrics.totalProfit", newTrade.getMetrics().getProfitLoss().doubleValue());
+                        }
+                        break;
+                    case LOSS:
+                        update.inc("metrics.losingTrades", 1);
+                        if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
+                            update.inc("metrics.totalLoss", newTrade.getMetrics().getProfitLoss().abs().doubleValue());
+                        }
+                        break;
+                    case BREAK_EVEN:
+                        update.inc("metrics.breakEvenTrades", 1);
+                        break;
+                    case OPEN:
+                        update.inc("metrics.openPositions", 1);
+                        break;
+                }
+
+                mongoTemplate.updateFirst(
+                        Query.query(Criteria.where("portfolioId").is(portfolioId)),
+                        update,
+                        PortfolioEntity.class
+                );
+            } catch (Exception e) {
+                log.error("Error applying trade update delta asynchronously for portfolio {}: {}", portfolioId, e.getMessage(), e);
             }
-        } else {
-            // It's a new trade, so totalTrades increases by 1
-            update.inc("metrics.totalTrades", 1);
-            update.push("trades", newTrade.getTradeId());
-        }
-
-        // Apply new metrics
-        switch (newTrade.getStatus()) {
-            case WIN:
-                update.inc("metrics.winningTrades", 1);
-                if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
-                    update.inc("metrics.totalProfit", newTrade.getMetrics().getProfitLoss().doubleValue());
-                }
-                break;
-            case LOSS:
-                update.inc("metrics.losingTrades", 1);
-                if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
-                    update.inc("metrics.totalLoss", newTrade.getMetrics().getProfitLoss().abs().doubleValue());
-                }
-                break;
-            case BREAK_EVEN:
-                update.inc("metrics.breakEvenTrades", 1);
-                break;
-            case OPEN:
-                update.inc("metrics.openPositions", 1);
-                break;
-        }
-
-        mongoTemplate.updateFirst(
-                Query.query(Criteria.where("portfolioId").is(portfolioId)),
-                update,
-                PortfolioEntity.class
-        );
     }
 
     private PortfolioModel processTradeDetailsAndGetPortfolio(List<String> tradeIds, String portfolioId, String userId) {

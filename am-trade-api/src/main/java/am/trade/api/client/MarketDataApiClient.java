@@ -6,12 +6,16 @@ import am.trade.api.config.MarketDataApiConfig;
 import am.trade.common.models.market.MarketDataResponse;
 import am.trade.common.models.market.MarketDataResponseWrapper;
 import am.trade.common.models.market.OhlcDataRequest;
+import am.trade.exceptions.MarketDataUnavailableException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClientException;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.HashMap;
@@ -63,12 +67,11 @@ public class MarketDataApiClient {
                 .maximumSize(10_000)
                 .build(new com.github.benmanes.caffeine.cache.CacheLoader<String, Double>() {
                     @Override
-                    public Double load(String key) {
+                    public Double load(String key) throws Exception {
                         return fetchFromApi(java.util.Collections.singletonList(key)).get(key);
                     }
 
-                    @Override
-                    public Map<String, Double> loadAll(Iterable<? extends String> keys) {
+                    public Map<String, Double> loadAll(Iterable<? extends String> keys) throws Exception {
                         return fetchFromApi(keys);
                     }
                 });
@@ -79,15 +82,9 @@ public class MarketDataApiClient {
             return new HashMap<>();
         }
 
-        // Clean symbols (remove exchange prefix if present) and filter out nulls
+        // Clean symbols and filter out nulls
         List<String> cleanSymbols = symbols.stream()
                 .filter(java.util.Objects::nonNull)
-                .map(symbol -> {
-                    if (symbol.contains(":")) {
-                        return symbol.substring(symbol.lastIndexOf(":") + 1);
-                    }
-                    return symbol;
-                })
                 .collect(java.util.stream.Collectors.toList());
 
         if (cleanSymbols.isEmpty()) {
@@ -123,44 +120,37 @@ public class MarketDataApiClient {
         log.debug("Fetching OHLC data for {} from {}", symbolsParam, config.getOhlcEndpoint());
 
         try {
-            Map rawMap = restTemplate.postForObject(
+            JsonNode responseNode = restTemplate.postForObject(
                     config.getOhlcEndpoint(),
                     request,
-                    Map.class);
+                    JsonNode.class);
 
-            log.debug("Raw market data response for symbols {}: {}", symbolsParam, rawMap);
+            log.debug("Raw market data response for symbols {}: {}", symbolsParam, responseNode);
 
-            if (rawMap != null) {
-                Object actualData = rawMap.containsKey("data") ? rawMap.get("data") : rawMap;
-                if (actualData instanceof Map) {
-                    Map<?, ?> dataToProcess = (Map<?, ?>) actualData;
+            if (responseNode != null) {
+                JsonNode dataNode = responseNode.has("data") ? responseNode.get("data") : responseNode;
+                
+                Map<String, MarketDataResponse> responses = MAPPER.convertValue(
+                        dataNode, 
+                        new TypeReference<Map<String, MarketDataResponse>>() {}
+                );
 
-                    for (Object key : dataToProcess.keySet()) {
-                        try {
-                            Object value = dataToProcess.get(key);
-                            MarketDataResponse response = MAPPER.convertValue(value, MarketDataResponse.class);
-                            String symbolKey = String.valueOf(key);
-                            if (symbolKey.contains(":")) {
-                                symbolKey = symbolKey.substring(symbolKey.lastIndexOf(":") + 1);
-                            }
-                            
-                            Double price = response.getLastPrice();
-                            if (price != null) {
-                                currentPrices.put(symbolKey, price);
-                            } else {
-                                log.warn("Received null price for symbol {}", symbolKey);
-                            }
-                            
-                        } catch (Exception e) {
-                            log.error("Error converting response for symbol {}", key, e);
+                if (responses != null) {
+                    responses.forEach((key, response) -> {
+                        String symbolKey = key.contains(":") ? key.substring(key.lastIndexOf(":") + 1) : key;
+                        Double price = response.getLastPrice();
+                        if (price != null) {
+                            currentPrices.put(symbolKey, price);
+                        } else {
+                            log.warn("Received null price for symbol {}", symbolKey);
                         }
-                    }
+                    });
                 }
             }
             return currentPrices;
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.error("Failed to fetch market data from API for symbols: {}", symbolsParam, e);
-            return currentPrices;
+            throw new MarketDataUnavailableException("Failed to fetch market data for symbols: " + symbolsParam, e);
         }
     }
 }
