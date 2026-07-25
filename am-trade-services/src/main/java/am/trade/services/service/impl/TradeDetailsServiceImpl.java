@@ -14,8 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 
 /**
  * Implementation of TradeDetailsService that converts repository entities to domain models
@@ -190,22 +192,42 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     @Override
     public List<TradeDetails> saveAllTradeDetails(List<TradeDetails> tradeDetailsList) {
         log.debug("Saving {} trade details records", tradeDetailsList.size());
+
+        // Collect all non-null tradeIds from the incoming batch
+        List<String> incomingTradeIds = tradeDetailsList.stream()
+                .map(TradeDetails::getTradeId)
+                .filter(id -> id != null)
+                .collect(Collectors.toList());
+
+        // FIX: Single batch DB lookup instead of N individual findByTradeId calls.
+        // Build a Map<tradeId, mongoId> so we can resolve existing document IDs in O(1).
+        Map<String, String> existingIdByTradeId = new java.util.HashMap<>();
+        if (!incomingTradeIds.isEmpty()) {
+            tradeDetailsRepository.findByTradeIdIn(incomingTradeIds)
+                    .forEach(existing -> existingIdByTradeId.put(existing.getTradeId(), existing.getId()));
+        }
+
         List<TradeDetailsEntity> entities = tradeDetailsList.stream()
                 .map(tradeDetails -> {
                     TradeDetailsEntity entity = tradeDetailsMapper.toTradeEntity(tradeDetails);
+                    // Reuse the existing MongoDB _id so Spring Data performs an update, not an insert
                     if (tradeDetails.getTradeId() != null) {
-                        tradeDetailsRepository.findByTradeId(tradeDetails.getTradeId())
-                                .ifPresent(existing -> entity.setId(existing.getId()));
+                        String existingId = existingIdByTradeId.get(tradeDetails.getTradeId());
+                        if (existingId != null) {
+                            entity.setId(existingId);
+                        }
                     }
                     return entity;
                 })
                 .collect(Collectors.toList());
+
         List<TradeDetailsEntity> savedEntities = tradeDetailsRepository.saveAll(entities);
-        
+
         return savedEntities.stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
     }
+
     
     @Override
     public List<TradeDetails> findModelsByTradeIds(List<String> tradeIds) {

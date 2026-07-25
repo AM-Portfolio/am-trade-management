@@ -46,6 +46,7 @@ public class KafkaProducerService implements TradeHoldingEventPublisher {
     }
 
     @Override
+    @org.springframework.scheduling.annotation.Async("tradeProcessingExecutor")
     public void publishHoldingUpdate(PortfolioSyncEvent event) {
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
@@ -59,6 +60,7 @@ public class KafkaProducerService implements TradeHoldingEventPublisher {
             sendToKafka(event);
         }
     }
+
 
     private void sendToKafka(PortfolioSyncEvent event) {
         log.info("Sending holding update event for userId: {}, equities count: {}", 
