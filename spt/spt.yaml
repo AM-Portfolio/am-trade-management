@@ -1,0 +1,32 @@
+apiVersion: am.spt/v1
+kind: ServiceLoadTest
+service: am-trade-management
+label: am-trade-management
+enabled: true
+runtime: java
+owners: [trade-services]
+description: Trade Management service load-test registration (OpenAPI via springdoc)
+createdBy: trade-services
+updatedBy: trade-services
+createdAt: "2026-07-24"
+updatedAt: "2026-07-24"
+tags: [trade, java, springdoc]
+source:
+  repo: am-trade-management
+  path: spt/spt.yaml
+  team: trade-services
+traces:
+  - name: onboarding
+    ref: docs/spt-onboarding.md
+  - name: configmap
+    ref: spt-catalog-am-trade-management
+  - name: openapi
+    ref: /v3/api-docs
+  - name: namespace
+    ref: load-testing
+targets:
+  dev: "https://am-dev.asrax.in/trade"
+  preprod: "https://am-preprod.asrax.in/trade"
+  prod: "https://am.asrax.in/trade"
+openapi:
+  path: /v3/api-docs
