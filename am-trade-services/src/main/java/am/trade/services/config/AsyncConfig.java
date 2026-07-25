@@ -13,17 +13,18 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class AsyncConfig {
 
     /**
-     * Dedicated thread pool for processing trade aggregations/deltas.
+     * Shared thread pool for processing asynchronous tasks (e.g., trade aggregations/deltas).
      * Uses a bounded queue and CallerRunsPolicy to provide graceful backpressure
-     * when the system is under extreme load (e.g., 500+ concurrent requests).
+     * when the system is under extreme load.
      */
-    @Bean(name = "tradeProcessingExecutor")
-    public Executor tradeProcessingExecutor() {
+    @Bean(name = "taskExecutor")
+    @org.springframework.context.annotation.Primary
+    public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(10);
         executor.setMaxPoolSize(50);
         executor.setQueueCapacity(1000);
-        executor.setThreadNamePrefix("TradeProc-");
+        executor.setThreadNamePrefix("AsyncProc-");
         // If the queue is full, the calling thread (Tomcat HTTP thread) will execute the task directly.
         // This acts as a natural backpressure mechanism to prevent OutOfMemory errors and queue unbounded growth.
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());

@@ -110,7 +110,7 @@ public interface TradeManagementService {
      * @param pageable Pagination information
      * @return Page of trade details for the specified portfolio and symbols
      */
-    Page<TradeDetails> getTradesBySymbolsPage(String userId, String portfolioId, List<String> symbols, Pageable pageable);
+    Page<TradeDetails> getTradesBySymbolsPage(String portfolioId, List<String> symbols, Pageable pageable);
     
     /**
      * Get trades based on multiple filter criteria

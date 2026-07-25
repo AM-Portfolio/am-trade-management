@@ -160,7 +160,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
     }
 
     @Override
-    @org.springframework.scheduling.annotation.Async("tradeProcessingExecutor")
+    @org.springframework.scheduling.annotation.Async
     public void applyTradesDelta(List<TradeDetails> trades, String portfolioId, String userId) {
         if (trades == null || trades.isEmpty()) {
             return;
@@ -221,7 +221,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
     }
 
     @Override
-    @org.springframework.scheduling.annotation.Async("tradeProcessingExecutor")
+    @org.springframework.scheduling.annotation.Async
     public void applyTradeUpdateDelta(TradeDetails oldTrade, TradeDetails newTrade, String portfolioId, String userId) {
         if (newTrade == null) return;
 

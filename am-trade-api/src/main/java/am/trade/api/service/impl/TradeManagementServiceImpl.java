@@ -101,13 +101,14 @@ public class TradeManagementServiceImpl implements TradeManagementService {
             LocalDateTime endDateTime, String portfolioId) {
         List<TradeDetails> trades;
 
-        log.info("Filtering trades between {} and {}", startDateTime, endDateTime);
+        String userId = com.am.security.context.UserContext.getUserIdOrThrow();
+        log.info("Filtering trades for user {} between {} and {}", userId, startDateTime, endDateTime);
 
         // If portfolio ID is provided, filter by it
         if (portfolioId != null && !portfolioId.isEmpty()) {
-            trades = tradeDetailsService.findByPortfolioIdAndEntryInfoTimestampBetween(portfolioId, startDateTime, endDateTime);
+            trades = tradeDetailsService.findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(userId, portfolioId, startDateTime, endDateTime);
         } else {
-            trades = tradeDetailsService.findModelsByEntryDateBetween(startDateTime, endDateTime);
+            trades = tradeDetailsService.findModelsByUserIdAndEntryInfoTimestampBetween(userId, startDateTime, endDateTime);
         }
 
         log.info("Retained {} trades after date filtering", trades.size());
@@ -123,14 +124,16 @@ public class TradeManagementServiceImpl implements TradeManagementService {
 
     @Override
     public Page<TradeDetails> getTradeDetailsByPortfolio(String portfolioId, Pageable pageable) {
-        Page<TradeDetails> page = tradeDetailsService.findModelsByPortfolioId(portfolioId, pageable);
+        String userId = com.am.security.context.UserContext.getUserIdOrThrow();
+        Page<TradeDetails> page = tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId, pageable);
         enrichWithLivePrices(page.getContent());
         return page;
     }
 
     @Override
     public List<TradeDetails> getAllTradesByTradePortfolioId(String portfolioId) {
-        List<TradeDetails> trades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+        String userId = com.am.security.context.UserContext.getUserIdOrThrow();
+        List<TradeDetails> trades = tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId);
         enrichWithLivePrices(trades);
         return trades;
     }
@@ -140,7 +143,8 @@ public class TradeManagementServiceImpl implements TradeManagementService {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay().minusNanos(1);
 
-        List<TradeDetails> filteredTrades = tradeDetailsService.findByPortfolioIdAndEntryInfoTimestampBetween(portfolioId, startDateTime, endDateTime);
+        String userId = com.am.security.context.UserContext.getUserIdOrThrow();
+        List<TradeDetails> filteredTrades = tradeDetailsService.findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(userId, portfolioId, startDateTime, endDateTime);
                 
         enrichWithLivePrices(filteredTrades);
         return filteredTrades;
@@ -165,14 +169,16 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                 .collect(Collectors.toList());
 
         // Use database-side filtering
-        List<TradeDetails> filteredTrades = tradeDetailsService.findModelsByPortfolioIdAndSymbolInIgnoreCase(portfolioId, upperCaseSymbols);
+        String userId = com.am.security.context.UserContext.getUserIdOrThrow();
+        List<TradeDetails> filteredTrades = tradeDetailsService.findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase(userId, portfolioId, upperCaseSymbols);
                 
         enrichWithLivePrices(filteredTrades);
         return filteredTrades;
     }
 
     @Override
-    public Page<TradeDetails> getTradesBySymbolsPage(String userId, String portfolioId, List<String> symbols, Pageable pageable) {
+    public Page<TradeDetails> getTradesBySymbolsPage(String portfolioId, List<String> symbols, Pageable pageable) {
+        String userId = com.am.security.context.UserContext.getUserIdOrThrow();
         log.info("Fetching paginated trades for user: {} portfolio: {} filtered by symbols: {}", userId, portfolioId, symbols);
 
         if (portfolioId == null || portfolioId.isEmpty()) {
@@ -224,8 +230,9 @@ public class TradeManagementServiceImpl implements TradeManagementService {
         LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
         LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay().minusNanos(1) : null;
 
+        String userId = com.am.security.context.UserContext.getUserIdOrThrow();
         Page<TradeDetails> pagedTrades = tradeDetailsService.findByFilters(
-                portfolioIds, symbols, statuses, strategies, startDateTime, endDateTime, pageable);
+                userId, portfolioIds, symbols, statuses, strategies, startDateTime, endDateTime, pageable);
 
         List<TradeDetails> content = pagedTrades.getContent();
         if (!content.isEmpty()) {

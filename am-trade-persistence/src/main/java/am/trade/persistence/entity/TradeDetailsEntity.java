@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -32,6 +34,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "trade_details")
+@CompoundIndexes({
+    // Most common query: userId + portfolioId (used by getTradeDetailsByPortfolio, getAllTradesByPortfolio)
+    @CompoundIndex(name = "idx_userId_portfolioId", def = "{'userId': 1, 'portfolioId': 1}"),
+    // Date-range queries per user+portfolio (used by calendar analytics, getTradesByDateRange)
+    // Descending on timestamp so MongoDB reads newest-first without a sort step
+    @CompoundIndex(name = "idx_userId_portfolioId_entryTs", def = "{'userId': 1, 'portfolioId': 1, 'entryInfo.timestamp': -1}"),
+    // User-wide date-range queries (used when no portfolioId is provided)
+    @CompoundIndex(name = "idx_userId_entryTs", def = "{'userId': 1, 'entryInfo.timestamp': -1}"),
+    // Symbol filtering per user+portfolio (used by getTradesBySymbols)
+    @CompoundIndex(name = "idx_userId_portfolioId_symbol", def = "{'userId': 1, 'portfolioId': 1, 'symbol': 1}")
+})
 public class TradeDetailsEntity {
     
     /**

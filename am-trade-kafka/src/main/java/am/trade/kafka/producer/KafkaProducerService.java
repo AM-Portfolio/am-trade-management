@@ -46,7 +46,7 @@ public class KafkaProducerService implements TradeHoldingEventPublisher {
     }
 
     @Override
-    @org.springframework.scheduling.annotation.Async("tradeProcessingExecutor")
+    @org.springframework.scheduling.annotation.Async
     public void publishHoldingUpdate(PortfolioSyncEvent event) {
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

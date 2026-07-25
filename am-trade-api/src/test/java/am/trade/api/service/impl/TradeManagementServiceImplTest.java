@@ -40,8 +40,14 @@ class TradeManagementServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        com.am.security.context.UserContext.setUserId("test-user");
         tradeManagementService = new TradeManagementServiceImpl(tradeDetailsService, portfolioRepository,
                 tradeDetailsMapper, appLogger, marketDataApiClient);
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        com.am.security.context.UserContext.clear();
     }
 
     @Test
@@ -66,8 +72,8 @@ class TradeManagementServiceImplTest {
         // Trade 5: Outside (August)
         TradeDetails trade5 = createTrade("t5", portfolioId, LocalDateTime.of(2020, 8, 1, 0, 0));
 
-        // Unnecessary mock removed
-        when(tradeDetailsService.findByPortfolioIdAndEntryInfoTimestampBetween(
+        when(tradeDetailsService.findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(
+                org.mockito.ArgumentMatchers.eq("test-user"),
                 org.mockito.ArgumentMatchers.eq(portfolioId), 
                 org.mockito.ArgumentMatchers.any(LocalDateTime.class), 
                 org.mockito.ArgumentMatchers.any(LocalDateTime.class)))

@@ -83,7 +83,7 @@ public class TradeApiServiceImpl implements TradeApiService {
         log.info("Service: Fetching paginated trade details for portfolio: {} with symbols: {}", portfolioId, symbols);
         
         String currentUserId = UserContext.getUserIdOrThrow();
-        Page<TradeDetails> tradePage = tradeManagementService.getTradesBySymbolsPage(currentUserId, portfolioId, symbols, pageable);
+        Page<TradeDetails> tradePage = tradeManagementService.getTradesBySymbolsPage(portfolioId, symbols, pageable);
 
         // Verify valid structure only (ownership is now verified by the DB query)
         List<TradeDetails> validTrades = tradePage.getContent().stream()
