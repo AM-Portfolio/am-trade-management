@@ -71,7 +71,8 @@ public class MarketDataApiClient {
                         return fetchFromApi(java.util.Collections.singletonList(key)).get(key);
                     }
 
-                    public Map<String, Double> loadAll(Iterable<? extends String> keys) throws Exception {
+                    @Override
+                    public Map<String, Double> loadAll(java.util.Set<? extends String> keys) throws Exception {
                         return fetchFromApi(keys);
                     }
                 });
@@ -168,8 +169,7 @@ public class MarketDataApiClient {
             }
         } catch (RestClientException e) {
             log.error("Failed to fetch market data from API for symbols: {}", symbolsParam, e);
-            // Do not throw MarketDataUnavailableException here; instead, let the negative caching below 
-            // populate the failed symbols with -1.0 so Caffeine doesn't infinitely retry and cause cache penetration.
+            throw new am.trade.exceptions.MarketDataUnavailableException("Transport failure while fetching market data", e);
         }
 
         // NEGATIVE CACHING: Prevent Cache Penetration by caching missing/failed keys as -1.0

@@ -179,18 +179,26 @@ public class TradeManagementServiceImpl implements TradeManagementService {
             throw new IllegalArgumentException("Portfolio ID cannot be null or empty");
         }
 
-        if (symbols == null || symbols.isEmpty()) {
-            Page<TradeDetails> page = tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId, pageable);
-            enrichWithLivePrices(page.getContent());
-            return page;
-        }
-
-        List<String> upperCaseSymbols = symbols.stream()
-                .filter(java.util.Objects::nonNull)
+        List<String> cleanSymbols = symbols == null ? java.util.Collections.emptyList() : symbols.stream()
+                .filter(s -> s != null && !s.trim().isEmpty())
+                .map(String::trim)
                 .map(String::toUpperCase)
                 .collect(Collectors.toList());
 
-        Page<TradeDetails> page = tradeDetailsService.findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase(userId, portfolioId, upperCaseSymbols, pageable);
+        org.springframework.data.domain.Pageable effectivePageable = (pageable != null && pageable.getSort().isSorted()) 
+                ? pageable 
+                : org.springframework.data.domain.PageRequest.of(
+                        pageable != null ? pageable.getPageNumber() : 0, 
+                        pageable != null ? pageable.getPageSize() : 20, 
+                        org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "entryInfo.timestamp")
+                                .and(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "tradeId")));
+
+        Page<TradeDetails> page;
+        if (cleanSymbols.isEmpty()) {
+            page = tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId, effectivePageable);
+        } else {
+            page = tradeDetailsService.findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase(userId, portfolioId, cleanSymbols, effectivePageable);
+        }
         enrichWithLivePrices(page.getContent());
         return page;
     }

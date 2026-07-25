@@ -72,15 +72,7 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException ex, HttpServletRequest request) {
         log.error("Method argument validation exception: {}", ex.getMessage());
         
-        List<ErrorDetail> errorDetails = new ArrayList<>();
-        BindingResult result = ex.getBindingResult();
-        for (FieldError fieldError : result.getFieldErrors()) {
-            errorDetails.add(ErrorDetail.builder()
-                    .field(fieldError.getField())
-                    .message(fieldError.getDefaultMessage())
-                    .code("VALIDATION_ERROR")
-                    .build());
-        }
+        List<ErrorDetail> errorDetails = toErrorDetails(ex.getBindingResult());
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
@@ -93,6 +85,18 @@ public class GlobalExceptionHandler {
                 .build();
                 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    private List<ErrorDetail> toErrorDetails(BindingResult result) {
+        List<ErrorDetail> errorDetails = new ArrayList<>();
+        for (FieldError fieldError : result.getFieldErrors()) {
+            errorDetails.add(ErrorDetail.builder()
+                    .field(fieldError.getField())
+                    .message(fieldError.getDefaultMessage())
+                    .code("VALIDATION_ERROR")
+                    .build());
+        }
+        return errorDetails;
     }
 
     /**

@@ -180,6 +180,9 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     public TradeDetails saveTradeDetails(TradeDetails tradeDetails) {
         log.debug("Saving trade details: {}", tradeDetails);
         TradeDetailsEntity entity = tradeDetailsMapper.toTradeEntity(tradeDetails);
+        if (entity.getSymbol() != null) {
+            entity.setSymbol(entity.getSymbol().toUpperCase());
+        }
         
         if (tradeDetails.getTradeId() != null) {
             tradeDetailsRepository.findByTradeId(tradeDetails.getTradeId())
@@ -190,27 +193,36 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     }
     
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public List<TradeDetails> saveAllTradeDetails(List<TradeDetails> tradeDetailsList) {
         log.debug("Saving {} trade details records", tradeDetailsList.size());
+        Map<String, String> existingIdByTradeId = resolveExistingIdsByTradeId(tradeDetailsList);
+        List<TradeDetailsEntity> entities = toEntitiesReusingExistingIds(tradeDetailsList, existingIdByTradeId);
+        List<TradeDetailsEntity> savedEntities = tradeDetailsRepository.saveAll(entities);
+        return savedEntities.stream().map(tradeDetailsMapper::toTradeDetails).collect(Collectors.toList());
+    }
 
-        // Collect all non-null tradeIds from the incoming batch
+    private Map<String, String> resolveExistingIdsByTradeId(List<TradeDetails> tradeDetailsList) {
         List<String> incomingTradeIds = tradeDetailsList.stream()
                 .map(TradeDetails::getTradeId)
                 .filter(id -> id != null)
                 .collect(Collectors.toList());
-
-        // FIX: Single batch DB lookup instead of N individual findByTradeId calls.
-        // Build a Map<tradeId, mongoId> so we can resolve existing document IDs in O(1).
         Map<String, String> existingIdByTradeId = new java.util.HashMap<>();
         if (!incomingTradeIds.isEmpty()) {
             tradeDetailsRepository.findByTradeIdIn(incomingTradeIds)
                     .forEach(existing -> existingIdByTradeId.put(existing.getTradeId(), existing.getId()));
         }
+        return existingIdByTradeId;
+    }
 
-        List<TradeDetailsEntity> entities = tradeDetailsList.stream()
+    private List<TradeDetailsEntity> toEntitiesReusingExistingIds(
+            List<TradeDetails> tradeDetailsList, Map<String, String> existingIdByTradeId) {
+        return tradeDetailsList.stream()
                 .map(tradeDetails -> {
                     TradeDetailsEntity entity = tradeDetailsMapper.toTradeEntity(tradeDetails);
-                    // Reuse the existing MongoDB _id so Spring Data performs an update, not an insert
+                    if (entity.getSymbol() != null) {
+                        entity.setSymbol(entity.getSymbol().toUpperCase());
+                    }
                     if (tradeDetails.getTradeId() != null) {
                         String existingId = existingIdByTradeId.get(tradeDetails.getTradeId());
                         if (existingId != null) {
@@ -219,12 +231,6 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
                     }
                     return entity;
                 })
-                .collect(Collectors.toList());
-
-        List<TradeDetailsEntity> savedEntities = tradeDetailsRepository.saveAll(entities);
-
-        return savedEntities.stream()
-                .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
     }
 
