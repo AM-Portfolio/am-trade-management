@@ -1,0 +1,5 @@
+exclude_paths:
+  - "helm/values.*"
+  - "am-trade-app/src/main/resources/application.*"
+  - ".env.*"
+  - "scripts/vault-sync.js"
