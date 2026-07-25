@@ -12,5 +12,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MarketDataResponse {
-    private double lastPrice;
+    private Double lastPrice;
 }

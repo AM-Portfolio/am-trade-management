@@ -23,6 +23,8 @@ public interface TradeDetailsService {
     
     List<TradeDetails> findModelsByEntryDateBetween(LocalDateTime startDate, LocalDateTime endDate);
     
+    List<TradeDetails> findModelsByUserIdAndEntryInfoTimestampBetween(String userId, LocalDateTime startDate, LocalDateTime endDate);
+    
     Page<TradeDetails> findModelsByPortfolioId(String portfolioId, Pageable pageable);
     
     List<TradeDetails> findModelsByExitDateBetween(LocalDateTime startDate, LocalDateTime endDate);
@@ -35,7 +37,13 @@ public interface TradeDetailsService {
     
     List<TradeDetails> findModelsByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols);
     
+    List<TradeDetails> findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase(String userId, String portfolioId, List<String> symbols);
+    
     Page<TradeDetails> findModelsByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols, Pageable pageable);
+    
+    Page<TradeDetails> findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase(String userId, String portfolioId, List<String> symbols, Pageable pageable);
+    
+    Page<TradeDetails> findModelsByUserIdAndPortfolioId(String userId, String portfolioId, Pageable pageable);
     
     List<TradeDetails> findModelsBySymbolAndEntryDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate);
     
@@ -60,6 +68,7 @@ public interface TradeDetailsService {
     List<TradeDetails> saveAllTradeDetails(List<TradeDetails> tradeDetailsList);
 
     Page<TradeDetails> findByFilters(
+            String userId,
             List<String> portfolioIds,
             List<String> symbols,
             List<TradeStatus> statuses,
@@ -84,6 +93,10 @@ public interface TradeDetailsService {
      */
     List<TradeDetails> findByPortfolioIdInAndEntryInfoTimestampBetween(List<String> portfolioIds, LocalDateTime startDate, LocalDateTime endDate);
     
+    List<TradeDetails> findModelsByUserIdAndPortfolioId(String userId, String portfolioId);
+    
+    List<TradeDetails> findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(String userId, String portfolioId, LocalDateTime startDate, LocalDateTime endDate);
+
     /**
      * Find trade details by user ID and entry timestamp between given dates
      * @param userId User ID to search for

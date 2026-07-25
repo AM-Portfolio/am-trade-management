@@ -10,6 +10,7 @@ import java.util.List;
 
 public interface TradeDetailsRepositoryCustom {
     Page<TradeDetailsEntity> findByFilters(
+            String userId,
             List<String> portfolioIds,
             List<String> symbols,
             List<TradeStatus> statuses,

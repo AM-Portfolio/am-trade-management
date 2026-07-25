@@ -104,6 +104,7 @@ public interface TradeManagementService {
     /**
      * Get trades for a specific portfolio filtered by symbols with pagination
      * 
+     * @param userId The ID of the user requesting the trades
      * @param portfolioId The portfolio ID
      * @param symbols List of symbols to filter by
      * @param pageable Pagination information

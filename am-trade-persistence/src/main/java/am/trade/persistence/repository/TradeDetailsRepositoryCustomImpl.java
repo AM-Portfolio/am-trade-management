@@ -23,6 +23,7 @@ public class TradeDetailsRepositoryCustomImpl implements TradeDetailsRepositoryC
 
     @Override
     public Page<TradeDetailsEntity> findByFilters(
+            String userId,
             List<String> portfolioIds,
             List<String> symbols,
             List<TradeStatus> statuses,
@@ -32,6 +33,11 @@ public class TradeDetailsRepositoryCustomImpl implements TradeDetailsRepositoryC
             Pageable pageable) {
 
         Query query = new Query();
+
+        if (userId == null || userId.isEmpty()) {
+            throw new IllegalArgumentException("userId must not be null or empty — UserContext may not be initialized for this request");
+        }
+        query.addCriteria(Criteria.where("userId").is(userId));
 
         if (portfolioIds != null && !portfolioIds.isEmpty()) {
             query.addCriteria(Criteria.where("portfolioId").in(portfolioIds));

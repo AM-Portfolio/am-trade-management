@@ -9,6 +9,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Configuration
 public class MongoIndexConfig {
 
@@ -27,7 +30,7 @@ public class MongoIndexConfig {
                     .unique()
                     .background());
         } catch (Exception e) {
-            System.err.println("WARNING: Failed to create unique index on tradeId. This is likely because the K6 load test inserted duplicate trades before the index existed. Please clear duplicates from the am-apps-dev database to enable the index.");
+            log.warn("Failed to create unique index on tradeId. This is likely because the K6 load test inserted duplicate trades before the index existed. Please clear duplicates from the am-apps-dev database to enable the index.", e);
         }
 
         // Index 1: Powers GET /v1/trades/details/portfolio/{portfolioId}
@@ -37,6 +40,15 @@ public class MongoIndexConfig {
                 .on("portfolioId", Sort.Direction.ASC)
                 .on("symbol", Sort.Direction.ASC)
                 .named("idx_trade_portfolio_symbol")
+                .background());
+
+        // Index 1b: Powers GET /v2/trades/details/portfolio/{portfolioId}
+        // with the new User ID pushdown optimization
+        tradeOps.ensureIndex(new Index()
+                .on("userId", Sort.Direction.ASC)
+                .on("portfolioId", Sort.Direction.ASC)
+                .on("symbol", Sort.Direction.ASC)
+                .named("idx_trade_user_portfolio_symbol")
                 .background());
 
         // Index 2: Powers pagination queries sorted by entry date (most common sort)
