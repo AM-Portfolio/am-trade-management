@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Configuration
-@ConfigurationProperties(prefix = "market-data")
+@ConfigurationProperties(prefix = "market-data.api")
 public class MarketDataApiConfig {
     private String baseUrl;
     private String ohlcEndpoint;
