@@ -12,13 +12,10 @@ import am.trade.exceptions.config.ExceptionsAutoConfiguration;
 import am.trade.kafka.config.KafkaConfig;
 import am.trade.services.config.TradeServicesAutoConfiguration;
 
-import org.springframework.data.web.config.EnableSpringDataWebSupport;
-
 /**
  * Main application class for Trade Management System
  */
 @SpringBootApplication(scanBasePackages = { "am.trade" })
-@EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 @Import({
         KafkaConfig.class,
         am.trade.kafka.config.LocalKafkaConfig.class,
