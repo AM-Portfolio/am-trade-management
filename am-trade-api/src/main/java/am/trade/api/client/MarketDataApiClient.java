@@ -45,7 +45,7 @@ public class MarketDataApiClient {
         this.restTemplate = restTemplateBuilder
                 .rootUri(config.getBaseUrl())
                 .setConnectTimeout(java.time.Duration.ofSeconds(3))
-                .setReadTimeout(java.time.Duration.ofSeconds(10))
+                .setReadTimeout(java.time.Duration.ofSeconds(30))
                 .defaultHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                 .defaultHeader("Accept", "application/json")
                 .defaultHeader("Content-Type", "application/json")
