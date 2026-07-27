@@ -3,9 +3,6 @@ FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
-# Cache buster to bypass GHCR unknown blob issue on self-hosted runners
-RUN echo "Bust Cache 2026-07-27"
-
 # Copy the pre-built JAR file from the correct am-trade-management
 COPY am-trade-app/target/*.jar app.jar
 
