@@ -371,6 +371,32 @@ public class TradeApiServiceImpl implements TradeApiService {
 
         return savedTrade;
     }
+    
+    @Override
+    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
+    public void deleteTrade(String tradeId) {
+        log.info("Deleting trade with ID: {}", tradeId);
+
+        // Find existing trade to verify ownership
+        TradeDetails existingTrade = tradeDetailsService.findModelByTradeId(tradeId)
+                .orElseThrow(() -> new IllegalArgumentException("Trade not found with ID: " + tradeId));
+
+        // Get current user ID
+        String userId = UserContext.getUserIdOrThrow();
+
+        // Verify ownership
+        if (!existingTrade.getUserId().equals(userId)) {
+            log.error("User {} attempted to delete trade {} owned by {}", 
+                    userId, tradeId, existingTrade.getUserId());
+            throw new IllegalArgumentException("You are not authorized to delete this trade");
+        }
+
+        // Delete the trade
+        tradeDetailsService.deleteByTradeId(tradeId);
+
+        // Publish event to am-portfolio service
+        publishPortfolioSyncEvent(existingTrade, "DELETE");
+    }
 
     /**
      * Validates that non-editable fields haven't been changed in the update request

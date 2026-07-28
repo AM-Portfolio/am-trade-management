@@ -1,0 +1,1257 @@
+﻿Path: am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java
+Line: 77
+Body: _🎯 Functional Correctness_ | _🔴 Critical_ | _⚡ Quick win_
+
+<details>
+<summary>🧩 Analysis chain</summary>
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+# Locate the resolved Caffeine version pin.
+fd -e xml -e gradle -e kts | xargs rg -n -i 'caffeine' 2>/dev/null
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 564
+
+---
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+set -euo pipefail
+
+echo "## relevant cafeine dependency declarations"
+for f in am-trade-api/pom.xml am-trade-services/pom.xml; do
+  echo "--- $f"
+  sed -n '36,76p' "$f"
+done
+
+echo
+echo "## pom/build files"
+fd -e xml -e gradle -e kts -e yaml -e yml . | sort | sed -n '1,120p'
+
+echo
+echo "## target file lines"
+wc -l am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java
+sed -n '1,180p' am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 11649
+
+---
+
+🌐 Web query:
+
+`Caffeine CacheLoader loadAll method signature cache loader interface 3.x`
+
+💡 Result:
+
+In Caffeine 3.x, the loadAll method signature in the CacheLoader interface is: default Map<? extends K,? extends V> loadAll(Set<? extends K> keys) throws Exception [1][2][3][4] This method is designed to compute or retrieve values for multiple keys at once and is invoked by LoadingCache.getAll(Iterable) [1][3][4]. It is a default method in the CacheLoader interface, meaning it does not need to be implemented unless bulk retrieval offers significant performance advantages over individual lookups [1][4]. If not overridden, LoadingCache.getAll will default to calling individual load(K) methods [1][3][4]. Note that the parameter type is a Set<? extends K> in Caffeine 3.x [1][2], which differs from the Iterable<? extends K> type used in earlier versions (e.g., Caffeine 2.x) [5].
+
+Citations:
+
+- 1: https://www.javadoc.io/static/com.github.ben-manes.caffeine/caffeine/3.1.1/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/CacheLoader.html
+- 2: https://www.javadoc.io/static/com.github.ben-manes.caffeine/caffeine/3.0.2/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/CacheLoader.html
+- 3: https://devdoc.net/javamisc/caffeine-3.0.6-javadoc/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/CacheLoader.html
+- 4: https://apidia.net/mvn/com.github.ben-manes.caffeine/caffeine/3.1.8/com.github.benmanes.caffeine.cache.CacheLoader.html
+- 5: https://javadoc.io/static/com.github.ben-manes.caffeine/caffeine/2.8.5/com/github/benmanes/caffeine/cache/CacheLoader.html
+
+---
+
+🌐 Web query:
+
+`Maven central com.github.ben-manes.caffeine caffeine pom 3.1.8 LoadAll Set`
+
+💡 Result:
+
+Caffeine version 3.1.8 is a valid release in the com.github.ben-manes.caffeine group available on Maven Central [1][2][3]. Regarding loadAll and Set: The loadAll method is part of the CacheLoader interface in Caffeine [4][5][6]. It is defined with the signature: default Map<? extends K,? extends V> loadAll(Set<? extends K> keys) throws Exception [4][5][6]. Key details about loadAll: - Purpose: It is used by LoadingCache.getAll(Iterable) to perform bulk lookups [4][7][6]. - Implementation: By default, if loadAll is not overridden, LoadingCache.getAll will defer to individual calls to the CacheLoader.load method for each missing key [8][5][6]. You should override loadAll when bulk retrieval is significantly more efficient than individual lookups [4][5][6]. - Behavior: The method receives a Set of keys that need to be loaded [4][5][6]. If the returned map contains extra keys not present in the input Set, those extra entries will also be cached, though only the requested keys are returned by the initial getAll call [4][5][6]. Conversely, if the returned map is missing some of the requested keys, only the entries it does contain will be cached [4][5][6]. You can implement this in your own CacheLoader to optimize bulk loading operations [8][5].
+
+Citations:
+
+- 1: https://central.sonatype.com/artifact/com.github.ben-manes.caffeine/caffeine/3.1.8
+- 2: https://repo1.maven.org/maven2/com/github/ben-manes/caffeine/caffeine/3.1.8/
+- 3: https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine/3.1.8
+- 4: https://apidia.net/mvn/com.github.ben-manes.caffeine/caffeine/3.1.8/com.github.benmanes.caffeine.cache.CacheLoader.html
+- 5: https://mintlify.wiki/ben-manes/caffeine/api/cache-loader
+- 6: https://www.javadoc.io/static/com.github.ben-manes.caffeine/caffeine/3.1.1/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/CacheLoader.html
+- 7: https://apidia.net/mvn/com.github.ben-manes.caffeine/caffeine/3.1.8/com.github.benmanes.caffeine.cache.LoadingCache.html
+- 8: https://github.com/ben-manes/caffeine/wiki/Population
+
+---
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+set -euo pipefail
+
+echo "## root pom parent/version"
+sed -n '1,140p' pom.xml
+
+echo
+echo "## platform/dependency management caffeine pins"
+rg -n -C 3 'com\.github\.ben-manes\.caffeine|caffeine|spring-boot-bom|spring-boot-parent' pom.xml am-trade-api/pom.xml am-trade-services/pom.xml
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 5453
+
+---
+
+🌐 Web query:
+
+`com.github.ben-manes.caffeine caffeine pom dependencies spring-boot-dependencies caffeine version 3.4.1`
+
+💡 Result:
+
+There is no version 3.4.1 of the com.github.ben-manes.caffeine:caffeine library [1][2]. While a version 3.4.1 exists for other artifacts—such as io.micronaut.cache:micronaut-cache-caffeine [3][4]—the core Caffeine library uses a different versioning scheme [5][1]. As of July 2026, the latest available versions of the core Caffeine library include 3.2.4 [5][6][7]. Regarding Spring Boot dependencies, Spring Boot manages the version of Caffeine used in projects [8][9]. For Spring Boot 3.4.x, the managed version of Caffeine is 3.1.8 [8][10]. If you are using Spring Boot and wish to use a newer version of Caffeine than the one managed by your current Spring Boot version, you can override the version in your pom.xml (for Maven) or build.gradle (for Gradle) [9]. For Maven, update the property: <properties> <caffeine.version>3.2.4</caffeine.version> </properties> For Gradle, specify the version directly: dependencies { implementation("com.github.ben-manes.caffeine:caffeine:3.2.4") }
+
+Citations:
+
+- 1: https://repo1.maven.org/maven2/com/github/ben-manes/caffeine/caffeine/
+- 2: https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
+- 3: https://repo1.maven.org/maven2/io/micronaut/cache/micronaut-cache-caffeine/3.4.1/
+- 4: https://jarcasting.com/artifacts/io.micronaut.cache/micronaut-cache-caffeine/
+- 5: https://github.com/ben-manes/caffeine/releases
+- 6: https://github.com/ben-manes/caffeine?tab=readme-ov-file
+- 7: https://deps.dev/maven/com.github.ben-manes.caffeine%3Acaffeine
+- 8: https://docs.spring.io/spring-boot/3.4/appendix/dependency-versions/coordinates.html
+- 9: https://docs.spring.io/spring-boot/3.4/appendix/dependency-versions/properties.html
+- 10: https://central.sonatype.com/artifact/org.springframework.boot/spring-boot-dependencies/3.4.13
+
+---
+
+🌐 Web query:
+
+`com.github.ben-manes.caffeine caffeine pom dependencies caffeine.version caffeine 3.1.8`
+
+💡 Result:
+
+Caffeine version 3.1.8 is a release of the high-performance Java caching library developed by Ben Manes, published on August 9, 2023 [1][2]. To include Caffeine 3.1.8 in your project using Maven, add the following dependency to your pom.xml file [3]: <dependency> <groupId>com.github.ben-manes.caffeine</groupId> <artifactId>caffeine</artifactId> <version>3.1.8</version> </dependency> For Gradle users, you can use: implementation("com.github.ben-manes.caffeine:caffeine:3.1.8") As of July 24, 2026, version 3.1.8 is an older release [4]. The library has since been updated, with more recent versions (such as 3.2.4) available on Maven Central [4][5]. It is generally recommended to use the latest stable version for the latest features, bug fixes, and performance improvements [4]. Key details regarding version 3.1.8: - Group ID: com.github.ben-manes.caffeine [6][3] - Artifact ID: caffeine [6][3] - License: Apache License 2.0 [4] - Release Notes: Version 3.1.8 included a workaround for a potential JDK concurrency bug involving method handles [1][7].
+
+Citations:
+
+- 1: https://github.com/ben-manes/caffeine/releases/tag/v3.1.8
+- 2: https://apidia.net/mvn/com.github.ben-manes.caffeine/caffeine/3.1.8/release-info.html
+- 3: https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine/3.1.8
+- 4: https://github.com/ben-manes/caffeine?tab=readme-ov-file
+- 5: https://javadoc.io/doc/com.github.ben-manes.caffeine/caffeine/latest/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/Caffeine.html
+- 6: https://central.sonatype.com/artifact/com.github.ben-manes.caffeine/caffeine/3.1.8
+- 7: https://github.com/ben-manes/caffeine/releases
+
+---
+
+
+
+</details>
+
+**Use the Caffeine 3.x `loadAll` signature.**
+
+This module is built under Spring Boot 3.4.1, which resolves `caffeine` to 3.x, but this override still uses the obsolete `Iterable<? extends String>` signature from Caffeine 2.x. That will not override `CacheLoader.loadAll`, causing fresh misses to run individual `load` calls instead of the intended bulk load and leaving the `@Override` invalid.
+
+<details>
+<summary>🐛 Proposed fix to match Caffeine 3.x signature</summary>
+
+```diff
+                 .build(new com.github.benmanes.caffeine.cache.CacheLoader<String, Double>() {
+                     `@Override`
+                     public Double load(String key) {
+                         return fetchFromApi(java.util.Collections.singletonList(key)).get(key);
+                     }
+
+                     `@Override`
+-                    public Map<String, Double> loadAll(Iterable<? extends String> keys) {
++                    public Map<String, Double> loadAll(java.util.Set<? extends String> keys) {
+                         return fetchFromApi(keys);
+                     }
+                 });
+```
+</details>
+
+<!-- suggestion_start -->
+
+<details>
+<summary>📝 Committable suggestion</summary>
+
+> ‼️ **IMPORTANT**
+> Carefully review the code before committing. Ensure that it accurately replaces the highlighted code, contains no missing lines, and has no issues with indentation. Thoroughly test & benchmark the code to ensure it meets the requirements.
+
+```suggestion
+                .build(new com.github.benmanes.caffeine.cache.CacheLoader<String, Double>() {
+                    `@Override`
+                    public Double load(String key) {
+                        return fetchFromApi(java.util.Collections.singletonList(key)).get(key);
+                    }
+
+                    `@Override`
+                    public Map<String, Double> loadAll(java.util.Set<? extends String> keys) {
+                        return fetchFromApi(keys);
+                    }
+                });
+```
+
+</details>
+
+<!-- suggestion_end -->
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+```
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In `@am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java`
+around lines 59 - 69, Update the CacheLoader implementation in
+MarketDataApiClient so its loadAll method uses the Caffeine 3.x key-collection
+signature required by CacheLoader, while preserving the existing fetchFromApi
+bulk-loading behavior and `@Override` annotation.
+```
+
+</details>
+
+<!-- fingerprinting:phantom:medusa:beignet -->
+
+<!-- cr-indicator-types:potential_issue -->
+
+<!-- cr-comment:v1:5c570a650116c4620d36dab8 -->
+
+<!-- This is an auto-generated comment by CodeRabbit -->
+---
+
+Path: am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java
+Line: 
+Body: _🚀 Performance & Scalability_ | _🟠 Major_ | _⚡ Quick win_
+
+<details>
+<summary>🧩 Analysis chain</summary>
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+set -euo pipefail
+
+echo "== locate file =="
+fd -a 'MarketDataApiClient\.java$' . || true
+
+echo "== file excerpt =="
+if [ -f am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java ]; then
+  nl -ba am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java | sed -n '1,180p'
+fi
+
+echo "== caffeine dependencies =="
+rg -n "caffeine|com.github.ben-manes.caffeine|Caffeine|LoadingCache|AsyncLoadingCache" -S pom.xml am-trade-api/pom.xml build.gradle* settings.gradle* 2>/dev/null || true
+
+echo "== usage/currentPrices symbols =="
+rg -n "fetchFromApi|getCurrentPrices|getAll\\(|L1|isL1CacheEnabled|localCache" -S am-trade-api/src/main/java am-trade-services 2>/dev/null || true
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 338
+
+---
+
+🌐 Web query:
+
+`Caffeine Java FAQ bulk load concurrent same entries getAll stampede AsyncLoadingCache asyncLoadAll`
+
+💡 Result:
+
+In Caffeine, AsyncLoadingCache is specifically designed to handle bulk loads and mitigate cache stampedes [1][2]. Bulk Loading and asyncLoadAll: When you use AsyncLoadingCache.getAll(Iterable), the cache checks which keys are already present. For keys that are absent, it triggers a load [3][4]. If an AsyncCacheLoader with an optimized asyncLoadAll implementation is provided, the cache invokes it once for all missing keys [3][4]. If asyncLoadAll is not overridden, the cache defaults to individual asyncLoad calls for each missing key [5][6][4]. Concurrency and Cache Stampede Protection: The primary mechanism for preventing cache stampedes in AsyncLoadingCache is its use of CompletableFuture [1]. When a load is initiated for a key, the cache immediately inserts a CompletableFuture into its internal map [1]. If other threads request the same key while that future is still in-flight, they will retrieve and wait on the same shared future rather than triggering redundant loads [1][2]. Handling Same/Duplicate Entries: 1. In-flight Deduplication: If concurrent calls to getAll request the same missing keys, the cache ensures that the bulk loader is only invoked for those keys once by tracking the in-flight status of the futures [1][2]. 2. Returning Extra Entries: If your asyncLoadAll implementation returns entries for keys that were not explicitly requested (a pre-fetch pattern), Caffeine will cache these extra entries, but only return the requested keys to the caller of getAll [7][4]. 3. Completion Behavior: By design, getAll completes once the futures for the requested keys are finished [8]. Note that in some versions, if the loader returns extra keys, those extra entries might not be added to the cache until the initial requested keys are processed, though this behavior has been refined in recent updates to ensure all fetched data is correctly handled [8]. Best Practices: To effectively utilize bulk loading, override asyncLoadAll in your AsyncCacheLoader [6][4]. This is significantly more efficient than individual lookups when the underlying data source supports batching [5][7]. If your application requires more complex logic, such as coalescing requests over a time window, you can implement a custom loader that manages a sink or buffer to batch requests manually [9].
+
+Citations:
+
+- 1: https://github.com/ben-manes/caffeine/wiki/Faq
+- 2: https://github.com/ben-manes/caffeine/issues/297
+- 3: https://javadoc.io/static/com.github.ben-manes.caffeine/caffeine/2.8.5/com/github/benmanes/caffeine/cache/AsyncLoadingCache.html
+- 4: https://javadoc.io/static/com.github.ben-manes.caffeine/caffeine/2.8.5/com/github/benmanes/caffeine/cache/AsyncCacheLoader.html
+- 5: https://www.javadoc.io/static/com.github.ben-manes.caffeine/caffeine/3.1.1/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/CacheLoader.html
+- 6: https://github.com/ben-manes/caffeine/wiki/Population
+- 7: https://mintlify.wiki/ben-manes/caffeine/api/cache-loader
+- 8: https://github.com/ben-manes/caffeine/issues/1409
+- 9: https://github.com/ben-manes/caffeine/blob/master/examples/coalescing-bulkloader-reactor/README.md
+
+---
+
+🌐 Web query:
+
+`Caffeine issues 613 synchronous LoadingCache getAll concurrent bulk loading ConcurrentHashMap single get`
+
+💡 Result:
+
+In Caffeine, the distinction between synchronous and asynchronous bulk loading in `getAll` centers on how concurrency and atomic state updates are handled [1][2]. Synchronous LoadingCache (`Caffeine.build()`) relies on the underlying `ConcurrentHashMap` and its `compute` methods (similar to `computeIfAbsent`) [3][2]. Because the cache uses the map's fine-grained, bin-level locks, it is technically impossible to lock multiple entries simultaneously during a bulk load [1][2]. Consequently, `getAll` for a synchronous cache cannot perform an atomic, blocking bulk load that prevents concurrent loads for the same keys [1][2]. This means that separate threads requesting the same keys may trigger redundant `cacheLoader.loadAll()` calls or individual `load()` operations, as the cache cannot effectively "reserve" those keys while the bulk operation is in progress [1][2]. In contrast, `AsyncLoadingCache` (`Caffeine.buildAsync()`) handles this by storing `CompletableFuture` objects as values in the map immediately [1][2]. This allows the cache to establish an in-flight state for all requested keys atomically [4][2]. When a bulk operation is initiated, it can insert these incomplete futures into the map; subsequent threads requesting those same keys will then simply receive the existing, in-flight future rather than triggering a new load [3][2]. Once the bulk operation completes, it fulfills the futures, ensuring that the cache is updated correctly without the race conditions or stampedes associated with the synchronous implementation [3][5][2]. For users experiencing issues related to this (such as those discussed in issue `#613`), the recommended mitigation is to use `AsyncLoadingCache` when bulk loading is a frequent requirement, or to accept that the synchronous `getAll` may perform multiple loads if concurrent requests overlap [1][2]. If you must use a synchronous cache but face severe contention, you can attempt to increase the initial capacity of the cache to reduce lock contention on the `ConcurrentHashMap` [6][2].
+
+Citations:
+
+- 1: https://github.com/ben-manes/caffeine/discussions/613
+- 2: https://github.com/ben-manes/caffeine/wiki/Faq
+- 3: https://github.com/ben-manes/caffeine/issues/430
+- 4: https://github.com/ben-manes/caffeine/issues/996
+- 5: https://github.com/ben-manes/caffeine/issues/631
+- 6: https://github.com/ben-manes/caffeine/issues/771
+
+---
+
+🌐 Web query:
+
+`ben-manes caffeine FAQ synchronous bulk load cannot block concurrent loads same entries`
+
+💡 Result:
+
+In Caffeine, the reason a synchronous bulk load (via Cache#getAll) cannot block concurrent loads for the same entries is due to how it relies on the underlying ConcurrentHashMap for thread-safe computations [1]. Because a synchronous cache must lock through the hash table (specifically using ConcurrentHashMap's computeIfAbsent mechanism), it only supports one computation per caller at a time and does not have the ability to lock multiple entries simultaneously [1][2][3]. Consequently, it cannot establish in-flight placeholders for all requested keys before starting the bulk load [3]. Instead, it performs the load outside of the map's locks and then updates the mappings, which means it cannot prevent concurrent threads from initiating their own overlapping loads for the same keys, potentially leading to redundant work or a cache stampede [1][4]. In contrast, an AsyncCache (via Caffeine#buildAsync) is designed to avoid this limitation by establishing mappings immediately as CompletableFuture placeholders [1][2]. This ensures that any concurrent calls for the same entry will retrieve the existing in-flight future, allowing the bulk operation to effectively serialize and manage the loading process across threads [1][5]. If you require protection against concurrent loading for the same entries in a synchronous context, Caffeine recommends using an AsyncCache (or an asynchronous view) to ensure atomicity during the loading phase [1][2].
+
+Citations:
+
+- 1: https://github.com/ben-manes/caffeine/wiki/Faq
+- 2: https://github.com/ben-manes/caffeine/discussions/613
+- 3: https://github.com/ben-manes/caffeine/issues/996
+- 4: https://github.com/ben-manes/caffeine/issues/631
+- 5: https://www.javadoc.io/static/com.github.ben-manes.caffeine/caffeine/3.1.7/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/AsyncCache.html
+
+---
+
+🌐 Web query:
+
+`ben-manes caffeine synchronous LoadingCache loadAll duplicate calls ConcurrentHashMap getAll`
+
+💡 Result:
+
+In Caffeine, the behavior of `LoadingCache.getAll()` regarding duplicate load calls depends primarily on whether you are using a synchronous or asynchronous cache, due to the underlying limitations of `ConcurrentHashMap` [1][2]. For a synchronous `LoadingCache` (built with `Caffeine.newBuilder().build(...)`), the cache piggybacks on `ConcurrentHashMap` computations [2]. Because `ConcurrentHashMap` does not support atomic bulk operations, `getAll()` cannot lock all keys simultaneously during a bulk load [1][2]. Consequently, if multiple threads concurrently request the same keys, they may trigger overlapping or duplicate calls to `CacheLoader.loadAll()` (or individual `load()` calls) [1][2]. In such cases, if multiple loads for the same key occur, the last load to complete will overwrite any existing mapping in the cache [3][4]. In contrast, an `AsyncLoadingCache` (built with `Caffeine.newBuilder().buildAsync(...)`) avoids this issue [2]. It immediately inserts an in-flight `CompletableFuture` into the cache as a placeholder [2][5]. When concurrent requests for the same key occur, they obtain the existing in-flight future rather than triggering a new load [2][5]. The bulk operation then completes these futures [2][5]. Key takeaways: - Synchronous `LoadingCache` cannot atomically lock all keys in a bulk request, making it susceptible to redundant, overlapping loads during high concurrency [1][2]. - If you require protection against "cache stampedes" or redundant loads for the same keys, `AsyncLoadingCache` is the recommended approach, as it effectively uses futures as locks for in-flight requests [2][5]. - `LoadingCache.getAll()` will automatically ignore duplicate elements within the provided `keys` iterable itself before initiating the load [3][4].
+
+Citations:
+
+- 1: https://github.com/ben-manes/caffeine/discussions/613
+- 2: https://github.com/ben-manes/caffeine/wiki/Faq
+- 3: https://javadoc.io/static/com.github.ben-manes.caffeine/caffeine/2.8.5/com/github/benmanes/caffeine/cache/LoadingCache.html
+- 4: https://javadoc.io/static/com.github.ben-manes.caffeine/caffeine/2.8.8/com/github/benmanes/caffeine/cache/Cache.html
+- 5: https://stackoverflow.com/questions/68598025/how-to-use-caffeine-getall
+
+---
+
+
+
+</details>
+
+**Correct the Caffeine stampede claim or switch bulk loading to an async cache.**
+
+Synchronous `Caffeine#build()` only coalesces single-key `get()` misses; bulk `getAll()` misses are not globally locked for the same entries, so concurrent identical `getCurrentPrices(...)` calls on missing symbols can each invoke `fetchFromApi(...)`. Use `buildAsync(...)` with `asyncLoadAll(...)`/`AsyncLoadingCache` for bulk stampede protection, or update the comment to reflect the weaker single-key guarantee.
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+```
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In `@am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java`
+around lines 92 - 97, Correct the stampede-protection comment and behavior
+around localCache.getAll in getCurrentPrices: either migrate the cache to
+AsyncLoadingCache using buildAsync with asyncLoadAll so concurrent bulk misses
+are coalesced, or revise the comment to claim only synchronous single-key get()
+coalescing. Preserve the existing bulk result and empty-map handling.
+```
+
+</details>
+
+<!-- fingerprinting:phantom:medusa:beignet -->
+
+<!-- cr-indicator-types:potential_issue -->
+
+<!-- cr-comment:v1:31850033b02cc7dedc536983 -->
+
+<!-- This is an auto-generated comment by CodeRabbit -->
+---
+
+Path: am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java
+Line: 194
+Body: _🎯 Functional Correctness_ | _🟠 Major_ | _⚡ Quick win_
+
+<details>
+<summary>🧩 Analysis chain</summary>
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+set -euo pipefail
+
+echo "== locate relevant files =="
+fd -a 'TradeManagementServiceImpl\.java|TradeControllerV2\.java|.*TradeDetailsService.*\.java|am-trade-api/pom.xml|am-trade-services/pom.xml' . | sed 's#^\./##'
+
+echo
+echo "== outline TradeManagementServiceImpl =="
+ast-grep outline am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java --view expanded || true
+
+echo
+echo "== relevant TradeManagementServiceImpl lines =="
+sed -n '1,240p' am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java | nl -ba | sed -n '140,220p'
+
+echo
+echo "== TradeControllerV2 relevant snippets =="
+fd 'TradeControllerV2\.java' . -x sh -c 'echo "--- $1"; sed -n "1,260p" "$1" | nl -ba | sed -n "1,240p"' sh {}
+
+echo
+echo "== repository/service find methods =="
+fd '\.java$' . | xargs rg -n "findModelsByUserIdAndPortfolioId|findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase|MongoRepository|Pageable|Sort|defaultSort|SORT" -S
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 1203
+
+---
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+set -euo pipefail
+
+echo "== list java files by approximate size for inspection =="
+for f in $(fd '\.java$' am-trade-api am-trade-services 2>/dev/null | head -200); do
+  echo "$f $(wc -l < "$f")"
+done
+
+echo
+echo "== controller endpoint path and parameter annotations =="
+rg -n "GetMapping|PostMapping|Pageable|sort|Sort|DefaultSort|`@Sort`|Pageable\\(" am-trade-api/src/main/java/am/trade/api am-trade-services/src/main/java/am/trade -S
+
+echo
+echo "== service repository method signatures =="
+rg -n "findModelsByUserIdAndPortfolioId|findModelsByPortfolioId|findModelsByUserId|SymbolInIgnoreCase|MongoRepository|Pageable" am-trade-services/src/main/java am-trade-api/src/main/java -S
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 46835
+
+---
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+set -euo pipefail
+
+echo "== TradeControllerV2 =="
+sed -n '1,90p' am-trade-api/src/main/java/am/trade/api/controller/TradeControllerV2.java | sed -n '1,90p'
+
+echo
+echo "== TradeDetailsService interface =="
+sed -n '1,70p' am-trade-services/src/main/java/am/trade/services/service/TradeDetailsService.java | sed -n '1,70p'
+
+echo
+echo "== TradeDetailsServiceImpl relevant implementations =="
+sed -n '65,140p' am-trade-services/src/main/java/am/trade/services/impl/TradeDetailsServiceImpl.java 2>/dev/null || true
+sed -n '65,140p' am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java
+
+echo
+echo "== TradeDetailsEntity/repo candidate files =="
+fd -i 'TradeDetails.*Repository|TradeDetailsEntity|TradeDetailsRepository' . -x sh -c 'echo "--- $1"; wc -l "$1"; sed -n "1,220p" "$1"' sh {}
+
+echo
+echo "== repository annotations and find signatures =="
+rg -n "class .*TradeDetails.*Repository|interface .*TradeDetails.*Repository|findByUser|findByPortfolioIdAndSymbolInIgnoreCase|findByUserIdAndPortfolioIdAndSymbolInIgnoreCase|findByUserIdAndPortfolioId|`@Document`|Sort|defaultSort|MongoRepository|ReactiveMongoRepository" -S am-trade-services/src/main/java am-trade-api/src/main/java
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 30743
+
+---
+
+
+
+</details>
+
+**Apply a deterministic sort before paging.**
+
+`TradeControllerV2` passes raw `Pageable` to `TradeDetailsService`; when callers omit `sort`, MongoDB query paths can return pages without a stable order, causing duplicates or gaps between page requests. Add a default business sort with a deterministic tie-breaker before returning pages.
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+```
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In
+`@am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java`
+around lines 182 - 194, Update the paged trade retrieval flow in
+TradeManagementServiceImpl to apply a default business sort with a deterministic
+tie-breaker whenever the incoming Pageable has no sort, before calling either
+tradeDetailsService query method. Preserve caller-provided sorting, and use the
+resulting sorted Pageable for both empty-symbol and symbol-filtered paths before
+enriching and returning pages.
+```
+
+</details>
+
+<!-- fingerprinting:phantom:poseidon:luna -->
+
+<!-- cr-indicator-types:potential_issue -->
+
+<!-- cr-comment:v1:9d238b0bd8f2902aece9e498 -->
+
+<!-- This is an auto-generated comment by CodeRabbit -->
+---
+
+Path: am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java
+Line: 193
+Body: _🎯 Functional Correctness_ | _🟡 Minor_ | _⚡ Quick win_
+
+**Handle lists containing only invalid symbols.**
+
+After filtering nulls, `upperCaseSymbols` can be empty; the repository then receives `symbol: {$in: []}` and returns no trades, even though the no-symbol path is defined to return all trades. Trim and discard blank values, then treat an empty normalized list as no symbol filter or reject it explicitly.
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+```
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In
+`@am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java`
+around lines 188 - 193, Update the symbol normalization in the trade retrieval
+flow before calling
+tradeDetailsService.findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase: trim
+values, discard null or blank symbols, and route an empty normalized list
+through the existing no-symbol path so all trades are returned, or explicitly
+reject the input if that is the established contract.
+```
+
+</details>
+
+<!-- fingerprinting:phantom:poseidon:luna -->
+
+<!-- cr-indicator-types:potential_issue -->
+
+<!-- cr-comment:v1:36bfb4049da3dfed5c454840 -->
+
+<!-- This is an auto-generated comment by CodeRabbit -->
+---
+
+Path: am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepository.java
+Line: 47
+Body: _🎯 Functional Correctness_ | _🟠 Major_ | _⚡ Quick win_
+
+<details>
+<summary>🧩 Analysis chain</summary>
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+set -euo pipefail
+
+echo "== locate files =="
+fd -a 'TradeDetailsRepository\.java|TradeManagementServiceImpl\.java|TradeDetailsEntity\.java' . | sed 's#^\./##'
+
+echo
+echo "== repository outline =="
+repo="$(fd 'TradeDetailsRepository\.java' . | head -n1 || true)"
+if [ -n "${repo:-}" ]; then
+  wc -l "$repo"
+  ast-grep outline "$repo" --view expanded || true
+  echo
+  cat -n "$repo"
+fi
+
+echo
+echo "== service references =="
+svc="$(fd 'TradeManagementServiceImpl\.java' . | head -n1 || true)"
+if [ -n "${svc:-}" ]; then
+  wc -l "$svc"
+  ast-grep outline "$svc" --view expanded || true
+  echo
+  rg -n "findByUserIdAndPortfolioIdAndSymbolInIgnoreCase|symbol|Symbol|uppercase|toUpperCase|TradeDetails" "$svc" -C 3 || true
+fi
+
+echo
+echo "== symbol normalization/search across repo =="
+rg -n "toUpperCase\(|toUpperCaseLocalized|toUpperCase\(|symbol|Symbol|TradeDetailsRepository|TradeDetailsEntity|TradeDetails" . \
+  -g '*.java' \
+  -C 2 || true
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 50389
+
+---
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+set -euo pipefail
+
+python3 - <<'PY'
+import pathlib, re
+
+# Find the exact Java files by name without broad repo traversal.
+candidates = []
+for p in pathlib.Path('.').rglob('TradeDetailsRepository.java'):
+    candidates.append(str(p))
+for p in pathlib.Path('.').rglob('TradeManagementServiceImpl.java'):
+    candidates.append(str(p))
+for p in pathlib.Path('.').rglob('TradeDetailsEntity.java'):
+    candidates.append(str(p))
+print("candidate_files=" + ";".join(sorted(set(candidates))))
+
+repo_files = [p for p in candidates if "TradeDetailsRepository.java" in p]
+svc_files = [p for p in candidates if "TradeManagementServiceImpl.java" in p]
+entity_files = [p for p in candidates if "TradeDetailsEntity.java" in p]
+
+print("count:" + str(len(candidates)))
+for f in repo_files + svc_files + entity_files:
+    lines = pathlib.Path(f).read_text(errors='replace').splitlines()
+    print(f"--- {f} ({len(lines)} lines) ---")
+    for i,l in enumerate(lines,1):
+        if re.search(r'findByUserIdAndPortfolioIdAndSymbolInIgnoreCase|toUpperCase\(|symbol|Symbol|TradeDetailsEntity|`@Document`|`@Field`|`@Query`', l, re.I):
+            lo=max(1,i-6); hi=min(len(lines), i+8)
+            print(f"::[{f}:{lo}-{hi}]")
+            for j in range(lo,hi+1):
+                print(f"{j:>4}: {lines[j-1]}")
+PY
+
+echo
+echo "== focused symbols usage in persistence/service modules =="
+rg -n "toUpperCase\(|toUpper|toUpperCaseLocalized|symbol|Symbol|TradeDetailsRepository|TradeDetailsEntity|`@Query`" \
+  am-trade-persistence/src/main/java am-trade-services/src/main/java \
+  -g '*.java' -C 2 || true
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 50389
+
+---
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+set -euo pipefail
+
+echo "== TradeManagementServiceImpl symbol filter block =="
+sed -n '150,175p' am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java
+
+echo
+echo "== TradeDetailsService interface/impl methods referencing symbols =="
+python3 - <<'PY'
+import pathlib, re
+for p in pathlib.Path('.').rglob('TradeDetails*.java'):
+    s=str(p)
+    if "TradeDetailsService" not in s and "TradeDetailsRepositoryCustom" not in s:
+        continue
+    lines=p.read_text(errors='replace').splitlines()
+    print(f"--- {s} ({len(lines)} lines) ---")
+    for i,l in enumerate(lines,1):
+        if re.search(r'findModelsByPortfolioIdAndSymbolInIgnoreCase|find.*Symbol.*IgnoreCase|SymbolInIgnoreCase|query|`@Query`|MongoTemplate|Criteria|case.?insensitive|toUpperCase|ignore.*case', l, re.I):
+            lo=max(1,i-8); hi=min(len(lines), i+12)
+            for j in range(lo,hi+1):
+                print(f"{j:>4}: {lines[j-1]}")
+PY
+
+echo
+echo "== TradeDetailsEntity symbol field annotations =="
+sed -n '1,140p' am-trade-persistence/src/main/java/am/trade/persistence/entity/TradeDetailsEntity.java
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 48604
+
+---
+
+
+
+</details>
+
+**Normalize stored symbols or make `$in` case-insensitive.**
+
+These repository methods use exact `$in` matching despite the `IgnoreCase` suffix and service-side `toUpperCase()` comment. Mixed-case or legacy stored symbols will be omitted; normalize symbols on every write path or add a case-insensitive/normalized-field query for these methods.
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+```
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In
+`@am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepository.java`
+around lines 46 - 47, Update findByUserIdAndPortfolioIdAndSymbolInIgnoreCase and
+the corresponding symbol-in repository methods to support case-insensitive
+matching for mixed-case and legacy stored symbols, either by normalizing symbols
+on every write path or by querying a consistently normalized field. Ensure the
+service-side toUpperCase() behavior and the repository query use the same
+normalization strategy.
+```
+
+</details>
+
+<!-- fingerprinting:phantom:poseidon:luna -->
+
+<!-- cr-indicator-types:potential_issue -->
+
+<!-- cr-comment:v1:86cb14dbd562ffc4cb4446c4 -->
+
+<!-- This is an auto-generated comment by CodeRabbit -->
+---
+
+Path: am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java
+Line: 179
+Body: _🩺 Stability & Availability_ | _🟠 Major_ | _⚡ Quick win_
+
+**Do not negative-cache upstream outages as missing prices.**
+
+A `RestClientException` causes every requested symbol to be cached as `-1.0` for five minutes, and callers receive an empty map even after the provider recovers. Negative-cache only confirmed missing symbols from successful responses; throw `MarketDataUnavailableException` for transport failures so the global handler can return a 503.
+
+As per coding guidelines, “Never return null or empty objects to mask errors; use Optional or exceptions instead.”
+
+<details>
+<summary>🧰 Tools</summary>
+
+<details>
+<summary>🪛 PMD (7.26.0)</summary>
+
+[Low] 170-170: [InvalidLogMessageFormat (Error Prone)](https://docs.pmd-code.org/snapshot/pmd_rules_java_errorprone.html#invalidlogmessageformat): Too many arguments, expected 1 argument but found 2
+
+(InvalidLogMessageFormat (Error Prone))
+
+</details>
+
+</details>
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+```
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In `@am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java`
+around lines 169 - 179, Update the RestClientException handling in the
+market-data fetch method to throw MarketDataUnavailableException instead of
+continuing into negative caching. Ensure only symbols confirmed missing from
+successful API responses are added to currentPrices with -1.0, while transport
+failures propagate to the global 503 handler and do not return an empty map.
+```
+
+</details>
+
+<!-- fingerprinting:phantom:poseidon:terra -->
+
+<!-- cr-indicator-types:potential_issue -->
+
+<!-- cr-comment:v1:19a020b61d58f0c0410eb4a4 -->
+
+_Source: Coding guidelines_
+
+<!-- This is an auto-generated comment by CodeRabbit -->
+---
+
+Path: am-trade-exceptions/src/main/java/am/trade/exceptions/handler/GlobalExceptionHandler.java
+Line: 96
+Body: _📐 Maintainability & Code Quality_ | _🟠 Major_ | _⚡ Quick win_
+
+**Keep the validation handler within the 20-line limit.**
+
+`handleMethodArgumentNotValid` exceeds the repository’s maximum method length. Extract the `BindingResult` mapping and/or common 400-response construction into private helpers.
+
+<details>
+<summary>Proposed refactor</summary>
+
+```diff
+-        List<ErrorDetail> errorDetails = new ArrayList<>();
+-        BindingResult result = ex.getBindingResult();
+-        for (FieldError fieldError : result.getFieldErrors()) {
+-            errorDetails.add(ErrorDetail.builder()
+-                    .field(fieldError.getField())
+-                    .message(fieldError.getDefaultMessage())
+-                    .code("VALIDATION_ERROR")
+-                    .build());
+-        }
++        List<ErrorDetail> errorDetails = toErrorDetails(ex.getBindingResult());
+```
+
+</details>
+
+As per coding guidelines: `**/*.java`: Maximum method length of 20 lines of code.
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+```
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In
+`@am-trade-exceptions/src/main/java/am/trade/exceptions/handler/GlobalExceptionHandler.java`
+around lines 71 - 96, Reduce handleMethodArgumentNotValid to no more than 20
+lines by extracting the BindingResult-to-List<ErrorDetail> mapping and/or
+repeated bad-request ErrorResponse construction into private helper methods.
+Preserve the existing validation messages, fields, status, path, trace ID, and
+returned BAD_REQUEST response.
+```
+
+</details>
+
+<!-- fingerprinting:phantom:poseidon:luna -->
+
+<!-- cr-indicator-types:refactor_suggestion -->
+
+<!-- cr-comment:v1:692667d0157818a317523fb3 -->
+
+_Source: Coding guidelines_
+
+<!-- This is an auto-generated comment by CodeRabbit -->
+---
+
+Path: am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java
+Line: 220
+Body: _🗄️ Data Integrity & Integration_ | _🟠 Major_ | _🏗️ Heavy lift_
+
+**Do not discard failed asynchronous aggregate updates.**
+
+A Mongo failure is logged but the task completes normally; the trade remains saved while portfolio metrics stay stale with no recovery path. Persist an idempotent retryable work item or reconciliation record and emit a failure metric.
+
+- `am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java#L218-L220`: route failed batch deltas to durable recovery instead of log-only handling.
+- `am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java#L286-L288`: apply the same recovery behavior for single-trade updates.
+
+As per coding guidelines, “Never catch exceptions only to return empty objects; avoid silent failures.”
+
+<details>
+<summary>📍 Affects 1 file</summary>
+
+- `am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java#L218-L220` (this comment)
+- `am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java#L286-L288`
+
+</details>
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+```
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In
+`@am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java`
+around lines 218 - 220, Replace log-only exception handling in
+TradeProcessingServiceImpl at lines 218-220 and 286-288 with durable, idempotent
+retryable work-item or reconciliation-record creation for failed batch and
+single-trade aggregate updates, respectively; retain contextual error logging
+and emit a failure metric for each path so the asynchronous task exposes and
+supports recovery rather than completing silently.
+```
+
+</details>
+
+<!-- consolidated_sites_start -->
+<!--
+<consolidated_sites>
+<site>
+<role>anchor</role>
+<file>am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java</file>
+<line_range>218-220</line_range>
+</site>
+<site>
+<role>sibling</role>
+<file>am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java</file>
+<line_range>286-288</line_range>
+</site>
+</consolidated_sites>
+-->
+<!-- consolidated_sites_end -->
+
+<!-- fingerprinting:phantom:poseidon:terra -->
+
+<!-- cr-indicator-types:potential_issue -->
+
+<!-- cr-comment:v1:84073cb7930a6235a2923d76 -->
+
+_Source: Coding guidelines_
+
+<!-- This is an auto-generated comment by CodeRabbit -->
+---
+
+Path: .trufflehog.yaml
+Line: 5
+Body: _🔒 Security & Privacy_ | _🟠 Major_ | _⚡ Quick win_
+
+**Do not exclude entire configuration and environment file classes from secret scanning.**
+
+These patterns can suppress detection of committed credentials in Helm values, Spring configuration, `.env` files, and the Vault sync script. Narrow the exclusions to specific generated/example files, or add a separate scan that validates these paths contain only placeholders and no secrets.
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+```
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In @.trufflehog.yaml around lines 2 - 5, Update the exclusion patterns in
+.trufflehog.yaml so they no longer exclude entire Helm values, Spring
+application configuration, .env, or vault-sync file classes. Narrow them to
+explicitly generated or example files, or add a separate validation scan for
+these paths that rejects real credentials while allowing placeholders.
+```
+
+</details>
+
+<!-- fingerprinting:phantom:triton:luna -->
+
+<!-- cr-indicator-types:potential_issue -->
+
+<!-- cr-comment:v1:b69573de5cdfc94ea711c598 -->
+
+<!-- This is an auto-generated comment by CodeRabbit -->
+---
+
+Path: am-trade-api/src/main/java/am/trade/api/service/impl/TradeApiServiceImpl.java
+Line: 692
+Body: _🎯 Functional Correctness_ | _🟠 Major_ | _🏗️ Heavy lift_
+
+**Pagination totals are computed before advanced in-memory filters are applied, so `totalCount`/`totalPages`/`isLast` become inaccurate whenever those filters remove items.**
+
+In the paged branch, `dbPage.getTotalElements()` / `dbPage.hasNext()` are used for `totalCount`/`totalPages`/`isLast`, but `filteredContent` has already had `matchesAdvancedFilters` (positionTypes, tags, holding-time, P&L range, instrument filters) applied on top of `dbPage.getContent()`. Contrast this with the unpaged branch just below, which correctly uses `filteredContent.size()` for the count — confirming the paged branch is inconsistent, not an intentional simplification. Clients will see an overstated total/page count, and `isLast=false` can be reported even when no further page has any matching item after advanced filtering is applied.
+
+```diff
+     if (pageable != null && pageable.isPaged()) {
+         int pageSize = pageable.getPageSize();
+-            int totalPages = pageSize > 0
+-                    ? (int) Math.ceil((double) dbPage.getTotalElements() / pageSize)
+-                    : 1;
++            // NOTE: still approximate unless getTradesByFilters also applies the advanced
++            // criteria at the DB layer — accurate cross-page totals require either that,
++            // or a separate full-result-set count after in-memory filtering.
+         ...
+     }
+```
+
+A real fix requires moving the advanced filters (positionType, tags, holdingTime, P&L, instrument) into the DB query, or explicitly documenting that pagination totals are approximate when advanced filters are active.
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+```
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In
+`@am-trade-api/src/main/java/am/trade/api/service/impl/TradeApiServiceImpl.java`
+around lines 663 - 692, Update the paged branch around matchesAdvancedFilters
+and buildFilterResponse so pagination metadata reflects advanced-filtered
+results rather than dbPage.getTotalElements() and dbPage.hasNext(). Prefer
+incorporating positionType, holdingTime, tags, P&L, and instrument filters into
+tradeManagementService.getTradesByFilters; otherwise explicitly mark totalCount,
+totalPages, and isLast as approximate whenever those filters are applied.
+```
+
+</details>
+
+<!-- fingerprinting:phantom:medusa:beignet -->
+
+<!-- cr-indicator-types:potential_issue -->
+
+<!-- cr-comment:v1:f7f5a0512aa182316a4d2bf0 -->
+
+<!-- This is an auto-generated comment by CodeRabbit -->
+---
+
+Path: am-trade-kafka/src/main/java/am/trade/kafka/producer/KafkaProducerService.java
+Line: 50
+Body: _🗄️ Data Integrity & Integration_ | _🟠 Major_ | _⚡ Quick win_
+
+<details>
+<summary>🧩 Analysis chain</summary>
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+# Inspect callers and async configuration before applying the fix.
+rg -nP 'publishHoldingUpdate\s*\(|`@EnableAsync`|tradeProcessingExecutor' --glob '*.java' .
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 1653
+
+---
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+set -euo pipefail
+
+echo "== KafkaProducerService.java =="
+cat -n am-trade-kafka/src/main/java/am/trade/kafka/producer/KafkaProducerService.java
+
+echo
+echo "== AsyncConfig.java =="
+cat -n am-trade-services/src/main/java/am/trade/services/config/AsyncConfig.java
+
+echo
+echo "== Caller snippets =="
+sed -n '180,215p' am-trade-kafka/src/main/java/am/trade/kafka/consumer/TradeConsumerService.java | cat -n
+sed -n '285,310p' am-trade-api/src/main/java/am/trade/api/service/impl/TradeApiServiceImpl.java | cat -n
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 8906
+
+---
+
+
+
+</details>
+
+**Register the transaction callback before applying `@Async`.**
+
+`@Async` moves `publishHoldingUpdate` into `tradeProcessingExecutor`, so the transaction context from the caller is no longer the one being evaluated. `isActualTransactionActive()` will normally be `false` on the worker thread and `sendToKafka(event)` can run before the caller’s transaction commits, allowing rollback or not-yet-committed data to be published.
+
+Keep the transaction-bound registration synchronous, then delegate `sendToKafka` to an async bean/method from `afterCommit`.
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+```
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In
+`@am-trade-kafka/src/main/java/am/trade/kafka/producer/KafkaProducerService.java`
+around lines 49 - 50, Update publishHoldingUpdate so transaction synchronization
+is registered synchronously on the caller thread before any asynchronous
+delegation. Move the sendToKafka(event) invocation into an async bean or method
+called from the transaction’s afterCommit callback, preserving immediate
+handling when no transaction is active and ensuring Kafka publication cannot
+precede transaction commit.
+```
+
+</details>
+
+<!-- fingerprinting:phantom:triton:luna -->
+
+<!-- cr-indicator-types:potential_issue -->
+
+<!-- cr-comment:v1:96936be4aa9cd674add03d58 -->
+
+<!-- This is an auto-generated comment by CodeRabbit -->
+---
+
+Path: am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java
+Line: 230
+Body: _🗄️ Data Integrity & Integration_ | _🟠 Major_ | _🏗️ Heavy lift_
+
+<details>
+<summary>🧩 Analysis chain</summary>
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+# Check whether the app is configured/documented to run against a MongoDB replica set (required for `@Transactional`)
+rg -n -i "replicaSet|MongoTransactionManager|`@EnableTransactionManagement`" --type=yaml --type=properties -g '*.yml' -g '*.yaml' -g '*.properties'
+rg -n "MongoTransactionManager" --type=java
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 205
+
+---
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+set -u
+
+echo "== candidate file =="
+git ls-files | grep -F 'am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java' || true
+
+echo
+echo "== target file outline/size =="
+wc -l am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java 2>/dev/null || true
+ast-grep outline am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java --view compact 2>/dev/null | sed -n '1,160p' || true
+
+echo
+echo "== target snippet =="
+sed -n '160,245p' am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java 2>/dev/null | cat -n
+
+echo
+echo "== repository transaction settings/config/text search =="
+rg -n -i "replicaSet|transaction|MongoTransactionManager|`@EnableTransactionManagement`|`@Transactional`" \
+  -g '*.yml' -g '*.yaml' -g '*.properties' -g '*.java' -g '*.xml' -g '*.md' . 2>/dev/null | sed -n '1,240p'
+
+echo
+echo "== dependency versions mentioning mongo =="
+rg -n "spring-boot-starter-data-mongo.*transaction|spring-boot-starter-data-mongodb|spring-boot-autoconfigure|spring-data-mongodb|mongo" \
+  -g 'pom.xml' -g '*.gradle' -g '*.gradle.kts' -g 'gradle.properties' -g 'pom.xml' . 2>/dev/null | sed -n '1,240p'
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 11167
+
+---
+
+🏁 Script executed:
+
+```shell
+#!/bin/bash
+set -u
+
+echo "== MongoConfig =="
+wc -l am-trade-models/src/main/java/am/trade/models/config/MongoConfig.java 2>/dev/null || true
+cat -n am-trade-models/src/main/java/am/trade/models/config/MongoConfig.java 2>/dev/null | sed -n '1,120p'
+
+echo
+echo "== root pom mongo-related dependency management =="
+sed -n '1,140p' pom.xml 2>/dev/null | cat -n || true
+
+echo
+echo "== active transaction annotations near target =="
+sed -n '1,35p' am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java 2>/dev/null | cat -n || true
+```
+
+Repository: AM-Portfolio/am-trade-management
+
+Length of output: 10409
+
+---
+
+
+
+</details>
+
+**Make `saveAllTradeDetails` transactional for batch consistency.**
+
+This method reads existing documents and then saves a batch of documents, a transactional operation under the service-layer guidelines. Add `@Transactional`, but keep the deployment topology check in place: MongoDB multi-document transactions require replica set support, and the current Mongo config has `MongoTransactionManager` commented out.
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+```
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In
+`@am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java`
+around lines 192 - 230, Add `@Transactional` to the saveAllTradeDetails method so
+the existing-document lookup and batch save execute as one service-layer
+transaction. Preserve the current Mongo deployment topology check and do not
+enable or introduce MongoTransactionManager configuration; transactions must
+remain dependent on replica-set support.
+```
+
+</details>
+
+<!-- fingerprinting:phantom:medusa:beignet -->
+
+<!-- cr-indicator-types:refactor_suggestion -->
+
+<!-- cr-comment:v1:f01e323b9b361fc5e72f76c3 -->
+
+_Source: Coding guidelines_
+
+---
+
+_📐 Maintainability & Code Quality_ | _🟠 Major_ | _⚡ Quick win_
+
+**Break up `saveAllTradeDetails` to satisfy the method-length/SRP guideline.**
+
+The method now spans ~38 lines and does four distinct things: collecting tradeIds, batch-resolving existing Mongo IDs, mapping entities, and saving. As per coding guidelines, `**/*.java`: "Maximum method length of 20 lines of code" and "Each method performs exactly one logical operation following Single Responsibility Principle".
+
+<details>
+<summary>♻️ Suggested extraction</summary>
+
+```diff
+ public List<TradeDetails> saveAllTradeDetails(List<TradeDetails> tradeDetailsList) {
+     log.debug("Saving {} trade details records", tradeDetailsList.size());
++    Map<String, String> existingIdByTradeId = resolveExistingIdsByTradeId(tradeDetailsList);
++    List<TradeDetailsEntity> entities = toEntitiesReusingExistingIds(tradeDetailsList, existingIdByTradeId);
++    List<TradeDetailsEntity> savedEntities = tradeDetailsRepository.saveAll(entities);
++    return savedEntities.stream().map(tradeDetailsMapper::toTradeDetails).collect(Collectors.toList());
++}
++
++private Map<String, String> resolveExistingIdsByTradeId(List<TradeDetails> tradeDetailsList) {
++    List<String> incomingTradeIds = tradeDetailsList.stream()
++            .map(TradeDetails::getTradeId).filter(id -> id != null).collect(Collectors.toList());
++    Map<String, String> existingIdByTradeId = new HashMap<>();
++    if (!incomingTradeIds.isEmpty()) {
++        tradeDetailsRepository.findByTradeIdIn(incomingTradeIds)
++                .forEach(existing -> existingIdByTradeId.put(existing.getTradeId(), existing.getId()));
++    }
++    return existingIdByTradeId;
++}
+```
+</details>
+
+
+
+As per coding guidelines, `**/*.java`: "Maximum method length of 20 lines of code" and "Each method performs exactly one logical operation following Single Responsibility Principle".
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+```
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In
+`@am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java`
+around lines 192 - 230, Refactor saveAllTradeDetails into focused helper methods
+so it remains under 20 lines and delegates each logical operation separately:
+collecting non-null trade IDs, resolving existing IDs via findByTradeIdIn,
+mapping TradeDetails to entities while reusing existing Mongo IDs, and mapping
+saved entities back to TradeDetails. Preserve the current batch lookup and
+saveAll behavior.
+```
+
+</details>
+
+<!-- fingerprinting:phantom:medusa:beignet -->
+
+<!-- cr-indicator-types:refactor_suggestion -->
+
+<!-- cr-comment:v1:d10c5ce3ead4753279fb9b2f -->
+
+_Source: Coding guidelines_
+
+<!-- This is an auto-generated comment by CodeRabbit -->
+---
+
+Path: am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java
+Line: 65
+Body: are u sure that local cache is the last option, try something smarter as this local cache will evoke the garbage collector again an again and all put an little extra stress on CPU 
+---
+
+Path: am-trade-api/src/test/java/am/trade/api/service/impl/TradeManagementServiceImplTest.java
+Line: 69
+Body: why this is mentioned as unnecessary mock remove ?
+---
+
+Path: am-trade-services/src/main/java/am/trade/services/config/AsyncConfig.java
+Line: 20
+Body: why allocated specific thread pool ? cant it be shared with others ? and optimize this .........
+---
+

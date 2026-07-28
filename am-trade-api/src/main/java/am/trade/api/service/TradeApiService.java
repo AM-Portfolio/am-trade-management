@@ -53,6 +53,13 @@ public interface TradeApiService {
     TradeDetails updateTrade(String tradeId, TradeDetails tradeDetails);
     
     /**
+     * Delete an existing trade
+     * 
+     * @param tradeId The ID of the trade to delete
+     */
+    void deleteTrade(String tradeId);
+    
+    /**
      * Get trades by filters
      * 
      * @param portfolioIds Portfolio IDs to filter by

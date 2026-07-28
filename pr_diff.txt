@@ -1,0 +1,2366 @@
+﻿diff --git a/.gitignore b/.gitignore
+index 6b2e6f1..ad19626 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -148,3 +148,6 @@ payload.json
+ test.json
+ test_futures.json
+ am-trade-app/src/main/resources/application-local.yml
++
++# SPT Test Files
++spt/
+diff --git a/am-trade-analytics/src/main/java/am/trade/analytics/config/RedisConfig.java b/am-trade-analytics/src/main/java/am/trade/analytics/config/RedisConfig.java
+index 411ee84..35624cc 100644
+--- a/am-trade-analytics/src/main/java/am/trade/analytics/config/RedisConfig.java
++++ b/am-trade-analytics/src/main/java/am/trade/analytics/config/RedisConfig.java
+@@ -11,6 +11,7 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
+  * Redis configuration for trade sampling strategy
+  */
+ @Configuration
++@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "am.trade.cache.enabled", havingValue = "force-disabled-by-user") // FORCED OFF BY USER REQUEST
+ public class RedisConfig {
+ 
+     /**
+diff --git a/am-trade-analytics/src/main/java/am/trade/analytics/service/impl/TradeSamplingServiceImpl.java b/am-trade-analytics/src/main/java/am/trade/analytics/service/impl/TradeSamplingServiceImpl.java
+index 7f2f90d..89a8749 100644
+--- a/am-trade-analytics/src/main/java/am/trade/analytics/service/impl/TradeSamplingServiceImpl.java
++++ b/am-trade-analytics/src/main/java/am/trade/analytics/service/impl/TradeSamplingServiceImpl.java
+@@ -20,12 +20,17 @@ import java.util.concurrent.TimeUnit;
+  * and applies sampling strategies based on configuration
+  */
+ @Service
+-@RequiredArgsConstructor
+ @Slf4j
+ public class TradeSamplingServiceImpl implements TradeSamplingService {
+ 
+     private final TradeSamplingConfig samplingConfig;
+     private final RedisTemplate<String, Object> redisTemplate;
++
++    public TradeSamplingServiceImpl(TradeSamplingConfig samplingConfig, 
++                                    @org.springframework.beans.factory.annotation.Autowired(required = false) RedisTemplate<String, Object> redisTemplate) {
++        this.samplingConfig = samplingConfig;
++        this.redisTemplate = redisTemplate;
++    }
+     
+     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+     private static final String USER_TRADE_COUNT_KEY = "trade:count:%s:%s"; // user:date
+@@ -33,8 +38,8 @@ public class TradeSamplingServiceImpl implements TradeSamplingService {
+     
+     @Override
+     public boolean shouldStoreTradeReplay(TradeReplayRequest request, BigDecimal profitLossPercentage, BigDecimal volatility) {
+-        // If sampling is disabled, always store
+-        if (!samplingConfig.isEnabled()) {
++        // If sampling is disabled or redis is unavailable, always store
++        if (!samplingConfig.isEnabled() || redisTemplate == null) {
+             return true;
+         }
+         
+@@ -85,7 +90,7 @@ public class TradeSamplingServiceImpl implements TradeSamplingService {
+     
+     @Override
+     public void updateSamplingStatistics(TradeReplay tradeReplay, boolean wasStored) {
+-        if (!samplingConfig.isEnabled()) {
++        if (!samplingConfig.isEnabled() || redisTemplate == null) {
+             return;
+         }
+         
+diff --git a/am-trade-api/pom.xml b/am-trade-api/pom.xml
+index baea778..5fff51d 100644
+--- a/am-trade-api/pom.xml
++++ b/am-trade-api/pom.xml
+@@ -41,6 +41,11 @@
+             <groupId>org.springframework.boot</groupId>
+             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+         </dependency>
++        
++        <dependency>
++            <groupId>com.github.ben-manes.caffeine</groupId>
++            <artifactId>caffeine</artifactId>
++        </dependency>
+ 
+         <dependency>
+             <groupId>org.projectlombok</groupId>
+diff --git a/am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java b/am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java
+index 293e79d..7f4f1a5 100644
+--- a/am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java
++++ b/am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java
+@@ -12,10 +12,14 @@ import lombok.extern.slf4j.Slf4j;
+ import org.springframework.boot.web.client.RestTemplateBuilder;
+ import org.springframework.stereotype.Component;
+ import org.springframework.web.client.RestTemplate;
++import org.springframework.beans.factory.annotation.Value;
+ 
+ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
++import com.github.benmanes.caffeine.cache.Cache;
++import com.github.benmanes.caffeine.cache.Caffeine;
++import java.util.concurrent.TimeUnit;
+ 
+ @Slf4j
+ @Component
+@@ -24,6 +28,14 @@ public class MarketDataApiClient {
+     private final MarketDataApiConfig config;
+     private final RestTemplate restTemplate;
+ 
++    @Value("${am.trade.market-data.l1-cache.enabled:true}")
++    private boolean isL1CacheEnabled;
++
++    private final Cache<String, Double> localCache = Caffeine.newBuilder()
++            .expireAfterWrite(5, TimeUnit.MINUTES)
++            .maximumSize(10_000)
++            .build();
++
+     public MarketDataApiClient(MarketDataApiConfig config, RestTemplateBuilder restTemplateBuilder) {
+         this.config = config;
+         this.restTemplate = restTemplateBuilder
+@@ -50,52 +62,114 @@ public class MarketDataApiClient {
+             return new HashMap<>();
+         }
+ 
+-        String symbolsParam = String.join(",", symbols);
+-        OhlcDataRequest request = OhlcDataRequest.builder()
+-                .symbols(symbolsParam)
+-                .timeFrame("1D")
+-                .refresh(true)
+-                .indexSymbol(false)
+-                .build();
++        Map<String, Double> result = new HashMap<>();
++        List<String> missingSymbols = new java.util.ArrayList<>();
++        java.time.Instant now = java.time.Instant.now();
++
++        if (isL1CacheEnabled) {
++            // 1. Check local cache
++            for (String symbol : symbols) {
++                String cleanSymbol = symbol;
++                if (cleanSymbol != null && cleanSymbol.contains(":")) {
++                    cleanSymbol = cleanSymbol.substring(cleanSymbol.lastIndexOf(":") + 1);
++                }
++                Double cachedPrice = localCache.getIfPresent(cleanSymbol);
++                if (cachedPrice != null) {
++                    result.put(cleanSymbol, cachedPrice);
++                } else {
++                    missingSymbols.add(symbol); // Request with original symbol format
++                }
++            }
++
++            // 2. If all symbols are cached, return immediately
++            if (missingSymbols.isEmpty()) {
++                log.debug("All symbols retrieved from local cache.");
++                return result;
++            }
++        } else {
++            // Feature flag disabled, fetch everything
++            missingSymbols.addAll(symbols);
++        }
++
++        // 3. Fetch missing symbols from upstream with double-checked locking to prevent cache stampedes
++        synchronized (this) {
++            if (isL1CacheEnabled) {
++                List<String> stillMissing = new java.util.ArrayList<>();
++                for (String symbol : missingSymbols) {
++                    String cleanSymbol = symbol;
++                    if (cleanSymbol != null && cleanSymbol.contains(":")) {
++                        cleanSymbol = cleanSymbol.substring(cleanSymbol.lastIndexOf(":") + 1);
++                    }
++                    Double cachedPrice = localCache.getIfPresent(cleanSymbol);
++                    if (cachedPrice != null) {
++                        result.put(cleanSymbol, cachedPrice);
++                    } else {
++                        stillMissing.add(symbol);
++                    }
++                }
++                missingSymbols = stillMissing;
++                
++                if (missingSymbols.isEmpty()) {
++                    return result;
++                }
++            }
++
++            String symbolsParam = String.join(",", missingSymbols);
++            OhlcDataRequest request = OhlcDataRequest.builder()
++                    .symbols(symbolsParam)
++                    .timeFrame("1D")
++                    .refresh(false) // Set to false to avoid hammering the upstream market data provider on every request
++                    .indexSymbol(false)
++                    .build();
+ 
+-        log.debug("Fetching OHLC data for {} from {}", symbolsParam, config.getOhlcEndpoint());
+-
+-        try {
+-            Map rawMap = restTemplate.postForObject(
+-                    config.getOhlcEndpoint(),
+-                    request,
+-                    Map.class
+-            );
+-            
+-            log.info("Raw market data response for symbols {}: {}", symbolsParam, rawMap);
+-
+-            Map<String, Double> currentPrices = new HashMap<>();
+-            if (rawMap != null) {
+-                Object actualData = rawMap.containsKey("data") ? rawMap.get("data") : rawMap;
+-                if (actualData instanceof Map) {
+-                    Map<?, ?> dataToProcess = (Map<?, ?>) actualData;
+-                    ObjectMapper mapper = new ObjectMapper();
+-                    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+-                    
+-                    for (Object key : dataToProcess.keySet()) {
+-                        try {
+-                            Object value = dataToProcess.get(key);
+-                            MarketDataResponse response = mapper.convertValue(value, MarketDataResponse.class);
+-                            String symbolKey = String.valueOf(key);
+-                            if (symbolKey.contains(":")) {
+-                                symbolKey = symbolKey.substring(symbolKey.lastIndexOf(":") + 1);
++            log.debug("Fetching OHLC data for {} from {}", symbolsParam, config.getOhlcEndpoint());
++
++            try {
++                Map rawMap = restTemplate.postForObject(
++                        config.getOhlcEndpoint(),
++                        request,
++                        Map.class);
++
++                log.info("Raw market data response for symbols {}: {}", symbolsParam, rawMap);
++
++                Map<String, Double> currentPrices = new HashMap<>();
++                if (rawMap != null) {
++                    Object actualData = rawMap.containsKey("data") ? rawMap.get("data") : rawMap;
++                    if (actualData instanceof Map) {
++                        Map<?, ?> dataToProcess = (Map<?, ?>) actualData;
++                        ObjectMapper mapper = new ObjectMapper();
++                        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
++
++                        for (Object key : dataToProcess.keySet()) {
++                            try {
++                                Object value = dataToProcess.get(key);
++                                MarketDataResponse response = mapper.convertValue(value, MarketDataResponse.class);
++                                String symbolKey = String.valueOf(key);
++                                if (symbolKey.contains(":")) {
++                                    symbolKey = symbolKey.substring(symbolKey.lastIndexOf(":") + 1);
++                                }
++                                
++                                Double price = response.getLastPrice();
++                                currentPrices.put(symbolKey, price);
++                                
++                                if (isL1CacheEnabled) {
++                                    // Update local cache
++                                    localCache.put(symbolKey, price);
++                                }
++                            } catch (Exception e) {
++                                log.error("Error converting response for symbol {}", key, e);
+                             }
+-                            currentPrices.put(symbolKey, response.getLastPrice());
+-                        } catch (Exception e) {
+-                            log.error("Error converting response for symbol {}", key, e);
+                         }
+                     }
+                 }
++                
++                // Merge newly fetched prices into the result
++                result.putAll(currentPrices);
++                return result;
++            } catch (Exception e) {
++                log.error("Failed to fetch market data from API for symbols: {}", symbolsParam, e);
++                return result; // Return whatever we found in the cache
+             }
+-            return currentPrices;
+-        } catch (Exception e) {
+-            log.error("Failed to fetch market data from API for symbols: {}", symbolsParam, e);
+-            return new HashMap<>();
+         }
+     }
+ }
+diff --git a/am-trade-api/src/main/java/am/trade/api/controller/PortfolioSummaryController.java b/am-trade-api/src/main/java/am/trade/api/controller/PortfolioSummaryController.java
+index 4dfd265..adb66ba 100644
+--- a/am-trade-api/src/main/java/am/trade/api/controller/PortfolioSummaryController.java
++++ b/am-trade-api/src/main/java/am/trade/api/controller/PortfolioSummaryController.java
+@@ -20,6 +20,7 @@ import org.springframework.format.annotation.DateTimeFormat;
+ import org.springframework.http.ResponseEntity;
+ import org.springframework.web.bind.annotation.*;
+ 
++import io.micrometer.observation.annotation.Observed;
+ import java.time.LocalDate;
+ import java.util.List;
+ import java.util.Map;
+@@ -44,6 +45,7 @@ public class PortfolioSummaryController {
+             @ApiResponse(responseCode = "500", description = "Internal server error")
+     })
+     @GetMapping("/by-owner")
++    @Observed(name = "portfolio.summary.by.owner", contextualName = "get-portfolio-summaries")
+     public ResponseEntity<?> getPortfolioSummariesForAuthenticatedUser() {
+         String ownerId = UserContext.getUserIdOrThrow();
+         try {
+diff --git a/am-trade-api/src/main/java/am/trade/api/controller/TradeControllerV2.java b/am-trade-api/src/main/java/am/trade/api/controller/TradeControllerV2.java
+new file mode 100644
+index 0000000..58a6b00
+--- /dev/null
++++ b/am-trade-api/src/main/java/am/trade/api/controller/TradeControllerV2.java
+@@ -0,0 +1,51 @@
++package am.trade.api.controller;
++
++import java.util.List;
++
++import org.springframework.data.domain.Page;
++import org.springframework.data.domain.Pageable;
++import org.springframework.http.ResponseEntity;
++import org.springframework.validation.annotation.Validated;
++import org.springframework.web.bind.annotation.GetMapping;
++import org.springframework.web.bind.annotation.PathVariable;
++import org.springframework.web.bind.annotation.RequestMapping;
++import org.springframework.web.bind.annotation.RequestParam;
++import org.springframework.web.bind.annotation.RestController;
++
++import am.trade.api.service.TradeApiService;
++import am.trade.common.models.TradeDetails;
++import io.swagger.v3.oas.annotations.Operation;
++import io.swagger.v3.oas.annotations.Parameter;
++import io.swagger.v3.oas.annotations.responses.ApiResponse;
++import io.swagger.v3.oas.annotations.responses.ApiResponses;
++import io.swagger.v3.oas.annotations.tags.Tag;
++import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
++
++@RestController
++@RequestMapping("/v2/trades")
++@Tag(name = "Trade API v2", description = "Version 2 API for trade operations (Paginated)")
++@RequiredArgsConstructor
++@Slf4j
++@Validated
++public class TradeControllerV2 {
++
++    private final TradeApiService tradeApiService;
++
++    @Operation(summary = "Get paginated trade details by portfolio ID and symbols")
++    @ApiResponses(value = {
++            @ApiResponse(responseCode = "200", description = "Trade details found"),
++            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
++            @ApiResponse(responseCode = "500", description = "Internal server error")
++    })
++    @GetMapping("/details/portfolio/{portfolioId}")
++    public ResponseEntity<Page<TradeDetails>> getTradeDetailsByPortfolioAndSymbolsPage(
++            @Parameter(description = "Portfolio ID") @PathVariable String portfolioId,
++            @Parameter(description = "Symbols to filter by (optional)") @RequestParam(required = false) List<String> symbols,
++            Pageable pageable) {
++
++        log.info("Fetching v2 paginated trade details for portfolio: {} with symbols: {}", portfolioId, symbols);
++        Page<TradeDetails> tradeDetails = tradeApiService.getTradeDetailsByPortfolioAndSymbolsPage(portfolioId, symbols, pageable);
++        return ResponseEntity.ok(tradeDetails);
++    }
++}
+diff --git a/am-trade-api/src/main/java/am/trade/api/service/TradeApiService.java b/am-trade-api/src/main/java/am/trade/api/service/TradeApiService.java
+index 44cf85d..08e296f 100644
+--- a/am-trade-api/src/main/java/am/trade/api/service/TradeApiService.java
++++ b/am-trade-api/src/main/java/am/trade/api/service/TradeApiService.java
+@@ -25,6 +25,16 @@ public interface TradeApiService {
+      */
+     List<TradeDetails> getTradeDetailsByPortfolioAndSymbols(String portfolioId, List<String> symbols);
+     
++    /**
++     * Get trade details by portfolio ID and optional symbols with pagination
++     * 
++     * @param portfolioId The portfolio ID
++     * @param symbols Optional list of symbols to filter by
++     * @param pageable Pagination information
++     * @return Page of trade details
++     */
++    Page<TradeDetails> getTradeDetailsByPortfolioAndSymbolsPage(String portfolioId, List<String> symbols, Pageable pageable);
++    
+     /**
+      * Add a new trade
+      * 
+diff --git a/am-trade-api/src/main/java/am/trade/api/service/TradeManagementService.java b/am-trade-api/src/main/java/am/trade/api/service/TradeManagementService.java
+index 0357d6a..999dab3 100644
+--- a/am-trade-api/src/main/java/am/trade/api/service/TradeManagementService.java
++++ b/am-trade-api/src/main/java/am/trade/api/service/TradeManagementService.java
+@@ -101,6 +101,16 @@ public interface TradeManagementService {
+      */
+     List<TradeDetails> getTradesBySymbols(String portfolioId, List<String> symbols);
+     
++    /**
++     * Get trades for a specific portfolio filtered by symbols with pagination
++     * 
++     * @param portfolioId The portfolio ID
++     * @param symbols List of symbols to filter by
++     * @param pageable Pagination information
++     * @return Page of trade details for the specified portfolio and symbols
++     */
++    Page<TradeDetails> getTradesBySymbolsPage(String portfolioId, List<String> symbols, Pageable pageable);
++    
+     /**
+      * Get trades based on multiple filter criteria
+      * 
+diff --git a/am-trade-api/src/main/java/am/trade/api/service/impl/PortfolioSummaryServiceImpl.java b/am-trade-api/src/main/java/am/trade/api/service/impl/PortfolioSummaryServiceImpl.java
+index 07fe0ad..d3ab547 100644
+--- a/am-trade-api/src/main/java/am/trade/api/service/impl/PortfolioSummaryServiceImpl.java
++++ b/am-trade-api/src/main/java/am/trade/api/service/impl/PortfolioSummaryServiceImpl.java
+@@ -10,6 +10,7 @@ import am.trade.services.service.TradeDetailsService;
+ import lombok.RequiredArgsConstructor;
+ import lombok.extern.slf4j.Slf4j;
+ 
++import org.springframework.cache.annotation.Cacheable;
+ import org.springframework.stereotype.Service;
+ 
+ import java.time.LocalDate;
+@@ -161,6 +162,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
+     }
+     
+     @Override
++    @Cacheable(value = "portfolioSummary", key = "#ownerId")
+     public List<PortfolioModel> getPortfolioSummariesByOwnerId(String ownerId) {
+         log.debug("Getting portfolio summaries for ownerId: {}", ownerId);
+         
+diff --git a/am-trade-api/src/main/java/am/trade/api/service/impl/ProfitLossHeatmapServiceImpl.java b/am-trade-api/src/main/java/am/trade/api/service/impl/ProfitLossHeatmapServiceImpl.java
+index 46ea7bd..c39a824 100644
+--- a/am-trade-api/src/main/java/am/trade/api/service/impl/ProfitLossHeatmapServiceImpl.java
++++ b/am-trade-api/src/main/java/am/trade/api/service/impl/ProfitLossHeatmapServiceImpl.java
+@@ -23,6 +23,8 @@ import am.trade.api.service.ProfitLossHeatmapService;
+ import am.trade.api.service.TradeManagementService;
+ import lombok.extern.slf4j.Slf4j;
+ 
++import org.springframework.cache.annotation.Cacheable;
++
+ @Service
+ @Slf4j
+ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
+@@ -34,6 +36,7 @@ public class ProfitLossHeatmapServiceImpl implements ProfitLossHeatmapService {
+     }
+     
+     @Override
++    @Cacheable(cacheNames = "analyticsCache", key = "#portfolioId")
+     public ProfitLossHeatmapData getYearlyHeatmap(String portfolioId, boolean includeTradeDetails) {
+         log.info("Generating yearly profit/loss heatmap for portfolio: {}", portfolioId);
+         
+diff --git a/am-trade-api/src/main/java/am/trade/api/service/impl/TradeApiServiceImpl.java b/am-trade-api/src/main/java/am/trade/api/service/impl/TradeApiServiceImpl.java
+index 82cda47..d8ef31b 100644
+--- a/am-trade-api/src/main/java/am/trade/api/service/impl/TradeApiServiceImpl.java
++++ b/am-trade-api/src/main/java/am/trade/api/service/impl/TradeApiServiceImpl.java
+@@ -33,6 +33,7 @@ import am.trade.services.publisher.TradeHoldingEventPublisher;
+ import am.trade.services.service.TradeDetailsService;
+ import am.trade.services.service.TradeProcessingService;
+ import am.trade.services.service.PortfolioPersistenceService;
++import io.micrometer.observation.annotation.Observed;
+ import lombok.RequiredArgsConstructor;
+ 
+ import java.math.BigDecimal;
+@@ -43,6 +44,7 @@ import java.time.LocalDateTime;
+  */
+ @Service
+ @RequiredArgsConstructor
++@Observed(name = "trade.service", contextualName = "trade-api-service")
+ public class TradeApiServiceImpl implements TradeApiService {
+     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TradeApiServiceImpl.class);
+ 
+@@ -77,6 +79,30 @@ public class TradeApiServiceImpl implements TradeApiService {
+     }
+ 
+     @Override
++    public Page<TradeDetails> getTradeDetailsByPortfolioAndSymbolsPage(String portfolioId, List<String> symbols, Pageable pageable) {
++        log.info("Service: Fetching paginated trade details for portfolio: {} with symbols: {}", portfolioId, symbols);
++        Page<TradeDetails> tradePage = tradeManagementService.getTradesBySymbolsPage(portfolioId, symbols, pageable);
++
++        // Verify ownership and valid structure
++        String currentUserId = UserContext.getUserIdOrThrow();
++        List<TradeDetails> validTrades = tradePage.getContent().stream()
++                .filter(t -> currentUserId.equals(t.getUserId()))
++                .filter(t -> {
++                    boolean isValid = t.getTradeId() != null && t.getPortfolioId() != null &&
++                            t.getStatus() != null && t.getTradePositionType() != null;
++                    if (!isValid) {
++                        log.warn("Filtering out corrupt trade record missing required fields. Trade ID: {}, Portfolio: {}",
++                                t.getTradeId(), t.getPortfolioId());
++                    }
++                    return isValid;
++                })
++                .collect(Collectors.toList());
++
++        return new org.springframework.data.domain.PageImpl<>(validTrades, pageable, tradePage.getTotalElements());
++    }
++
++    @Override
++    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
+     public TradeDetails addTrade(TradeDetails tradeDetails) {
+         if (tradeDetails == null) {
+             log.error("Cannot add null trade");
+@@ -111,7 +137,7 @@ public class TradeApiServiceImpl implements TradeApiService {
+         // Save trade details and process for portfolio aggregation
+         TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
+         if (savedTrade != null) {
+-            tradeProcessingService.processTradeDetailsWithObjects(
++            tradeProcessingService.applyTradesDelta(
+                     List.of(savedTrade),
+                     savedTrade.getPortfolioId(),
+                     savedTrade.getUserId());
+@@ -279,6 +305,7 @@ public class TradeApiServiceImpl implements TradeApiService {
+     }
+ 
+     @Override
++    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
+     public TradeDetails updateTrade(String tradeId, TradeDetails tradeDetails) {
+         if (tradeId == null || tradeId.isEmpty() || tradeDetails == null) {
+             log.error("Cannot update trade: invalid trade ID or trade details");
+@@ -320,10 +347,7 @@ public class TradeApiServiceImpl implements TradeApiService {
+         // Save and process trade
+         TradeDetails savedTrade = tradeDetailsService.saveTradeDetails(tradeDetails);
+         if (savedTrade != null) {
+-            tradeProcessingService.processTradeDetailsWithObjects(
+-                    List.of(savedTrade),
+-                    savedTrade.getPortfolioId(),
+-                    savedTrade.getUserId());
++            tradeProcessingService.applyTradeUpdateDelta(originalTrade, savedTrade, savedTrade.getPortfolioId(), savedTrade.getUserId());
+ 
+             // Determine the correct action and emit the Kafka event.
+             // The helper reads all fields (entryInfo, exitInfo, status) from savedTrade itself.
+@@ -475,6 +499,7 @@ public class TradeApiServiceImpl implements TradeApiService {
+     }
+ 
+     @Override
++    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
+     public List<TradeDetails> addOrUpdateTrades(List<TradeDetails> tradeDetailsList) {
+         if (tradeDetailsList == null || tradeDetailsList.isEmpty()) {
+             log.warn("Empty or null trade details list provided");
+diff --git a/am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java b/am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java
+index a819b9a..110b4c9 100644
+--- a/am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java
++++ b/am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java
+@@ -99,62 +99,23 @@ public class TradeManagementServiceImpl implements TradeManagementService {
+ 
+     private Map<String, List<TradeDetails>> getTradeDetailsByDateTimeRange(LocalDateTime startDateTime,
+             LocalDateTime endDateTime, String portfolioId) {
+-        List<TradeDetails> trades = new ArrayList<>();
++        List<TradeDetails> trades;
+ 
+         log.info("Filtering trades between {} and {}", startDateTime, endDateTime);
+ 
+         // If portfolio ID is provided, filter by it
+         if (portfolioId != null && !portfolioId.isEmpty()) {
+-            // Fetch embedded trades directly from PortfolioEntity
+-            Optional<PortfolioEntity> portfolioOpt = portfolioRepository.findByPortfolioId(portfolioId);
+-
+-            if (portfolioOpt.isPresent()) {
+-                PortfolioEntity portfolio = portfolioOpt.get();
+-                List<String> tradeIds = portfolio.getTrades();
+-
+-                if (tradeIds != null && !tradeIds.isEmpty()) {
+-                    log.info("Found {} trade IDs in portfolio {}", tradeIds.size(), portfolioId);
+-                    // Fetch trades by ID
+-                    trades = tradeDetailsService.findModelsByTradeIds(tradeIds);
+-                } else {
+-                    log.warn("Portfolio {} has null or empty trades list", portfolioId);
+-                }
+-            } else {
+-                log.warn("Portfolio {} not found in database", portfolioId);
+-                // Fallback attempt: try standard service
+-                log.info("Attempting fallback to TradeDetailsService for portfolio {}", portfolioId);
+-                trades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+-            }
++            trades = tradeDetailsService.findByPortfolioIdAndEntryInfoTimestampBetween(portfolioId, startDateTime, endDateTime);
+         } else {
+-            // Get all trades in the date range - this service method likely handles
+-            // filtering already?
+-            // If findModelsByEntryDateBetween handles it, we might double filter, but
+-            // that's safe.
+             trades = tradeDetailsService.findModelsByEntryDateBetween(startDateTime, endDateTime);
+         }
+ 
+-        // Apply date filtering to the collected trades
+-        List<TradeDetails> filteredTrades = trades.stream()
+-                .filter(trade -> {
+-                    LocalDateTime tradeDate = trade.getEntryInfo() != null
+-                            ? trade.getEntryInfo().getTimestamp()
+-                            : null;
+-
+-                    if (tradeDate != null) {
+-                        return !tradeDate.isBefore(startDateTime) && !tradeDate.isAfter(endDateTime);
+-                    } else {
+-                        log.debug("Trade {} skipped. No entry timestamp.", trade.getTradeId());
+-                        return false;
+-                    }
+-                })
+-                .collect(Collectors.toList());
+-
+-        log.info("Retained {} trades after date filtering", filteredTrades.size());
++        log.info("Retained {} trades after date filtering", trades.size());
+         
+-        enrichWithLivePrices(filteredTrades);
++        enrichWithLivePrices(trades);
+ 
+         // Group trades by portfolio ID
+-        return filteredTrades.stream()
++        return trades.stream()
+                 .collect(Collectors.groupingBy(
+                         TradeDetails::getPortfolioId,
+                         Collectors.toList()));
+@@ -179,17 +140,7 @@ public class TradeManagementServiceImpl implements TradeManagementService {
+         LocalDateTime startDateTime = startDate.atStartOfDay();
+         LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay().minusNanos(1);
+ 
+-        List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+-
+-        List<TradeDetails> filteredTrades = allTrades.stream()
+-                .filter(trade -> {
+-                    LocalDateTime tradeDate = trade.getEntryInfo() != null ? trade.getEntryInfo().getTimestamp() : null;
+-
+-                    return tradeDate != null &&
+-                            !tradeDate.isBefore(startDateTime) &&
+-                            !tradeDate.isAfter(endDateTime);
+-                })
+-                .collect(Collectors.toList());
++        List<TradeDetails> filteredTrades = tradeDetailsService.findByPortfolioIdAndEntryInfoTimestampBetween(portfolioId, startDateTime, endDateTime);
+                 
+         enrichWithLivePrices(filteredTrades);
+         return filteredTrades;
+@@ -208,20 +159,39 @@ public class TradeManagementServiceImpl implements TradeManagementService {
+             return getAllTradesByTradePortfolioId(portfolioId);
+         }
+ 
+-        // Get all trades for the portfolio
+-        List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+-
+-        // Filter by symbols (case-insensitive)
+-        List<TradeDetails> filteredTrades = allTrades.stream()
+-                .filter(trade -> trade.getSymbol() != null &&
+-                        symbols.stream()
+-                                .anyMatch(symbol -> trade.getSymbol().equalsIgnoreCase(symbol)))
++        // Convert input symbols to upper case for case-insensitive matching in MongoDB
++        List<String> upperCaseSymbols = symbols.stream()
++                .map(String::toUpperCase)
+                 .collect(Collectors.toList());
++
++        // Use database-side filtering
++        List<TradeDetails> filteredTrades = tradeDetailsService.findModelsByPortfolioIdAndSymbolInIgnoreCase(portfolioId, upperCaseSymbols);
+                 
+         enrichWithLivePrices(filteredTrades);
+         return filteredTrades;
+     }
+ 
++    @Override
++    public Page<TradeDetails> getTradesBySymbolsPage(String portfolioId, List<String> symbols, Pageable pageable) {
++        log.info("Fetching paginated trades for portfolio: {} filtered by symbols: {}", portfolioId, symbols);
++
++        if (portfolioId == null || portfolioId.isEmpty()) {
++            throw new IllegalArgumentException("Portfolio ID cannot be null or empty");
++        }
++
++        if (symbols == null || symbols.isEmpty()) {
++            return getTradeDetailsByPortfolio(portfolioId, pageable);
++        }
++
++        List<String> upperCaseSymbols = symbols.stream()
++                .map(String::toUpperCase)
++                .collect(Collectors.toList());
++
++        Page<TradeDetails> page = tradeDetailsService.findModelsByPortfolioIdAndSymbolInIgnoreCase(portfolioId, upperCaseSymbols, pageable);
++        enrichWithLivePrices(page.getContent());
++        return page;
++    }
++
+     @Override
+     public Page<TradeDetails> getTradesByFilters(
+             List<String> portfolioIds,
+@@ -236,72 +206,22 @@ public class TradeManagementServiceImpl implements TradeManagementService {
+                 "Fetching trades with filters - portfolioIds: {}, symbols: {}, statuses: {}, startDate: {}, endDate: {}, strategies: {}",
+                 portfolioIds, symbols, statuses, startDate, endDate, strategies);
+ 
+-        // Collect all trades from the specified portfolios
+-        List<TradeDetails> allTrades;
+-
+         if (portfolioIds == null || portfolioIds.isEmpty()) {
+-            // If no portfolio IDs provided, get all trades from all portfolios
+-            // This would require a method to get all trades, which might not be efficient
+-            // Consider implementing a repository method for this or limiting the scope
+             throw new IllegalArgumentException("At least one portfolio ID must be provided");
+-        } else {
+-            // Get trades from all specified portfolios
+-            allTrades = portfolioIds.stream()
+-                    .flatMap(portfolioId -> tradeDetailsService.findModelsByPortfolioId(portfolioId).stream())
+-                    .collect(Collectors.toList());
+         }
+ 
+-        // Apply filters
+-        List<TradeDetails> filteredTrades = allTrades.stream()
+-                // Filter by symbols if provided
+-                .filter(trade -> symbols == null || symbols.isEmpty() ||
+-                        (trade.getSymbol() != null &&
+-                                symbols.stream().anyMatch(symbol -> trade.getSymbol().equalsIgnoreCase(symbol))))
+-
+-                // Filter by statuses if provided
+-                .filter(trade -> statuses == null || statuses.isEmpty() ||
+-                        (trade.getStatus() != null && statuses.contains(trade.getStatus())))
+-
+-                // Filter by strategies if provided
+-                .filter(trade -> strategies == null || strategies.isEmpty() ||
+-                        (trade.getStrategy() != null &&
+-                                strategies.stream()
+-                                        .anyMatch(strategy -> trade.getStrategy().equalsIgnoreCase(strategy))))
+-
+-                // Filter by date range if provided
+-                .filter(trade -> {
+-                    // If no date range provided, include all trades
+-                    if (startDate == null && endDate == null) {
+-                        return true;
+-                    }
++        LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
++        LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay().minusNanos(1) : null;
+ 
+-                    LocalDate tradeDate = trade.getTradeDate();
+-                    if (tradeDate == null) {
+-                        return false; // Skip trades without a date
+-                    }
++        Page<TradeDetails> pagedTrades = tradeDetailsService.findByFilters(
++                portfolioIds, symbols, statuses, strategies, startDateTime, endDateTime, pageable);
+ 
+-                    // Check if the trade date is within the specified range
+-                    boolean afterStartDate = startDate == null || !tradeDate.isBefore(startDate);
+-                    boolean beforeEndDate = endDate == null || !tradeDate.isAfter(endDate);
+-
+-                    return afterStartDate && beforeEndDate;
+-                })
+-                .collect(Collectors.toList());
+-
+-        // Apply pagination
+-        int start = (int) pageable.getOffset();
+-        int end = Math.min((start + pageable.getPageSize()), filteredTrades.size());
+-
+-        // Handle case where start might be beyond the list size
+-        if (start > filteredTrades.size()) {
+-            return new PageImpl<>(List.of(), pageable, filteredTrades.size());
++        List<TradeDetails> content = pagedTrades.getContent();
++        if (!content.isEmpty()) {
++            enrichWithLivePrices(content);
+         }
+ 
+-        List<TradeDetails> pagedTrades = filteredTrades.subList(start, end);
+-        
+-        enrichWithLivePrices(pagedTrades);
+-
+-        return new PageImpl<>(pagedTrades, pageable, filteredTrades.size());
++        return pagedTrades;
+     }
+     
+     private void enrichWithLivePrices(List<TradeDetails> trades) {
+diff --git a/am-trade-api/src/main/java/am/trade/api/service/impl/TradeSummaryServiceImpl.java b/am-trade-api/src/main/java/am/trade/api/service/impl/TradeSummaryServiceImpl.java
+index 56ef16d..4ee1898 100644
+--- a/am-trade-api/src/main/java/am/trade/api/service/impl/TradeSummaryServiceImpl.java
++++ b/am-trade-api/src/main/java/am/trade/api/service/impl/TradeSummaryServiceImpl.java
+@@ -134,6 +134,7 @@ public class TradeSummaryServiceImpl implements TradeSummaryService {
+     }
+ 
+     @Override
++    @org.springframework.cache.annotation.Cacheable(cacheNames = "analyticsCache")
+     public Map<String, List<TradeDetails>> getTradeDetailsByTimePeriod(
+             String periodType,
+             LocalDate startDate,
+diff --git a/am-trade-app/pom.xml b/am-trade-app/pom.xml
+index 729a05d..8223143 100644
+--- a/am-trade-app/pom.xml
++++ b/am-trade-app/pom.xml
+@@ -61,6 +61,11 @@
+             <groupId>org.springframework.boot</groupId>
+             <artifactId>spring-boot-starter</artifactId>
+         </dependency>
++        <!-- Required for @Observed and other AOP aspects to function -->
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-aop</artifactId>
++        </dependency>
+         <dependency>
+             <groupId>org.springframework.boot</groupId>
+             <artifactId>spring-boot-starter-web</artifactId>
+diff --git a/am-trade-app/src/main/java/am/trade/app/config/ObservabilityConfig.java b/am-trade-app/src/main/java/am/trade/app/config/ObservabilityConfig.java
+new file mode 100644
+index 0000000..5457d36
+--- /dev/null
++++ b/am-trade-app/src/main/java/am/trade/app/config/ObservabilityConfig.java
+@@ -0,0 +1,30 @@
++package am.trade.app.config;
++
++import io.micrometer.observation.ObservationRegistry;
++import io.micrometer.observation.aop.ObservedAspect;
++import org.springframework.context.annotation.Bean;
++import org.springframework.context.annotation.Configuration;
++import org.springframework.data.mongodb.observability.MongoObservationCommandListener;
++import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
++
++/**
++ * Central observability wiring:
++ * 1. Enables @Observed annotation support via AOP
++ * 2. Wires MongoDB command-level tracing for Spring Boot 3.2.x
++ */
++@Configuration
++public class ObservabilityConfig {
++
++    @Bean
++    public ObservedAspect observedAspect(ObservationRegistry observationRegistry) {
++        return new ObservedAspect(observationRegistry);
++    }
++
++    @Bean
++    public MongoClientSettingsBuilderCustomizer mongoObservabilityCustomizer(
++            ObservationRegistry observationRegistry) {
++        return builder -> builder.addCommandListener(
++            new MongoObservationCommandListener(observationRegistry)
++        );
++    }
++}
+diff --git a/am-trade-app/src/main/resources/application-kafka.yml b/am-trade-app/src/main/resources/application-kafka.yml
+index 8fbbc89..bb64e97 100644
+--- a/am-trade-app/src/main/resources/application-kafka.yml
++++ b/am-trade-app/src/main/resources/application-kafka.yml
+@@ -4,7 +4,7 @@ spring:
+     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+     consumer:
+       group-id: ${KAFKA_CONSUMER_GROUP:am-trade-group}
+-      auto-offset-reset: earliest
++      auto-offset-reset: latest
+       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+       properties:
+diff --git a/am-trade-app/src/main/resources/application.yml b/am-trade-app/src/main/resources/application.yml
+index f7b4a85..e238249 100644
+--- a/am-trade-app/src/main/resources/application.yml
++++ b/am-trade-app/src/main/resources/application.yml
+@@ -1,8 +1,19 @@
+ # Application specific common settings
+ am:
++  observability:
++    enabled: true
++    request-log:
++      enabled: true
++      ignore-paths:
++        - /actuator/**
++        - /favicon.ico
++        - /swagger-ui/**
++        - /api-docs/**
+   cors:
+     allowed-origin-patterns: ${CORS_ALLOWED_ORIGINS:http://localhost:*,https://localhost:*,https://*.replit.dev,https://*}
+   trade:
++    cache:
++      enabled: false
+     kafka:
+       enabled: true
+     api:
+@@ -33,6 +44,8 @@ spring:
+   profiles:
+     active: local
+     include: security
++  autoconfigure:
++    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration, org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration, org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration
+   config:
+     import:
+       - classpath:application-common.yml
+@@ -44,7 +57,8 @@ spring:
+       - optional:file:/vault/secrets/market-data
+   data:
+     mongodb:
+-      uri: ${MONGODB_URI:mongodb://localhost:27017/trade}
++      host: ${MONGODB_HOST:localhost}
++      port: ${MONGODB_PORT:27017}
+       database: ${MONGODB_DATABASE:trade}
+       auto-index-creation: false
+     jackson:
+@@ -63,7 +77,7 @@ spring:
+       max.block.ms: 2000
+     consumer:
+       group-id: am-trade-management
+-      auto-offset-reset: earliest
++      auto-offset-reset: latest
+       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+       properties:
+@@ -125,3 +139,4 @@ logging:
+     am.trade: INFO
+     org.springframework.data.mongodb: INFO
+     org.springframework.web: INFO
++# trigger ci
+diff --git a/am-trade-kafka/src/main/java/am/trade/kafka/config/KafkaConfig.java b/am-trade-kafka/src/main/java/am/trade/kafka/config/KafkaConfig.java
+index 9c56b0a..1e3cd32 100644
+--- a/am-trade-kafka/src/main/java/am/trade/kafka/config/KafkaConfig.java
++++ b/am-trade-kafka/src/main/java/am/trade/kafka/config/KafkaConfig.java
+@@ -37,7 +37,7 @@ public class KafkaConfig {
+     @Value("${spring.kafka.consumer.group-id:am-trade-group}")
+     private String groupId;
+ 
+-    @Value("${spring.kafka.consumer.auto-offset-reset:earliest}")
++    @Value("${spring.kafka.consumer.auto-offset-reset:latest}")
+     private String autoOffsetReset;
+ 
+     @Autowired
+@@ -153,6 +153,7 @@ public class KafkaConfig {
+         // Without this, acknowledgment() calls are no-ops and failed messages are
+         // permanently lost.
+         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
++        factory.getContainerProperties().setObservationEnabled(true);
+         // Wire in the error handler — handles retries and DLT publishing on failure
+         factory.setCommonErrorHandler(errorHandler);
+         return factory;
+@@ -172,7 +173,9 @@ public class KafkaConfig {
+     @Bean(name = "kafkaTemplate")
+     @Primary
+     public KafkaTemplate<String, Object> kafkaTemplate() {
+-        return new KafkaTemplate<>(kafkaProducerFactory());
++        KafkaTemplate<String, Object> template = new KafkaTemplate<>(kafkaProducerFactory());
++        template.setObservationEnabled(true);
++        return template;
+     }
+ 
+     // Topic Definitions
+diff --git a/am-trade-persistence/src/main/java/am/trade/persistence/config/MongoIndexConfig.java b/am-trade-persistence/src/main/java/am/trade/persistence/config/MongoIndexConfig.java
+new file mode 100644
+index 0000000..f10f891
+--- /dev/null
++++ b/am-trade-persistence/src/main/java/am/trade/persistence/config/MongoIndexConfig.java
+@@ -0,0 +1,70 @@
++package am.trade.persistence.config;
++
++import am.trade.persistence.entity.TradeDetailsEntity;
++import jakarta.annotation.PostConstruct;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.context.annotation.Configuration;
++import org.springframework.data.domain.Sort;
++import org.springframework.data.mongodb.core.MongoTemplate;
++import org.springframework.data.mongodb.core.index.Index;
++import org.springframework.data.mongodb.core.index.IndexOperations;
++
++@Configuration
++public class MongoIndexConfig {
++
++    @Autowired
++    private MongoTemplate mongoTemplate;
++
++    @PostConstruct
++    public void createIndexes() {
++        IndexOperations tradeOps = mongoTemplate.indexOps(TradeDetailsEntity.class);
++
++        // Index 0: Powers business key lookups (PUT/POST)
++        try {
++            tradeOps.ensureIndex(new Index()
++                    .on("tradeId", Sort.Direction.ASC)
++                    .named("idx_trade_trade_id")
++                    .unique()
++                    .background());
++        } catch (Exception e) {
++            System.err.println("WARNING: Failed to create unique index on tradeId. This is likely because the K6 load test inserted duplicate trades before the index existed. Please clear duplicates from the am-apps-dev database to enable the index.");
++        }
++
++        // Index 1: Powers GET /v1/trades/details/portfolio/{portfolioId}
++        // Satisfies queries on portfolioId alone (prefix rule)
++        // AND queries on portfolioId + symbol (the filtered symbol search)
++        tradeOps.ensureIndex(new Index()
++                .on("portfolioId", Sort.Direction.ASC)
++                .on("symbol", Sort.Direction.ASC)
++                .named("idx_trade_portfolio_symbol")
++                .background());
++
++        // Index 2: Powers pagination queries sorted by entry date (most common sort)
++        tradeOps.ensureIndex(new Index()
++                .on("portfolioId", Sort.Direction.ASC)
++                .on("entryInfo.timestamp", Sort.Direction.DESC)
++                .named("idx_trade_portfolio_date")
++                .background());
++
++        // Index 3: Powers the Filter API (status is the primary discriminator)
++        tradeOps.ensureIndex(new Index()
++                .on("portfolioId", Sort.Direction.ASC)
++                .on("status", Sort.Direction.ASC)
++                .named("idx_trade_portfolio_status")
++                .background());
++
++        // Index 4: Powers Journal/Analytics by user id and date
++        tradeOps.ensureIndex(new Index()
++                .on("userId", Sort.Direction.ASC)
++                .on("entryInfo.timestamp", Sort.Direction.DESC)
++                .named("idx_trade_user_date")
++                .background());
++
++        // Index 5: Powers Journal/Analytics by user id and symbol
++        tradeOps.ensureIndex(new Index()
++                .on("userId", Sort.Direction.ASC)
++                .on("symbol", Sort.Direction.ASC)
++                .named("idx_trade_user_symbol")
++                .background());
++    }
++}
+diff --git a/am-trade-persistence/src/main/java/am/trade/persistence/config/PersistenceAutoConfiguration.java b/am-trade-persistence/src/main/java/am/trade/persistence/config/PersistenceAutoConfiguration.java
+index 6f710e3..45dac47 100644
+--- a/am-trade-persistence/src/main/java/am/trade/persistence/config/PersistenceAutoConfiguration.java
++++ b/am-trade-persistence/src/main/java/am/trade/persistence/config/PersistenceAutoConfiguration.java
+@@ -30,4 +30,5 @@ public class PersistenceAutoConfiguration {
+     public PortfolioMapper portfolioMapper() {
+         return new PortfolioMapper(new TradeDetailsMapper());
+     }
++
+ }
+diff --git a/am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepository.java b/am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepository.java
+index aeba268..477ca15 100644
+--- a/am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepository.java
++++ b/am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepository.java
+@@ -17,7 +17,7 @@ import am.trade.persistence.entity.TradeDetailsEntity;
+  * Repository interface for Trade document
+  */
+ @Repository
+-public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEntity, String> {
++public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEntity, String>, TradeDetailsRepositoryCustom {
+ 
+     Optional<TradeDetailsEntity> findById(String id);
+     
+@@ -40,6 +40,12 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
+     
+     List<TradeDetailsEntity> findByPortfolioId(String portfolioId);
+     
++    @Query("{'portfolioId': ?0, 'symbol': {$in: ?1}}")
++    List<TradeDetailsEntity> findByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols);
++    
++    @Query("{'portfolioId': ?0, 'symbol': {$in: ?1}}")
++    Page<TradeDetailsEntity> findByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols, Pageable pageable);
++    
+     @Query("{'symbol': ?0, 'entryInfo.timestamp': {$gte: ?1, $lte: ?2}}")
+     List<TradeDetailsEntity> findBySymbolAndEntryDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate);
+     
+@@ -86,4 +92,16 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
+      */
+     @Query("{'userId': ?0}")
+     List<TradeDetailsEntity> findByUserId(String userId);
++
++    @Query("{'portfolioId': ?0, 'entryInfo.timestamp': {$gte: ?1, $lte: ?2}}")
++    List<TradeDetailsEntity> findByPortfolioIdAndEntryInfoTimestampBetween(String portfolioId, LocalDateTime startDate, LocalDateTime endDate);
++
++    @Query("{'userId': ?0, 'entryInfo.timestamp': {$gte: ?1, $lte: ?2}}")
++    List<TradeDetailsEntity> findByUserIdAndEntryInfoTimestampBetween(String userId, LocalDateTime startDate, LocalDateTime endDate);
++    
++    @Query("{'userId': ?0, 'symbol': ?1}")
++    List<TradeDetailsEntity> findByUserIdAndSymbol(String userId, String symbol);
++    
++    @Query("{'userId': ?0, 'symbol': ?1, 'entryInfo.timestamp': {$gte: ?2, $lte: ?3}}")
++    List<TradeDetailsEntity> findByUserIdAndSymbolAndEntryInfoTimestampBetween(String userId, String symbol, LocalDateTime startDate, LocalDateTime endDate);
+ }
+diff --git a/am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepositoryCustom.java b/am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepositoryCustom.java
+new file mode 100644
+index 0000000..fe7fbcd
+--- /dev/null
++++ b/am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepositoryCustom.java
+@@ -0,0 +1,20 @@
++package am.trade.persistence.repository;
++
++import am.trade.models.enums.TradeStatus;
++import am.trade.persistence.entity.TradeDetailsEntity;
++import org.springframework.data.domain.Page;
++import org.springframework.data.domain.Pageable;
++
++import java.time.LocalDateTime;
++import java.util.List;
++
++public interface TradeDetailsRepositoryCustom {
++    Page<TradeDetailsEntity> findByFilters(
++            List<String> portfolioIds,
++            List<String> symbols,
++            List<TradeStatus> statuses,
++            List<String> strategies,
++            LocalDateTime startDate,
++            LocalDateTime endDate,
++            Pageable pageable);
++}
+diff --git a/am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepositoryCustomImpl.java b/am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepositoryCustomImpl.java
+new file mode 100644
+index 0000000..c6ed05e
+--- /dev/null
++++ b/am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepositoryCustomImpl.java
+@@ -0,0 +1,75 @@
++package am.trade.persistence.repository;
++
++import am.trade.models.enums.TradeStatus;
++import am.trade.persistence.entity.TradeDetailsEntity;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.data.domain.Page;
++import org.springframework.data.domain.PageImpl;
++import org.springframework.data.domain.Pageable;
++import org.springframework.data.mongodb.core.MongoTemplate;
++import org.springframework.data.mongodb.core.query.Criteria;
++import org.springframework.data.mongodb.core.query.Query;
++import org.springframework.stereotype.Repository;
++
++import java.time.LocalDateTime;
++import java.util.List;
++import java.util.stream.Collectors;
++
++@Repository
++public class TradeDetailsRepositoryCustomImpl implements TradeDetailsRepositoryCustom {
++
++    @Autowired
++    private MongoTemplate mongoTemplate;
++
++    @Override
++    public Page<TradeDetailsEntity> findByFilters(
++            List<String> portfolioIds,
++            List<String> symbols,
++            List<TradeStatus> statuses,
++            List<String> strategies,
++            LocalDateTime startDate,
++            LocalDateTime endDate,
++            Pageable pageable) {
++
++        Query query = new Query();
++
++        if (portfolioIds != null && !portfolioIds.isEmpty()) {
++            query.addCriteria(Criteria.where("portfolioId").in(portfolioIds));
++        }
++
++        if (symbols != null && !symbols.isEmpty()) {
++            List<String> upperCaseSymbols = symbols.stream().map(String::toUpperCase).collect(Collectors.toList());
++            // In MongoDB, you can use regex for case-insensitivity, but since the model stores uppercase
++            // or we mapped it to uppercase, we will use in() directly on the list.
++            query.addCriteria(Criteria.where("symbol").in(upperCaseSymbols));
++        }
++
++        if (statuses != null && !statuses.isEmpty()) {
++            query.addCriteria(Criteria.where("status").in(statuses));
++        }
++
++        if (strategies != null && !strategies.isEmpty()) {
++            // Some strategies might be case sensitive, let's use regex for case insensitivity
++            // or just $in if they are exact matches. The previous java stream used equalsIgnoreCase
++            List<java.util.regex.Pattern> regexPatterns = strategies.stream()
++                    .map(s -> java.util.regex.Pattern.compile("^" + java.util.regex.Pattern.quote(s) + "$", java.util.regex.Pattern.CASE_INSENSITIVE))
++                    .collect(Collectors.toList());
++            query.addCriteria(Criteria.where("strategy").in(regexPatterns));
++        }
++
++        if (startDate != null && endDate != null) {
++            query.addCriteria(Criteria.where("entryInfo.timestamp").gte(startDate).lte(endDate));
++        } else if (startDate != null) {
++            query.addCriteria(Criteria.where("entryInfo.timestamp").gte(startDate));
++        } else if (endDate != null) {
++            query.addCriteria(Criteria.where("entryInfo.timestamp").lte(endDate));
++        }
++
++        long count = mongoTemplate.count(query, TradeDetailsEntity.class);
++
++        query.with(pageable);
++        List<TradeDetailsEntity> results = mongoTemplate.find(query, TradeDetailsEntity.class);
++
++        return new PageImpl<>(results, pageable, count);
++    }
++}
+diff --git a/am-trade-services/pom.xml b/am-trade-services/pom.xml
+index 27eb186..ce79fba 100644
+--- a/am-trade-services/pom.xml
++++ b/am-trade-services/pom.xml
+@@ -62,6 +62,10 @@
+             <groupId>org.springframework.boot</groupId>
+             <artifactId>spring-boot-starter-cache</artifactId>
+         </dependency>
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-data-redis</artifactId>
++        </dependency>
+         <dependency>
+             <groupId>com.github.ben-manes.caffeine</groupId>
+             <artifactId>caffeine</artifactId>
+diff --git a/am-trade-services/src/main/java/am/trade/services/config/CacheConfig.java b/am-trade-services/src/main/java/am/trade/services/config/CacheConfig.java
+index fc04b8c..3426a25 100644
+--- a/am-trade-services/src/main/java/am/trade/services/config/CacheConfig.java
++++ b/am-trade-services/src/main/java/am/trade/services/config/CacheConfig.java
+@@ -1,50 +1,114 @@
+ package am.trade.services.config;
+ 
+-import com.github.benmanes.caffeine.cache.Caffeine;
++import com.fasterxml.jackson.annotation.JsonTypeInfo;
++import com.fasterxml.jackson.databind.ObjectMapper;
++import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
++import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
++import io.lettuce.core.resource.DefaultClientResources;
++import io.lettuce.core.tracing.MicrometerTracing;
++import io.micrometer.observation.ObservationRegistry;
+ import org.springframework.beans.factory.annotation.Value;
++import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+ import org.springframework.cache.CacheManager;
+ import org.springframework.cache.annotation.EnableCaching;
+-import org.springframework.cache.caffeine.CaffeineCacheManager;
+ import org.springframework.context.annotation.Bean;
+ import org.springframework.context.annotation.Configuration;
++import org.springframework.context.annotation.Primary;
++import org.springframework.data.redis.cache.RedisCacheConfiguration;
++import org.springframework.data.redis.cache.RedisCacheManager;
++import org.springframework.data.redis.connection.RedisConnectionFactory;
++import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
++import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
++import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
++import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
++import org.springframework.data.redis.serializer.RedisSerializationContext;
+ 
+-import java.util.concurrent.TimeUnit;
++import java.time.Duration;
++import java.util.HashMap;
++import java.util.Map;
+ 
+ /**
+- * Configuration for caching using Caffeine cache provider
+- * Sets up caches for trade summaries and metrics with configurable expiry and size
++ * Configuration for caching using Redis.
++ * This can be toggled on or off via am.trade.cache.enabled
++ *
++ * Redis tracing is enabled by injecting MicrometerTracing into the Lettuce
++ * client resources, exactly mirroring am-portfolio's approach. This is
++ * required because the Spring Boot YAML property
++ * spring.data.redis.client.observation.enabled only works for the
++ * auto-configured connection factory. Since we declare a custom bean here,
++ * we must wire tracing manually.
+  */
+ @Configuration
+ @EnableCaching
++@ConditionalOnProperty(name = "am.trade.cache.enabled", havingValue = "force-disabled-by-user") // FORCED OFF BY USER REQUEST
+ public class CacheConfig {
+ 
+-    @Value("${cache.trade-summary.expiry-minutes:60}")
+-    private long tradeSummaryCacheExpiryMinutes;
++    @Value("${cache.trade-details.expiry-minutes:10}")
++    private long tradeDetailsExpiryMinutes;
+ 
+-    @Value("${cache.trade-summary.max-size:1000}")
+-    private long tradeSummaryCacheMaxSize;
++    @Value("${cache.portfolio-summary.expiry-minutes:5}")
++    private long portfolioSummaryExpiryMinutes;
++
++    @Value("${spring.data.redis.host:localhost}")
++    private String redisHost;
++
++    @Value("${spring.data.redis.port:6379}")
++    private int redisPort;
++
++    @Value("${spring.data.redis.password:}")
++    private String redisPassword;
+ 
+     /**
+-     * Configure the cache manager with Caffeine cache provider
+-     *
+-     * @return Configured cache manager
++     * Custom Lettuce connection factory with MicrometerTracing injected.
++     * This is what makes "redis.get", "redis.set" spans appear in Grafana Tempo.
++     * Mirrors portfolio-redis RedisConfig exactly.
+      */
+     @Bean
+-    public CacheManager cacheManager() {
+-        CaffeineCacheManager cacheManager = new CaffeineCacheManager("tradeSummaryCache");
+-        cacheManager.setCaffeine(caffeineCacheBuilder());
+-        return cacheManager;
++    @Primary
++    public RedisConnectionFactory redisConnectionFactory(ObservationRegistry observationRegistry) {
++        RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
++        redisConfig.setHostName(redisHost);
++        redisConfig.setPort(redisPort);
++
++        if (redisPassword != null && !redisPassword.isBlank()) {
++            redisConfig.setPassword(redisPassword);
++        }
++
++        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
++                .commandTimeout(Duration.ofSeconds(5))
++                .clientResources(DefaultClientResources.builder()
++                        .tracing(new MicrometerTracing(observationRegistry, "redis"))
++                        .build())
++                .build();
++
++        return new LettuceConnectionFactory(redisConfig, clientConfig);
+     }
+ 
+-    /**
+-     * Configure Caffeine cache with expiry and maximum size
+-     *
+-     * @return Caffeine cache builder
+-     */
+-    private Caffeine<Object, Object> caffeineCacheBuilder() {
+-        return Caffeine.newBuilder()
+-                .expireAfterWrite(tradeSummaryCacheExpiryMinutes, TimeUnit.MINUTES)
+-                .maximumSize(tradeSummaryCacheMaxSize)
+-                .recordStats();
++    @Bean
++    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory, ObjectMapper objectMapper) {
++        ObjectMapper cacheObjectMapper = objectMapper.copy();
++
++        PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
++                .allowIfSubType(Object.class)
++                .build();
++
++        cacheObjectMapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
++
++        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(cacheObjectMapper);
++
++        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
++                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer))
++                .entryTtl(Duration.ofMinutes(10));
++
++        Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
++
++        cacheConfigurations.put("tradeDetails", defaultConfig.entryTtl(Duration.ofMinutes(tradeDetailsExpiryMinutes)));
++        cacheConfigurations.put("portfolioSummary", defaultConfig.entryTtl(Duration.ofMinutes(portfolioSummaryExpiryMinutes)));
++        cacheConfigurations.put("tradeDomainCache", defaultConfig.entryTtl(Duration.ofMinutes(10)));
++
++        return RedisCacheManager.builder(redisConnectionFactory)
++                .cacheDefaults(defaultConfig)
++                .withInitialCacheConfigurations(cacheConfigurations)
++                .build();
+     }
+ }
+diff --git a/am-trade-services/src/main/java/am/trade/services/config/CaffeineCacheConfig.java b/am-trade-services/src/main/java/am/trade/services/config/CaffeineCacheConfig.java
+new file mode 100644
+index 0000000..2e10e7a
+--- /dev/null
++++ b/am-trade-services/src/main/java/am/trade/services/config/CaffeineCacheConfig.java
+@@ -0,0 +1,26 @@
++package am.trade.services.config;
++
++import com.github.benmanes.caffeine.cache.Caffeine;
++import org.springframework.cache.CacheManager;
++import org.springframework.cache.annotation.EnableCaching;
++import org.springframework.cache.caffeine.CaffeineCacheManager;
++import org.springframework.context.annotation.Bean;
++import org.springframework.context.annotation.Configuration;
++import org.springframework.context.annotation.Primary;
++
++import java.util.concurrent.TimeUnit;
++
++@Configuration
++@EnableCaching
++public class CaffeineCacheConfig {
++
++    @Bean
++    @Primary
++    public CacheManager caffeineCacheManager() {
++        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
++        cacheManager.setCaffeine(Caffeine.newBuilder()
++                .expireAfterWrite(5, TimeUnit.MINUTES)
++                .maximumSize(5000));
++        return cacheManager;
++    }
++}
+diff --git a/am-trade-services/src/main/java/am/trade/services/metrics/TradeBusinessMetrics.java b/am-trade-services/src/main/java/am/trade/services/metrics/TradeBusinessMetrics.java
+new file mode 100644
+index 0000000..2039277
+--- /dev/null
++++ b/am-trade-services/src/main/java/am/trade/services/metrics/TradeBusinessMetrics.java
+@@ -0,0 +1,78 @@
++package am.trade.services.metrics;
++
++import io.micrometer.core.instrument.Counter;
++import io.micrometer.core.instrument.MeterRegistry;
++import io.micrometer.core.instrument.Timer;
++import org.springframework.stereotype.Component;
++
++import java.util.concurrent.TimeUnit;
++
++/**
++ * Domain meters for the Grafana "Functional / Services" dashboard (trade domain path).
++ *
++ * <p>Two meters are registered here:
++ * <ul>
++ *   <li>{@code trade.processed} — Counter, tagged by {@code status} (success/failure)
++ *       and {@code position_type} (LONG/SHORT). Prometheus exports this as
++ *       {@code trade_processed_total}.</li>
++ *   <li>{@code trade.processing.duration} — Timer for the core processing pipeline.
++ *       Prometheus exports this as {@code trade_processing_duration_seconds}
++ *       (with {@code _bucket}, {@code _count}, {@code _sum} suffixes).</li>
++ * </ul>
++ *
++ * <p><b>Why a separate class instead of calling MeterRegistry directly?</b><br>
++ * Centralising metric definitions here means:
++ * <ul>
++ *   <li>Tag names and metric names are defined in exactly one place — easy to rename.</li>
++ *   <li>Business logic classes stay clean; they call a simple method, not a builder chain.</li>
++ *   <li>Unit-testable with Micrometer's {@code SimpleMeterRegistry} without starting Spring.</li>
++ * </ul>
++ *
++ * <p>Mirrors the pattern in {@code McpBusinessMetrics} (am-core-services).
++ */
++@Component
++public class TradeBusinessMetrics {
++
++    private final MeterRegistry registry;
++
++    public TradeBusinessMetrics(MeterRegistry registry) {
++        this.registry = registry;
++    }
++
++    /**
++     * Increments the trade processed counter.
++     *
++     * @param status        outcome of processing: "success" or "failure"
++     * @param positionType  trade direction: "LONG", "SHORT", or "unknown"
++     */
++    public void recordTradeProcessed(String status, String positionType) {
++        Counter.builder("trade.processed")
++                .description("Total trades processed by the trade processing pipeline")
++                .tag("status", status == null ? "unknown" : status)
++                .tag("position_type", positionType == null ? "unknown" : positionType)
++                .register(registry)
++                .increment();
++    }
++
++    /**
++     * Records the wall-clock time spent inside the trade processing pipeline.
++     *
++     * <p>Usage pattern (in the caller):
++     * <pre>{@code
++     *   long start = System.nanoTime();
++     *   try {
++     *       // ... business logic ...
++     *   } finally {
++     *       tradeBusinessMetrics.recordProcessingDuration(System.nanoTime() - start);
++     *   }
++     * }</pre>
++     *
++     * @param durationNanos elapsed time measured with {@link System#nanoTime()}
++     */
++    public void recordProcessingDuration(long durationNanos) {
++        Timer.builder("trade.processing.duration")
++                .description("Wall-clock time of the trade processing pipeline")
++                .register(registry)
++                .record(durationNanos, TimeUnit.NANOSECONDS);
++    }
++}
+diff --git a/am-trade-services/src/main/java/am/trade/services/service/TradeDetailsService.java b/am-trade-services/src/main/java/am/trade/services/service/TradeDetailsService.java
+index e2b6642..d7d390a 100644
+--- a/am-trade-services/src/main/java/am/trade/services/service/TradeDetailsService.java
++++ b/am-trade-services/src/main/java/am/trade/services/service/TradeDetailsService.java
+@@ -30,8 +30,13 @@ public interface TradeDetailsService {
+     List<TradeDetails> findModelsByStatus(TradeStatus status);
+     
+     List<TradeDetails> findModelsByPortfolioId(String portfolioId);
++    List<TradeDetails> findByPortfolioIdAndEntryInfoTimestampBetween(String portfolioId, LocalDateTime startDate, LocalDateTime endDate);
+     List<TradeDetails> findByPortfolioIdIn(List<String> portfolioIds);
+     
++    List<TradeDetails> findModelsByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols);
++    
++    Page<TradeDetails> findModelsByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols, Pageable pageable);
++    
+     List<TradeDetails> findModelsBySymbolAndEntryDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate);
+     
+     List<TradeDetails> findModelsBySymbolAndExitDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate);
+@@ -53,6 +58,15 @@ public interface TradeDetailsService {
+      * @return The list of saved trade details models with any generated IDs
+      */
+     List<TradeDetails> saveAllTradeDetails(List<TradeDetails> tradeDetailsList);
++
++    Page<TradeDetails> findByFilters(
++            List<String> portfolioIds,
++            List<String> symbols,
++            List<TradeStatus> statuses,
++            List<String> strategies,
++            LocalDateTime startDate,
++            LocalDateTime endDate,
++            Pageable pageable);
+     
+     /**
+      * Find trade details by multiple trade IDs in a single database call
+diff --git a/am-trade-services/src/main/java/am/trade/services/service/TradeProcessingService.java b/am-trade-services/src/main/java/am/trade/services/service/TradeProcessingService.java
+index 54e22a9..62b874e 100644
+--- a/am-trade-services/src/main/java/am/trade/services/service/TradeProcessingService.java
++++ b/am-trade-services/src/main/java/am/trade/services/service/TradeProcessingService.java
+@@ -40,6 +40,16 @@ public interface TradeProcessingService {
+      */
+     void processTradeDetailsWithObjects(List<TradeDetails> trades, String portfolioId, String userId);
+     
++    /**
++     * Apply delta updates atomically to a portfolio for new trades
++     */
++    void applyTradesDelta(List<TradeDetails> trades, String portfolioId, String userId);
++
++    /**
++     * Apply delta updates atomically for an updated trade (reversing old contribution)
++     */
++    void applyTradeUpdateDelta(TradeDetails oldTrade, TradeDetails newTrade, String portfolioId, String userId);
++    
+     /**
+      * Get the current status of an open position
+      * 
+diff --git a/am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java b/am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java
+index 5afa8f7..80da654 100644
+--- a/am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java
++++ b/am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java
+@@ -99,6 +99,24 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
+                 .map(tradeDetailsMapper::toTradeDetails)
+                 .collect(Collectors.toList());
+     }
++
++    @Override
++    public List<TradeDetails> findModelsByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols) {
++        log.debug("Finding trade details by portfolio ID: {} and symbols: {}", portfolioId, symbols);
++        return tradeDetailsRepository.findByPortfolioIdAndSymbolInIgnoreCase(portfolioId, symbols).stream()
++                .map(tradeDetailsMapper::toTradeDetails)
++                .collect(Collectors.toList());
++    }
++
++    @Override
++    public Page<TradeDetails> findModelsByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols, Pageable pageable) {
++        log.debug("Finding trade details by portfolio ID: {} and symbols: {} with pagination", portfolioId, symbols);
++        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findByPortfolioIdAndSymbolInIgnoreCase(portfolioId, symbols, pageable);
++        List<TradeDetails> models = entityPage.getContent().stream()
++                .map(tradeDetailsMapper::toTradeDetails)
++                .collect(Collectors.toList());
++        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
++    }
+     
+     @Override
+     public List<TradeDetails> findModelsBySymbolAndEntryDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate) {
+@@ -194,6 +212,26 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
+         return tradeDetails;
+     }
+ 
++    @Override
++    public Page<TradeDetails> findByFilters(
++            List<String> portfolioIds,
++            List<String> symbols,
++            List<TradeStatus> statuses,
++            List<String> strategies,
++            LocalDateTime startDate,
++            LocalDateTime endDate,
++            Pageable pageable) {
++        log.debug("Finding trade details by filters with pagination");
++        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findByFilters(
++                portfolioIds, symbols, statuses, strategies, startDate, endDate, pageable);
++                
++        List<TradeDetails> models = entityPage.getContent().stream()
++                .map(tradeDetailsMapper::toTradeDetails)
++                .collect(Collectors.toList());
++                
++        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
++    }
++
+     @Override
+     public List<TradeDetails> findByPortfolioIdIn(List<String> portfolioIds) {
+         log.debug("Finding trade details by portfolio IDs: {}", portfolioIds);
+@@ -207,25 +245,9 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
+             LocalDateTime endDate) {
+         log.debug("Finding trade details by user ID: {} and entry date between {} and {}", userId, startDate, endDate);
+         
+-        // Use the repository method to get trades by user ID
+-        List<TradeDetailsEntity> userEntities = tradeDetailsRepository.findByUserId(userId);
++        List<TradeDetailsEntity> entities = tradeDetailsRepository.findByUserIdAndEntryInfoTimestampBetween(userId, startDate, endDate);
+         
+-        // Filter by entry date in memory
+-        List<TradeDetailsEntity> dateFilteredEntities = userEntities.stream()
+-                .filter(entity -> {
+-                    // Access timestamp through entryInfo
+-                    if (entity.getEntryInfo() == null) {
+-                        return false;
+-                    }
+-                    LocalDateTime entryDate = entity.getEntryInfo().getTimestamp();
+-                    return entryDate != null && 
+-                           (entryDate.isEqual(startDate) || entryDate.isAfter(startDate)) && 
+-                           (entryDate.isEqual(endDate) || entryDate.isBefore(endDate));
+-                })
+-                .collect(Collectors.toList());
+-        
+-        // Map entities to domain models
+-        List<TradeDetails> userTradeDetails = dateFilteredEntities.stream()
++        List<TradeDetails> userTradeDetails = entities.stream()
+                 .map(tradeDetailsMapper::toTradeDetails)
+                 .collect(Collectors.toList());
+                 
+@@ -239,31 +261,14 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
+         log.debug("Finding trade details by user ID: {} and symbol: {} with date range: {} to {}", 
+                 userId, symbol, startDate, endDate);
+         
+-        // Get all trades by user ID
+-        List<TradeDetailsEntity> userEntities = tradeDetailsRepository.findByUserId(userId);
+-        
+-        // Filter by symbol and date range in memory
+-        List<TradeDetailsEntity> filteredEntities = userEntities.stream()
+-                .filter(entity -> entity.getSymbol().equals(symbol))
+-                .filter(entity -> {
+-                    // If no date range specified, include all trades
+-                    if (startDate == null || endDate == null) {
+-                        return true;
+-                    }
+-                    
+-                    // Otherwise filter by entry date
+-                    if (entity.getEntryInfo() == null) {
+-                        return false;
+-                    }
+-                    LocalDateTime entryDate = entity.getEntryInfo().getTimestamp();
+-                    return entryDate != null && 
+-                           (entryDate.isEqual(startDate) || entryDate.isAfter(startDate)) && 
+-                           (entryDate.isEqual(endDate) || entryDate.isBefore(endDate));
+-                })
+-                .collect(Collectors.toList());
++        List<TradeDetailsEntity> entities;
++        if (startDate == null || endDate == null) {
++            entities = tradeDetailsRepository.findByUserIdAndSymbol(userId, symbol);
++        } else {
++            entities = tradeDetailsRepository.findByUserIdAndSymbolAndEntryInfoTimestampBetween(userId, symbol, startDate, endDate);
++        }
+         
+-        // Map entities to domain models
+-        List<TradeDetails> tradeDetails = filteredEntities.stream()
++        List<TradeDetails> tradeDetails = entities.stream()
+                 .map(tradeDetailsMapper::toTradeDetails)
+                 .collect(Collectors.toList());
+                 
+@@ -275,16 +280,9 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
+     public List<TradeDetails> findByUserIdAndSymbol(String userId, String symbol) {
+         log.debug("Finding trade details by user ID: {} and symbol: {}", userId, symbol);
+         
+-        // Get all trades by user ID
+-        List<TradeDetailsEntity> userEntities = tradeDetailsRepository.findByUserId(userId);
+-        
+-        // Filter by symbol in memory
+-        List<TradeDetailsEntity> filteredEntities = userEntities.stream()
+-                .filter(entity -> entity.getSymbol().equals(symbol))
+-                .collect(Collectors.toList());
++        List<TradeDetailsEntity> entities = tradeDetailsRepository.findByUserIdAndSymbol(userId, symbol);
+         
+-        // Map entities to domain models
+-        List<TradeDetails> tradeDetails = filteredEntities.stream()
++        List<TradeDetails> tradeDetails = entities.stream()
+                 .map(tradeDetailsMapper::toTradeDetails)
+                 .collect(Collectors.toList());
+                 
+@@ -298,11 +296,15 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
+         log.debug("Finding trade details by user ID: {} and strategy: {} with date range: {} to {}", 
+                 userId, strategy, startDate, endDate);
+         
+-        // Get all trades by user ID
+-        List<TradeDetailsEntity> userEntities = tradeDetailsRepository.findByUserId(userId);
++        List<TradeDetailsEntity> entities;
++        if (startDate == null || endDate == null) {
++            entities = tradeDetailsRepository.findByUserId(userId);
++        } else {
++            entities = tradeDetailsRepository.findByUserIdAndEntryInfoTimestampBetween(userId, startDate, endDate);
++        }
+         
+-        // Filter by strategy and date range in memory
+-        List<TradeDetailsEntity> filteredEntities = userEntities.stream()
++        // Filter by strategy in memory
++        List<TradeDetailsEntity> filteredEntities = entities.stream()
+                 .filter(entity -> {
+                     // Check if the entity has entry reasoning with the specified strategy
+                     if (entity.getEntryReasoning() == null) {
+@@ -310,21 +312,6 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
+                     }
+                     return strategy.equals(entity.getEntryReasoning().getStreategy());
+                 })
+-                .filter(entity -> {
+-                    // If no date range specified, include all trades
+-                    if (startDate == null || endDate == null) {
+-                        return true;
+-                    }
+-                    
+-                    // Otherwise filter by entry date
+-                    if (entity.getEntryInfo() == null) {
+-                        return false;
+-                    }
+-                    LocalDateTime entryDate = entity.getEntryInfo().getTimestamp();
+-                    return entryDate != null && 
+-                           (entryDate.isEqual(startDate) || entryDate.isAfter(startDate)) && 
+-                           (entryDate.isEqual(endDate) || entryDate.isBefore(endDate));
+-                })
+                 .collect(Collectors.toList());
+         
+         // Map entities to domain models
+@@ -335,4 +322,18 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
+         log.info("Found {} trades matching user ID, strategy, and date range criteria", tradeDetails.size());
+         return tradeDetails;
+     }
++    
++    @Override
++    public List<TradeDetails> findByPortfolioIdAndEntryInfoTimestampBetween(String portfolioId, LocalDateTime startDate, LocalDateTime endDate) {
++        log.debug("Finding trade details by portfolio ID: {} and entry date between {} and {}", portfolioId, startDate, endDate);
++        
++        List<TradeDetailsEntity> entities = tradeDetailsRepository.findByPortfolioIdAndEntryInfoTimestampBetween(portfolioId, startDate, endDate);
++        
++        List<TradeDetails> tradeDetails = entities.stream()
++                .map(tradeDetailsMapper::toTradeDetails)
++                .collect(Collectors.toList());
++                
++        log.info("Found {} trades matching portfolio ID and date range criteria", tradeDetails.size());
++        return tradeDetails;
++    }
+ }
+diff --git a/am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java b/am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java
+index 5b1608b..439de44 100644
+--- a/am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java
++++ b/am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java
+@@ -9,11 +9,19 @@ import am.trade.common.models.TradeModel;
+ import am.trade.models.enums.TradePositionType;
+ import am.trade.models.enums.TradeStatus;
+ import am.trade.models.enums.TradeType;
++import am.trade.services.metrics.TradeBusinessMetrics;
+ import am.trade.services.service.PortfolioPersistenceService;
+ import am.trade.services.service.TradeDetailsService;
+ import am.trade.services.service.TradeProcessingService;
+ import lombok.extern.slf4j.Slf4j;
+ import org.springframework.stereotype.Service;
++import io.micrometer.observation.ObservationRegistry;
++import io.micrometer.observation.Observation;
++import org.springframework.data.mongodb.core.MongoTemplate;
++import org.springframework.data.mongodb.core.query.Criteria;
++import org.springframework.data.mongodb.core.query.Query;
++import org.springframework.data.mongodb.core.query.Update;
++import am.trade.persistence.entity.PortfolioEntity;
+ 
+ import java.math.BigDecimal;
+ import java.math.RoundingMode;
+@@ -40,10 +48,21 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
+ 
+     private final TradeDetailsService tradeDetailsService;
+     private final PortfolioPersistenceService portfolioPersistenceService;
+-    
+-    public TradeProcessingServiceImpl(TradeDetailsService tradeDetailsService, PortfolioPersistenceService portfolioPersistenceService) {
++    private final TradeBusinessMetrics tradeBusinessMetrics;
++    private final ObservationRegistry observationRegistry;
++    private final MongoTemplate mongoTemplate;
++
++    public TradeProcessingServiceImpl(
++            TradeDetailsService tradeDetailsService,
++            PortfolioPersistenceService portfolioPersistenceService,
++            TradeBusinessMetrics tradeBusinessMetrics,
++            ObservationRegistry observationRegistry,
++            MongoTemplate mongoTemplate) {
+         this.tradeDetailsService = tradeDetailsService;
+         this.portfolioPersistenceService = portfolioPersistenceService;
++        this.tradeBusinessMetrics = tradeBusinessMetrics;
++        this.observationRegistry = observationRegistry;
++        this.mongoTemplate = mongoTemplate;
+     }
+ 
+     private static final int DECIMAL_SCALE = 4;
+@@ -79,34 +98,41 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
+         if (tradeIds == null || tradeIds.isEmpty()) {
+             return;
+         }
+-        
+-        // Check if portfolio already exists
+-        Optional<PortfolioModel> existingPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId);
+-        
+-        Set<String> uniqueTradeIds = new HashSet<>();
+-        
+-        if (existingPortfolio.isPresent()) {
+-            // Combine existing trades with new ones
+-            List<String> existingTrades = existingPortfolio.get().getTradeIds();
+-            if (existingTrades != null && !existingTrades.isEmpty()) {
+-                log.info("Combining {} existing trades with {} new trades for portfolio {}", 
+-                        existingTrades.size(), tradeIds.size(), portfolioId);
+-                
+-                // Add all existing trades to the set to ensure uniqueness
+-                uniqueTradeIds.addAll(existingTrades);
++
++        // Relying on am-observability-lib zero-config for HTTP/MongoDB tracing; no custom spans needed.
++        try {
++            // Check if portfolio already exists
++            Optional<PortfolioModel> existingPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId);
++
++            Set<String> uniqueTradeIds = new HashSet<>();
++
++            if (existingPortfolio.isPresent()) {
++                // Combine existing trades with new ones
++                List<String> existingTrades = existingPortfolio.get().getTradeIds();
++                if (existingTrades != null && !existingTrades.isEmpty()) {
++                    log.info("Combining {} existing trades with {} new trades for portfolio {}",
++                            existingTrades.size(), tradeIds.size(), portfolioId);
++
++                    // Add all existing trades to the set to ensure uniqueness
++                    uniqueTradeIds.addAll(existingTrades);
++                }
+             }
++
++            // Add all new trades to the set (duplicates will be automatically eliminated)
++            uniqueTradeIds.addAll(tradeIds);
++
++            log.info("After removing duplicates: {} unique trades for portfolio {}",
++                    uniqueTradeIds.size(), portfolioId);
++
++            // Convert back to list for further processing
++            List<String> allTradeIds = new ArrayList<>(uniqueTradeIds);
++
++            processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId, userId);
++            tradeBusinessMetrics.recordTradeProcessed("success", "unknown");
++        } catch (Exception e) {
++            tradeBusinessMetrics.recordTradeProcessed("failure", "unknown");
++            throw e;
+         }
+-        
+-        // Add all new trades to the set (duplicates will be automatically eliminated)
+-        uniqueTradeIds.addAll(tradeIds);
+-        
+-        log.info("After removing duplicates: {} unique trades for portfolio {}", 
+-                uniqueTradeIds.size(), portfolioId);
+-                
+-        // Convert back to list for further processing
+-        List<String> allTradeIds = new ArrayList<>(uniqueTradeIds);
+-        
+-        processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId, userId);
+     }
+ 
+     @Override
+@@ -133,6 +159,128 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
+         processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId, userId);
+     }
+ 
++    @Override
++    public void applyTradesDelta(List<TradeDetails> trades, String portfolioId, String userId) {
++        if (trades == null || trades.isEmpty()) {
++            return;
++        }
++
++        int winningTradesDelta = 0;
++        int losingTradesDelta = 0;
++        int breakEvenTradesDelta = 0;
++        int openPositionsDelta = 0;
++        BigDecimal profitDelta = BigDecimal.ZERO;
++        BigDecimal lossDelta = BigDecimal.ZERO;
++
++        List<String> tradeIds = new ArrayList<>();
++
++        for (TradeDetails trade : trades) {
++            tradeIds.add(trade.getTradeId());
++
++            switch (trade.getStatus()) {
++                case WIN:
++                    winningTradesDelta++;
++                    if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
++                        profitDelta = profitDelta.add(trade.getMetrics().getProfitLoss());
++                    }
++                    break;
++                case LOSS:
++                    losingTradesDelta++;
++                    if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
++                        lossDelta = lossDelta.add(trade.getMetrics().getProfitLoss().abs());
++                    }
++                    break;
++                case BREAK_EVEN:
++                    breakEvenTradesDelta++;
++                    break;
++                case OPEN:
++                    openPositionsDelta++;
++                    break;
++            }
++        }
++
++        Update update = new Update()
++                .inc("metrics.totalTrades", trades.size())
++                .inc("metrics.winningTrades", winningTradesDelta)
++                .inc("metrics.losingTrades", losingTradesDelta)
++                .inc("metrics.breakEvenTrades", breakEvenTradesDelta)
++                .inc("metrics.openPositions", openPositionsDelta)
++                .inc("metrics.totalProfit", profitDelta.doubleValue())
++                .inc("metrics.totalLoss", lossDelta.doubleValue())
++                .set("lastUpdatedDate", LocalDateTime.now());
++
++        update.push("trades").each(tradeIds.toArray());
++
++        mongoTemplate.updateFirst(
++                Query.query(Criteria.where("portfolioId").is(portfolioId)),
++                update,
++                PortfolioEntity.class
++        );
++    }
++
++    @Override
++    public void applyTradeUpdateDelta(TradeDetails oldTrade, TradeDetails newTrade, String portfolioId, String userId) {
++        if (newTrade == null) return;
++
++        Update update = new Update().set("lastUpdatedDate", LocalDateTime.now());
++
++        // Reverse old metrics if present
++        if (oldTrade != null) {
++            switch (oldTrade.getStatus()) {
++                case WIN:
++                    update.inc("metrics.winningTrades", -1);
++                    if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
++                        update.inc("metrics.totalProfit", oldTrade.getMetrics().getProfitLoss().negate().doubleValue());
++                    }
++                    break;
++                case LOSS:
++                    update.inc("metrics.losingTrades", -1);
++                    if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
++                        update.inc("metrics.totalLoss", oldTrade.getMetrics().getProfitLoss().abs().negate().doubleValue());
++                    }
++                    break;
++                case BREAK_EVEN:
++                    update.inc("metrics.breakEvenTrades", -1);
++                    break;
++                case OPEN:
++                    update.inc("metrics.openPositions", -1);
++                    break;
++            }
++        } else {
++            // It's a new trade, so totalTrades increases by 1
++            update.inc("metrics.totalTrades", 1);
++            update.push("trades", newTrade.getTradeId());
++        }
++
++        // Apply new metrics
++        switch (newTrade.getStatus()) {
++            case WIN:
++                update.inc("metrics.winningTrades", 1);
++                if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
++                    update.inc("metrics.totalProfit", newTrade.getMetrics().getProfitLoss().doubleValue());
++                }
++                break;
++            case LOSS:
++                update.inc("metrics.losingTrades", 1);
++                if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
++                    update.inc("metrics.totalLoss", newTrade.getMetrics().getProfitLoss().abs().doubleValue());
++                }
++                break;
++            case BREAK_EVEN:
++                update.inc("metrics.breakEvenTrades", 1);
++                break;
++            case OPEN:
++                update.inc("metrics.openPositions", 1);
++                break;
++        }
++
++        mongoTemplate.updateFirst(
++                Query.query(Criteria.where("portfolioId").is(portfolioId)),
++                update,
++                PortfolioEntity.class
++        );
++    }
++
+     private PortfolioModel processTradeDetailsAndGetPortfolio(List<String> tradeIds, String portfolioId, String userId) {
+ 
+         // Calculate portfolio-level metrics
+@@ -308,78 +456,98 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
+     }
+ 
+     @Override
+-    public List<TradeDetails> 
+-    processTradeModels(List<TradeModel> trades, String portfolioId) {
++    public List<TradeDetails> processTradeModels(List<TradeModel> trades, String portfolioId) {
+         if (trades == null || trades.isEmpty()) {
+             return new ArrayList<>();
+         }
+ 
+-        // Group trades by symbol to handle multiple securities
+-        Map<String, List<TradeModel>> tradesBySymbol = trades.stream()
+-                .filter(trade -> trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSymbol() != null)
+-                .collect(Collectors.groupingBy(trade -> trade.getInstrumentInfo().getSymbol()));
+-        
+-        // Process each group of trades separately
+-        List<TradeDetails> result = new ArrayList<>();
+-        for (Map.Entry<String, List<TradeModel>> entry : tradesBySymbol.entrySet()) {
+-            String symbol = entry.getKey();
+-            List<TradeModel> symbolTrades = entry.getValue();
+-            
+-            // Sort trades by execution time (nulls last)
+-            List<TradeModel> sortedTrades = symbolTrades.stream()
+-                    .sorted(Comparator.comparing(
+-                            trade -> trade.getBasicInfo() != null ? trade.getBasicInfo().getOrderExecutionTime() : null,
+-                            Comparator.nullsLast(Comparator.naturalOrder())))
+-                    .collect(Collectors.toList());
+-            
+-            if (sortedTrades.isEmpty()) {
+-                continue;
+-            }
+-            
+-            // Identify separate trade cycles (buy-sell cycles) within the same symbol
+-            List<List<TradeModel>> tradeCycles = identifyTradeCycles(sortedTrades);
+-            
+-            // Process each trade cycle separately
+-            for (List<TradeModel> tradeCycle : tradeCycles) {
+-                if (tradeCycle.isEmpty()) {
++        // Measure total processing time for the Grafana trade_processing_duration_seconds panel.
++        long startNanos = System.nanoTime();
++        try {
++            // Group trades by symbol to handle multiple securities
++            Map<String, List<TradeModel>> tradesBySymbol = trades.stream()
++                    .filter(trade -> trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSymbol() != null)
++                    .collect(Collectors.groupingBy(trade -> trade.getInstrumentInfo().getSymbol()));
++
++            // Process each group of trades separately
++            List<TradeDetails> result = new ArrayList<>();
++            for (Map.Entry<String, List<TradeModel>> entry : tradesBySymbol.entrySet()) {
++                String symbol = entry.getKey();
++                List<TradeModel> symbolTrades = entry.getValue();
++
++                // Sort trades by execution time (nulls last)
++                List<TradeModel> sortedTrades = symbolTrades.stream()
++                        .sorted(Comparator.comparing(
++                                trade -> trade.getBasicInfo() != null ? trade.getBasicInfo().getOrderExecutionTime() : null,
++                                Comparator.nullsLast(Comparator.naturalOrder())))
++                        .collect(Collectors.toList());
++
++                if (sortedTrades.isEmpty()) {
+                     continue;
+                 }
+-                
+-                // Get the first trade to determine if it's a LONG or SHORT position
+-                TradeModel firstTrade = tradeCycle.get(0);
+-                TradePositionType tradePositionType = determineTradeType(firstTrade);
+-                
+-                // Process the trades to build entry and exit information.
+-                // calculateEntryInfo/calculateExitInfo already select BUY vs SELL by position type —
+-                // do NOT swap for SHORT (that turns open shorts into entryInfo=null → NPE in metrics).
+-                EntryExitInfo entryInfo = calculateEntryInfo(tradeCycle, tradePositionType);
+-                EntryExitInfo exitInfo = calculateExitInfo(tradeCycle, tradePositionType);
+-                
+-                // Calculate trade metrics
+-                TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
+-                
+-                // Determine trade status
+-                TradeStatus status = determineTradeStatus(entryInfo, exitInfo, metrics);
+-                
+-                // Build the complete trade model
+-                TradeDetails tradeDetails = TradeDetails.builder()
+-                        .tradeId(UUID.randomUUID().toString()) // Generate a unique ID for the trade
+-                        .portfolioId(portfolioId)
+-                        .symbol(symbol)
+-                        .instrumentInfo(convertToInstrumentInfo(firstTrade.getInstrumentInfo()))
+-                        .tradePositionType(tradePositionType)
+-                        .status(status)
+-                        .entryInfo(entryInfo)
+-                        .exitInfo(exitInfo)
+-                        .metrics(metrics)
+-                        .tradeExecutions(tradeCycle)
+-                        .build();
+-                
+-                result.add(tradeDetails);
++
++                // Identify separate trade cycles (buy-sell cycles) within the same symbol
++                List<List<TradeModel>> tradeCycles = Observation.createNotStarted("trade.cycle.identification", observationRegistry)
++                        .contextualName("identifyTradeCycles")
++                        .observe(() -> identifyTradeCycles(sortedTrades));
++
++                // Process each trade cycle separately
++                for (List<TradeModel> tradeCycle : tradeCycles) {
++                    if (tradeCycle.isEmpty()) {
++                        continue;
++                    }
++
++                    // Get the first trade to determine if it's a LONG or SHORT position
++                    TradeModel firstTrade = tradeCycle.get(0);
++                    TradePositionType tradePositionType = determineTradeType(firstTrade);
++
++                    // Process the trades to build entry and exit information.
++                    EntryExitInfo entryInfo = Observation.createNotStarted("trade.cycle.entry_info", observationRegistry)
++                            .contextualName("calculateEntryInfo")
++                            .observe(() -> calculateEntryInfo(tradeCycle, tradePositionType));
++                            
++                    EntryExitInfo exitInfo = Observation.createNotStarted("trade.cycle.exit_info", observationRegistry)
++                            .contextualName("calculateExitInfo")
++                            .observe(() -> calculateExitInfo(tradeCycle, tradePositionType));
++
++                    // Calculate trade metrics
++                    TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
++
++                    // Determine trade status
++                    TradeStatus status = determineTradeStatus(entryInfo, exitInfo, metrics);
++
++                    // Build the complete trade model
++                    TradeDetails tradeDetails = TradeDetails.builder()
++                            .tradeId(UUID.randomUUID().toString()) // Generate a unique ID for the trade
++                            .portfolioId(portfolioId)
++                            .symbol(symbol)
++                            .instrumentInfo(convertToInstrumentInfo(firstTrade.getInstrumentInfo()))
++                            .tradePositionType(tradePositionType)
++                            .status(status)
++                            .entryInfo(entryInfo)
++                            .exitInfo(exitInfo)
++                            .metrics(metrics)
++                            .tradeExecutions(tradeCycle)
++                            .build();
++
++                    result.add(tradeDetails);
++
++                    // Record one counter per completed trade, tagged by position type and status.
++                    tradeBusinessMetrics.recordTradeProcessed(
++                            "success",
++                            tradePositionType != null ? tradePositionType.name() : "unknown");
++                }
+             }
++
++            return result;
++        } catch (Exception e) {
++            // Record failure counter so Grafana shows failure rate, not just absence of successes.
++            tradeBusinessMetrics.recordTradeProcessed("failure", "unknown");
++            throw e;
++        } finally {
++            // Always record duration — even on failure — so latency percentiles are never skewed.
++            tradeBusinessMetrics.recordProcessingDuration(System.nanoTime() - startNanos);
+         }
+-        
+-        return result;
+     }
+ 
+ 
+diff --git a/helm/values.dev.yaml b/helm/values.dev.yaml
+index 86567bc..4386252 100644
+--- a/helm/values.dev.yaml
++++ b/helm/values.dev.yaml
+@@ -71,3 +71,5 @@ ingress:
+ 
+ env:
+   SPRING_PROFILES_ACTIVE: "dev"
++  AM_TRADE_CACHE_ENABLED: "false"
++  SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration"
+diff --git a/helm/values.yaml b/helm/values.yaml
+index 90feb16..8b1fb7c 100644
+--- a/helm/values.yaml
++++ b/helm/values.yaml
+@@ -29,6 +29,7 @@ service:
+ security:
+   automountServiceAccountToken: true
+ 
++
+ # Vault Secret Injection Configuration
+ vault:
+   enabled: true
+diff --git a/openapitools.json b/openapitools.json
+new file mode 100644
+index 0000000..936223a
+--- /dev/null
++++ b/openapitools.json
+@@ -0,0 +1,7 @@
++{
++  "$schema": "./node_modules/@openapitools/openapi-generator-cli/config.schema.json",
++  "spaces": 2,
++  "generator-cli": {
++    "version": "7.24.0"
++  }
++}
+diff --git a/package-lock.json b/package-lock.json
+deleted file mode 100644
+index d92c0f5..0000000
+--- a/package-lock.json
++++ /dev/null
+@@ -1,154 +0,0 @@
+-{
+-  "name": "am-trade-management",
+-  "version": "1.0.0",
+-  "lockfileVersion": 3,
+-  "requires": true,
+-  "packages": {
+-    "": {
+-      "name": "am-trade-management",
+-      "version": "1.0.0",
+-      "devDependencies": {
+-        "dotenv-cli": "^11.0.0"
+-      }
+-    },
+-    "node_modules/cross-spawn": {
+-      "version": "7.0.6",
+-      "resolved": "https://registry.npmjs.org/cross-spawn/-/cross-spawn-7.0.6.tgz",
+-      "integrity": "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==",
+-      "dev": true,
+-      "license": "MIT",
+-      "dependencies": {
+-        "path-key": "^3.1.0",
+-        "shebang-command": "^2.0.0",
+-        "which": "^2.0.1"
+-      },
+-      "engines": {
+-        "node": ">= 8"
+-      }
+-    },
+-    "node_modules/dotenv": {
+-      "version": "17.4.2",
+-      "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-17.4.2.tgz",
+-      "integrity": "sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==",
+-      "dev": true,
+-      "license": "BSD-2-Clause",
+-      "engines": {
+-        "node": ">=12"
+-      },
+-      "funding": {
+-        "url": "https://dotenvx.com"
+-      }
+-    },
+-    "node_modules/dotenv-cli": {
+-      "version": "11.0.0",
+-      "resolved": "https://registry.npmjs.org/dotenv-cli/-/dotenv-cli-11.0.0.tgz",
+-      "integrity": "sha512-r5pA8idbk7GFWuHEU7trSTflWcdBpQEK+Aw17UrSHjS6CReuhrrPcyC3zcQBPQvhArRHnBo/h6eLH1fkCvNlww==",
+-      "dev": true,
+-      "license": "MIT",
+-      "dependencies": {
+-        "cross-spawn": "^7.0.6",
+-        "dotenv": "^17.1.0",
+-        "dotenv-expand": "^12.0.0",
+-        "minimist": "^1.2.6"
+-      },
+-      "bin": {
+-        "dotenv": "cli.js"
+-      }
+-    },
+-    "node_modules/dotenv-expand": {
+-      "version": "12.0.3",
+-      "resolved": "https://registry.npmjs.org/dotenv-expand/-/dotenv-expand-12.0.3.tgz",
+-      "integrity": "sha512-uc47g4b+4k/M/SeaW1y4OApx+mtLWl92l5LMPP0GNXctZqELk+YGgOPIIC5elYmUH4OuoK3JLhuRUYegeySiFA==",
+-      "dev": true,
+-      "license": "BSD-2-Clause",
+-      "dependencies": {
+-        "dotenv": "^16.4.5"
+-      },
+-      "engines": {
+-        "node": ">=12"
+-      },
+-      "funding": {
+-        "url": "https://dotenvx.com"
+-      }
+-    },
+-    "node_modules/dotenv-expand/node_modules/dotenv": {
+-      "version": "16.6.1",
+-      "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-16.6.1.tgz",
+-      "integrity": "sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==",
+-      "dev": true,
+-      "license": "BSD-2-Clause",
+-      "engines": {
+-        "node": ">=12"
+-      },
+-      "funding": {
+-        "url": "https://dotenvx.com"
+-      }
+-    },
+-    "node_modules/isexe": {
+-      "version": "2.0.0",
+-      "resolved": "https://registry.npmjs.org/isexe/-/isexe-2.0.0.tgz",
+-      "integrity": "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==",
+-      "dev": true,
+-      "license": "ISC"
+-    },
+-    "node_modules/minimist": {
+-      "version": "1.2.8",
+-      "resolved": "https://registry.npmjs.org/minimist/-/minimist-1.2.8.tgz",
+-      "integrity": "sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==",
+-      "dev": true,
+-      "license": "MIT",
+-      "funding": {
+-        "url": "https://github.com/sponsors/ljharb"
+-      }
+-    },
+-    "node_modules/path-key": {
+-      "version": "3.1.1",
+-      "resolved": "https://registry.npmjs.org/path-key/-/path-key-3.1.1.tgz",
+-      "integrity": "sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==",
+-      "dev": true,
+-      "license": "MIT",
+-      "engines": {
+-        "node": ">=8"
+-      }
+-    },
+-    "node_modules/shebang-command": {
+-      "version": "2.0.0",
+-      "resolved": "https://registry.npmjs.org/shebang-command/-/shebang-command-2.0.0.tgz",
+-      "integrity": "sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA==",
+-      "dev": true,
+-      "license": "MIT",
+-      "dependencies": {
+-        "shebang-regex": "^3.0.0"
+-      },
+-      "engines": {
+-        "node": ">=8"
+-      }
+-    },
+-    "node_modules/shebang-regex": {
+-      "version": "3.0.0",
+-      "resolved": "https://registry.npmjs.org/shebang-regex/-/shebang-regex-3.0.0.tgz",
+-      "integrity": "sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==",
+-      "dev": true,
+-      "license": "MIT",
+-      "engines": {
+-        "node": ">=8"
+-      }
+-    },
+-    "node_modules/which": {
+-      "version": "2.0.2",
+-      "resolved": "https://registry.npmjs.org/which/-/which-2.0.2.tgz",
+-      "integrity": "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==",
+-      "dev": true,
+-      "license": "ISC",
+-      "dependencies": {
+-        "isexe": "^2.0.0"
+-      },
+-      "bin": {
+-        "node-which": "bin/node-which"
+-      },
+-      "engines": {
+-        "node": ">= 8"
+-      }
+-    }
+-  }
+-}
+diff --git a/package.json b/package.json
+deleted file mode 100644
+index 6b902d1..0000000
+--- a/package.json
++++ /dev/null
+@@ -1,18 +0,0 @@
+-{
+-  "name": "am-trade-management",
+-  "version": "1.0.0",
+-  "description": "AM Trade Management System",
+-  "private": true,
+-  "scripts": {
+-    "dev": "dotenv -- mvnw spring-boot:run -pl am-trade-app \"-Dspring-boot.run.profiles=local\"",
+-    "build": "dotenv -- mvnw clean install",
+-    "test": "dotenv -- mvnw test",
+-    "clean": "mvnw clean",
+-    "vault:sync": "node scripts/vault-sync.js"
+-  },
+-  "author": "AM-Portfolio",
+-  "license": "UNLICENSED",
+-  "devDependencies": {
+-    "dotenv-cli": "^11.0.0"
+-  }
+-}
+diff --git a/spt/SPT_CHANGES_TO_REVERT.md b/spt/SPT_CHANGES_TO_REVERT.md
+new file mode 100644
+index 0000000..9e0e60d
+--- /dev/null
++++ b/spt/SPT_CHANGES_TO_REVERT.md
+@@ -0,0 +1,42 @@
++# SPT Test Changes to Revert
++
++This file documents all the changes made to disable Redis and prepare the environment for the Software Performance Testing (SPT). When testing is complete, please revert the following changes to restore the application's normal behavior:
++
++## 1. Helm Configuration
++**File:** `helm/values.dev.yaml`
++- **Revert:** Remove the following environment variables from the `env:` section:
++  ```yaml
++  AM_TRADE_CACHE_ENABLED: "false"
++  SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration"
++  ```
++  *(Note: This restores caching and re-enables Spring Boot's automatic Redis connection).*
++
++## 2. Analytics Redis Config
++**File:** `am-trade-analytics/src/main/java/am/trade/analytics/config/RedisConfig.java`
++- **Revert:** Remove the `@ConditionalOnProperty` annotation from the class definition:
++  ```java
++  @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "am.trade.cache.enabled", havingValue = "true", matchIfMissing = true)
++  ```
++
++## 3. Analytics Service Implementation
++**File:** `am-trade-analytics/src/main/java/am/trade/analytics/service/impl/TradeSamplingServiceImpl.java`
++- **Revert:** Restore `@RequiredArgsConstructor` at the class level.
++- **Revert:** Remove the explicit constructor that was added:
++  ```java
++  public TradeSamplingServiceImpl(TradeSamplingConfig samplingConfig, 
++                                  @org.springframework.beans.factory.annotation.Autowired(required = false) RedisTemplate<String, Object> redisTemplate) {
++      this.samplingConfig = samplingConfig;
++      this.redisTemplate = redisTemplate;
++  }
++  ```
++- **Revert:** Remove the `|| redisTemplate == null` checks from the two `if` statements:
++  ```java
++  if (!samplingConfig.isEnabled() || redisTemplate == null) { ... }
++  ```
++  Change them back to:
++  ```java
++  if (!samplingConfig.isEnabled()) { ... }
++  ```
++
++---
++**After reverting these changes, commit and push them to restore normal dev functionality.**
+diff --git a/trade-versions/v1/documentation/quick-reference/QUICK-REFERENCE.md b/trade-versions/v1/documentation/quick-reference/QUICK-REFERENCE.md
+index 0a3bfdc..d7fbad6 100644
+--- a/trade-versions/v1/documentation/quick-reference/QUICK-REFERENCE.md
++++ b/trade-versions/v1/documentation/quick-reference/QUICK-REFERENCE.md
+@@ -93,9 +93,9 @@ curl http://localhost:8073/actuator
+ 
+ ### Database Configuration
+ ```env
+-MONGODB_URI=mongodb://localhost:27017
++MONGODB_HOST=localhost
++MONGODB_PORT=27017
+ MONGODB_DATABASE=am_trade_management
+-MONGODB_AUTHENTICATION_DATABASE=admin
+ ```
+ 
+ ### Redis Configuration

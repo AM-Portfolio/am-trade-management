@@ -1,0 +1,1040 @@
+﻿{
+    "value":  [
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471051",
+                      "pull_request_review_id":  4773358462,
+                      "id":  3645471051,
+                      "node_id":  "PRRC_kwDOO-jMk87ZSXlL",
+                      "diff_hunk":  "@@ -55,121 +52,112 @@ public MarketDataApiClient(MarketDataApiConfig config, RestTemplateBuilder restT\n                     return execution.execute(request, body);\n                 })\n                 .build();\n+                \n+        this.localCache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()\n+                .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)\n+                .maximumSize(10_000)\n+                .build(new com.github.benmanes.caffeine.cache.CacheLoader\u003cString, Double\u003e() {\n+                    @Override\n+                    public Double load(String key) {\n+                        return fetchFromApi(java.util.Collections.singletonList(key)).get(key);\n+                    }\n+\n+                    @Override\n+                    public Map\u003cString, Double\u003e loadAll(Iterable\u003c? extends String\u003e keys) {\n+                        return fetchFromApi(keys);\n+                    }\n+                });",
+                      "path":  "am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "0d9c700560a8b2dc9838d796cc6d841786b90b74",
+                      "user":  {
+                                   "login":  "coderabbitai[bot]",
+                                   "id":  136622811,
+                                   "node_id":  "BOT_kgDOCCSy2w",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/in/347564?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/coderabbitai%5Bbot%5D",
+                                   "html_url":  "https://github.com/apps/coderabbitai",
+                                   "followers_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/followers",
+                                   "following_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/orgs",
+                                   "repos_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/repos",
+                                   "events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/received_events",
+                                   "type":  "Bot",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "_🎯 Functional Correctness_ | _🔴 Critical_ | _⚡ Quick win_\n\n\u003cdetails\u003e\n\u003csummary\u003e🧩 Analysis chain\u003c/summary\u003e\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\n# Locate the resolved Caffeine version pin.\nfd -e xml -e gradle -e kts | xargs rg -n -i \u0027caffeine\u0027 2\u003e/dev/null\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 564\n\n---\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\nset -euo pipefail\n\necho \"## relevant cafeine dependency declarations\"\nfor f in am-trade-api/pom.xml am-trade-services/pom.xml; do\n  echo \"--- $f\"\n  sed -n \u002736,76p\u0027 \"$f\"\ndone\n\necho\necho \"## pom/build files\"\nfd -e xml -e gradle -e kts -e yaml -e yml . | sort | sed -n \u00271,120p\u0027\n\necho\necho \"## target file lines\"\nwc -l am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java\nsed -n \u00271,180p\u0027 am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 11649\n\n---\n\n🌐 Web query:\n\n`Caffeine CacheLoader loadAll method signature cache loader interface 3.x`\n\n💡 Result:\n\nIn Caffeine 3.x, the loadAll method signature in the CacheLoader interface is: default Map\u003c? extends K,? extends V\u003e loadAll(Set\u003c? extends K\u003e keys) throws Exception [1][2][3][4] This method is designed to compute or retrieve values for multiple keys at once and is invoked by LoadingCache.getAll(Iterable) [1][3][4]. It is a default method in the CacheLoader interface, meaning it does not need to be implemented unless bulk retrieval offers significant performance advantages over individual lookups [1][4]. If not overridden, LoadingCache.getAll will default to calling individual load(K) methods [1][3][4]. Note that the parameter type is a Set\u003c? extends K\u003e in Caffeine 3.x [1][2], which differs from the Iterable\u003c? extends K\u003e type used in earlier versions (e.g., Caffeine 2.x) [5].\n\nCitations:\n\n- 1: https://www.javadoc.io/static/com.github.ben-manes.caffeine/caffeine/3.1.1/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/CacheLoader.html\n- 2: https://www.javadoc.io/static/com.github.ben-manes.caffeine/caffeine/3.0.2/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/CacheLoader.html\n- 3: https://devdoc.net/javamisc/caffeine-3.0.6-javadoc/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/CacheLoader.html\n- 4: https://apidia.net/mvn/com.github.ben-manes.caffeine/caffeine/3.1.8/com.github.benmanes.caffeine.cache.CacheLoader.html\n- 5: https://javadoc.io/static/com.github.ben-manes.caffeine/caffeine/2.8.5/com/github/benmanes/caffeine/cache/CacheLoader.html\n\n---\n\n🌐 Web query:\n\n`Maven central com.github.ben-manes.caffeine caffeine pom 3.1.8 LoadAll Set`\n\n💡 Result:\n\nCaffeine version 3.1.8 is a valid release in the com.github.ben-manes.caffeine group available on Maven Central [1][2][3]. Regarding loadAll and Set: The loadAll method is part of the CacheLoader interface in Caffeine [4][5][6]. It is defined with the signature: default Map\u003c? extends K,? extends V\u003e loadAll(Set\u003c? extends K\u003e keys) throws Exception [4][5][6]. Key details about loadAll: - Purpose: It is used by LoadingCache.getAll(Iterable) to perform bulk lookups [4][7][6]. - Implementation: By default, if loadAll is not overridden, LoadingCache.getAll will defer to individual calls to the CacheLoader.load method for each missing key [8][5][6]. You should override loadAll when bulk retrieval is significantly more efficient than individual lookups [4][5][6]. - Behavior: The method receives a Set of keys that need to be loaded [4][5][6]. If the returned map contains extra keys not present in the input Set, those extra entries will also be cached, though only the requested keys are returned by the initial getAll call [4][5][6]. Conversely, if the returned map is missing some of the requested keys, only the entries it does contain will be cached [4][5][6]. You can implement this in your own CacheLoader to optimize bulk loading operations [8][5].\n\nCitations:\n\n- 1: https://central.sonatype.com/artifact/com.github.ben-manes.caffeine/caffeine/3.1.8\n- 2: https://repo1.maven.org/maven2/com/github/ben-manes/caffeine/caffeine/3.1.8/\n- 3: https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine/3.1.8\n- 4: https://apidia.net/mvn/com.github.ben-manes.caffeine/caffeine/3.1.8/com.github.benmanes.caffeine.cache.CacheLoader.html\n- 5: https://mintlify.wiki/ben-manes/caffeine/api/cache-loader\n- 6: https://www.javadoc.io/static/com.github.ben-manes.caffeine/caffeine/3.1.1/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/CacheLoader.html\n- 7: https://apidia.net/mvn/com.github.ben-manes.caffeine/caffeine/3.1.8/com.github.benmanes.caffeine.cache.LoadingCache.html\n- 8: https://github.com/ben-manes/caffeine/wiki/Population\n\n---\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\nset -euo pipefail\n\necho \"## root pom parent/version\"\nsed -n \u00271,140p\u0027 pom.xml\n\necho\necho \"## platform/dependency management caffeine pins\"\nrg -n -C 3 \u0027com\\.github\\.ben-manes\\.caffeine|caffeine|spring-boot-bom|spring-boot-parent\u0027 pom.xml am-trade-api/pom.xml am-trade-services/pom.xml\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 5453\n\n---\n\n🌐 Web query:\n\n`com.github.ben-manes.caffeine caffeine pom dependencies spring-boot-dependencies caffeine version 3.4.1`\n\n💡 Result:\n\nThere is no version 3.4.1 of the com.github.ben-manes.caffeine:caffeine library [1][2]. While a version 3.4.1 exists for other artifacts—such as io.micronaut.cache:micronaut-cache-caffeine [3][4]—the core Caffeine library uses a different versioning scheme [5][1]. As of July 2026, the latest available versions of the core Caffeine library include 3.2.4 [5][6][7]. Regarding Spring Boot dependencies, Spring Boot manages the version of Caffeine used in projects [8][9]. For Spring Boot 3.4.x, the managed version of Caffeine is 3.1.8 [8][10]. If you are using Spring Boot and wish to use a newer version of Caffeine than the one managed by your current Spring Boot version, you can override the version in your pom.xml (for Maven) or build.gradle (for Gradle) [9]. For Maven, update the property: \u003cproperties\u003e \u003ccaffeine.version\u003e3.2.4\u003c/caffeine.version\u003e \u003c/properties\u003e For Gradle, specify the version directly: dependencies { implementation(\"com.github.ben-manes.caffeine:caffeine:3.2.4\") }\n\nCitations:\n\n- 1: https://repo1.maven.org/maven2/com/github/ben-manes/caffeine/caffeine/\n- 2: https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine\n- 3: https://repo1.maven.org/maven2/io/micronaut/cache/micronaut-cache-caffeine/3.4.1/\n- 4: https://jarcasting.com/artifacts/io.micronaut.cache/micronaut-cache-caffeine/\n- 5: https://github.com/ben-manes/caffeine/releases\n- 6: https://github.com/ben-manes/caffeine?tab=readme-ov-file\n- 7: https://deps.dev/maven/com.github.ben-manes.caffeine%3Acaffeine\n- 8: https://docs.spring.io/spring-boot/3.4/appendix/dependency-versions/coordinates.html\n- 9: https://docs.spring.io/spring-boot/3.4/appendix/dependency-versions/properties.html\n- 10: https://central.sonatype.com/artifact/org.springframework.boot/spring-boot-dependencies/3.4.13\n\n---\n\n🌐 Web query:\n\n`com.github.ben-manes.caffeine caffeine pom dependencies caffeine.version caffeine 3.1.8`\n\n💡 Result:\n\nCaffeine version 3.1.8 is a release of the high-performance Java caching library developed by Ben Manes, published on August 9, 2023 [1][2]. To include Caffeine 3.1.8 in your project using Maven, add the following dependency to your pom.xml file [3]: \u003cdependency\u003e \u003cgroupId\u003ecom.github.ben-manes.caffeine\u003c/groupId\u003e \u003cartifactId\u003ecaffeine\u003c/artifactId\u003e \u003cversion\u003e3.1.8\u003c/version\u003e \u003c/dependency\u003e For Gradle users, you can use: implementation(\"com.github.ben-manes.caffeine:caffeine:3.1.8\") As of July 24, 2026, version 3.1.8 is an older release [4]. The library has since been updated, with more recent versions (such as 3.2.4) available on Maven Central [4][5]. It is generally recommended to use the latest stable version for the latest features, bug fixes, and performance improvements [4]. Key details regarding version 3.1.8: - Group ID: com.github.ben-manes.caffeine [6][3] - Artifact ID: caffeine [6][3] - License: Apache License 2.0 [4] - Release Notes: Version 3.1.8 included a workaround for a potential JDK concurrency bug involving method handles [1][7].\n\nCitations:\n\n- 1: https://github.com/ben-manes/caffeine/releases/tag/v3.1.8\n- 2: https://apidia.net/mvn/com.github.ben-manes.caffeine/caffeine/3.1.8/release-info.html\n- 3: https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine/3.1.8\n- 4: https://github.com/ben-manes/caffeine?tab=readme-ov-file\n- 5: https://javadoc.io/doc/com.github.ben-manes.caffeine/caffeine/latest/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/Caffeine.html\n- 6: https://central.sonatype.com/artifact/com.github.ben-manes.caffeine/caffeine/3.1.8\n- 7: https://github.com/ben-manes/caffeine/releases\n\n---\n\n\n\n\u003c/details\u003e\n\n**Use the Caffeine 3.x `loadAll` signature.**\n\nThis module is built under Spring Boot 3.4.1, which resolves `caffeine` to 3.x, but this override still uses the obsolete `Iterable\u003c? extends String\u003e` signature from Caffeine 2.x. That will not override `CacheLoader.loadAll`, causing fresh misses to run individual `load` calls instead of the intended bulk load and leaving the `@Override` invalid.\n\n\u003cdetails\u003e\n\u003csummary\u003e🐛 Proposed fix to match Caffeine 3.x signature\u003c/summary\u003e\n\n```diff\n                 .build(new com.github.benmanes.caffeine.cache.CacheLoader\u003cString, Double\u003e() {\n                     `@Override`\n                     public Double load(String key) {\n                         return fetchFromApi(java.util.Collections.singletonList(key)).get(key);\n                     }\n\n                     `@Override`\n-                    public Map\u003cString, Double\u003e loadAll(Iterable\u003c? extends String\u003e keys) {\n+                    public Map\u003cString, Double\u003e loadAll(java.util.Set\u003c? extends String\u003e keys) {\n                         return fetchFromApi(keys);\n                     }\n                 });\n```\n\u003c/details\u003e\n\n\u003c!-- suggestion_start --\u003e\n\n\u003cdetails\u003e\n\u003csummary\u003e📝 Committable suggestion\u003c/summary\u003e\n\n\u003e ‼️ **IMPORTANT**\n\u003e Carefully review the code before committing. Ensure that it accurately replaces the highlighted code, contains no missing lines, and has no issues with indentation. Thoroughly test \u0026 benchmark the code to ensure it meets the requirements.\n\n```suggestion\n                .build(new com.github.benmanes.caffeine.cache.CacheLoader\u003cString, Double\u003e() {\n                    `@Override`\n                    public Double load(String key) {\n                        return fetchFromApi(java.util.Collections.singletonList(key)).get(key);\n                    }\n\n                    `@Override`\n                    public Map\u003cString, Double\u003e loadAll(java.util.Set\u003c? extends String\u003e keys) {\n                        return fetchFromApi(keys);\n                    }\n                });\n```\n\n\u003c/details\u003e\n\n\u003c!-- suggestion_end --\u003e\n\n\u003cdetails\u003e\n\u003csummary\u003e🤖 Prompt for AI Agents\u003c/summary\u003e\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java`\naround lines 59 - 69, Update the CacheLoader implementation in\nMarketDataApiClient so its loadAll method uses the Caffeine 3.x key-collection\nsignature required by CacheLoader, while preserving the existing fetchFromApi\nbulk-loading behavior and `@Override` annotation.\n```\n\n\u003c/details\u003e\n\n\u003c!-- fingerprinting:phantom:medusa:beignet --\u003e\n\n\u003c!-- cr-indicator-types:potential_issue --\u003e\n\n\u003c!-- cr-comment:v1:5c570a650116c4620d36dab8 --\u003e\n\n\u003c!-- This is an auto-generated comment by CodeRabbit --\u003e",
+                      "created_at":  "2026-07-24T13:00:08Z",
+                      "updated_at":  "2026-07-24T13:00:10Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3645471051",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471051"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3645471051"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471051/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  68,
+                      "original_start_line":  59,
+                      "start_side":  "RIGHT",
+                      "line":  77,
+                      "original_line":  69,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  33,
+                      "position":  63,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471075",
+                      "pull_request_review_id":  4773358462,
+                      "id":  3645471075,
+                      "node_id":  "PRRC_kwDOO-jMk87ZSXlj",
+                      "diff_hunk":  "@@ -55,121 +52,112 @@ public MarketDataApiClient(MarketDataApiConfig config, RestTemplateBuilder restT\n                     return execution.execute(request, body);\n                 })\n                 .build();\n+                \n+        this.localCache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()\n+                .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)\n+                .maximumSize(10_000)\n+                .build(new com.github.benmanes.caffeine.cache.CacheLoader\u003cString, Double\u003e() {\n+                    @Override\n+                    public Double load(String key) {\n+                        return fetchFromApi(java.util.Collections.singletonList(key)).get(key);\n+                    }\n+\n+                    @Override\n+                    public Map\u003cString, Double\u003e loadAll(Iterable\u003c? extends String\u003e keys) {\n+                        return fetchFromApi(keys);\n+                    }\n+                });\n     }\n \n     public Map\u003cString, Double\u003e getCurrentPrices(List\u003cString\u003e symbols) {\n         if (symbols == null || symbols.isEmpty()) {\n             return new HashMap\u003c\u003e();\n         }\n \n-        Map\u003cString, Double\u003e result = new HashMap\u003c\u003e();\n-        List\u003cString\u003e missingSymbols = new java.util.ArrayList\u003c\u003e();\n-        java.time.Instant now = java.time.Instant.now();\n+        // Clean symbols (remove exchange prefix if present) and filter out nulls\n+        List\u003cString\u003e cleanSymbols = symbols.stream()\n+                .filter(java.util.Objects::nonNull)\n+                .map(symbol -\u003e {\n+                    if (symbol.contains(\":\")) {\n+                        return symbol.substring(symbol.lastIndexOf(\":\") + 1);\n+                    }\n+                    return symbol;\n+                })\n+                .collect(java.util.stream.Collectors.toList());\n \n-        if (isL1CacheEnabled) {\n-            // 1. Check local cache\n-            for (String symbol : symbols) {\n-                String cleanSymbol = symbol;\n-                if (cleanSymbol != null \u0026\u0026 cleanSymbol.contains(\":\")) {\n-                    cleanSymbol = cleanSymbol.substring(cleanSymbol.lastIndexOf(\":\") + 1);\n-                }\n-                Double cachedPrice = localCache.getIfPresent(cleanSymbol);\n-                if (cachedPrice != null) {\n-                    result.put(cleanSymbol, cachedPrice);\n-                } else {\n-                    missingSymbols.add(symbol); // Request with original symbol format\n-                }\n-            }\n+        if (cleanSymbols.isEmpty()) {\n+            return new HashMap\u003c\u003e();\n+        }\n \n-            // 2. If all symbols are cached, return immediately\n-            if (missingSymbols.isEmpty()) {\n-                log.debug(\"All symbols retrieved from local cache.\");\n-                return result;\n-            }\n+        if (isL1CacheEnabled) {\n+            // Caffeine LoadingCache automatically coalesces concurrent bulk requests (Cache Stampede protection).\n+            // Threads requesting the exact same missing keys will block on the single thread that is fetching them,\n+            // instead of all trying to fetch them concurrently.\n+            Map\u003cString, Double\u003e result = localCache.getAll(cleanSymbols);\n+            return result != null ? result : new HashMap\u003c\u003e();",
+                      "path":  "am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java",
+                      "commit_id":  "4de4ae39bd0ace5ef366c2bde2e60f08673c7845",
+                      "original_commit_id":  "0d9c700560a8b2dc9838d796cc6d841786b90b74",
+                      "user":  {
+                                   "login":  "coderabbitai[bot]",
+                                   "id":  136622811,
+                                   "node_id":  "BOT_kgDOCCSy2w",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/in/347564?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/coderabbitai%5Bbot%5D",
+                                   "html_url":  "https://github.com/apps/coderabbitai",
+                                   "followers_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/followers",
+                                   "following_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/orgs",
+                                   "repos_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/repos",
+                                   "events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/received_events",
+                                   "type":  "Bot",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "_🚀 Performance \u0026 Scalability_ | _🟠 Major_ | _⚡ Quick win_\n\n\u003cdetails\u003e\n\u003csummary\u003e🧩 Analysis chain\u003c/summary\u003e\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\nset -euo pipefail\n\necho \"== locate file ==\"\nfd -a \u0027MarketDataApiClient\\.java$\u0027 . || true\n\necho \"== file excerpt ==\"\nif [ -f am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java ]; then\n  nl -ba am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java | sed -n \u00271,180p\u0027\nfi\n\necho \"== caffeine dependencies ==\"\nrg -n \"caffeine|com.github.ben-manes.caffeine|Caffeine|LoadingCache|AsyncLoadingCache\" -S pom.xml am-trade-api/pom.xml build.gradle* settings.gradle* 2\u003e/dev/null || true\n\necho \"== usage/currentPrices symbols ==\"\nrg -n \"fetchFromApi|getCurrentPrices|getAll\\\\(|L1|isL1CacheEnabled|localCache\" -S am-trade-api/src/main/java am-trade-services 2\u003e/dev/null || true\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 338\n\n---\n\n🌐 Web query:\n\n`Caffeine Java FAQ bulk load concurrent same entries getAll stampede AsyncLoadingCache asyncLoadAll`\n\n💡 Result:\n\nIn Caffeine, AsyncLoadingCache is specifically designed to handle bulk loads and mitigate cache stampedes [1][2]. Bulk Loading and asyncLoadAll: When you use AsyncLoadingCache.getAll(Iterable), the cache checks which keys are already present. For keys that are absent, it triggers a load [3][4]. If an AsyncCacheLoader with an optimized asyncLoadAll implementation is provided, the cache invokes it once for all missing keys [3][4]. If asyncLoadAll is not overridden, the cache defaults to individual asyncLoad calls for each missing key [5][6][4]. Concurrency and Cache Stampede Protection: The primary mechanism for preventing cache stampedes in AsyncLoadingCache is its use of CompletableFuture [1]. When a load is initiated for a key, the cache immediately inserts a CompletableFuture into its internal map [1]. If other threads request the same key while that future is still in-flight, they will retrieve and wait on the same shared future rather than triggering redundant loads [1][2]. Handling Same/Duplicate Entries: 1. In-flight Deduplication: If concurrent calls to getAll request the same missing keys, the cache ensures that the bulk loader is only invoked for those keys once by tracking the in-flight status of the futures [1][2]. 2. Returning Extra Entries: If your asyncLoadAll implementation returns entries for keys that were not explicitly requested (a pre-fetch pattern), Caffeine will cache these extra entries, but only return the requested keys to the caller of getAll [7][4]. 3. Completion Behavior: By design, getAll completes once the futures for the requested keys are finished [8]. Note that in some versions, if the loader returns extra keys, those extra entries might not be added to the cache until the initial requested keys are processed, though this behavior has been refined in recent updates to ensure all fetched data is correctly handled [8]. Best Practices: To effectively utilize bulk loading, override asyncLoadAll in your AsyncCacheLoader [6][4]. This is significantly more efficient than individual lookups when the underlying data source supports batching [5][7]. If your application requires more complex logic, such as coalescing requests over a time window, you can implement a custom loader that manages a sink or buffer to batch requests manually [9].\n\nCitations:\n\n- 1: https://github.com/ben-manes/caffeine/wiki/Faq\n- 2: https://github.com/ben-manes/caffeine/issues/297\n- 3: https://javadoc.io/static/com.github.ben-manes.caffeine/caffeine/2.8.5/com/github/benmanes/caffeine/cache/AsyncLoadingCache.html\n- 4: https://javadoc.io/static/com.github.ben-manes.caffeine/caffeine/2.8.5/com/github/benmanes/caffeine/cache/AsyncCacheLoader.html\n- 5: https://www.javadoc.io/static/com.github.ben-manes.caffeine/caffeine/3.1.1/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/CacheLoader.html\n- 6: https://github.com/ben-manes/caffeine/wiki/Population\n- 7: https://mintlify.wiki/ben-manes/caffeine/api/cache-loader\n- 8: https://github.com/ben-manes/caffeine/issues/1409\n- 9: https://github.com/ben-manes/caffeine/blob/master/examples/coalescing-bulkloader-reactor/README.md\n\n---\n\n🌐 Web query:\n\n`Caffeine issues 613 synchronous LoadingCache getAll concurrent bulk loading ConcurrentHashMap single get`\n\n💡 Result:\n\nIn Caffeine, the distinction between synchronous and asynchronous bulk loading in `getAll` centers on how concurrency and atomic state updates are handled [1][2]. Synchronous LoadingCache (`Caffeine.build()`) relies on the underlying `ConcurrentHashMap` and its `compute` methods (similar to `computeIfAbsent`) [3][2]. Because the cache uses the map\u0027s fine-grained, bin-level locks, it is technically impossible to lock multiple entries simultaneously during a bulk load [1][2]. Consequently, `getAll` for a synchronous cache cannot perform an atomic, blocking bulk load that prevents concurrent loads for the same keys [1][2]. This means that separate threads requesting the same keys may trigger redundant `cacheLoader.loadAll()` calls or individual `load()` operations, as the cache cannot effectively \"reserve\" those keys while the bulk operation is in progress [1][2]. In contrast, `AsyncLoadingCache` (`Caffeine.buildAsync()`) handles this by storing `CompletableFuture` objects as values in the map immediately [1][2]. This allows the cache to establish an in-flight state for all requested keys atomically [4][2]. When a bulk operation is initiated, it can insert these incomplete futures into the map; subsequent threads requesting those same keys will then simply receive the existing, in-flight future rather than triggering a new load [3][2]. Once the bulk operation completes, it fulfills the futures, ensuring that the cache is updated correctly without the race conditions or stampedes associated with the synchronous implementation [3][5][2]. For users experiencing issues related to this (such as those discussed in issue `#613`), the recommended mitigation is to use `AsyncLoadingCache` when bulk loading is a frequent requirement, or to accept that the synchronous `getAll` may perform multiple loads if concurrent requests overlap [1][2]. If you must use a synchronous cache but face severe contention, you can attempt to increase the initial capacity of the cache to reduce lock contention on the `ConcurrentHashMap` [6][2].\n\nCitations:\n\n- 1: https://github.com/ben-manes/caffeine/discussions/613\n- 2: https://github.com/ben-manes/caffeine/wiki/Faq\n- 3: https://github.com/ben-manes/caffeine/issues/430\n- 4: https://github.com/ben-manes/caffeine/issues/996\n- 5: https://github.com/ben-manes/caffeine/issues/631\n- 6: https://github.com/ben-manes/caffeine/issues/771\n\n---\n\n🌐 Web query:\n\n`ben-manes caffeine FAQ synchronous bulk load cannot block concurrent loads same entries`\n\n💡 Result:\n\nIn Caffeine, the reason a synchronous bulk load (via Cache#getAll) cannot block concurrent loads for the same entries is due to how it relies on the underlying ConcurrentHashMap for thread-safe computations [1]. Because a synchronous cache must lock through the hash table (specifically using ConcurrentHashMap\u0027s computeIfAbsent mechanism), it only supports one computation per caller at a time and does not have the ability to lock multiple entries simultaneously [1][2][3]. Consequently, it cannot establish in-flight placeholders for all requested keys before starting the bulk load [3]. Instead, it performs the load outside of the map\u0027s locks and then updates the mappings, which means it cannot prevent concurrent threads from initiating their own overlapping loads for the same keys, potentially leading to redundant work or a cache stampede [1][4]. In contrast, an AsyncCache (via Caffeine#buildAsync) is designed to avoid this limitation by establishing mappings immediately as CompletableFuture placeholders [1][2]. This ensures that any concurrent calls for the same entry will retrieve the existing in-flight future, allowing the bulk operation to effectively serialize and manage the loading process across threads [1][5]. If you require protection against concurrent loading for the same entries in a synchronous context, Caffeine recommends using an AsyncCache (or an asynchronous view) to ensure atomicity during the loading phase [1][2].\n\nCitations:\n\n- 1: https://github.com/ben-manes/caffeine/wiki/Faq\n- 2: https://github.com/ben-manes/caffeine/discussions/613\n- 3: https://github.com/ben-manes/caffeine/issues/996\n- 4: https://github.com/ben-manes/caffeine/issues/631\n- 5: https://www.javadoc.io/static/com.github.ben-manes.caffeine/caffeine/3.1.7/com.github.benmanes.caffeine/com/github/benmanes/caffeine/cache/AsyncCache.html\n\n---\n\n🌐 Web query:\n\n`ben-manes caffeine synchronous LoadingCache loadAll duplicate calls ConcurrentHashMap getAll`\n\n💡 Result:\n\nIn Caffeine, the behavior of `LoadingCache.getAll()` regarding duplicate load calls depends primarily on whether you are using a synchronous or asynchronous cache, due to the underlying limitations of `ConcurrentHashMap` [1][2]. For a synchronous `LoadingCache` (built with `Caffeine.newBuilder().build(...)`), the cache piggybacks on `ConcurrentHashMap` computations [2]. Because `ConcurrentHashMap` does not support atomic bulk operations, `getAll()` cannot lock all keys simultaneously during a bulk load [1][2]. Consequently, if multiple threads concurrently request the same keys, they may trigger overlapping or duplicate calls to `CacheLoader.loadAll()` (or individual `load()` calls) [1][2]. In such cases, if multiple loads for the same key occur, the last load to complete will overwrite any existing mapping in the cache [3][4]. In contrast, an `AsyncLoadingCache` (built with `Caffeine.newBuilder().buildAsync(...)`) avoids this issue [2]. It immediately inserts an in-flight `CompletableFuture` into the cache as a placeholder [2][5]. When concurrent requests for the same key occur, they obtain the existing in-flight future rather than triggering a new load [2][5]. The bulk operation then completes these futures [2][5]. Key takeaways: - Synchronous `LoadingCache` cannot atomically lock all keys in a bulk request, making it susceptible to redundant, overlapping loads during high concurrency [1][2]. - If you require protection against \"cache stampedes\" or redundant loads for the same keys, `AsyncLoadingCache` is the recommended approach, as it effectively uses futures as locks for in-flight requests [2][5]. - `LoadingCache.getAll()` will automatically ignore duplicate elements within the provided `keys` iterable itself before initiating the load [3][4].\n\nCitations:\n\n- 1: https://github.com/ben-manes/caffeine/discussions/613\n- 2: https://github.com/ben-manes/caffeine/wiki/Faq\n- 3: https://javadoc.io/static/com.github.ben-manes.caffeine/caffeine/2.8.5/com/github/benmanes/caffeine/cache/LoadingCache.html\n- 4: https://javadoc.io/static/com.github.ben-manes.caffeine/caffeine/2.8.8/com/github/benmanes/caffeine/cache/Cache.html\n- 5: https://stackoverflow.com/questions/68598025/how-to-use-caffeine-getall\n\n---\n\n\n\n\u003c/details\u003e\n\n**Correct the Caffeine stampede claim or switch bulk loading to an async cache.**\n\nSynchronous `Caffeine#build()` only coalesces single-key `get()` misses; bulk `getAll()` misses are not globally locked for the same entries, so concurrent identical `getCurrentPrices(...)` calls on missing symbols can each invoke `fetchFromApi(...)`. Use `buildAsync(...)` with `asyncLoadAll(...)`/`AsyncLoadingCache` for bulk stampede protection, or update the comment to reflect the weaker single-key guarantee.\n\n\u003cdetails\u003e\n\u003csummary\u003e🤖 Prompt for AI Agents\u003c/summary\u003e\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java`\naround lines 92 - 97, Correct the stampede-protection comment and behavior\naround localCache.getAll in getCurrentPrices: either migrate the cache to\nAsyncLoadingCache using buildAsync with asyncLoadAll so concurrent bulk misses\nare coalesced, or revise the comment to claim only synchronous single-key get()\ncoalescing. Preserve the existing bulk result and empty-map handling.\n```\n\n\u003c/details\u003e\n\n\u003c!-- fingerprinting:phantom:medusa:beignet --\u003e\n\n\u003c!-- cr-indicator-types:potential_issue --\u003e\n\n\u003c!-- cr-comment:v1:31850033b02cc7dedc536983 --\u003e\n\n\u003c!-- This is an auto-generated comment by CodeRabbit --\u003e",
+                      "created_at":  "2026-07-24T13:00:08Z",
+                      "updated_at":  "2026-07-24T13:00:10Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3645471075",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471075"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3645471075"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471075/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  null,
+                      "original_start_line":  92,
+                      "start_side":  "RIGHT",
+                      "line":  null,
+                      "original_line":  97,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  83,
+                      "position":  1,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471080",
+                      "pull_request_review_id":  4773358462,
+                      "id":  3645471080,
+                      "node_id":  "PRRC_kwDOO-jMk87ZSXlo",
+                      "diff_hunk":  "@@ -172,22 +172,25 @@ public List\u003cTradeDetails\u003e getTradesBySymbols(String portfolioId, List\u003cString\u003e sy\n     }\n \n     @Override\n-    public Page\u003cTradeDetails\u003e getTradesBySymbolsPage(String portfolioId, List\u003cString\u003e symbols, Pageable pageable) {\n-        log.info(\"Fetching paginated trades for portfolio: {} filtered by symbols: {}\", portfolioId, symbols);\n+    public Page\u003cTradeDetails\u003e getTradesBySymbolsPage(String userId, String portfolioId, List\u003cString\u003e symbols, Pageable pageable) {\n+        log.info(\"Fetching paginated trades for user: {} portfolio: {} filtered by symbols: {}\", userId, portfolioId, symbols);\n \n         if (portfolioId == null || portfolioId.isEmpty()) {\n             throw new IllegalArgumentException(\"Portfolio ID cannot be null or empty\");\n         }\n \n         if (symbols == null || symbols.isEmpty()) {\n-            return getTradeDetailsByPortfolio(portfolioId, pageable);\n+            Page\u003cTradeDetails\u003e page = tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId, pageable);\n+            enrichWithLivePrices(page.getContent());\n+            return page;\n         }\n \n         List\u003cString\u003e upperCaseSymbols = symbols.stream()\n+                .filter(java.util.Objects::nonNull)\n                 .map(String::toUpperCase)\n                 .collect(Collectors.toList());\n \n-        Page\u003cTradeDetails\u003e page = tradeDetailsService.findModelsByPortfolioIdAndSymbolInIgnoreCase(portfolioId, upperCaseSymbols, pageable);\n+        Page\u003cTradeDetails\u003e page = tradeDetailsService.findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase(userId, portfolioId, upperCaseSymbols, pageable);\n         enrichWithLivePrices(page.getContent());",
+                      "path":  "am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "0d9c700560a8b2dc9838d796cc6d841786b90b74",
+                      "user":  {
+                                   "login":  "coderabbitai[bot]",
+                                   "id":  136622811,
+                                   "node_id":  "BOT_kgDOCCSy2w",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/in/347564?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/coderabbitai%5Bbot%5D",
+                                   "html_url":  "https://github.com/apps/coderabbitai",
+                                   "followers_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/followers",
+                                   "following_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/orgs",
+                                   "repos_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/repos",
+                                   "events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/received_events",
+                                   "type":  "Bot",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "_🎯 Functional Correctness_ | _🟠 Major_ | _⚡ Quick win_\n\n\u003cdetails\u003e\n\u003csummary\u003e🧩 Analysis chain\u003c/summary\u003e\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\nset -euo pipefail\n\necho \"== locate relevant files ==\"\nfd -a \u0027TradeManagementServiceImpl\\.java|TradeControllerV2\\.java|.*TradeDetailsService.*\\.java|am-trade-api/pom.xml|am-trade-services/pom.xml\u0027 . | sed \u0027s#^\\./##\u0027\n\necho\necho \"== outline TradeManagementServiceImpl ==\"\nast-grep outline am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java --view expanded || true\n\necho\necho \"== relevant TradeManagementServiceImpl lines ==\"\nsed -n \u00271,240p\u0027 am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java | nl -ba | sed -n \u0027140,220p\u0027\n\necho\necho \"== TradeControllerV2 relevant snippets ==\"\nfd \u0027TradeControllerV2\\.java\u0027 . -x sh -c \u0027echo \"--- $1\"; sed -n \"1,260p\" \"$1\" | nl -ba | sed -n \"1,240p\"\u0027 sh {}\n\necho\necho \"== repository/service find methods ==\"\nfd \u0027\\.java$\u0027 . | xargs rg -n \"findModelsByUserIdAndPortfolioId|findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase|MongoRepository|Pageable|Sort|defaultSort|SORT\" -S\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 1203\n\n---\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\nset -euo pipefail\n\necho \"== list java files by approximate size for inspection ==\"\nfor f in $(fd \u0027\\.java$\u0027 am-trade-api am-trade-services 2\u003e/dev/null | head -200); do\n  echo \"$f $(wc -l \u003c \"$f\")\"\ndone\n\necho\necho \"== controller endpoint path and parameter annotations ==\"\nrg -n \"GetMapping|PostMapping|Pageable|sort|Sort|DefaultSort|`@Sort`|Pageable\\\\(\" am-trade-api/src/main/java/am/trade/api am-trade-services/src/main/java/am/trade -S\n\necho\necho \"== service repository method signatures ==\"\nrg -n \"findModelsByUserIdAndPortfolioId|findModelsByPortfolioId|findModelsByUserId|SymbolInIgnoreCase|MongoRepository|Pageable\" am-trade-services/src/main/java am-trade-api/src/main/java -S\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 46835\n\n---\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\nset -euo pipefail\n\necho \"== TradeControllerV2 ==\"\nsed -n \u00271,90p\u0027 am-trade-api/src/main/java/am/trade/api/controller/TradeControllerV2.java | sed -n \u00271,90p\u0027\n\necho\necho \"== TradeDetailsService interface ==\"\nsed -n \u00271,70p\u0027 am-trade-services/src/main/java/am/trade/services/service/TradeDetailsService.java | sed -n \u00271,70p\u0027\n\necho\necho \"== TradeDetailsServiceImpl relevant implementations ==\"\nsed -n \u002765,140p\u0027 am-trade-services/src/main/java/am/trade/services/impl/TradeDetailsServiceImpl.java 2\u003e/dev/null || true\nsed -n \u002765,140p\u0027 am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java\n\necho\necho \"== TradeDetailsEntity/repo candidate files ==\"\nfd -i \u0027TradeDetails.*Repository|TradeDetailsEntity|TradeDetailsRepository\u0027 . -x sh -c \u0027echo \"--- $1\"; wc -l \"$1\"; sed -n \"1,220p\" \"$1\"\u0027 sh {}\n\necho\necho \"== repository annotations and find signatures ==\"\nrg -n \"class .*TradeDetails.*Repository|interface .*TradeDetails.*Repository|findByUser|findByPortfolioIdAndSymbolInIgnoreCase|findByUserIdAndPortfolioIdAndSymbolInIgnoreCase|findByUserIdAndPortfolioId|`@Document`|Sort|defaultSort|MongoRepository|ReactiveMongoRepository\" -S am-trade-services/src/main/java am-trade-api/src/main/java\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 30743\n\n---\n\n\n\n\u003c/details\u003e\n\n**Apply a deterministic sort before paging.**\n\n`TradeControllerV2` passes raw `Pageable` to `TradeDetailsService`; when callers omit `sort`, MongoDB query paths can return pages without a stable order, causing duplicates or gaps between page requests. Add a default business sort with a deterministic tie-breaker before returning pages.\n\n\u003cdetails\u003e\n\u003csummary\u003e🤖 Prompt for AI Agents\u003c/summary\u003e\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn\n`@am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java`\naround lines 182 - 194, Update the paged trade retrieval flow in\nTradeManagementServiceImpl to apply a default business sort with a deterministic\ntie-breaker whenever the incoming Pageable has no sort, before calling either\ntradeDetailsService query method. Preserve caller-provided sorting, and use the\nresulting sorted Pageable for both empty-symbol and symbol-filtered paths before\nenriching and returning pages.\n```\n\n\u003c/details\u003e\n\n\u003c!-- fingerprinting:phantom:poseidon:luna --\u003e\n\n\u003c!-- cr-indicator-types:potential_issue --\u003e\n\n\u003c!-- cr-comment:v1:9d238b0bd8f2902aece9e498 --\u003e\n\n\u003c!-- This is an auto-generated comment by CodeRabbit --\u003e",
+                      "created_at":  "2026-07-24T13:00:08Z",
+                      "updated_at":  "2026-07-24T13:00:10Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3645471080",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471080"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3645471080"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471080/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  182,
+                      "original_start_line":  182,
+                      "start_side":  "RIGHT",
+                      "line":  194,
+                      "original_line":  194,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  27,
+                      "position":  27,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471085",
+                      "pull_request_review_id":  4773358462,
+                      "id":  3645471085,
+                      "node_id":  "PRRC_kwDOO-jMk87ZSXlt",
+                      "diff_hunk":  "@@ -172,22 +172,25 @@ public List\u003cTradeDetails\u003e getTradesBySymbols(String portfolioId, List\u003cString\u003e sy\n     }\n \n     @Override\n-    public Page\u003cTradeDetails\u003e getTradesBySymbolsPage(String portfolioId, List\u003cString\u003e symbols, Pageable pageable) {\n-        log.info(\"Fetching paginated trades for portfolio: {} filtered by symbols: {}\", portfolioId, symbols);\n+    public Page\u003cTradeDetails\u003e getTradesBySymbolsPage(String userId, String portfolioId, List\u003cString\u003e symbols, Pageable pageable) {\n+        log.info(\"Fetching paginated trades for user: {} portfolio: {} filtered by symbols: {}\", userId, portfolioId, symbols);\n \n         if (portfolioId == null || portfolioId.isEmpty()) {\n             throw new IllegalArgumentException(\"Portfolio ID cannot be null or empty\");\n         }\n \n         if (symbols == null || symbols.isEmpty()) {\n-            return getTradeDetailsByPortfolio(portfolioId, pageable);\n+            Page\u003cTradeDetails\u003e page = tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId, pageable);\n+            enrichWithLivePrices(page.getContent());\n+            return page;\n         }\n \n         List\u003cString\u003e upperCaseSymbols = symbols.stream()\n+                .filter(java.util.Objects::nonNull)\n                 .map(String::toUpperCase)\n                 .collect(Collectors.toList());\n \n-        Page\u003cTradeDetails\u003e page = tradeDetailsService.findModelsByPortfolioIdAndSymbolInIgnoreCase(portfolioId, upperCaseSymbols, pageable);\n+        Page\u003cTradeDetails\u003e page = tradeDetailsService.findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase(userId, portfolioId, upperCaseSymbols, pageable);",
+                      "path":  "am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "0d9c700560a8b2dc9838d796cc6d841786b90b74",
+                      "user":  {
+                                   "login":  "coderabbitai[bot]",
+                                   "id":  136622811,
+                                   "node_id":  "BOT_kgDOCCSy2w",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/in/347564?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/coderabbitai%5Bbot%5D",
+                                   "html_url":  "https://github.com/apps/coderabbitai",
+                                   "followers_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/followers",
+                                   "following_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/orgs",
+                                   "repos_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/repos",
+                                   "events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/received_events",
+                                   "type":  "Bot",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "_🎯 Functional Correctness_ | _🟡 Minor_ | _⚡ Quick win_\n\n**Handle lists containing only invalid symbols.**\n\nAfter filtering nulls, `upperCaseSymbols` can be empty; the repository then receives `symbol: {$in: []}` and returns no trades, even though the no-symbol path is defined to return all trades. Trim and discard blank values, then treat an empty normalized list as no symbol filter or reject it explicitly.\n\n\u003cdetails\u003e\n\u003csummary\u003e🤖 Prompt for AI Agents\u003c/summary\u003e\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn\n`@am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java`\naround lines 188 - 193, Update the symbol normalization in the trade retrieval\nflow before calling\ntradeDetailsService.findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase: trim\nvalues, discard null or blank symbols, and route an empty normalized list\nthrough the existing no-symbol path so all trades are returned, or explicitly\nreject the input if that is the established contract.\n```\n\n\u003c/details\u003e\n\n\u003c!-- fingerprinting:phantom:poseidon:luna --\u003e\n\n\u003c!-- cr-indicator-types:potential_issue --\u003e\n\n\u003c!-- cr-comment:v1:36bfb4049da3dfed5c454840 --\u003e\n\n\u003c!-- This is an auto-generated comment by CodeRabbit --\u003e",
+                      "created_at":  "2026-07-24T13:00:08Z",
+                      "updated_at":  "2026-07-24T13:00:10Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3645471085",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471085"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3645471085"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471085/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  188,
+                      "original_start_line":  188,
+                      "start_side":  "RIGHT",
+                      "line":  193,
+                      "original_line":  193,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  26,
+                      "position":  26,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471090",
+                      "pull_request_review_id":  4773358462,
+                      "id":  3645471090,
+                      "node_id":  "PRRC_kwDOO-jMk87ZSXly",
+                      "diff_hunk":  "@@ -43,6 +43,12 @@ public interface TradeDetailsRepository extends MongoRepository\u003cTradeDetailsEnti\n     @Query(\"{\u0027portfolioId\u0027: ?0, \u0027symbol\u0027: {$in: ?1}}\")\n     List\u003cTradeDetailsEntity\u003e findByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List\u003cString\u003e symbols);\n     \n+    @Query(\"{\u0027userId\u0027: ?0, \u0027portfolioId\u0027: ?1, \u0027symbol\u0027: {$in: ?2}}\")\n+    Page\u003cTradeDetailsEntity\u003e findByUserIdAndPortfolioIdAndSymbolInIgnoreCase(String userId, String portfolioId, List\u003cString\u003e symbols, Pageable pageable);",
+                      "path":  "am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepository.java",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "0d9c700560a8b2dc9838d796cc6d841786b90b74",
+                      "user":  {
+                                   "login":  "coderabbitai[bot]",
+                                   "id":  136622811,
+                                   "node_id":  "BOT_kgDOCCSy2w",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/in/347564?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/coderabbitai%5Bbot%5D",
+                                   "html_url":  "https://github.com/apps/coderabbitai",
+                                   "followers_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/followers",
+                                   "following_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/orgs",
+                                   "repos_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/repos",
+                                   "events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/received_events",
+                                   "type":  "Bot",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "_🎯 Functional Correctness_ | _🟠 Major_ | _⚡ Quick win_\n\n\u003cdetails\u003e\n\u003csummary\u003e🧩 Analysis chain\u003c/summary\u003e\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\nset -euo pipefail\n\necho \"== locate files ==\"\nfd -a \u0027TradeDetailsRepository\\.java|TradeManagementServiceImpl\\.java|TradeDetailsEntity\\.java\u0027 . | sed \u0027s#^\\./##\u0027\n\necho\necho \"== repository outline ==\"\nrepo=\"$(fd \u0027TradeDetailsRepository\\.java\u0027 . | head -n1 || true)\"\nif [ -n \"${repo:-}\" ]; then\n  wc -l \"$repo\"\n  ast-grep outline \"$repo\" --view expanded || true\n  echo\n  cat -n \"$repo\"\nfi\n\necho\necho \"== service references ==\"\nsvc=\"$(fd \u0027TradeManagementServiceImpl\\.java\u0027 . | head -n1 || true)\"\nif [ -n \"${svc:-}\" ]; then\n  wc -l \"$svc\"\n  ast-grep outline \"$svc\" --view expanded || true\n  echo\n  rg -n \"findByUserIdAndPortfolioIdAndSymbolInIgnoreCase|symbol|Symbol|uppercase|toUpperCase|TradeDetails\" \"$svc\" -C 3 || true\nfi\n\necho\necho \"== symbol normalization/search across repo ==\"\nrg -n \"toUpperCase\\(|toUpperCaseLocalized|toUpperCase\\(|symbol|Symbol|TradeDetailsRepository|TradeDetailsEntity|TradeDetails\" . \\\n  -g \u0027*.java\u0027 \\\n  -C 2 || true\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 50389\n\n---\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\nset -euo pipefail\n\npython3 - \u003c\u003c\u0027PY\u0027\nimport pathlib, re\n\n# Find the exact Java files by name without broad repo traversal.\ncandidates = []\nfor p in pathlib.Path(\u0027.\u0027).rglob(\u0027TradeDetailsRepository.java\u0027):\n    candidates.append(str(p))\nfor p in pathlib.Path(\u0027.\u0027).rglob(\u0027TradeManagementServiceImpl.java\u0027):\n    candidates.append(str(p))\nfor p in pathlib.Path(\u0027.\u0027).rglob(\u0027TradeDetailsEntity.java\u0027):\n    candidates.append(str(p))\nprint(\"candidate_files=\" + \";\".join(sorted(set(candidates))))\n\nrepo_files = [p for p in candidates if \"TradeDetailsRepository.java\" in p]\nsvc_files = [p for p in candidates if \"TradeManagementServiceImpl.java\" in p]\nentity_files = [p for p in candidates if \"TradeDetailsEntity.java\" in p]\n\nprint(\"count:\" + str(len(candidates)))\nfor f in repo_files + svc_files + entity_files:\n    lines = pathlib.Path(f).read_text(errors=\u0027replace\u0027).splitlines()\n    print(f\"--- {f} ({len(lines)} lines) ---\")\n    for i,l in enumerate(lines,1):\n        if re.search(r\u0027findByUserIdAndPortfolioIdAndSymbolInIgnoreCase|toUpperCase\\(|symbol|Symbol|TradeDetailsEntity|`@Document`|`@Field`|`@Query`\u0027, l, re.I):\n            lo=max(1,i-6); hi=min(len(lines), i+8)\n            print(f\"::[{f}:{lo}-{hi}]\")\n            for j in range(lo,hi+1):\n                print(f\"{j:\u003e4}: {lines[j-1]}\")\nPY\n\necho\necho \"== focused symbols usage in persistence/service modules ==\"\nrg -n \"toUpperCase\\(|toUpper|toUpperCaseLocalized|symbol|Symbol|TradeDetailsRepository|TradeDetailsEntity|`@Query`\" \\\n  am-trade-persistence/src/main/java am-trade-services/src/main/java \\\n  -g \u0027*.java\u0027 -C 2 || true\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 50389\n\n---\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\nset -euo pipefail\n\necho \"== TradeManagementServiceImpl symbol filter block ==\"\nsed -n \u0027150,175p\u0027 am-trade-api/src/main/java/am/trade/api/service/impl/TradeManagementServiceImpl.java\n\necho\necho \"== TradeDetailsService interface/impl methods referencing symbols ==\"\npython3 - \u003c\u003c\u0027PY\u0027\nimport pathlib, re\nfor p in pathlib.Path(\u0027.\u0027).rglob(\u0027TradeDetails*.java\u0027):\n    s=str(p)\n    if \"TradeDetailsService\" not in s and \"TradeDetailsRepositoryCustom\" not in s:\n        continue\n    lines=p.read_text(errors=\u0027replace\u0027).splitlines()\n    print(f\"--- {s} ({len(lines)} lines) ---\")\n    for i,l in enumerate(lines,1):\n        if re.search(r\u0027findModelsByPortfolioIdAndSymbolInIgnoreCase|find.*Symbol.*IgnoreCase|SymbolInIgnoreCase|query|`@Query`|MongoTemplate|Criteria|case.?insensitive|toUpperCase|ignore.*case\u0027, l, re.I):\n            lo=max(1,i-8); hi=min(len(lines), i+12)\n            for j in range(lo,hi+1):\n                print(f\"{j:\u003e4}: {lines[j-1]}\")\nPY\n\necho\necho \"== TradeDetailsEntity symbol field annotations ==\"\nsed -n \u00271,140p\u0027 am-trade-persistence/src/main/java/am/trade/persistence/entity/TradeDetailsEntity.java\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 48604\n\n---\n\n\n\n\u003c/details\u003e\n\n**Normalize stored symbols or make `$in` case-insensitive.**\n\nThese repository methods use exact `$in` matching despite the `IgnoreCase` suffix and service-side `toUpperCase()` comment. Mixed-case or legacy stored symbols will be omitted; normalize symbols on every write path or add a case-insensitive/normalized-field query for these methods.\n\n\u003cdetails\u003e\n\u003csummary\u003e🤖 Prompt for AI Agents\u003c/summary\u003e\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn\n`@am-trade-persistence/src/main/java/am/trade/persistence/repository/TradeDetailsRepository.java`\naround lines 46 - 47, Update findByUserIdAndPortfolioIdAndSymbolInIgnoreCase and\nthe corresponding symbol-in repository methods to support case-insensitive\nmatching for mixed-case and legacy stored symbols, either by normalizing symbols\non every write path or by querying a consistently normalized field. Ensure the\nservice-side toUpperCase() behavior and the repository query use the same\nnormalization strategy.\n```\n\n\u003c/details\u003e\n\n\u003c!-- fingerprinting:phantom:poseidon:luna --\u003e\n\n\u003c!-- cr-indicator-types:potential_issue --\u003e\n\n\u003c!-- cr-comment:v1:86cb14dbd562ffc4cb4446c4 --\u003e\n\n\u003c!-- This is an auto-generated comment by CodeRabbit --\u003e",
+                      "created_at":  "2026-07-24T13:00:08Z",
+                      "updated_at":  "2026-07-24T13:00:11Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3645471090",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471090"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3645471090"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3645471090/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  46,
+                      "original_start_line":  46,
+                      "start_side":  "RIGHT",
+                      "line":  47,
+                      "original_line":  47,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  5,
+                      "position":  5,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3646002451",
+                      "pull_request_review_id":  4774039758,
+                      "id":  3646002451,
+                      "node_id":  "PRRC_kwDOO-jMk87ZUZUT",
+                      "diff_hunk":  "@@ -55,121 +61,123 @@ public MarketDataApiClient(MarketDataApiConfig config, RestTemplateBuilder restT\n                     return execution.execute(request, body);\n                 })\n                 .build();\n+                \n+        this.localCache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()\n+                .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)\n+                .maximumSize(10_000)\n+                .build(new com.github.benmanes.caffeine.cache.CacheLoader\u003cString, Double\u003e() {\n+                    @Override\n+                    public Double load(String key) throws Exception {\n+                        return fetchFromApi(java.util.Collections.singletonList(key)).get(key);\n+                    }\n+\n+                    public Map\u003cString, Double\u003e loadAll(Iterable\u003c? extends String\u003e keys) throws Exception {\n+                        return fetchFromApi(keys);\n+                    }\n+                });\n     }\n \n     public Map\u003cString, Double\u003e getCurrentPrices(List\u003cString\u003e symbols) {\n         if (symbols == null || symbols.isEmpty()) {\n             return new HashMap\u003c\u003e();\n         }\n \n-        Map\u003cString, Double\u003e result = new HashMap\u003c\u003e();\n-        List\u003cString\u003e missingSymbols = new java.util.ArrayList\u003c\u003e();\n-        java.time.Instant now = java.time.Instant.now();\n-\n-        if (isL1CacheEnabled) {\n-            // 1. Check local cache\n-            for (String symbol : symbols) {\n-                String cleanSymbol = symbol;\n-                if (cleanSymbol != null \u0026\u0026 cleanSymbol.contains(\":\")) {\n-                    cleanSymbol = cleanSymbol.substring(cleanSymbol.lastIndexOf(\":\") + 1);\n-                }\n-                Double cachedPrice = localCache.getIfPresent(cleanSymbol);\n-                if (cachedPrice != null) {\n-                    result.put(cleanSymbol, cachedPrice);\n-                } else {\n-                    missingSymbols.add(symbol); // Request with original symbol format\n-                }\n-            }\n+        List\u003cString\u003e cleanSymbols = symbols.stream()\n+                .filter(s -\u003e s != null \u0026\u0026 !s.trim().isEmpty())\n+                .map(symbol -\u003e {\n+                    // Remove provider prefix if present (e.g., \"NSE:RELIANCE\" -\u003e \"RELIANCE\")\n+                    if (symbol.contains(\":\")) {\n+                        return symbol.substring(symbol.lastIndexOf(\":\") + 1);\n+                    }\n+                    return symbol;\n+                })\n+                .collect(java.util.stream.Collectors.toList());\n \n-            // 2. If all symbols are cached, return immediately\n-            if (missingSymbols.isEmpty()) {\n-                log.debug(\"All symbols retrieved from local cache.\");\n-                return result;\n-            }\n-        } else {\n-            // Feature flag disabled, fetch everything\n-            missingSymbols.addAll(symbols);\n+        if (cleanSymbols.isEmpty()) {\n+            return new HashMap\u003c\u003e();\n         }\n \n-        // 3. Fetch missing symbols from upstream with double-checked locking to prevent cache stampedes\n-        synchronized (this) {\n-            if (isL1CacheEnabled) {\n-                List\u003cString\u003e stillMissing = new java.util.ArrayList\u003c\u003e();\n-                for (String symbol : missingSymbols) {\n-                    String cleanSymbol = symbol;\n-                    if (cleanSymbol != null \u0026\u0026 cleanSymbol.contains(\":\")) {\n-                        cleanSymbol = cleanSymbol.substring(cleanSymbol.lastIndexOf(\":\") + 1);\n+        Map\u003cString, Double\u003e filteredResult = new HashMap\u003c\u003e();\n+        if (isL1CacheEnabled) {\n+            Map\u003cString, Double\u003e result = localCache.getAll(cleanSymbols);\n+            if (result != null) {\n+                // Filter out negative cache values (-1.0)\n+                result.forEach((k, v) -\u003e {\n+                    if (v != null \u0026\u0026 v \u003e= 0.0) {\n+                        filteredResult.put(k, v);\n                     }\n-                    Double cachedPrice = localCache.getIfPresent(cleanSymbol);\n-                    if (cachedPrice != null) {\n-                        result.put(cleanSymbol, cachedPrice);\n-                    } else {\n-                        stillMissing.add(symbol);\n+                });\n+            }\n+        } else {\n+            Map\u003cString, Double\u003e result = fetchFromApi(cleanSymbols);\n+            if (result != null) {\n+                result.forEach((k, v) -\u003e {\n+                    if (v != null \u0026\u0026 v \u003e= 0.0) {\n+                        filteredResult.put(k, v);\n                     }\n-                }\n-                missingSymbols = stillMissing;\n-                \n-                if (missingSymbols.isEmpty()) {\n-                    return result;\n-                }\n+                });\n             }\n+        }\n+        return filteredResult;\n+    }\n+\n+    private Map\u003cString, Double\u003e fetchFromApi(Iterable\u003c? extends String\u003e missingSymbols) {\n+        Map\u003cString, Double\u003e currentPrices = new HashMap\u003c\u003e();\n+        String symbolsParam = String.join(\",\", missingSymbols);\n+        \n+        if (symbolsParam.isEmpty()) {\n+            return currentPrices;\n+        }\n+\n+        OhlcDataRequest request = OhlcDataRequest.builder()\n+                .symbols(symbolsParam)\n+                .timeFrame(\"1D\")\n+                .refresh(false)\n+                .indexSymbol(false)\n+                .build();\n+\n+        log.debug(\"Fetching OHLC data for {} from {}\", symbolsParam, config.getOhlcEndpoint());\n \n-            String symbolsParam = String.join(\",\", missingSymbols);\n-            OhlcDataRequest request = OhlcDataRequest.builder()\n-                    .symbols(symbolsParam)\n-                    .timeFrame(\"1D\")\n-                    .refresh(false) // Set to false to avoid hammering the upstream market data provider on every request\n-                    .indexSymbol(false)\n-                    .build();\n-\n-            log.debug(\"Fetching OHLC data for {} from {}\", symbolsParam, config.getOhlcEndpoint());\n-\n-            try {\n-                Map rawMap = restTemplate.postForObject(\n-                        config.getOhlcEndpoint(),\n-                        request,\n-                        Map.class);\n-\n-                log.info(\"Raw market data response for symbols {}: {}\", symbolsParam, rawMap);\n-\n-                Map\u003cString, Double\u003e currentPrices = new HashMap\u003c\u003e();\n-                if (rawMap != null) {\n-                    Object actualData = rawMap.containsKey(\"data\") ? rawMap.get(\"data\") : rawMap;\n-                    if (actualData instanceof Map) {\n-                        Map\u003c?, ?\u003e dataToProcess = (Map\u003c?, ?\u003e) actualData;\n-                        ObjectMapper mapper = new ObjectMapper();\n-                        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);\n-\n-                        for (Object key : dataToProcess.keySet()) {\n-                            try {\n-                                Object value = dataToProcess.get(key);\n-                                MarketDataResponse response = mapper.convertValue(value, MarketDataResponse.class);\n-                                String symbolKey = String.valueOf(key);\n-                                if (symbolKey.contains(\":\")) {\n-                                    symbolKey = symbolKey.substring(symbolKey.lastIndexOf(\":\") + 1);\n-                                }\n-                                \n-                                Double price = response.getLastPrice();\n-                                currentPrices.put(symbolKey, price);\n-                                \n-                                if (isL1CacheEnabled) {\n-                                    // Update local cache\n-                                    localCache.put(symbolKey, price);\n-                                }\n-                            } catch (Exception e) {\n-                                log.error(\"Error converting response for symbol {}\", key, e);\n-                            }\n+        try {\n+            JsonNode responseNode = restTemplate.postForObject(\n+                    config.getOhlcEndpoint(),\n+                    request,\n+                    JsonNode.class);\n+\n+            log.debug(\"Raw market data response for symbols {}: {}\", symbolsParam, responseNode);\n+\n+            if (responseNode != null) {\n+                JsonNode dataNode = responseNode.has(\"data\") ? responseNode.get(\"data\") : responseNode;\n+                \n+                Map\u003cString, MarketDataResponse\u003e responses = MAPPER.convertValue(\n+                        dataNode, \n+                        new TypeReference\u003cMap\u003cString, MarketDataResponse\u003e\u003e() {}\n+                );\n+\n+                if (responses != null) {\n+                    responses.forEach((key, response) -\u003e {\n+                        String symbolKey = key.contains(\":\") ? key.substring(key.lastIndexOf(\":\") + 1) : key;\n+                        Double price = response.getLastPrice();\n+                        if (price != null) {\n+                            currentPrices.put(symbolKey, price);\n+                        } else {\n+                            log.warn(\"Received null price for symbol {}\", symbolKey);\n                         }\n-                    }\n+                    });\n                 }\n-                \n-                // Merge newly fetched prices into the result\n-                result.putAll(currentPrices);\n-                return result;\n-            } catch (Exception e) {\n-                log.error(\"Failed to fetch market data from API for symbols: {}\", symbolsParam, e);\n-                return result; // Return whatever we found in the cache\n             }\n+        } catch (RestClientException e) {\n+            log.error(\"Failed to fetch market data from API for symbols: {}\", symbolsParam, e);\n+            // Do not throw MarketDataUnavailableException here; instead, let the negative caching below \n+            // populate the failed symbols with -1.0 so Caffeine doesn\u0027t infinitely retry and cause cache penetration.\n+        }\n+\n+        // NEGATIVE CACHING: Prevent Cache Penetration by caching missing/failed keys as -1.0\n+        // This ensures Caffeine doesn\u0027t retry them constantly if the upstream is down or missing data.\n+        for (String sym : missingSymbols) {\n+            currentPrices.putIfAbsent(sym, -1.0);\n         }",
+                      "path":  "am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "5556abe5a47b51dc99d3f33d6b4746e7e9b9156d",
+                      "user":  {
+                                   "login":  "coderabbitai[bot]",
+                                   "id":  136622811,
+                                   "node_id":  "BOT_kgDOCCSy2w",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/in/347564?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/coderabbitai%5Bbot%5D",
+                                   "html_url":  "https://github.com/apps/coderabbitai",
+                                   "followers_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/followers",
+                                   "following_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/orgs",
+                                   "repos_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/repos",
+                                   "events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/received_events",
+                                   "type":  "Bot",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "_🩺 Stability \u0026 Availability_ | _🟠 Major_ | _⚡ Quick win_\n\n**Do not negative-cache upstream outages as missing prices.**\n\nA `RestClientException` causes every requested symbol to be cached as `-1.0` for five minutes, and callers receive an empty map even after the provider recovers. Negative-cache only confirmed missing symbols from successful responses; throw `MarketDataUnavailableException` for transport failures so the global handler can return a 503.\n\nAs per coding guidelines, “Never return null or empty objects to mask errors; use Optional or exceptions instead.”\n\n\u003cdetails\u003e\n\u003csummary\u003e🧰 Tools\u003c/summary\u003e\n\n\u003cdetails\u003e\n\u003csummary\u003e🪛 PMD (7.26.0)\u003c/summary\u003e\n\n[Low] 170-170: [InvalidLogMessageFormat (Error Prone)](https://docs.pmd-code.org/snapshot/pmd_rules_java_errorprone.html#invalidlogmessageformat): Too many arguments, expected 1 argument but found 2\n\n(InvalidLogMessageFormat (Error Prone))\n\n\u003c/details\u003e\n\n\u003c/details\u003e\n\n\u003cdetails\u003e\n\u003csummary\u003e🤖 Prompt for AI Agents\u003c/summary\u003e\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn `@am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java`\naround lines 169 - 179, Update the RestClientException handling in the\nmarket-data fetch method to throw MarketDataUnavailableException instead of\ncontinuing into negative caching. Ensure only symbols confirmed missing from\nsuccessful API responses are added to currentPrices with -1.0, while transport\nfailures propagate to the global 503 handler and do not return an empty map.\n```\n\n\u003c/details\u003e\n\n\u003c!-- fingerprinting:phantom:poseidon:terra --\u003e\n\n\u003c!-- cr-indicator-types:potential_issue --\u003e\n\n\u003c!-- cr-comment:v1:19a020b61d58f0c0410eb4a4 --\u003e\n\n_Source: Coding guidelines_\n\n\u003c!-- This is an auto-generated comment by CodeRabbit --\u003e",
+                      "created_at":  "2026-07-24T14:23:31Z",
+                      "updated_at":  "2026-07-24T14:23:33Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3646002451",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3646002451"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3646002451"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3646002451/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  169,
+                      "original_start_line":  169,
+                      "start_side":  "RIGHT",
+                      "line":  179,
+                      "original_line":  179,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  263,
+                      "position":  263,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3646002462",
+                      "pull_request_review_id":  4774039758,
+                      "id":  3646002462,
+                      "node_id":  "PRRC_kwDOO-jMk87ZUZUe",
+                      "diff_hunk":  "@@ -63,5 +63,76 @@ public ResponseEntity\u003cErrorResponse\u003e handleValidationException(\n         \n         return new ResponseEntity\u003c\u003e(errorResponse, HttpStatus.BAD_REQUEST);\n     }\n+\n+    /**\n+     * Handle Spring validation exceptions (e.g. @Valid failures on controllers)\n+     */\n+    @ExceptionHandler(MethodArgumentNotValidException.class)\n+    public ResponseEntity\u003cErrorResponse\u003e handleMethodArgumentNotValid(\n+            MethodArgumentNotValidException ex, HttpServletRequest request) {\n+        log.error(\"Method argument validation exception: {}\", ex.getMessage());\n+        \n+        List\u003cErrorDetail\u003e errorDetails = new ArrayList\u003c\u003e();\n+        BindingResult result = ex.getBindingResult();\n+        for (FieldError fieldError : result.getFieldErrors()) {\n+            errorDetails.add(ErrorDetail.builder()\n+                    .field(fieldError.getField())\n+                    .message(fieldError.getDefaultMessage())\n+                    .code(\"VALIDATION_ERROR\")\n+                    .build());\n+        }\n+\n+        ErrorResponse errorResponse = ErrorResponse.builder()\n+                .timestamp(LocalDateTime.now())\n+                .status(HttpStatus.BAD_REQUEST.value())\n+                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())\n+                .message(\"Validation failed for one or more fields\")\n+                .path(request.getRequestURI())\n+                .traceId(UUID.randomUUID().toString())\n+                .errors(errorDetails)\n+                .build();\n+                \n+        return new ResponseEntity\u003c\u003e(errorResponse, HttpStatus.BAD_REQUEST);\n+    }",
+                      "path":  "am-trade-exceptions/src/main/java/am/trade/exceptions/handler/GlobalExceptionHandler.java",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "5556abe5a47b51dc99d3f33d6b4746e7e9b9156d",
+                      "user":  {
+                                   "login":  "coderabbitai[bot]",
+                                   "id":  136622811,
+                                   "node_id":  "BOT_kgDOCCSy2w",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/in/347564?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/coderabbitai%5Bbot%5D",
+                                   "html_url":  "https://github.com/apps/coderabbitai",
+                                   "followers_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/followers",
+                                   "following_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/orgs",
+                                   "repos_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/repos",
+                                   "events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/received_events",
+                                   "type":  "Bot",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "_📐 Maintainability \u0026 Code Quality_ | _🟠 Major_ | _⚡ Quick win_\n\n**Keep the validation handler within the 20-line limit.**\n\n`handleMethodArgumentNotValid` exceeds the repository’s maximum method length. Extract the `BindingResult` mapping and/or common 400-response construction into private helpers.\n\n\u003cdetails\u003e\n\u003csummary\u003eProposed refactor\u003c/summary\u003e\n\n```diff\n-        List\u003cErrorDetail\u003e errorDetails = new ArrayList\u003c\u003e();\n-        BindingResult result = ex.getBindingResult();\n-        for (FieldError fieldError : result.getFieldErrors()) {\n-            errorDetails.add(ErrorDetail.builder()\n-                    .field(fieldError.getField())\n-                    .message(fieldError.getDefaultMessage())\n-                    .code(\"VALIDATION_ERROR\")\n-                    .build());\n-        }\n+        List\u003cErrorDetail\u003e errorDetails = toErrorDetails(ex.getBindingResult());\n```\n\n\u003c/details\u003e\n\nAs per coding guidelines: `**/*.java`: Maximum method length of 20 lines of code.\n\n\u003cdetails\u003e\n\u003csummary\u003e🤖 Prompt for AI Agents\u003c/summary\u003e\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn\n`@am-trade-exceptions/src/main/java/am/trade/exceptions/handler/GlobalExceptionHandler.java`\naround lines 71 - 96, Reduce handleMethodArgumentNotValid to no more than 20\nlines by extracting the BindingResult-to-List\u003cErrorDetail\u003e mapping and/or\nrepeated bad-request ErrorResponse construction into private helper methods.\nPreserve the existing validation messages, fields, status, path, trace ID, and\nreturned BAD_REQUEST response.\n```\n\n\u003c/details\u003e\n\n\u003c!-- fingerprinting:phantom:poseidon:luna --\u003e\n\n\u003c!-- cr-indicator-types:refactor_suggestion --\u003e\n\n\u003c!-- cr-comment:v1:692667d0157818a317523fb3 --\u003e\n\n_Source: Coding guidelines_\n\n\u003c!-- This is an auto-generated comment by CodeRabbit --\u003e",
+                      "created_at":  "2026-07-24T14:23:31Z",
+                      "updated_at":  "2026-07-24T14:23:33Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3646002462",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3646002462"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3646002462"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3646002462/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  71,
+                      "original_start_line":  71,
+                      "start_side":  "RIGHT",
+                      "line":  96,
+                      "original_line":  96,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  34,
+                      "position":  34,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3646002467",
+                      "pull_request_review_id":  4774039758,
+                      "id":  3646002467,
+                      "node_id":  "PRRC_kwDOO-jMk87ZUZUj",
+                      "diff_hunk":  "@@ -160,125 +160,132 @@ public void processTradeDetailsWithObjects(List\u003cTradeDetails\u003e trades, String por\n     }\n \n     @Override\n+    @org.springframework.scheduling.annotation.Async(\"tradeProcessingExecutor\")\n     public void applyTradesDelta(List\u003cTradeDetails\u003e trades, String portfolioId, String userId) {\n         if (trades == null || trades.isEmpty()) {\n             return;\n         }\n \n-        int winningTradesDelta = 0;\n-        int losingTradesDelta = 0;\n-        int breakEvenTradesDelta = 0;\n-        int openPositionsDelta = 0;\n-        BigDecimal profitDelta = BigDecimal.ZERO;\n-        BigDecimal lossDelta = BigDecimal.ZERO;\n-\n-        List\u003cString\u003e tradeIds = new ArrayList\u003c\u003e();\n-\n-        for (TradeDetails trade : trades) {\n-            tradeIds.add(trade.getTradeId());\n-\n-            switch (trade.getStatus()) {\n-                case WIN:\n-                    winningTradesDelta++;\n-                    if (trade.getMetrics() != null \u0026\u0026 trade.getMetrics().getProfitLoss() != null) {\n-                        profitDelta = profitDelta.add(trade.getMetrics().getProfitLoss());\n-                    }\n-                    break;\n-                case LOSS:\n-                    losingTradesDelta++;\n-                    if (trade.getMetrics() != null \u0026\u0026 trade.getMetrics().getProfitLoss() != null) {\n-                        lossDelta = lossDelta.add(trade.getMetrics().getProfitLoss().abs());\n+        try {\n+                int winningTradesDelta = 0;\n+                int losingTradesDelta = 0;\n+                int breakEvenTradesDelta = 0;\n+                int openPositionsDelta = 0;\n+                BigDecimal profitDelta = BigDecimal.ZERO;\n+                BigDecimal lossDelta = BigDecimal.ZERO;\n+\n+                for (TradeDetails trade : trades) {\n+                    switch (trade.getStatus()) {\n+                        case WIN:\n+                            winningTradesDelta++;\n+                            if (trade.getMetrics() != null \u0026\u0026 trade.getMetrics().getProfitLoss() != null) {\n+                                profitDelta = profitDelta.add(trade.getMetrics().getProfitLoss());\n+                            }\n+                            break;\n+                        case LOSS:\n+                            losingTradesDelta++;\n+                            if (trade.getMetrics() != null \u0026\u0026 trade.getMetrics().getProfitLoss() != null) {\n+                                lossDelta = lossDelta.add(trade.getMetrics().getProfitLoss().abs());\n+                            }\n+                            break;\n+                        case BREAK_EVEN:\n+                            breakEvenTradesDelta++;\n+                            break;\n+                        case OPEN:\n+                            openPositionsDelta++;\n+                            break;\n                     }\n-                    break;\n-                case BREAK_EVEN:\n-                    breakEvenTradesDelta++;\n-                    break;\n-                case OPEN:\n-                    openPositionsDelta++;\n-                    break;\n-            }\n-        }\n-\n-        Update update = new Update()\n-                .inc(\"metrics.totalTrades\", trades.size())\n-                .inc(\"metrics.winningTrades\", winningTradesDelta)\n-                .inc(\"metrics.losingTrades\", losingTradesDelta)\n-                .inc(\"metrics.breakEvenTrades\", breakEvenTradesDelta)\n-                .inc(\"metrics.openPositions\", openPositionsDelta)\n-                .inc(\"metrics.totalProfit\", profitDelta.doubleValue())\n-                .inc(\"metrics.totalLoss\", lossDelta.doubleValue())\n-                .set(\"lastUpdatedDate\", LocalDateTime.now());\n-\n-        update.push(\"trades\").each(tradeIds.toArray());\n+                }\n \n-        mongoTemplate.updateFirst(\n-                Query.query(Criteria.where(\"portfolioId\").is(portfolioId)),\n-                update,\n-                PortfolioEntity.class\n-        );\n+                Update update = new Update()\n+                        .inc(\"metrics.totalTrades\", trades.size())\n+                        .inc(\"metrics.winningTrades\", winningTradesDelta)\n+                        .inc(\"metrics.losingTrades\", losingTradesDelta)\n+                        .inc(\"metrics.breakEvenTrades\", breakEvenTradesDelta)\n+                        .inc(\"metrics.openPositions\", openPositionsDelta)\n+                        .inc(\"metrics.totalProfit\", profitDelta.doubleValue())\n+                        .inc(\"metrics.totalLoss\", lossDelta.doubleValue())\n+                        .set(\"lastUpdatedDate\", LocalDateTime.now());\n+\n+                // We no longer push trade IDs to an unbounded array in PortfolioEntity\n+                // to avoid MongoDB document size limits and write contention overhead.\n+\n+                mongoTemplate.updateFirst(\n+                        Query.query(Criteria.where(\"portfolioId\").is(portfolioId)),\n+                        update,\n+                        PortfolioEntity.class\n+                );\n+            } catch (Exception e) {\n+                log.error(\"Error applying trades delta asynchronously for portfolio {}: {}\", portfolioId, e.getMessage(), e);\n+            }",
+                      "path":  "am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "5556abe5a47b51dc99d3f33d6b4746e7e9b9156d",
+                      "user":  {
+                                   "login":  "coderabbitai[bot]",
+                                   "id":  136622811,
+                                   "node_id":  "BOT_kgDOCCSy2w",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/in/347564?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/coderabbitai%5Bbot%5D",
+                                   "html_url":  "https://github.com/apps/coderabbitai",
+                                   "followers_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/followers",
+                                   "following_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/orgs",
+                                   "repos_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/repos",
+                                   "events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/received_events",
+                                   "type":  "Bot",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "_🗄️ Data Integrity \u0026 Integration_ | _🟠 Major_ | _🏗️ Heavy lift_\n\n**Do not discard failed asynchronous aggregate updates.**\n\nA Mongo failure is logged but the task completes normally; the trade remains saved while portfolio metrics stay stale with no recovery path. Persist an idempotent retryable work item or reconciliation record and emit a failure metric.\n\n- `am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java#L218-L220`: route failed batch deltas to durable recovery instead of log-only handling.\n- `am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java#L286-L288`: apply the same recovery behavior for single-trade updates.\n\nAs per coding guidelines, “Never catch exceptions only to return empty objects; avoid silent failures.”\n\n\u003cdetails\u003e\n\u003csummary\u003e📍 Affects 1 file\u003c/summary\u003e\n\n- `am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java#L218-L220` (this comment)\n- `am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java#L286-L288`\n\n\u003c/details\u003e\n\n\u003cdetails\u003e\n\u003csummary\u003e🤖 Prompt for AI Agents\u003c/summary\u003e\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn\n`@am-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java`\naround lines 218 - 220, Replace log-only exception handling in\nTradeProcessingServiceImpl at lines 218-220 and 286-288 with durable, idempotent\nretryable work-item or reconciliation-record creation for failed batch and\nsingle-trade aggregate updates, respectively; retain contextual error logging\nand emit a failure metric for each path so the asynchronous task exposes and\nsupports recovery rather than completing silently.\n```\n\n\u003c/details\u003e\n\n\u003c!-- consolidated_sites_start --\u003e\n\u003c!--\n\u003cconsolidated_sites\u003e\n\u003csite\u003e\n\u003crole\u003eanchor\u003c/role\u003e\n\u003cfile\u003eam-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java\u003c/file\u003e\n\u003cline_range\u003e218-220\u003c/line_range\u003e\n\u003c/site\u003e\n\u003csite\u003e\n\u003crole\u003esibling\u003c/role\u003e\n\u003cfile\u003eam-trade-services/src/main/java/am/trade/services/service/impl/TradeProcessingServiceImpl.java\u003c/file\u003e\n\u003cline_range\u003e286-288\u003c/line_range\u003e\n\u003c/site\u003e\n\u003c/consolidated_sites\u003e\n--\u003e\n\u003c!-- consolidated_sites_end --\u003e\n\n\u003c!-- fingerprinting:phantom:poseidon:terra --\u003e\n\n\u003c!-- cr-indicator-types:potential_issue --\u003e\n\n\u003c!-- cr-comment:v1:84073cb7930a6235a2923d76 --\u003e\n\n_Source: Coding guidelines_\n\n\u003c!-- This is an auto-generated comment by CodeRabbit --\u003e",
+                      "created_at":  "2026-07-24T14:23:31Z",
+                      "updated_at":  "2026-07-24T14:23:33Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3646002467",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3646002467"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3646002467"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3646002467/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  218,
+                      "original_start_line":  218,
+                      "start_side":  "RIGHT",
+                      "line":  220,
+                      "original_line":  220,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  110,
+                      "position":  110,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3649959146",
+                      "pull_request_review_id":  4779036086,
+                      "id":  3649959146,
+                      "node_id":  "PRRC_kwDOO-jMk87ZjfTq",
+                      "diff_hunk":  "@@ -0,0 +1,5 @@\n+exclude_paths:\n+  - \"helm/values.*\"\n+  - \"am-trade-app/src/main/resources/application.*\"\n+  - \".env.*\"\n+  - \"scripts/vault-sync.js\"",
+                      "path":  ".trufflehog.yaml",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "bdaeb34a583c2eaf1a422b3007b19ffd264a7d52",
+                      "user":  {
+                                   "login":  "coderabbitai[bot]",
+                                   "id":  136622811,
+                                   "node_id":  "BOT_kgDOCCSy2w",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/in/347564?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/coderabbitai%5Bbot%5D",
+                                   "html_url":  "https://github.com/apps/coderabbitai",
+                                   "followers_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/followers",
+                                   "following_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/orgs",
+                                   "repos_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/repos",
+                                   "events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/received_events",
+                                   "type":  "Bot",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "_🔒 Security \u0026 Privacy_ | _🟠 Major_ | _⚡ Quick win_\n\n**Do not exclude entire configuration and environment file classes from secret scanning.**\n\nThese patterns can suppress detection of committed credentials in Helm values, Spring configuration, `.env` files, and the Vault sync script. Narrow the exclusions to specific generated/example files, or add a separate scan that validates these paths contain only placeholders and no secrets.\n\n\u003cdetails\u003e\n\u003csummary\u003e🤖 Prompt for AI Agents\u003c/summary\u003e\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn @.trufflehog.yaml around lines 2 - 5, Update the exclusion patterns in\n.trufflehog.yaml so they no longer exclude entire Helm values, Spring\napplication configuration, .env, or vault-sync file classes. Narrow them to\nexplicitly generated or example files, or add a separate validation scan for\nthese paths that rejects real credentials while allowing placeholders.\n```\n\n\u003c/details\u003e\n\n\u003c!-- fingerprinting:phantom:triton:luna --\u003e\n\n\u003c!-- cr-indicator-types:potential_issue --\u003e\n\n\u003c!-- cr-comment:v1:b69573de5cdfc94ea711c598 --\u003e\n\n\u003c!-- This is an auto-generated comment by CodeRabbit --\u003e",
+                      "created_at":  "2026-07-25T09:14:06Z",
+                      "updated_at":  "2026-07-25T09:14:08Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3649959146",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3649959146"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3649959146"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3649959146/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  2,
+                      "original_start_line":  2,
+                      "start_side":  "RIGHT",
+                      "line":  5,
+                      "original_line":  5,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  5,
+                      "position":  5,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3649959147",
+                      "pull_request_review_id":  4779036086,
+                      "id":  3649959147,
+                      "node_id":  "PRRC_kwDOO-jMk87ZjfTr",
+                      "diff_hunk":  "@@ -640,19 +640,56 @@ public FilterTradeDetailsResponse filterTradeDetails(FilterTradeDetailsRequest r\n             appliedFilterName = getFilterName(userId, request.getFavoriteFilterId());\n         }\n \n-        // Apply filters and get all matching trades\n-        List\u003cTradeDetails\u003e filteredTrades = applyFilters(effectiveFilter);\n+        am.trade.common.models.MetricsFilterConfig config = effectiveFilter.getMetricsConfig();\n+        if (config == null || config.getPortfolioIds() == null || config.getPortfolioIds().isEmpty()) {\n+            log.warn(\"No metrics configuration or portfolio IDs provided in filter request\");\n+            return buildFilterResponse(Collections.emptyList(), 0, effectiveFilter, appliedFilterName, null);\n+        }\n+\n+        // Extract DB-compatible filter parameters from the config\n+        List\u003cString\u003e symbols = config.getInstruments();\n+        List\u003cTradeStatus\u003e statuses = extractStatusFilter(config);\n+        List\u003cString\u003e strategies = extractStrategyFilter(config);\n+        LocalDate startDate = extractStartDateFilter(config);\n+        LocalDate endDate = extractEndDateFilter(config);\n+\n+        // Use a large unpaged query only when no Pageable is provided,\n+        // otherwise pass the caller\u0027s Pageable directly to the DB.\n+        org.springframework.data.domain.Pageable effectivePageable =\n+                (pageable != null \u0026\u0026 pageable.isPaged()) ? pageable : org.springframework.data.domain.Pageable.unpaged();\n+\n+        // Route to the DB-side filtered + paginated query.\n+        // This avoids loading ALL trades for a portfolio into the JVM before filtering.\n+        org.springframework.data.domain.Page\u003cTradeDetails\u003e dbPage =\n+                tradeManagementService.getTradesByFilters(\n+                        config.getPortfolioIds(), symbols, statuses, startDate, endDate, strategies, effectivePageable);\n+\n+        // Apply the remaining advanced in-memory-only filters (positionType, holdingTime,\n+        // tags, P\u0026L range, options/instrument filters) only on the page content, which\n+        // is bounded by the page size (typically 10-50 items).\n+        String currentUserId = userId;\n+        List\u003cTradeDetails\u003e filteredContent = dbPage.getContent().stream()\n+                .filter(trade -\u003e currentUserId.equals(trade.getUserId()))\n+                .filter(trade -\u003e matchesAdvancedFilters(trade, config))\n+                .collect(Collectors.toList());\n \n-        // Apply sorting and pagination if Pageable is provided\n         if (pageable != null \u0026\u0026 pageable.isPaged()) {\n-            List\u003cTradeDetails\u003e sortedTrades = applySortingWithPageable(filteredTrades, pageable);\n-            PaginationResult paginationResult = applyPaginationWithPageable(sortedTrades, pageable);\n-            return buildFilterResponse(paginationResult.trades, filteredTrades.size(),\n+            int pageSize = pageable.getPageSize();\n+            int totalPages = pageSize \u003e 0\n+                    ? (int) Math.ceil((double) dbPage.getTotalElements() / pageSize)\n+                    : 1;\n+            PaginationResult paginationResult = new PaginationResult(\n+                    filteredContent,\n+                    pageable.getPageNumber(),\n+                    pageSize,\n+                    totalPages,\n+                    pageable.getPageNumber() == 0,\n+                    !dbPage.hasNext());\n+            return buildFilterResponse(filteredContent, dbPage.getTotalElements(),\n                     effectiveFilter, appliedFilterName, paginationResult);\n         }\n \n-        // Return all results without pagination\n-        return buildFilterResponse(filteredTrades, filteredTrades.size(),\n+        return buildFilterResponse(filteredContent, filteredContent.size(),",
+                      "path":  "am-trade-api/src/main/java/am/trade/api/service/impl/TradeApiServiceImpl.java",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "bdaeb34a583c2eaf1a422b3007b19ffd264a7d52",
+                      "user":  {
+                                   "login":  "coderabbitai[bot]",
+                                   "id":  136622811,
+                                   "node_id":  "BOT_kgDOCCSy2w",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/in/347564?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/coderabbitai%5Bbot%5D",
+                                   "html_url":  "https://github.com/apps/coderabbitai",
+                                   "followers_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/followers",
+                                   "following_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/orgs",
+                                   "repos_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/repos",
+                                   "events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/received_events",
+                                   "type":  "Bot",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "_🎯 Functional Correctness_ | _🟠 Major_ | _🏗️ Heavy lift_\n\n**Pagination totals are computed before advanced in-memory filters are applied, so `totalCount`/`totalPages`/`isLast` become inaccurate whenever those filters remove items.**\n\nIn the paged branch, `dbPage.getTotalElements()` / `dbPage.hasNext()` are used for `totalCount`/`totalPages`/`isLast`, but `filteredContent` has already had `matchesAdvancedFilters` (positionTypes, tags, holding-time, P\u0026L range, instrument filters) applied on top of `dbPage.getContent()`. Contrast this with the unpaged branch just below, which correctly uses `filteredContent.size()` for the count — confirming the paged branch is inconsistent, not an intentional simplification. Clients will see an overstated total/page count, and `isLast=false` can be reported even when no further page has any matching item after advanced filtering is applied.\n\n```diff\n     if (pageable != null \u0026\u0026 pageable.isPaged()) {\n         int pageSize = pageable.getPageSize();\n-            int totalPages = pageSize \u003e 0\n-                    ? (int) Math.ceil((double) dbPage.getTotalElements() / pageSize)\n-                    : 1;\n+            // NOTE: still approximate unless getTradesByFilters also applies the advanced\n+            // criteria at the DB layer — accurate cross-page totals require either that,\n+            // or a separate full-result-set count after in-memory filtering.\n         ...\n     }\n```\n\nA real fix requires moving the advanced filters (positionType, tags, holdingTime, P\u0026L, instrument) into the DB query, or explicitly documenting that pagination totals are approximate when advanced filters are active.\n\n\u003cdetails\u003e\n\u003csummary\u003e🤖 Prompt for AI Agents\u003c/summary\u003e\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn\n`@am-trade-api/src/main/java/am/trade/api/service/impl/TradeApiServiceImpl.java`\naround lines 663 - 692, Update the paged branch around matchesAdvancedFilters\nand buildFilterResponse so pagination metadata reflects advanced-filtered\nresults rather than dbPage.getTotalElements() and dbPage.hasNext(). Prefer\nincorporating positionType, holdingTime, tags, P\u0026L, and instrument filters into\ntradeManagementService.getTradesByFilters; otherwise explicitly mark totalCount,\ntotalPages, and isLast as approximate whenever those filters are applied.\n```\n\n\u003c/details\u003e\n\n\u003c!-- fingerprinting:phantom:medusa:beignet --\u003e\n\n\u003c!-- cr-indicator-types:potential_issue --\u003e\n\n\u003c!-- cr-comment:v1:f7f5a0512aa182316a4d2bf0 --\u003e\n\n\u003c!-- This is an auto-generated comment by CodeRabbit --\u003e",
+                      "created_at":  "2026-07-25T09:14:06Z",
+                      "updated_at":  "2026-07-25T09:14:08Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3649959147",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3649959147"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3649959147"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3649959147/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  663,
+                      "original_start_line":  663,
+                      "start_side":  "RIGHT",
+                      "line":  692,
+                      "original_line":  692,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  78,
+                      "position":  78,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3649959148",
+                      "pull_request_review_id":  4779036086,
+                      "id":  3649959148,
+                      "node_id":  "PRRC_kwDOO-jMk87ZjfTs",
+                      "diff_hunk":  "@@ -46,6 +46,7 @@ public \u003cT extends BaseEvent\u003e void sendEvent(String topic, T event) {\n     }\n \n     @Override\n+    @org.springframework.scheduling.annotation.Async(\"tradeProcessingExecutor\")\n     public void publishHoldingUpdate(PortfolioSyncEvent event) {",
+                      "path":  "am-trade-kafka/src/main/java/am/trade/kafka/producer/KafkaProducerService.java",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "bdaeb34a583c2eaf1a422b3007b19ffd264a7d52",
+                      "user":  {
+                                   "login":  "coderabbitai[bot]",
+                                   "id":  136622811,
+                                   "node_id":  "BOT_kgDOCCSy2w",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/in/347564?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/coderabbitai%5Bbot%5D",
+                                   "html_url":  "https://github.com/apps/coderabbitai",
+                                   "followers_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/followers",
+                                   "following_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/orgs",
+                                   "repos_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/repos",
+                                   "events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/received_events",
+                                   "type":  "Bot",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "_🗄️ Data Integrity \u0026 Integration_ | _🟠 Major_ | _⚡ Quick win_\n\n\u003cdetails\u003e\n\u003csummary\u003e🧩 Analysis chain\u003c/summary\u003e\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\n# Inspect callers and async configuration before applying the fix.\nrg -nP \u0027publishHoldingUpdate\\s*\\(|`@EnableAsync`|tradeProcessingExecutor\u0027 --glob \u0027*.java\u0027 .\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 1653\n\n---\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\nset -euo pipefail\n\necho \"== KafkaProducerService.java ==\"\ncat -n am-trade-kafka/src/main/java/am/trade/kafka/producer/KafkaProducerService.java\n\necho\necho \"== AsyncConfig.java ==\"\ncat -n am-trade-services/src/main/java/am/trade/services/config/AsyncConfig.java\n\necho\necho \"== Caller snippets ==\"\nsed -n \u0027180,215p\u0027 am-trade-kafka/src/main/java/am/trade/kafka/consumer/TradeConsumerService.java | cat -n\nsed -n \u0027285,310p\u0027 am-trade-api/src/main/java/am/trade/api/service/impl/TradeApiServiceImpl.java | cat -n\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 8906\n\n---\n\n\n\n\u003c/details\u003e\n\n**Register the transaction callback before applying `@Async`.**\n\n`@Async` moves `publishHoldingUpdate` into `tradeProcessingExecutor`, so the transaction context from the caller is no longer the one being evaluated. `isActualTransactionActive()` will normally be `false` on the worker thread and `sendToKafka(event)` can run before the caller’s transaction commits, allowing rollback or not-yet-committed data to be published.\n\nKeep the transaction-bound registration synchronous, then delegate `sendToKafka` to an async bean/method from `afterCommit`.\n\n\u003cdetails\u003e\n\u003csummary\u003e🤖 Prompt for AI Agents\u003c/summary\u003e\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn\n`@am-trade-kafka/src/main/java/am/trade/kafka/producer/KafkaProducerService.java`\naround lines 49 - 50, Update publishHoldingUpdate so transaction synchronization\nis registered synchronously on the caller thread before any asynchronous\ndelegation. Move the sendToKafka(event) invocation into an async bean or method\ncalled from the transaction’s afterCommit callback, preserving immediate\nhandling when no transaction is active and ensuring Kafka publication cannot\nprecede transaction commit.\n```\n\n\u003c/details\u003e\n\n\u003c!-- fingerprinting:phantom:triton:luna --\u003e\n\n\u003c!-- cr-indicator-types:potential_issue --\u003e\n\n\u003c!-- cr-comment:v1:96936be4aa9cd674add03d58 --\u003e\n\n\u003c!-- This is an auto-generated comment by CodeRabbit --\u003e",
+                      "created_at":  "2026-07-25T09:14:06Z",
+                      "updated_at":  "2026-07-25T09:14:08Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3649959148",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3649959148"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3649959148"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3649959148/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  49,
+                      "original_start_line":  49,
+                      "start_side":  "RIGHT",
+                      "line":  50,
+                      "original_line":  50,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  5,
+                      "position":  5,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3649959152",
+                      "pull_request_review_id":  4779036086,
+                      "id":  3649959152,
+                      "node_id":  "PRRC_kwDOO-jMk87ZjfTw",
+                      "diff_hunk":  "@@ -170,22 +192,42 @@ public TradeDetails saveTradeDetails(TradeDetails tradeDetails) {\n     @Override\n     public List\u003cTradeDetails\u003e saveAllTradeDetails(List\u003cTradeDetails\u003e tradeDetailsList) {\n         log.debug(\"Saving {} trade details records\", tradeDetailsList.size());\n+\n+        // Collect all non-null tradeIds from the incoming batch\n+        List\u003cString\u003e incomingTradeIds = tradeDetailsList.stream()\n+                .map(TradeDetails::getTradeId)\n+                .filter(id -\u003e id != null)\n+                .collect(Collectors.toList());\n+\n+        // FIX: Single batch DB lookup instead of N individual findByTradeId calls.\n+        // Build a Map\u003ctradeId, mongoId\u003e so we can resolve existing document IDs in O(1).\n+        Map\u003cString, String\u003e existingIdByTradeId = new java.util.HashMap\u003c\u003e();\n+        if (!incomingTradeIds.isEmpty()) {\n+            tradeDetailsRepository.findByTradeIdIn(incomingTradeIds)\n+                    .forEach(existing -\u003e existingIdByTradeId.put(existing.getTradeId(), existing.getId()));\n+        }\n+\n         List\u003cTradeDetailsEntity\u003e entities = tradeDetailsList.stream()\n                 .map(tradeDetails -\u003e {\n                     TradeDetailsEntity entity = tradeDetailsMapper.toTradeEntity(tradeDetails);\n+                    // Reuse the existing MongoDB _id so Spring Data performs an update, not an insert\n                     if (tradeDetails.getTradeId() != null) {\n-                        tradeDetailsRepository.findByTradeId(tradeDetails.getTradeId())\n-                                .ifPresent(existing -\u003e entity.setId(existing.getId()));\n+                        String existingId = existingIdByTradeId.get(tradeDetails.getTradeId());\n+                        if (existingId != null) {\n+                            entity.setId(existingId);\n+                        }\n                     }\n                     return entity;\n                 })\n                 .collect(Collectors.toList());\n+\n         List\u003cTradeDetailsEntity\u003e savedEntities = tradeDetailsRepository.saveAll(entities);\n-        \n+\n         return savedEntities.stream()\n                 .map(tradeDetailsMapper::toTradeDetails)\n                 .collect(Collectors.toList());\n     }\n+",
+                      "path":  "am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "bdaeb34a583c2eaf1a422b3007b19ffd264a7d52",
+                      "user":  {
+                                   "login":  "coderabbitai[bot]",
+                                   "id":  136622811,
+                                   "node_id":  "BOT_kgDOCCSy2w",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/in/347564?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/coderabbitai%5Bbot%5D",
+                                   "html_url":  "https://github.com/apps/coderabbitai",
+                                   "followers_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/followers",
+                                   "following_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/orgs",
+                                   "repos_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/repos",
+                                   "events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/coderabbitai%5Bbot%5D/received_events",
+                                   "type":  "Bot",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "_🗄️ Data Integrity \u0026 Integration_ | _🟠 Major_ | _🏗️ Heavy lift_\n\n\u003cdetails\u003e\n\u003csummary\u003e🧩 Analysis chain\u003c/summary\u003e\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\n# Check whether the app is configured/documented to run against a MongoDB replica set (required for `@Transactional`)\nrg -n -i \"replicaSet|MongoTransactionManager|`@EnableTransactionManagement`\" --type=yaml --type=properties -g \u0027*.yml\u0027 -g \u0027*.yaml\u0027 -g \u0027*.properties\u0027\nrg -n \"MongoTransactionManager\" --type=java\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 205\n\n---\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\nset -u\n\necho \"== candidate file ==\"\ngit ls-files | grep -F \u0027am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java\u0027 || true\n\necho\necho \"== target file outline/size ==\"\nwc -l am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java 2\u003e/dev/null || true\nast-grep outline am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java --view compact 2\u003e/dev/null | sed -n \u00271,160p\u0027 || true\n\necho\necho \"== target snippet ==\"\nsed -n \u0027160,245p\u0027 am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java 2\u003e/dev/null | cat -n\n\necho\necho \"== repository transaction settings/config/text search ==\"\nrg -n -i \"replicaSet|transaction|MongoTransactionManager|`@EnableTransactionManagement`|`@Transactional`\" \\\n  -g \u0027*.yml\u0027 -g \u0027*.yaml\u0027 -g \u0027*.properties\u0027 -g \u0027*.java\u0027 -g \u0027*.xml\u0027 -g \u0027*.md\u0027 . 2\u003e/dev/null | sed -n \u00271,240p\u0027\n\necho\necho \"== dependency versions mentioning mongo ==\"\nrg -n \"spring-boot-starter-data-mongo.*transaction|spring-boot-starter-data-mongodb|spring-boot-autoconfigure|spring-data-mongodb|mongo\" \\\n  -g \u0027pom.xml\u0027 -g \u0027*.gradle\u0027 -g \u0027*.gradle.kts\u0027 -g \u0027gradle.properties\u0027 -g \u0027pom.xml\u0027 . 2\u003e/dev/null | sed -n \u00271,240p\u0027\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 11167\n\n---\n\n🏁 Script executed:\n\n```shell\n#!/bin/bash\nset -u\n\necho \"== MongoConfig ==\"\nwc -l am-trade-models/src/main/java/am/trade/models/config/MongoConfig.java 2\u003e/dev/null || true\ncat -n am-trade-models/src/main/java/am/trade/models/config/MongoConfig.java 2\u003e/dev/null | sed -n \u00271,120p\u0027\n\necho\necho \"== root pom mongo-related dependency management ==\"\nsed -n \u00271,140p\u0027 pom.xml 2\u003e/dev/null | cat -n || true\n\necho\necho \"== active transaction annotations near target ==\"\nsed -n \u00271,35p\u0027 am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java 2\u003e/dev/null | cat -n || true\n```\n\nRepository: AM-Portfolio/am-trade-management\n\nLength of output: 10409\n\n---\n\n\n\n\u003c/details\u003e\n\n**Make `saveAllTradeDetails` transactional for batch consistency.**\n\nThis method reads existing documents and then saves a batch of documents, a transactional operation under the service-layer guidelines. Add `@Transactional`, but keep the deployment topology check in place: MongoDB multi-document transactions require replica set support, and the current Mongo config has `MongoTransactionManager` commented out.\n\n\u003cdetails\u003e\n\u003csummary\u003e🤖 Prompt for AI Agents\u003c/summary\u003e\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn\n`@am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java`\naround lines 192 - 230, Add `@Transactional` to the saveAllTradeDetails method so\nthe existing-document lookup and batch save execute as one service-layer\ntransaction. Preserve the current Mongo deployment topology check and do not\nenable or introduce MongoTransactionManager configuration; transactions must\nremain dependent on replica-set support.\n```\n\n\u003c/details\u003e\n\n\u003c!-- fingerprinting:phantom:medusa:beignet --\u003e\n\n\u003c!-- cr-indicator-types:refactor_suggestion --\u003e\n\n\u003c!-- cr-comment:v1:f01e323b9b361fc5e72f76c3 --\u003e\n\n_Source: Coding guidelines_\n\n---\n\n_📐 Maintainability \u0026 Code Quality_ | _🟠 Major_ | _⚡ Quick win_\n\n**Break up `saveAllTradeDetails` to satisfy the method-length/SRP guideline.**\n\nThe method now spans ~38 lines and does four distinct things: collecting tradeIds, batch-resolving existing Mongo IDs, mapping entities, and saving. As per coding guidelines, `**/*.java`: \"Maximum method length of 20 lines of code\" and \"Each method performs exactly one logical operation following Single Responsibility Principle\".\n\n\u003cdetails\u003e\n\u003csummary\u003e♻️ Suggested extraction\u003c/summary\u003e\n\n```diff\n public List\u003cTradeDetails\u003e saveAllTradeDetails(List\u003cTradeDetails\u003e tradeDetailsList) {\n     log.debug(\"Saving {} trade details records\", tradeDetailsList.size());\n+    Map\u003cString, String\u003e existingIdByTradeId = resolveExistingIdsByTradeId(tradeDetailsList);\n+    List\u003cTradeDetailsEntity\u003e entities = toEntitiesReusingExistingIds(tradeDetailsList, existingIdByTradeId);\n+    List\u003cTradeDetailsEntity\u003e savedEntities = tradeDetailsRepository.saveAll(entities);\n+    return savedEntities.stream().map(tradeDetailsMapper::toTradeDetails).collect(Collectors.toList());\n+}\n+\n+private Map\u003cString, String\u003e resolveExistingIdsByTradeId(List\u003cTradeDetails\u003e tradeDetailsList) {\n+    List\u003cString\u003e incomingTradeIds = tradeDetailsList.stream()\n+            .map(TradeDetails::getTradeId).filter(id -\u003e id != null).collect(Collectors.toList());\n+    Map\u003cString, String\u003e existingIdByTradeId = new HashMap\u003c\u003e();\n+    if (!incomingTradeIds.isEmpty()) {\n+        tradeDetailsRepository.findByTradeIdIn(incomingTradeIds)\n+                .forEach(existing -\u003e existingIdByTradeId.put(existing.getTradeId(), existing.getId()));\n+    }\n+    return existingIdByTradeId;\n+}\n```\n\u003c/details\u003e\n\n\n\nAs per coding guidelines, `**/*.java`: \"Maximum method length of 20 lines of code\" and \"Each method performs exactly one logical operation following Single Responsibility Principle\".\n\n\u003cdetails\u003e\n\u003csummary\u003e🤖 Prompt for AI Agents\u003c/summary\u003e\n\n```\nVerify each finding against current code. Fix only still-valid issues, skip the\nrest with a brief reason, keep changes minimal, and validate.\n\nIn\n`@am-trade-services/src/main/java/am/trade/services/service/impl/TradeDetailsServiceImpl.java`\naround lines 192 - 230, Refactor saveAllTradeDetails into focused helper methods\nso it remains under 20 lines and delegates each logical operation separately:\ncollecting non-null trade IDs, resolving existing IDs via findByTradeIdIn,\nmapping TradeDetails to entities while reusing existing Mongo IDs, and mapping\nsaved entities back to TradeDetails. Preserve the current batch lookup and\nsaveAll behavior.\n```\n\n\u003c/details\u003e\n\n\u003c!-- fingerprinting:phantom:medusa:beignet --\u003e\n\n\u003c!-- cr-indicator-types:refactor_suggestion --\u003e\n\n\u003c!-- cr-comment:v1:d10c5ce3ead4753279fb9b2f --\u003e\n\n_Source: Coding guidelines_\n\n\u003c!-- This is an auto-generated comment by CodeRabbit --\u003e",
+                      "created_at":  "2026-07-25T09:14:06Z",
+                      "updated_at":  "2026-07-25T09:14:08Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3649959152",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3649959152"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3649959152"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3649959152/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  192,
+                      "original_start_line":  192,
+                      "start_side":  "RIGHT",
+                      "line":  230,
+                      "original_line":  230,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  81,
+                      "position":  81,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3650069630",
+                      "pull_request_review_id":  4779156605,
+                      "id":  3650069630,
+                      "node_id":  "PRRC_kwDOO-jMk87Zj6R-",
+                      "diff_hunk":  "@@ -55,121 +61,123 @@ public MarketDataApiClient(MarketDataApiConfig config, RestTemplateBuilder restT\n                     return execution.execute(request, body);\n                 })\n                 .build();\n+                \n+        this.localCache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()",
+                      "path":  "am-trade-api/src/main/java/am/trade/api/client/MarketDataApiClient.java",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "user":  {
+                                   "login":  "SagaRoy12",
+                                   "id":  111957606,
+                                   "node_id":  "U_kgDOBqxWZg",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/u/111957606?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/SagaRoy12",
+                                   "html_url":  "https://github.com/SagaRoy12",
+                                   "followers_url":  "https://api.github.com/users/SagaRoy12/followers",
+                                   "following_url":  "https://api.github.com/users/SagaRoy12/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/SagaRoy12/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/SagaRoy12/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/SagaRoy12/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/SagaRoy12/orgs",
+                                   "repos_url":  "https://api.github.com/users/SagaRoy12/repos",
+                                   "events_url":  "https://api.github.com/users/SagaRoy12/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/SagaRoy12/received_events",
+                                   "type":  "User",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "are u sure that local cache is the last option, try something smarter as this local cache will evoke the garbage collector again an again and all put an little extra stress on CPU ",
+                      "created_at":  "2026-07-25T11:04:18Z",
+                      "updated_at":  "2026-07-25T11:19:12Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3650069630",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3650069630"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3650069630"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3650069630/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  null,
+                      "original_start_line":  null,
+                      "start_side":  null,
+                      "line":  65,
+                      "original_line":  65,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  51,
+                      "position":  51,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3650070673",
+                      "pull_request_review_id":  4779156605,
+                      "id":  3650070673,
+                      "node_id":  "PRRC_kwDOO-jMk87Zj6iR",
+                      "diff_hunk":  "@@ -66,9 +66,12 @@ void getTradeDetailsByMonth_shouldFilterTradesCorrectly() {\n         // Trade 5: Outside (August)\n         TradeDetails trade5 = createTrade(\"t5\", portfolioId, LocalDateTime.of(2020, 8, 1, 0, 0));\n \n-        when(portfolioRepository.findByPortfolioId(portfolioId)).thenReturn(java.util.Optional.empty());\n-        when(tradeDetailsService.findModelsByPortfolioId(portfolioId))\n-                .thenReturn(Arrays.asList(trade1, trade2, trade3, trade4, trade5));\n+        // Unnecessary mock removed",
+                      "path":  "am-trade-api/src/test/java/am/trade/api/service/impl/TradeManagementServiceImplTest.java",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "user":  {
+                                   "login":  "SagaRoy12",
+                                   "id":  111957606,
+                                   "node_id":  "U_kgDOBqxWZg",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/u/111957606?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/SagaRoy12",
+                                   "html_url":  "https://github.com/SagaRoy12",
+                                   "followers_url":  "https://api.github.com/users/SagaRoy12/followers",
+                                   "following_url":  "https://api.github.com/users/SagaRoy12/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/SagaRoy12/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/SagaRoy12/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/SagaRoy12/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/SagaRoy12/orgs",
+                                   "repos_url":  "https://api.github.com/users/SagaRoy12/repos",
+                                   "events_url":  "https://api.github.com/users/SagaRoy12/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/SagaRoy12/received_events",
+                                   "type":  "User",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "why this is mentioned as unnecessary mock remove ?",
+                      "created_at":  "2026-07-25T11:05:14Z",
+                      "updated_at":  "2026-07-25T11:19:12Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3650070673",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3650070673"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3650070673"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3650070673/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  null,
+                      "original_start_line":  null,
+                      "start_side":  null,
+                      "line":  69,
+                      "original_line":  69,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  7,
+                      "position":  7,
+                      "subject_type":  "line"
+                  },
+                  {
+                      "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3650090940",
+                      "pull_request_review_id":  4779156605,
+                      "id":  3650090940,
+                      "node_id":  "PRRC_kwDOO-jMk87Zj_e8",
+                      "diff_hunk":  "@@ -0,0 +1,33 @@\n+package am.trade.services.config;\n+\n+import org.springframework.context.annotation.Bean;\n+import org.springframework.context.annotation.Configuration;\n+import org.springframework.scheduling.annotation.EnableAsync;\n+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;\n+\n+import java.util.concurrent.Executor;\n+import java.util.concurrent.ThreadPoolExecutor;\n+\n+@Configuration\n+@EnableAsync\n+public class AsyncConfig {\n+\n+    /**\n+     * Dedicated thread pool for processing trade aggregations/deltas.\n+     * Uses a bounded queue and CallerRunsPolicy to provide graceful backpressure\n+     * when the system is under extreme load (e.g., 500+ concurrent requests).\n+     */\n+    @Bean(name = \"tradeProcessingExecutor\")",
+                      "path":  "am-trade-services/src/main/java/am/trade/services/config/AsyncConfig.java",
+                      "commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "original_commit_id":  "29514479144a73694d74fd0dff54e8c0c723248c",
+                      "user":  {
+                                   "login":  "SagaRoy12",
+                                   "id":  111957606,
+                                   "node_id":  "U_kgDOBqxWZg",
+                                   "avatar_url":  "https://avatars.githubusercontent.com/u/111957606?v=4",
+                                   "gravatar_id":  "",
+                                   "url":  "https://api.github.com/users/SagaRoy12",
+                                   "html_url":  "https://github.com/SagaRoy12",
+                                   "followers_url":  "https://api.github.com/users/SagaRoy12/followers",
+                                   "following_url":  "https://api.github.com/users/SagaRoy12/following{/other_user}",
+                                   "gists_url":  "https://api.github.com/users/SagaRoy12/gists{/gist_id}",
+                                   "starred_url":  "https://api.github.com/users/SagaRoy12/starred{/owner}{/repo}",
+                                   "subscriptions_url":  "https://api.github.com/users/SagaRoy12/subscriptions",
+                                   "organizations_url":  "https://api.github.com/users/SagaRoy12/orgs",
+                                   "repos_url":  "https://api.github.com/users/SagaRoy12/repos",
+                                   "events_url":  "https://api.github.com/users/SagaRoy12/events{/privacy}",
+                                   "received_events_url":  "https://api.github.com/users/SagaRoy12/received_events",
+                                   "type":  "User",
+                                   "user_view_type":  "public",
+                                   "site_admin":  false
+                               },
+                      "body":  "why allocated specific thread pool ? cant it be shared with others ? and optimize this .........",
+                      "created_at":  "2026-07-25T11:17:32Z",
+                      "updated_at":  "2026-07-25T11:19:12Z",
+                      "html_url":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3650090940",
+                      "pull_request_url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48",
+                      "_links":  {
+                                     "self":  {
+                                                  "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3650090940"
+                                              },
+                                     "html":  {
+                                                  "href":  "https://github.com/AM-Portfolio/am-trade-management/pull/48#discussion_r3650090940"
+                                              },
+                                     "pull_request":  {
+                                                          "href":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/48"
+                                                      }
+                                 },
+                      "reactions":  {
+                                        "url":  "https://api.github.com/repos/AM-Portfolio/am-trade-management/pulls/comments/3650090940/reactions",
+                                        "total_count":  0,
+                                        "+1":  0,
+                                        "-1":  0,
+                                        "laugh":  0,
+                                        "hooray":  0,
+                                        "confused":  0,
+                                        "heart":  0,
+                                        "rocket":  0,
+                                        "eyes":  0
+                                    },
+                      "start_line":  null,
+                      "original_start_line":  null,
+                      "start_side":  null,
+                      "line":  20,
+                      "original_line":  20,
+                      "side":  "RIGHT",
+                      "author_association":  "NONE",
+                      "original_position":  20,
+                      "position":  20,
+                      "subject_type":  "line"
+                  }
+              ],
+    "Count":  15
+}

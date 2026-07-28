@@ -1,0 +1,28 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "components": {
+    "schemas": {
+      "JournalTemplateCategory": {
+        "type": "string",
+        "enum": [
+          "DAILY_CHECKIN",
+          "PRE_MARKET",
+          "POST_MARKET",
+          "TRADE_RECAP"
+        ]
+      },
+      "TestPayload": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/JournalTemplateCategory"
+          }
+        }
+      }
+    }
+  }
+}

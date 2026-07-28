@@ -56,6 +56,16 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     }
     
     @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteByTradeId(String tradeId) {
+        log.debug("Deleting trade details by trade ID: {}", tradeId);
+        tradeDetailsRepository.findByTradeId(tradeId).ifPresent(entity -> {
+            tradeDetailsRepository.deleteById(entity.getId());
+            log.info("Deleted trade details with trade ID: {}", tradeId);
+        });
+    }
+    
+    @Override
     public List<TradeDetails> findModelsBySymbol(String symbol) {
         log.debug("Finding trade details by symbol: {}", symbol);
         return tradeDetailsRepository.findBySymbol(symbol).stream()
