@@ -60,9 +60,9 @@ spring:
       - optional:file:/vault/secrets/market-data
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://admin:password123@localhost:27017/trade?authSource=admin}
+      host: ${MONGODB_HOST:localhost}
+      port: ${MONGODB_PORT:27017}
       database: ${MONGODB_DATABASE:trade}
-      field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy
       auto-index-creation: false
     jackson:
       default-property-inclusion: non_null
@@ -104,7 +104,7 @@ management:
       validate-group-membership: false
       group:
         readiness:
-          include: mongo,kafka,readinessState,diskSpace
+          include: mongo,redis,kafka,readinessState,diskSpace
   metrics:
     tags:
       # Required for Grafana Technical / Services Service dropdown
@@ -115,6 +115,8 @@ management:
     readinessstate:
       enabled: true
     mongo:
+      enabled: true
+    redis:
       enabled: true
     kafka:
       enabled: true
