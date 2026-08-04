@@ -19,8 +19,6 @@ global:
         path: "apps/data/prod/infra/mongodb"
       kafka:
         path: "apps/data/prod/infra/kafka"
-      redis:
-        path: "apps/data/prod/infra/redis"
       app:
         path: "apps/data/prod/services/am-trade-management"
       identity-oidc:
