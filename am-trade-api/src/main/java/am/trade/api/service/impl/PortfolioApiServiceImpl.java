@@ -67,8 +67,33 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
         String userId = UserContext.getUserIdOrThrow();
         log.info("Updating portfolio: {} for user: {}", portfolioId, userId);
 
-        PortfolioModel existingPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId)
-                .orElseThrow(() -> new IllegalArgumentException("Portfolio not found with ID: " + portfolioId));
+        java.util.Optional<PortfolioModel> existingPortfolioOpt = portfolioPersistenceService.findByPortfolioId(portfolioId);
+
+        if (existingPortfolioOpt.isEmpty()) {
+            log.warn("Portfolio {} not found in local trade DB. Creating a stub and forwarding update.", portfolioId);
+            PortfolioModel stubPortfolio = PortfolioModel.builder()
+                    .portfolioId(portfolioId)
+                    .name(request.getName())
+                    .description(request.getDescription())
+                    .ownerId(userId)
+                    .active(true)
+                    .currency(request.getCurrency())
+                    .initialCapital(request.getInitialCapital())
+                    .currentCapital(request.getInitialCapital())
+                    .createdDate(LocalDateTime.now())
+                    .lastUpdatedDate(LocalDateTime.now())
+                    .metrics(new PortfolioMetrics())
+                    .tradeIds(new ArrayList<>())
+                    .winningTradeIds(new ArrayList<>())
+                    .losingTradeIds(new ArrayList<>())
+                    .assetAllocations(new ArrayList<>())
+                    .build();
+            PortfolioModel saved = portfolioPersistenceService.savePortfolio(stubPortfolio);
+            tradeApiService.publishBulkPortfolioSyncEvent(saved.getPortfolioId(), saved.getName(), saved.getOwnerId(), new ArrayList<>(), "REPLACE_ALL");
+            return saved;
+        }
+
+        PortfolioModel existingPortfolio = existingPortfolioOpt.get();
 
         if (!existingPortfolio.getOwnerId().equals(userId)) {
             log.error("User {} attempted to update portfolio {} owned by {}", userId, portfolioId, existingPortfolio.getOwnerId());
@@ -96,8 +121,16 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
         String userId = UserContext.getUserIdOrThrow();
         log.info("Deleting portfolio: {} for user: {}. deleteTrades: {}", portfolioId, userId, deleteTrades);
 
-        PortfolioModel existingPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId)
-                .orElseThrow(() -> new IllegalArgumentException("Portfolio not found with ID: " + portfolioId));
+        java.util.Optional<PortfolioModel> existingPortfolioOpt = portfolioPersistenceService.findByPortfolioId(portfolioId);
+
+        if (existingPortfolioOpt.isEmpty()) {
+            log.warn("Portfolio {} not found in local trade DB. Forwarding delete event to am-portfolio anyway.", portfolioId);
+            // Send ONE Kafka message for the empty portfolio to ensure am-portfolio deletes it
+            tradeApiService.publishBulkPortfolioSyncEvent(portfolioId, portfolioId, userId, new ArrayList<>(), "DELETE_PORTFOLIO");
+            return;
+        }
+
+        PortfolioModel existingPortfolio = existingPortfolioOpt.get();
 
         if (!existingPortfolio.getOwnerId().equals(userId)) {
             log.error("User {} attempted to delete portfolio {} owned by {}", userId, portfolioId, existingPortfolio.getOwnerId());
