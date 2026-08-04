@@ -19,6 +19,8 @@ global:
         path: "apps/data/prod/infra/mongodb"
       kafka:
         path: "apps/data/prod/infra/kafka"
+      redis:
+        path: "apps/data/prod/infra/redis"
       app:
         path: "apps/data/prod/services/am-trade-management"
       identity-oidc:
@@ -29,6 +31,8 @@ global:
 env:
   SPRING_PROFILES_ACTIVE: "prod"
   MONGODB_DATABASE: "trade"
+  # Enable Kafka so portfolio/trade sync events are published
+  AM_TRADE_KAFKA_ENABLED: "true"
   # Match prod Kafka (same as portfolio/doc): SCRAM over PLAINTEXT listener
   KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
   KAFKA_SASL_MECHANISM: "SCRAM-SHA-256"
@@ -64,5 +68,5 @@ resources:
     cpu: 1000m
     memory: 1024Mi
   requests:
-    cpu: 100m
-    memory: 256Mi
+    cpu: 500m
+    memory: 512Mi
