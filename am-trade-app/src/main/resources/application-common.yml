@@ -47,7 +47,7 @@ market-data:
 am:
   portfolio:
     service:
-      url: ${AM_PORTFOLIO_SERVICE_URL:http://localhost:8081}
+      url: ${AM_PORTFOLIO_SERVICE_URL:http://am-portfolio:8080}
 
 # Internal service-to-service secret (must match am-portfolio's app.jwt.internal-secret)
 app:
