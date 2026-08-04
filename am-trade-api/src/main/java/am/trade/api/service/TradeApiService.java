@@ -112,4 +112,13 @@ public interface TradeApiService {
      * @return The updated portfolio details
      */
     am.trade.common.models.PortfolioModel recalculatePortfolio(String portfolioId, String userId);
+
+    /**
+     * Publishes a bulk portfolio sync event for a list of trades
+     * @param portfolioId The ID of the portfolio
+     * @param userId The ID of the user
+     * @param trades The list of trades to include in the event
+     * @param action The action (e.g., "DELETE")
+     */
+    void publishBulkPortfolioSyncEvent(String portfolioId, String portfolioName, String userId, List<TradeDetails> trades, String action);
 }

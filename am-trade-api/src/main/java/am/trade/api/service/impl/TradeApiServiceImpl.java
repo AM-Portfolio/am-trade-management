@@ -102,7 +102,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     }
 
     @Override
-    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(cacheNames = {"analyticsCache", "portfolioSummary", "tradeSummaryCache"}, allEntries = true)
     public TradeDetails addTrade(TradeDetails tradeDetails) {
         if (tradeDetails == null) {
             log.error("Cannot add null trade");
@@ -286,9 +286,17 @@ public class TradeApiServiceImpl implements TradeApiService {
                 }
             }
         }
+        String portfolioName = savedTrade.getPortfolioId();
+        am.trade.common.models.PortfolioModel portfolio = portfolioPersistenceService.findByPortfolioId(savedTrade.getPortfolioId()).orElse(null);
+        if (portfolio != null && portfolio.getName() != null) {
+            portfolioName = portfolio.getName();
+        }
+
         // ── Build and publish the event ──────────────────────────────────────
         am.trade.models.kafka.PortfolioSyncEvent syncEvent = am.trade.models.kafka.PortfolioSyncEvent.builder()
                 .id(savedTrade.getPortfolioId())
+                .portfolioId(portfolioName)
+                .action(action)
                 .brokerType(brokerType)
                 .userId(savedTrade.getUserId())
                 .equities(List.of(equity))
@@ -305,7 +313,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     }
 
     @Override
-    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(cacheNames = {"analyticsCache", "portfolioSummary", "tradeSummaryCache"}, allEntries = true)
     public TradeDetails updateTrade(String tradeId, TradeDetails tradeDetails) {
         if (tradeId == null || tradeId.isEmpty() || tradeDetails == null) {
             log.error("Cannot update trade: invalid trade ID or trade details");
@@ -373,7 +381,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     }
     
     @Override
-    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(cacheNames = {"analyticsCache", "portfolioSummary", "tradeSummaryCache"}, allEntries = true)
     public void deleteTrade(String tradeId) {
         log.info("Deleting trade with ID: {}", tradeId);
 
@@ -393,6 +401,10 @@ public class TradeApiServiceImpl implements TradeApiService {
 
         // Delete the trade
         tradeDetailsService.deleteByTradeId(tradeId);
+
+        // Recalculate portfolio metrics
+        List<TradeDetails> remainingTrades = tradeDetailsService.findModelsByPortfolioId(existingTrade.getPortfolioId());
+        tradeProcessingService.processTradeDetailsWithObjects(remainingTrades, existingTrade.getPortfolioId(), userId);
 
         // Publish event to am-portfolio service
         publishPortfolioSyncEvent(existingTrade, "DELETE");
@@ -525,7 +537,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     }
 
     @Override
-    @org.springframework.cache.annotation.CacheEvict(cacheNames = "analyticsCache", allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(cacheNames = {"analyticsCache", "portfolioSummary", "tradeSummaryCache"}, allEntries = true)
     public List<TradeDetails> addOrUpdateTrades(List<TradeDetails> tradeDetailsList) {
         if (tradeDetailsList == null || tradeDetailsList.isEmpty()) {
             log.warn("Empty or null trade details list provided");
@@ -1157,5 +1169,77 @@ public class TradeApiServiceImpl implements TradeApiService {
         return portfolioPersistenceService.findByPortfolioId(portfolioId)
                 .orElseThrow(() -> new am.trade.exceptions.TradeException("Portfolio not found with ID: " + portfolioId,
                         org.springframework.http.HttpStatus.NOT_FOUND));
+    }
+
+    @Override
+    public void publishBulkPortfolioSyncEvent(String portfolioId, String portfolioName, String userId, List<TradeDetails> trades, String action) {
+        if ((trades == null || trades.isEmpty()) && !List.of("CREATE", "UPDATE", "DELETE", "DELETE_PORTFOLIO").contains(action)) {
+            return;
+        }
+
+        List<TradeDetails> safeTrades = trades != null ? trades : Collections.emptyList();
+
+        List<am.trade.models.kafka.EquityPosition> equities = new java.util.ArrayList<>();
+        String brokerType = "OTHER";
+
+        String equityAction = "DELETE_PORTFOLIO".equals(action) ? "DELETE" : action;
+
+        for (TradeDetails trade : safeTrades) {
+            String assetType = trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSegment() != null
+                    ? trade.getInstrumentInfo().getSegment().name()
+                    : "EQUITY";
+
+            String isin = trade.getInstrumentInfo() != null ? trade.getInstrumentInfo().getIsin() : null;
+
+            java.math.BigDecimal entryQuantity = trade.getEntryInfo() != null && trade.getEntryInfo().getQuantity() != null
+                    ? java.math.BigDecimal.valueOf(trade.getEntryInfo().getQuantity())
+                    : java.math.BigDecimal.ZERO;
+
+            java.math.BigDecimal entryPrice = trade.getEntryInfo() != null && trade.getEntryInfo().getPrice() != null
+                    ? trade.getEntryInfo().getPrice()
+                    : java.math.BigDecimal.ZERO;
+            
+            java.math.BigDecimal investmentValue = entryQuantity.multiply(entryPrice);
+
+            am.trade.models.kafka.EquityPosition equity = am.trade.models.kafka.EquityPosition.builder()
+                    .symbol(trade.getSymbol())
+                    .assetType(assetType)
+                    .quantity(entryQuantity)
+                    .avgBuyingPrice(entryPrice)
+                    .investmentValue(investmentValue)
+                    .action(equityAction)
+                    .tradeStatus("OPEN")
+                    .isin(isin)
+                    .build();
+            equities.add(equity);
+
+            if ("OTHER".equals(brokerType) && trade.getTradeExecutions() != null && !trade.getTradeExecutions().isEmpty()) {
+                am.trade.common.models.TradeModel execution = trade.getTradeExecutions().get(0);
+                if (execution != null && execution.getBasicInfo() != null
+                        && execution.getBasicInfo().getBrokerType() != null) {
+                    brokerType = execution.getBasicInfo().getBrokerType().name();
+                }
+            }
+        }
+
+        // Use the passed portfolioName directly
+        
+        am.trade.models.kafka.PortfolioSyncEvent syncEvent = am.trade.models.kafka.PortfolioSyncEvent.builder()
+                .id(portfolioId)
+                .portfolioId(portfolioName)
+                .action(action)
+                .deleteAllTrades("DELETE".equals(action) || "DELETE_PORTFOLIO".equals(action))
+                .brokerType(brokerType)
+                .userId(userId)
+                .equities(equities)
+                .timestamp(java.time.LocalDateTime.now())
+                .build();
+
+        log.info("Publishing bulk portfolio sync event for portfolioId: {} with {} trades, action: {}", portfolioId, safeTrades.size(), action);
+        try {
+            tradeHoldingEventPublisher.publishHoldingUpdate(syncEvent);
+        } catch (Exception e) {
+            log.error("Failed to publish bulk portfolio sync event for portfolio: {}. Error: {}", portfolioId, e.getMessage());
+        }
     }
 }

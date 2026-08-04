@@ -32,6 +32,7 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
 
     @Override
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = {"portfolioSummary", "tradeSummaryCache"}, allEntries = true)
     public PortfolioModel createPortfolio(PortfolioCreateRequest request) {
         String userId = UserContext.getUserIdOrThrow();
         log.info("Creating new portfolio for user: {}", userId);
@@ -54,11 +55,14 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
                 .assetAllocations(new ArrayList<>())
                 .build();
 
-        return portfolioPersistenceService.savePortfolio(portfolioModel);
+        PortfolioModel saved = portfolioPersistenceService.savePortfolio(portfolioModel);
+        tradeApiService.publishBulkPortfolioSyncEvent(saved.getPortfolioId(), saved.getName(), saved.getOwnerId(), new ArrayList<>(), "CREATE");
+        return saved;
     }
 
     @Override
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = {"portfolioSummary", "tradeSummaryCache"}, allEntries = true)
     public PortfolioModel updatePortfolio(String portfolioId, PortfolioUpdateRequest request) {
         String userId = UserContext.getUserIdOrThrow();
         log.info("Updating portfolio: {} for user: {}", portfolioId, userId);
@@ -79,11 +83,15 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
         existingPortfolio.setLastUpdatedDate(LocalDateTime.now());
         
         // Save and return
-        return portfolioPersistenceService.savePortfolio(existingPortfolio);
+        PortfolioModel saved = portfolioPersistenceService.savePortfolio(existingPortfolio);
+        List<TradeDetails> trades = tradeDetailsService.findModelsByPortfolioId(saved.getPortfolioId());
+        tradeApiService.publishBulkPortfolioSyncEvent(saved.getPortfolioId(), saved.getName(), saved.getOwnerId(), trades, "REPLACE_ALL");
+        return saved;
     }
 
     @Override
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = {"portfolioSummary", "tradeSummaryCache"}, allEntries = true)
     public void deletePortfolio(String portfolioId, boolean deleteTrades) {
         String userId = UserContext.getUserIdOrThrow();
         log.info("Deleting portfolio: {} for user: {}. deleteTrades: {}", portfolioId, userId, deleteTrades);
@@ -100,14 +108,15 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
             log.info("Deleting all trades for portfolio: {}", portfolioId);
             List<TradeDetails> trades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
             for (TradeDetails trade : trades) {
-                // We call the API service so that Kafka sync events (DELETE) are properly emitted
-                tradeApiService.deleteTrade(trade.getTradeId());
+                // Delete trade from local DB directly
+                tradeDetailsService.deleteByTradeId(trade.getTradeId());
             }
+            // Send ONE Kafka message for portfolio and all trades
+            tradeApiService.publishBulkPortfolioSyncEvent(portfolioId, existingPortfolio.getName(), userId, trades, "DELETE_PORTFOLIO");
         } else {
             log.info("Leaving trades orphaned for portfolio: {}", portfolioId);
-            // Optionally, we could find the trades and set their portfolioId to null,
-            // but the domain model usually just leaves the ID pointing to nowhere (orphaned)
-            // or the user re-assigns them. For now, they simply become orphaned.
+            // Send ONE Kafka message for the empty portfolio
+            tradeApiService.publishBulkPortfolioSyncEvent(portfolioId, existingPortfolio.getName(), userId, new ArrayList<>(), "DELETE_PORTFOLIO");
         }
 
         portfolioPersistenceService.deleteByPortfolioId(portfolioId);
