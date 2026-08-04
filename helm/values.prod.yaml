@@ -9,11 +9,21 @@ global:
   vault:
     enabled: true
     secrets:
+      otel:
+        path: "apps/data/prod/infra/observability"
+      auth:
+        path: "apps/data/prod/services/am-auth"
+      infra:
+        path: "apps/data/prod/infra/shared-api"
       mongo:
         path: "apps/data/prod/infra/mongodb"
       kafka:
         path: "apps/data/prod/infra/kafka"
       app:
+        path: "apps/data/prod/services/am-trade-management"
+      identity-oidc:
+        path: "apps/data/prod/services/am-identity"
+      service-oauth:
         path: "apps/data/prod/services/am-trade-management"
 
 env:
@@ -54,5 +64,5 @@ resources:
     cpu: 1000m
     memory: 1024Mi
   requests:
-    cpu: 100m
-    memory: 256Mi
+    cpu: 500m
+    memory: 512Mi

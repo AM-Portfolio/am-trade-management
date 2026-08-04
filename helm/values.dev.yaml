@@ -2,23 +2,34 @@
 environment: dev
 replicaCount: 1
 
+
 resources:
   limits:
     cpu: 1000m
     memory: 1024Mi
   requests:
-    cpu: 100m
-    memory: 256Mi
+    cpu: 500m
+    memory: 512Mi
 
 global:
   vault:
     enabled: true
     secrets:
+      otel:
+        path: "apps/data/dev/infra/observability"
+      auth:
+        path: "apps/data/dev/services/am-auth"
+      infra:
+        path: "apps/data/dev/infra/shared-api"
       mongo:
         path: "apps/data/dev/infra/mongodb"
       kafka:
         path: "apps/data/dev/infra/kafka"
       app:
+        path: "apps/data/dev/services/am-trade-management"
+      identity-oidc:
+        path: "apps/data/dev/services/am-identity"
+      service-oauth:
         path: "apps/data/dev/services/am-trade-management"
 
 hostAliases:
