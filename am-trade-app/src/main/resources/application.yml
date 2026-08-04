@@ -104,7 +104,7 @@ management:
       validate-group-membership: false
       group:
         readiness:
-          include: mongo,redis,kafka,readinessState,diskSpace
+          include: mongo,kafka,readinessState,diskSpace
   metrics:
     tags:
       # Required for Grafana Technical / Services Service dropdown
@@ -115,8 +115,6 @@ management:
     readinessstate:
       enabled: true
     mongo:
-      enabled: true
-    redis:
       enabled: true
     kafka:
       enabled: true
