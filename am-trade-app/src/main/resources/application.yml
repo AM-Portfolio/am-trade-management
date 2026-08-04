@@ -60,8 +60,8 @@ spring:
       - optional:file:/vault/secrets/market-data
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://admin:password123@localhost:27017/trade_management?authSource=admin}
-      database: ${MONGODB_DATABASE:trade_management}
+      uri: ${MONGODB_URI:mongodb://admin:password123@localhost:27017/trade?authSource=admin}
+      database: ${MONGODB_DATABASE:trade}
       field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy
       auto-index-creation: false
     jackson:
