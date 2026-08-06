@@ -52,4 +52,4 @@ am:
 # Internal service-to-service secret (must match am-portfolio's app.jwt.internal-secret)
 app:
   jwt:
-    internal-secret: ${INTERNAL_SECRET_KEY:internal-service-super-secret-key-32chars-minimum-change-in-prod}
+    internal-secret: ${INTERNAL_SECRET_KEY}
