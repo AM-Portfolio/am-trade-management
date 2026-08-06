@@ -40,14 +40,14 @@ server:
 
 market-data:
   api:
-    baseUrl: ${AM_MARKET_DATA_API_URL:http://am-market-data:8080}
+    baseUrl: ${AM_MARKET_DATA_API_URL}
     ohlcEndpoint: /v1/market-data/ohlc
 
 # am-portfolio service integration
 am:
   portfolio:
     service:
-      url: ${AM_PORTFOLIO_SERVICE_URL:http://am-portfolio:8080}
+      url: ${AM_PORTFOLIO_SERVICE_URL}
 
 # Internal service-to-service secret (must match am-portfolio's app.jwt.internal-secret)
 app:
