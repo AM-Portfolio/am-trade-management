@@ -19,6 +19,8 @@ public interface TradeDetailsService {
     
     Optional<TradeDetails> findModelByTradeId(String tradeId);
     
+    void deleteByTradeId(String tradeId);
+    
     List<TradeDetails> findModelsBySymbol(String symbol);
     
     List<TradeDetails> findModelsByEntryDateBetween(LocalDateTime startDate, LocalDateTime endDate);

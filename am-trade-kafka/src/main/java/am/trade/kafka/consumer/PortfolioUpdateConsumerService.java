@@ -113,8 +113,8 @@ public class PortfolioUpdateConsumerService {
     }
 
     private void processInboundPortfolioEvent(PortfolioUpdateInboundEvent event) {
-        if (event.getPortfolioId() == null || event.getEquities() == null || event.getEquities().isEmpty()) {
-            log.warn("PortfolioUpdateInboundEvent has no portfolioId or equities. Skipping. EventId: {}", event.getId());
+        if (event.getPortfolioId() == null) {
+            log.warn("PortfolioUpdateInboundEvent has no portfolioId. Skipping. EventId: {}", event.getId());
             return;
         }
 
@@ -129,6 +129,11 @@ public class PortfolioUpdateConsumerService {
         // Upsert the portfolio record in the trade-management database so it appears
         // in the UI dropdown. Without this, trades get created but the portfolio is invisible.
         upsertPortfolio(portfolioId, userId, event.getName(), event.getBrokerType());
+
+        if (event.getEquities() == null || event.getEquities().isEmpty()) {
+            log.info("PortfolioUpdateInboundEvent has no equities. Upserted portfolio only. EventId: {}", event.getId());
+            return;
+        }
 
         // Fetch ALL existing trades for this portfolio once, rather than querying per symbol.
         // This is far more efficient when a portfolio has 50+ holdings.

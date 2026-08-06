@@ -31,6 +31,8 @@ global:
 env:
   SPRING_PROFILES_ACTIVE: "prod"
   MONGODB_DATABASE: "trade"
+  # Enable Kafka so portfolio/trade sync events are published
+  AM_TRADE_KAFKA_ENABLED: "true"
   # Match prod Kafka (same as portfolio/doc): SCRAM over PLAINTEXT listener
   KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
   KAFKA_SASL_MECHANISM: "SCRAM-SHA-256"
