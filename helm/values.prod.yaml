@@ -31,6 +31,7 @@ global:
 env:
   SPRING_PROFILES_ACTIVE: "prod"
   MONGODB_DATABASE: "trade"
+  AM_MARKET_DATA_API_URL: "http://am-market-data:8080"
   # Enable Kafka so portfolio/trade sync events are published
   AM_TRADE_KAFKA_ENABLED: "true"
   # Match prod Kafka (same as portfolio/doc): SCRAM over PLAINTEXT listener
