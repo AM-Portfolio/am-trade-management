@@ -8,6 +8,11 @@ environment: "prod"
 global:
   vault:
     enabled: true
+    # The cluster uses Vault Agent Injector (sidecar), NOT the Secrets Store CSI Driver.
+    # Explicitly disable CSI here to override the universal-chart default (which is true).
+    # Without this, Helm tries to create a SecretProviderClass — a CRD that isn't installed.
+    csi:
+      enabled: false
     secrets:
       otel:
         path: "apps/data/prod/infra/observability"
