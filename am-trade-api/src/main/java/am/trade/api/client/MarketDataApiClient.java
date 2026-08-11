@@ -133,7 +133,7 @@ public class MarketDataApiClient {
         OhlcDataRequest request = OhlcDataRequest.builder()
                 .symbols(symbolsParam)
                 .timeFrame("1D")
-                .refresh(false)
+                .refresh(true)
                 .indexSymbol(false)
                 .build();
 
@@ -172,12 +172,14 @@ public class MarketDataApiClient {
             throw new am.trade.exceptions.MarketDataUnavailableException("Transport failure while fetching market data", e);
         }
 
-        // NEGATIVE CACHING: Prevent Cache Penetration by caching missing/failed keys as -1.0
-        // This ensures Caffeine doesn't retry them constantly if the upstream is down or missing data.
-        for (String sym : missingSymbols) {
-            currentPrices.putIfAbsent(sym, -1.0);
+        // Only return prices we actually received. Do NOT negative-cache missing symbols as -1.0.
+        // Reason: negative caching caused a 5-minute blackout — Caffeine would serve -1.0 for any
+        // symbol whose price was temporarily unavailable (market closed, transient API error, etc.),
+        // blocking retries for the entire cache TTL. By omitting missing symbols from the returned map,
+        // Caffeine's LoadingCache will naturally retry them on the very next request.
+        if (currentPrices.isEmpty()) {
+            log.warn("No live prices returned from market data API for symbols: {}", symbolsParam);
         }
-
         return currentPrices;
     }
 }
