@@ -29,6 +29,7 @@ service:
 security:
   automountServiceAccountToken: true
 
+
 # Vault Secret Injection Configuration
 vault:
   enabled: true

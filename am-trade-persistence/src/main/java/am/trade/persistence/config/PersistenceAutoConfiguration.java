@@ -8,6 +8,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import am.trade.persistence.mapper.PortfolioMapper;
 import am.trade.persistence.mapper.TradeDetailsMapper;
+import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Auto-configuration class for the persistence module
@@ -29,5 +31,19 @@ public class PersistenceAutoConfiguration {
     @ConditionalOnProperty(name = "am.trade.persistence.portfolio.enabled", havingValue = "true", matchIfMissing = true)
     public PortfolioMapper portfolioMapper() {
         return new PortfolioMapper(new TradeDetailsMapper());
+    }
+
+    /**
+     * Customize MongoDB client settings for high concurrency
+     */
+    @Bean
+    public MongoClientSettingsBuilderCustomizer customMongoClientSettings() {
+        return builder -> {
+            builder.applyToConnectionPoolSettings(pool -> 
+                pool.maxSize(1000)
+                    .minSize(50)
+                    .maxWaitTime(10, TimeUnit.SECONDS)
+            );
+        };
     }
 }

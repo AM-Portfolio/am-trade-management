@@ -17,7 +17,7 @@ import am.trade.persistence.entity.TradeDetailsEntity;
  * Repository interface for Trade document
  */
 @Repository
-public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEntity, String> {
+public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEntity, String>, TradeDetailsRepositoryCustom {
 
     Optional<TradeDetailsEntity> findById(String id);
     
@@ -39,6 +39,24 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
     List<TradeDetailsEntity> findByStatus(TradeStatus status);
     
     List<TradeDetailsEntity> findByPortfolioId(String portfolioId);
+    
+    @Query("{'portfolioId': ?0, 'symbol': {$in: ?1}}")
+    List<TradeDetailsEntity> findByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols);
+    
+    @Query("{'userId': ?0, 'portfolioId': ?1, 'symbol': {$in: ?2}}")
+    Page<TradeDetailsEntity> findByUserIdAndPortfolioIdAndSymbolInIgnoreCase(String userId, String portfolioId, List<String> symbols, Pageable pageable);
+
+    @Query("{'userId': ?0, 'portfolioId': ?1, 'symbol': {$in: ?2}}")
+    List<TradeDetailsEntity> findByUserIdAndPortfolioIdAndSymbolInIgnoreCase(String userId, String portfolioId, List<String> symbols);
+    
+    @Query("{'userId': ?0, 'portfolioId': ?1}")
+    Page<TradeDetailsEntity> findByUserIdAndPortfolioId(String userId, String portfolioId, Pageable pageable);
+    
+    @Query("{'userId': ?0, 'portfolioId': ?1}")
+    List<TradeDetailsEntity> findByUserIdAndPortfolioId(String userId, String portfolioId);
+    
+    @Query("{'portfolioId': ?0, 'symbol': {$in: ?1}}")
+    Page<TradeDetailsEntity> findByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols, Pageable pageable);
     
     @Query("{'symbol': ?0, 'entryInfo.timestamp': {$gte: ?1, $lte: ?2}}")
     List<TradeDetailsEntity> findBySymbolAndEntryDateBetween(String symbol, LocalDateTime startDate, LocalDateTime endDate);
@@ -86,4 +104,19 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
      */
     @Query("{'userId': ?0}")
     List<TradeDetailsEntity> findByUserId(String userId);
+
+    @Query("{'portfolioId': ?0, 'entryInfo.timestamp': {$gte: ?1, $lte: ?2}}")
+    List<TradeDetailsEntity> findByPortfolioIdAndEntryInfoTimestampBetween(String portfolioId, LocalDateTime startDate, LocalDateTime endDate);
+
+    @Query("{'userId': ?0, 'entryInfo.timestamp': {$gte: ?1, $lte: ?2}}")
+    List<TradeDetailsEntity> findByUserIdAndEntryInfoTimestampBetween(String userId, LocalDateTime startDate, LocalDateTime endDate);
+
+    @Query("{'userId': ?0, 'portfolioId': ?1, 'entryInfo.timestamp': {$gte: ?2, $lte: ?3}}")
+    List<TradeDetailsEntity> findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(String userId, String portfolioId, LocalDateTime startDate, LocalDateTime endDate);
+    
+    @Query("{'userId': ?0, 'symbol': ?1}")
+    List<TradeDetailsEntity> findByUserIdAndSymbol(String userId, String symbol);
+    
+    @Query("{'userId': ?0, 'symbol': ?1, 'entryInfo.timestamp': {$gte: ?2, $lte: ?3}}")
+    List<TradeDetailsEntity> findByUserIdAndSymbolAndEntryInfoTimestampBetween(String userId, String symbol, LocalDateTime startDate, LocalDateTime endDate);
 }

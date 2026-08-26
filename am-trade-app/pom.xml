@@ -5,7 +5,7 @@
     <parent>
         <artifactId>am-trade-management</artifactId>
         <groupId>am.trade</groupId>
-        <version>1.0.13-SNAPSHOT</version>
+        <version>1.0.22-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -60,6 +60,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <!-- Required for @Observed and other AOP aspects to function -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

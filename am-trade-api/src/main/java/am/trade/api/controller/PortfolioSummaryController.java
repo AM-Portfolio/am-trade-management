@@ -20,6 +20,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import io.micrometer.observation.annotation.Observed;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class PortfolioSummaryController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/by-owner")
+    @Observed(name = "portfolio.summary.by.owner", contextualName = "get-portfolio-summaries")
     public ResponseEntity<?> getPortfolioSummariesForAuthenticatedUser() {
         String ownerId = UserContext.getUserIdOrThrow();
         try {

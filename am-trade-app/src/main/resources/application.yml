@@ -1,8 +1,19 @@
 # Application specific common settings
 am:
+  observability:
+    enabled: true
+    request-log:
+      enabled: true
+      ignore-paths:
+        - /actuator/**
+        - /favicon.ico
+        - /swagger-ui/**
+        - /api-docs/**
   cors:
     allowed-origin-patterns: ${CORS_ALLOWED_ORIGINS:http://localhost:*,https://localhost:*,https://*.replit.dev,https://*}
   trade:
+    cache:
+      enabled: false
     kafka:
       enabled: true
     api:
@@ -26,6 +37,9 @@ am:
 
 server:
   port: 8080
+  tomcat:
+    threads:
+      max: 1000
 
 spring:
   application:
@@ -33,6 +47,8 @@ spring:
   profiles:
     active: local
     include: security
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration, org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration, org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration
   config:
     import:
       - classpath:application-common.yml
@@ -44,7 +60,8 @@ spring:
       - optional:file:/vault/secrets/market-data
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/trade}
+      host: ${MONGODB_HOST:localhost}
+      port: ${MONGODB_PORT:27017}
       database: ${MONGODB_DATABASE:trade}
       auto-index-creation: false
     jackson:
@@ -63,7 +80,7 @@ spring:
       max.block.ms: 2000
     consumer:
       group-id: am-trade-management
-      auto-offset-reset: earliest
+      auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
@@ -125,3 +142,4 @@ logging:
     am.trade: INFO
     org.springframework.data.mongodb: INFO
     org.springframework.web: INFO
+# trigger ci

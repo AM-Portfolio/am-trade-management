@@ -26,6 +26,16 @@ public interface TradeApiService {
     List<TradeDetails> getTradeDetailsByPortfolioAndSymbols(String portfolioId, List<String> symbols);
     
     /**
+     * Get trade details by portfolio ID and optional symbols with pagination
+     * 
+     * @param portfolioId The portfolio ID
+     * @param symbols Optional list of symbols to filter by
+     * @param pageable Pagination information
+     * @return Page of trade details
+     */
+    Page<TradeDetails> getTradeDetailsByPortfolioAndSymbolsPage(String portfolioId, List<String> symbols, Pageable pageable);
+    
+    /**
      * Add a new trade
      * 
      * @param tradeDetails The trade details to add
@@ -41,6 +51,13 @@ public interface TradeApiService {
      * @return The updated trade details
      */
     TradeDetails updateTrade(String tradeId, TradeDetails tradeDetails);
+    
+    /**
+     * Delete an existing trade
+     * 
+     * @param tradeId The ID of the trade to delete
+     */
+    void deleteTrade(String tradeId);
     
     /**
      * Get trades by filters
@@ -95,4 +112,13 @@ public interface TradeApiService {
      * @return The updated portfolio details
      */
     am.trade.common.models.PortfolioModel recalculatePortfolio(String portfolioId, String userId);
+
+    /**
+     * Publishes a bulk portfolio sync event for a list of trades
+     * @param portfolioId The ID of the portfolio
+     * @param userId The ID of the user
+     * @param trades The list of trades to include in the event
+     * @param action The action (e.g., "DELETE")
+     */
+    void publishBulkPortfolioSyncEvent(String portfolioId, String portfolioName, String userId, List<TradeDetails> trades, String action);
 }

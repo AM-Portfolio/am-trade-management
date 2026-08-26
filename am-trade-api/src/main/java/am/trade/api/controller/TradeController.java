@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -103,6 +104,24 @@ public class TradeController {
 
         TradeDetails updatedTrade = tradeApiService.updateTrade(tradeId, tradeDetails);
         return ResponseEntity.ok(updatedTrade);
+    }
+    
+    @Operation(summary = "Delete an existing trade")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Trade deleted successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "403", description = "Unauthorized access"),
+            @ApiResponse(responseCode = "404", description = "Trade not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @DeleteMapping("/details/{tradeId}")
+    public ResponseEntity<Void> deleteTrade(
+            @Parameter(description = "Trade ID") @PathVariable String tradeId) {
+
+        log.info("Deleting trade with ID: {}", tradeId);
+
+        tradeApiService.deleteTrade(tradeId);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Filter trades by multiple criteria")

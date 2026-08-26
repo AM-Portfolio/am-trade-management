@@ -5,7 +5,7 @@
     <parent>
         <artifactId>am-trade-management</artifactId>
         <groupId>am.trade</groupId>
-        <version>1.0.13-SNAPSHOT</version>
+        <version>1.0.22-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -40,6 +40,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
         </dependency>
 
         <dependency>

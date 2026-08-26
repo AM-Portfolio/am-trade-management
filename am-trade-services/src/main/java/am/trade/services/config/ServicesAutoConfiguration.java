@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.impl.TradeDetailsServiceImpl;
@@ -25,13 +26,15 @@ public class ServicesAutoConfiguration {
      * 
      * @param tradeDetailsRepository The trade details repository
      * @param tradeDetailsMapper The trade details mapper
+     * @param mongoTemplate The MongoTemplate for complex queries
      * @return TradeDetailsService instance
      */
     @Bean
     @ConditionalOnMissingBean
     public TradeDetailsService tradeDetailsService(
             TradeDetailsRepository tradeDetailsRepository,
-            TradeDetailsMapper tradeDetailsMapper) {
-        return new TradeDetailsServiceImpl(tradeDetailsRepository, tradeDetailsMapper);
+            TradeDetailsMapper tradeDetailsMapper,
+            MongoTemplate mongoTemplate) {
+        return new TradeDetailsServiceImpl(tradeDetailsRepository, tradeDetailsMapper, mongoTemplate);
     }
 }

@@ -7,15 +7,19 @@ import am.trade.persistence.mapper.TradeDetailsMapper;
 import am.trade.persistence.repository.TradeDetailsRepository;
 import am.trade.services.service.TradeDetailsService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 
 /**
  * Implementation of TradeDetailsService that converts repository entities to domain models
@@ -27,11 +31,14 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
 
     private final TradeDetailsRepository tradeDetailsRepository;
     private final TradeDetailsMapper tradeDetailsMapper;
+    private final MongoTemplate mongoTemplate;
     
     public TradeDetailsServiceImpl(TradeDetailsRepository tradeDetailsRepository, 
-                                  TradeDetailsMapper tradeDetailsMapper) {
+                                  TradeDetailsMapper tradeDetailsMapper,
+                                  MongoTemplate mongoTemplate) {
         this.tradeDetailsRepository = tradeDetailsRepository;
         this.tradeDetailsMapper = tradeDetailsMapper;
+        this.mongoTemplate = mongoTemplate;
     }
     
     @Override
@@ -49,6 +56,16 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     }
     
     @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteByTradeId(String tradeId) {
+        log.debug("Deleting trade details by trade ID: {}", tradeId);
+        tradeDetailsRepository.findByTradeId(tradeId).ifPresent(entity -> {
+            tradeDetailsRepository.deleteById(entity.getId());
+            log.info("Deleted trade details with trade ID: {}", tradeId);
+        });
+    }
+    
+    @Override
     public List<TradeDetails> findModelsBySymbol(String symbol) {
         log.debug("Finding trade details by symbol: {}", symbol);
         return tradeDetailsRepository.findBySymbol(symbol).stream()
@@ -60,6 +77,14 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     public List<TradeDetails> findModelsByEntryDateBetween(LocalDateTime startDate, LocalDateTime endDate) {
         log.debug("Finding trade details by entry date between {} and {}", startDate, endDate);
         return tradeDetailsRepository.findByEntryDateBetween(startDate, endDate).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TradeDetails> findModelsByUserIdAndEntryInfoTimestampBetween(String userId, LocalDateTime startDate, LocalDateTime endDate) {
+        log.debug("Finding trade details by user ID: {} and entry date between {} and {}", userId, startDate, endDate);
+        return tradeDetailsRepository.findByUserIdAndEntryInfoTimestampBetween(userId, startDate, endDate).stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
     }
@@ -98,6 +123,52 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
         return tradeDetailsRepository.findByPortfolioId(portfolioId).stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TradeDetails> findModelsByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols) {
+        log.debug("Finding trade details by portfolio ID: {} and symbols: {}", portfolioId, symbols);
+        return tradeDetailsRepository.findByPortfolioIdAndSymbolInIgnoreCase(portfolioId, symbols).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TradeDetails> findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase(String userId, String portfolioId, List<String> symbols) {
+        log.debug("Finding trade details by user ID: {}, portfolio ID: {} and symbols: {}", userId, portfolioId, symbols);
+        return tradeDetailsRepository.findByUserIdAndPortfolioIdAndSymbolInIgnoreCase(userId, portfolioId, symbols).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<TradeDetails> findModelsByPortfolioIdAndSymbolInIgnoreCase(String portfolioId, List<String> symbols, Pageable pageable) {
+        log.debug("Finding trade details by portfolio ID: {} and symbols: {} with pagination", portfolioId, symbols);
+        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findByPortfolioIdAndSymbolInIgnoreCase(portfolioId, symbols, pageable);
+        List<TradeDetails> models = entityPage.getContent().stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
+    }
+    
+    @Override
+    public Page<TradeDetails> findModelsByUserIdAndPortfolioIdAndSymbolInIgnoreCase(String userId, String portfolioId, List<String> symbols, Pageable pageable) {
+        log.debug("Finding trade details by user ID: {}, portfolio ID: {} and symbols: {} with pagination", userId, portfolioId, symbols);
+        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findByUserIdAndPortfolioIdAndSymbolInIgnoreCase(userId, portfolioId, symbols, pageable);
+        List<TradeDetails> models = entityPage.getContent().stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
+    }
+
+    @Override
+    public Page<TradeDetails> findModelsByUserIdAndPortfolioId(String userId, String portfolioId, Pageable pageable) {
+        log.debug("Finding trade details by user ID: {}, portfolio ID: {} with pagination", userId, portfolioId);
+        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findByUserIdAndPortfolioId(userId, portfolioId, pageable);
+        List<TradeDetails> models = entityPage.getContent().stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
     }
     
     @Override
@@ -140,6 +211,9 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     public TradeDetails saveTradeDetails(TradeDetails tradeDetails) {
         log.debug("Saving trade details: {}", tradeDetails);
         TradeDetailsEntity entity = tradeDetailsMapper.toTradeEntity(tradeDetails);
+        if (entity.getSymbol() != null) {
+            entity.setSymbol(entity.getSymbol().toUpperCase());
+        }
         
         if (tradeDetails.getTradeId() != null) {
             tradeDetailsRepository.findByTradeId(tradeDetails.getTradeId())
@@ -150,24 +224,47 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     }
     
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public List<TradeDetails> saveAllTradeDetails(List<TradeDetails> tradeDetailsList) {
         log.debug("Saving {} trade details records", tradeDetailsList.size());
-        List<TradeDetailsEntity> entities = tradeDetailsList.stream()
+        Map<String, String> existingIdByTradeId = resolveExistingIdsByTradeId(tradeDetailsList);
+        List<TradeDetailsEntity> entities = toEntitiesReusingExistingIds(tradeDetailsList, existingIdByTradeId);
+        List<TradeDetailsEntity> savedEntities = tradeDetailsRepository.saveAll(entities);
+        return savedEntities.stream().map(tradeDetailsMapper::toTradeDetails).collect(Collectors.toList());
+    }
+
+    private Map<String, String> resolveExistingIdsByTradeId(List<TradeDetails> tradeDetailsList) {
+        List<String> incomingTradeIds = tradeDetailsList.stream()
+                .map(TradeDetails::getTradeId)
+                .filter(id -> id != null)
+                .collect(Collectors.toList());
+        Map<String, String> existingIdByTradeId = new java.util.HashMap<>();
+        if (!incomingTradeIds.isEmpty()) {
+            tradeDetailsRepository.findByTradeIdIn(incomingTradeIds)
+                    .forEach(existing -> existingIdByTradeId.put(existing.getTradeId(), existing.getId()));
+        }
+        return existingIdByTradeId;
+    }
+
+    private List<TradeDetailsEntity> toEntitiesReusingExistingIds(
+            List<TradeDetails> tradeDetailsList, Map<String, String> existingIdByTradeId) {
+        return tradeDetailsList.stream()
                 .map(tradeDetails -> {
                     TradeDetailsEntity entity = tradeDetailsMapper.toTradeEntity(tradeDetails);
+                    if (entity.getSymbol() != null) {
+                        entity.setSymbol(entity.getSymbol().toUpperCase());
+                    }
                     if (tradeDetails.getTradeId() != null) {
-                        tradeDetailsRepository.findByTradeId(tradeDetails.getTradeId())
-                                .ifPresent(existing -> entity.setId(existing.getId()));
+                        String existingId = existingIdByTradeId.get(tradeDetails.getTradeId());
+                        if (existingId != null) {
+                            entity.setId(existingId);
+                        }
                     }
                     return entity;
                 })
                 .collect(Collectors.toList());
-        List<TradeDetailsEntity> savedEntities = tradeDetailsRepository.saveAll(entities);
-        
-        return savedEntities.stream()
-                .map(tradeDetailsMapper::toTradeDetails)
-                .collect(Collectors.toList());
     }
+
     
     @Override
     public List<TradeDetails> findModelsByTradeIds(List<String> tradeIds) {
@@ -195,6 +292,43 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     }
 
     @Override
+    public Page<TradeDetails> findByFilters(
+            String userId,
+            List<String> portfolioIds,
+            List<String> symbols,
+            List<TradeStatus> statuses,
+            List<String> strategies,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Pageable pageable) {
+        log.debug("Finding trade details by filters with pagination");
+        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findByFilters(
+                userId, portfolioIds, symbols, statuses, strategies, startDate, endDate, pageable);
+                
+        List<TradeDetails> models = entityPage.getContent().stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+                
+        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
+    }
+
+    @Override
+    public List<TradeDetails> findModelsByUserIdAndPortfolioId(String userId, String portfolioId) {
+        log.debug("Finding trade details by user ID: {} and portfolio ID: {}", userId, portfolioId);
+        return tradeDetailsRepository.findByUserIdAndPortfolioId(userId, portfolioId).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TradeDetails> findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(String userId, String portfolioId, LocalDateTime startDate, LocalDateTime endDate) {
+        log.debug("Finding trade details by user ID: {}, portfolio ID: {} and entry date between {} and {}", userId, portfolioId, startDate, endDate);
+        return tradeDetailsRepository.findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(userId, portfolioId, startDate, endDate).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<TradeDetails> findByPortfolioIdIn(List<String> portfolioIds) {
         log.debug("Finding trade details by portfolio IDs: {}", portfolioIds);
         return tradeDetailsRepository.findByPortfolioIdIn(portfolioIds).stream()
@@ -207,25 +341,9 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
             LocalDateTime endDate) {
         log.debug("Finding trade details by user ID: {} and entry date between {} and {}", userId, startDate, endDate);
         
-        // Use the repository method to get trades by user ID
-        List<TradeDetailsEntity> userEntities = tradeDetailsRepository.findByUserId(userId);
+        List<TradeDetailsEntity> entities = tradeDetailsRepository.findByUserIdAndEntryInfoTimestampBetween(userId, startDate, endDate);
         
-        // Filter by entry date in memory
-        List<TradeDetailsEntity> dateFilteredEntities = userEntities.stream()
-                .filter(entity -> {
-                    // Access timestamp through entryInfo
-                    if (entity.getEntryInfo() == null) {
-                        return false;
-                    }
-                    LocalDateTime entryDate = entity.getEntryInfo().getTimestamp();
-                    return entryDate != null && 
-                           (entryDate.isEqual(startDate) || entryDate.isAfter(startDate)) && 
-                           (entryDate.isEqual(endDate) || entryDate.isBefore(endDate));
-                })
-                .collect(Collectors.toList());
-        
-        // Map entities to domain models
-        List<TradeDetails> userTradeDetails = dateFilteredEntities.stream()
+        List<TradeDetails> userTradeDetails = entities.stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
                 
@@ -239,31 +357,14 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
         log.debug("Finding trade details by user ID: {} and symbol: {} with date range: {} to {}", 
                 userId, symbol, startDate, endDate);
         
-        // Get all trades by user ID
-        List<TradeDetailsEntity> userEntities = tradeDetailsRepository.findByUserId(userId);
+        List<TradeDetailsEntity> entities;
+        if (startDate == null || endDate == null) {
+            entities = tradeDetailsRepository.findByUserIdAndSymbol(userId, symbol);
+        } else {
+            entities = tradeDetailsRepository.findByUserIdAndSymbolAndEntryInfoTimestampBetween(userId, symbol, startDate, endDate);
+        }
         
-        // Filter by symbol and date range in memory
-        List<TradeDetailsEntity> filteredEntities = userEntities.stream()
-                .filter(entity -> entity.getSymbol().equals(symbol))
-                .filter(entity -> {
-                    // If no date range specified, include all trades
-                    if (startDate == null || endDate == null) {
-                        return true;
-                    }
-                    
-                    // Otherwise filter by entry date
-                    if (entity.getEntryInfo() == null) {
-                        return false;
-                    }
-                    LocalDateTime entryDate = entity.getEntryInfo().getTimestamp();
-                    return entryDate != null && 
-                           (entryDate.isEqual(startDate) || entryDate.isAfter(startDate)) && 
-                           (entryDate.isEqual(endDate) || entryDate.isBefore(endDate));
-                })
-                .collect(Collectors.toList());
-        
-        // Map entities to domain models
-        List<TradeDetails> tradeDetails = filteredEntities.stream()
+        List<TradeDetails> tradeDetails = entities.stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
                 
@@ -275,16 +376,9 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     public List<TradeDetails> findByUserIdAndSymbol(String userId, String symbol) {
         log.debug("Finding trade details by user ID: {} and symbol: {}", userId, symbol);
         
-        // Get all trades by user ID
-        List<TradeDetailsEntity> userEntities = tradeDetailsRepository.findByUserId(userId);
+        List<TradeDetailsEntity> entities = tradeDetailsRepository.findByUserIdAndSymbol(userId, symbol);
         
-        // Filter by symbol in memory
-        List<TradeDetailsEntity> filteredEntities = userEntities.stream()
-                .filter(entity -> entity.getSymbol().equals(symbol))
-                .collect(Collectors.toList());
-        
-        // Map entities to domain models
-        List<TradeDetails> tradeDetails = filteredEntities.stream()
+        List<TradeDetails> tradeDetails = entities.stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
                 
@@ -298,41 +392,45 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
         log.debug("Finding trade details by user ID: {} and strategy: {} with date range: {} to {}", 
                 userId, strategy, startDate, endDate);
         
-        // Get all trades by user ID
-        List<TradeDetailsEntity> userEntities = tradeDetailsRepository.findByUserId(userId);
+        // Push all filtering to MongoDB — avoids fetching unfiltered user data into JVM memory
+        org.springframework.data.mongodb.core.query.Query query =
+                new org.springframework.data.mongodb.core.query.Query();
         
-        // Filter by strategy and date range in memory
-        List<TradeDetailsEntity> filteredEntities = userEntities.stream()
-                .filter(entity -> {
-                    // Check if the entity has entry reasoning with the specified strategy
-                    if (entity.getEntryReasoning() == null) {
-                        return false;
-                    }
-                    return strategy.equals(entity.getEntryReasoning().getStreategy());
-                })
-                .filter(entity -> {
-                    // If no date range specified, include all trades
-                    if (startDate == null || endDate == null) {
-                        return true;
-                    }
-                    
-                    // Otherwise filter by entry date
-                    if (entity.getEntryInfo() == null) {
-                        return false;
-                    }
-                    LocalDateTime entryDate = entity.getEntryInfo().getTimestamp();
-                    return entryDate != null && 
-                           (entryDate.isEqual(startDate) || entryDate.isAfter(startDate)) && 
-                           (entryDate.isEqual(endDate) || entryDate.isBefore(endDate));
-                })
-                .collect(Collectors.toList());
+        query.addCriteria(org.springframework.data.mongodb.core.query.Criteria.where("userId").is(userId));
+        // NOTE: field name "streategy" is a persisted typo in the data model — must match the stored field name
+        query.addCriteria(org.springframework.data.mongodb.core.query.Criteria.where("entryReasoning.streategy").is(strategy));
         
-        // Map entities to domain models
-        List<TradeDetails> tradeDetails = filteredEntities.stream()
+        if (startDate != null && endDate != null) {
+            query.addCriteria(org.springframework.data.mongodb.core.query.Criteria
+                    .where("entryInfo.timestamp").gte(startDate).lte(endDate));
+        } else if (startDate != null) {
+            query.addCriteria(org.springframework.data.mongodb.core.query.Criteria
+                    .where("entryInfo.timestamp").gte(startDate));
+        } else if (endDate != null) {
+            query.addCriteria(org.springframework.data.mongodb.core.query.Criteria
+                    .where("entryInfo.timestamp").lte(endDate));
+        }
+        
+        List<TradeDetailsEntity> entities = mongoTemplate.find(query, TradeDetailsEntity.class);
+        List<TradeDetails> tradeDetails = entities.stream()
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
                 
         log.info("Found {} trades matching user ID, strategy, and date range criteria", tradeDetails.size());
+        return tradeDetails;
+    }
+    
+    @Override
+    public List<TradeDetails> findByPortfolioIdAndEntryInfoTimestampBetween(String portfolioId, LocalDateTime startDate, LocalDateTime endDate) {
+        log.debug("Finding trade details by portfolio ID: {} and entry date between {} and {}", portfolioId, startDate, endDate);
+        
+        List<TradeDetailsEntity> entities = tradeDetailsRepository.findByPortfolioIdAndEntryInfoTimestampBetween(portfolioId, startDate, endDate);
+        
+        List<TradeDetails> tradeDetails = entities.stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+                
+        log.info("Found {} trades matching portfolio ID and date range criteria", tradeDetails.size());
         return tradeDetails;
     }
 }

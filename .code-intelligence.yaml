@@ -17,18 +17,28 @@ local:
 gitnexus:
   skipAgentsMd: true
   skipSkills: true
-  group_path: trade/am-trade-management
-graphify:
-  sources:
-  - docs/
-  - backend/templates/
-  - attachments/
-  out: graphify-out/
-  mcp_name: graphify-corp-docs
-  llm_policy: local
+  group_path: am-trade-management
 capabilities:
-  domain: trade
+  domain: services
   surfaces:
   - http
   - kafka
+  - stomp
   - libs
+  - config
+  - redis
+  pdg: true
+  scan:
+    scan_roots:
+    - .
+  topics:
+  - TRADE_UPDATE
+  - PORTFOLIO_UPDATE
+  - STOCK_UPDATE
+  config_prefixes:
+  - am.trade
+  flows:
+  - slug: trade-streaming
+    tier: A
+    query: redis trade subscribe kafka
+    entry_contract: STOMP /app/trade/subscribe

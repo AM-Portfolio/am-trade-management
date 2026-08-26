@@ -6,28 +6,46 @@ import am.trade.api.config.MarketDataApiConfig;
 import am.trade.common.models.market.MarketDataResponse;
 import am.trade.common.models.market.MarketDataResponseWrapper;
 import am.trade.common.models.market.OhlcDataRequest;
+import am.trade.exceptions.MarketDataUnavailableException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClientException;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
 public class MarketDataApiClient {
 
+    private static final ObjectMapper MAPPER = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
     private final MarketDataApiConfig config;
     private final RestTemplate restTemplate;
 
-    public MarketDataApiClient(MarketDataApiConfig config, RestTemplateBuilder restTemplateBuilder) {
+    @Value("${am.trade.market-data.l1-cache.enabled:true}")
+    private boolean isL1CacheEnabled;
+
+    private final com.github.benmanes.caffeine.cache.LoadingCache<String, Double> localCache;
+
+    public MarketDataApiClient(MarketDataApiConfig config, org.springframework.boot.web.client.RestTemplateBuilder restTemplateBuilder) {
         this.config = config;
         this.restTemplate = restTemplateBuilder
                 .rootUri(config.getBaseUrl())
+                .setConnectTimeout(java.time.Duration.ofSeconds(3))
+                .setReadTimeout(java.time.Duration.ofSeconds(30))
                 .defaultHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                 .defaultHeader("Accept", "application/json")
                 .defaultHeader("Content-Type", "application/json")
@@ -43,6 +61,21 @@ public class MarketDataApiClient {
                     return execution.execute(request, body);
                 })
                 .build();
+                
+        this.localCache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()
+                .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)
+                .maximumSize(10_000)
+                .build(new com.github.benmanes.caffeine.cache.CacheLoader<String, Double>() {
+                    @Override
+                    public Double load(String key) throws Exception {
+                        return fetchFromApi(java.util.Collections.singletonList(key)).get(key);
+                    }
+
+                    @Override
+                    public Map<String, Double> loadAll(java.util.Set<? extends String> keys) throws Exception {
+                        return fetchFromApi(keys);
+                    }
+                });
     }
 
     public Map<String, Double> getCurrentPrices(List<String> symbols) {
@@ -50,7 +83,53 @@ public class MarketDataApiClient {
             return new HashMap<>();
         }
 
-        String symbolsParam = String.join(",", symbols);
+        List<String> cleanSymbols = symbols.stream()
+                .filter(s -> s != null && !s.trim().isEmpty())
+                .map(symbol -> {
+                    // Remove provider prefix if present (e.g., "NSE:RELIANCE" -> "RELIANCE")
+                    if (symbol.contains(":")) {
+                        return symbol.substring(symbol.lastIndexOf(":") + 1);
+                    }
+                    return symbol;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        if (cleanSymbols.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        Map<String, Double> filteredResult = new HashMap<>();
+        if (isL1CacheEnabled) {
+            Map<String, Double> result = localCache.getAll(cleanSymbols);
+            if (result != null) {
+                // Filter out negative cache values (-1.0)
+                result.forEach((k, v) -> {
+                    if (v != null && v >= 0.0) {
+                        filteredResult.put(k, v);
+                    }
+                });
+            }
+        } else {
+            Map<String, Double> result = fetchFromApi(cleanSymbols);
+            if (result != null) {
+                result.forEach((k, v) -> {
+                    if (v != null && v >= 0.0) {
+                        filteredResult.put(k, v);
+                    }
+                });
+            }
+        }
+        return filteredResult;
+    }
+
+    private Map<String, Double> fetchFromApi(Iterable<? extends String> missingSymbols) {
+        Map<String, Double> currentPrices = new HashMap<>();
+        String symbolsParam = String.join(",", missingSymbols);
+        
+        if (symbolsParam.isEmpty()) {
+            return currentPrices;
+        }
+
         OhlcDataRequest request = OhlcDataRequest.builder()
                 .symbols(symbolsParam)
                 .timeFrame("1D")
@@ -61,41 +140,46 @@ public class MarketDataApiClient {
         log.debug("Fetching OHLC data for {} from {}", symbolsParam, config.getOhlcEndpoint());
 
         try {
-            Map rawMap = restTemplate.postForObject(
+            JsonNode responseNode = restTemplate.postForObject(
                     config.getOhlcEndpoint(),
                     request,
-                    Map.class
-            );
-            
-            log.info("Raw market data response for symbols {}: {}", symbolsParam, rawMap);
+                    JsonNode.class);
 
-            Map<String, Double> currentPrices = new HashMap<>();
-            if (rawMap != null) {
-                Object actualData = rawMap.containsKey("data") ? rawMap.get("data") : rawMap;
-                if (actualData instanceof Map) {
-                    Map<?, ?> dataToProcess = (Map<?, ?>) actualData;
-                    ObjectMapper mapper = new ObjectMapper();
-                    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                    
-                    for (Object key : dataToProcess.keySet()) {
-                        try {
-                            Object value = dataToProcess.get(key);
-                            MarketDataResponse response = mapper.convertValue(value, MarketDataResponse.class);
-                            String symbolKey = String.valueOf(key);
-                            if (symbolKey.contains(":")) {
-                                symbolKey = symbolKey.substring(symbolKey.lastIndexOf(":") + 1);
-                            }
-                            currentPrices.put(symbolKey, response.getLastPrice());
-                        } catch (Exception e) {
-                            log.error("Error converting response for symbol {}", key, e);
+            log.debug("Raw market data response for symbols {}: {}", symbolsParam, responseNode);
+
+            if (responseNode != null) {
+                JsonNode dataNode = responseNode.has("data") ? responseNode.get("data") : responseNode;
+                
+                Map<String, MarketDataResponse> responses = MAPPER.convertValue(
+                        dataNode, 
+                        new TypeReference<Map<String, MarketDataResponse>>() {}
+                );
+
+                if (responses != null) {
+                    responses.forEach((key, response) -> {
+                        String symbolKey = key.contains(":") ? key.substring(key.lastIndexOf(":") + 1) : key;
+                        Double price = response.getLastPrice();
+                        if (price != null) {
+                            currentPrices.put(symbolKey, price);
+                        } else {
+                            log.warn("Received null price for symbol {}", symbolKey);
                         }
-                    }
+                    });
                 }
             }
-            return currentPrices;
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.error("Failed to fetch market data from API for symbols: {}", symbolsParam, e);
-            return new HashMap<>();
+            throw new am.trade.exceptions.MarketDataUnavailableException("Transport failure while fetching market data", e);
         }
+
+        // Only return prices we actually received. Do NOT negative-cache missing symbols as -1.0.
+        // Reason: negative caching caused a 5-minute blackout — Caffeine would serve -1.0 for any
+        // symbol whose price was temporarily unavailable (market closed, transient API error, etc.),
+        // blocking retries for the entire cache TTL. By omitting missing symbols from the returned map,
+        // Caffeine's LoadingCache will naturally retry them on the very next request.
+        if (currentPrices.isEmpty()) {
+            log.warn("No live prices returned from market data API for symbols: {}", symbolsParam);
+        }
+        return currentPrices;
     }
 }

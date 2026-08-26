@@ -9,11 +9,19 @@ import am.trade.common.models.TradeModel;
 import am.trade.models.enums.TradePositionType;
 import am.trade.models.enums.TradeStatus;
 import am.trade.models.enums.TradeType;
+import am.trade.services.metrics.TradeBusinessMetrics;
 import am.trade.services.service.PortfolioPersistenceService;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.Observation;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import am.trade.persistence.entity.PortfolioEntity;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -40,10 +48,21 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
 
     private final TradeDetailsService tradeDetailsService;
     private final PortfolioPersistenceService portfolioPersistenceService;
-    
-    public TradeProcessingServiceImpl(TradeDetailsService tradeDetailsService, PortfolioPersistenceService portfolioPersistenceService) {
+    private final TradeBusinessMetrics tradeBusinessMetrics;
+    private final ObservationRegistry observationRegistry;
+    private final MongoTemplate mongoTemplate;
+
+    public TradeProcessingServiceImpl(
+            TradeDetailsService tradeDetailsService,
+            PortfolioPersistenceService portfolioPersistenceService,
+            TradeBusinessMetrics tradeBusinessMetrics,
+            ObservationRegistry observationRegistry,
+            MongoTemplate mongoTemplate) {
         this.tradeDetailsService = tradeDetailsService;
         this.portfolioPersistenceService = portfolioPersistenceService;
+        this.tradeBusinessMetrics = tradeBusinessMetrics;
+        this.observationRegistry = observationRegistry;
+        this.mongoTemplate = mongoTemplate;
     }
 
     private static final int DECIMAL_SCALE = 4;
@@ -79,34 +98,41 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         if (tradeIds == null || tradeIds.isEmpty()) {
             return;
         }
-        
-        // Check if portfolio already exists
-        Optional<PortfolioModel> existingPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId);
-        
-        Set<String> uniqueTradeIds = new HashSet<>();
-        
-        if (existingPortfolio.isPresent()) {
-            // Combine existing trades with new ones
-            List<String> existingTrades = existingPortfolio.get().getTradeIds();
-            if (existingTrades != null && !existingTrades.isEmpty()) {
-                log.info("Combining {} existing trades with {} new trades for portfolio {}", 
-                        existingTrades.size(), tradeIds.size(), portfolioId);
-                
-                // Add all existing trades to the set to ensure uniqueness
-                uniqueTradeIds.addAll(existingTrades);
+
+        // Relying on am-observability-lib zero-config for HTTP/MongoDB tracing; no custom spans needed.
+        try {
+            // Check if portfolio already exists
+            Optional<PortfolioModel> existingPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId);
+
+            Set<String> uniqueTradeIds = new HashSet<>();
+
+            if (existingPortfolio.isPresent()) {
+                // Combine existing trades with new ones
+                List<String> existingTrades = existingPortfolio.get().getTradeIds();
+                if (existingTrades != null && !existingTrades.isEmpty()) {
+                    log.info("Combining {} existing trades with {} new trades for portfolio {}",
+                            existingTrades.size(), tradeIds.size(), portfolioId);
+
+                    // Add all existing trades to the set to ensure uniqueness
+                    uniqueTradeIds.addAll(existingTrades);
+                }
             }
+
+            // Add all new trades to the set (duplicates will be automatically eliminated)
+            uniqueTradeIds.addAll(tradeIds);
+
+            log.info("After removing duplicates: {} unique trades for portfolio {}",
+                    uniqueTradeIds.size(), portfolioId);
+
+            // Convert back to list for further processing
+            List<String> allTradeIds = new ArrayList<>(uniqueTradeIds);
+
+            processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId, userId);
+            tradeBusinessMetrics.recordTradeProcessed("success", "unknown");
+        } catch (Exception e) {
+            tradeBusinessMetrics.recordTradeProcessed("failure", "unknown");
+            throw e;
         }
-        
-        // Add all new trades to the set (duplicates will be automatically eliminated)
-        uniqueTradeIds.addAll(tradeIds);
-        
-        log.info("After removing duplicates: {} unique trades for portfolio {}", 
-                uniqueTradeIds.size(), portfolioId);
-                
-        // Convert back to list for further processing
-        List<String> allTradeIds = new ArrayList<>(uniqueTradeIds);
-        
-        processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId, userId);
     }
 
     @Override
@@ -131,6 +157,135 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         List<String> allTradeIds = new ArrayList<>(uniqueTradeIds);
         
         processTradeDetailsAndGetPortfolio(allTradeIds, portfolioId, userId);
+    }
+
+    @Override
+    @org.springframework.scheduling.annotation.Async
+    public void applyTradesDelta(List<TradeDetails> trades, String portfolioId, String userId) {
+        if (trades == null || trades.isEmpty()) {
+            return;
+        }
+
+        try {
+                int winningTradesDelta = 0;
+                int losingTradesDelta = 0;
+                int breakEvenTradesDelta = 0;
+                int openPositionsDelta = 0;
+                BigDecimal profitDelta = BigDecimal.ZERO;
+                BigDecimal lossDelta = BigDecimal.ZERO;
+
+                for (TradeDetails trade : trades) {
+                    switch (trade.getStatus()) {
+                        case WIN:
+                            winningTradesDelta++;
+                            if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
+                                profitDelta = profitDelta.add(trade.getMetrics().getProfitLoss());
+                            }
+                            break;
+                        case LOSS:
+                            losingTradesDelta++;
+                            if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
+                                lossDelta = lossDelta.add(trade.getMetrics().getProfitLoss().abs());
+                            }
+                            break;
+                        case BREAK_EVEN:
+                            breakEvenTradesDelta++;
+                            break;
+                        case OPEN:
+                            openPositionsDelta++;
+                            break;
+                    }
+                }
+
+                Update update = new Update()
+                        .inc("metrics.totalTrades", trades.size())
+                        .inc("metrics.winningTrades", winningTradesDelta)
+                        .inc("metrics.losingTrades", losingTradesDelta)
+                        .inc("metrics.breakEvenTrades", breakEvenTradesDelta)
+                        .inc("metrics.openPositions", openPositionsDelta)
+                        .inc("metrics.totalProfit", profitDelta.doubleValue())
+                        .inc("metrics.totalLoss", lossDelta.doubleValue())
+                        .set("lastUpdatedDate", LocalDateTime.now());
+
+                // We no longer push trade IDs to an unbounded array in PortfolioEntity
+                // to avoid MongoDB document size limits and write contention overhead.
+
+                mongoTemplate.updateFirst(
+                        Query.query(Criteria.where("portfolioId").is(portfolioId)),
+                        update,
+                        PortfolioEntity.class
+                );
+            } catch (Exception e) {
+                log.error("Error applying trades delta asynchronously for portfolio {}: {}", portfolioId, e.getMessage(), e);
+            }
+    }
+
+    @Override
+    @org.springframework.scheduling.annotation.Async
+    public void applyTradeUpdateDelta(TradeDetails oldTrade, TradeDetails newTrade, String portfolioId, String userId) {
+        if (newTrade == null) return;
+
+        try {
+                Update update = new Update().set("lastUpdatedDate", LocalDateTime.now());
+
+                // Reverse old metrics if present
+                if (oldTrade != null) {
+                    switch (oldTrade.getStatus()) {
+                        case WIN:
+                            update.inc("metrics.winningTrades", -1);
+                            if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
+                                update.inc("metrics.totalProfit", oldTrade.getMetrics().getProfitLoss().negate().doubleValue());
+                            }
+                            break;
+                        case LOSS:
+                            update.inc("metrics.losingTrades", -1);
+                            if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
+                                update.inc("metrics.totalLoss", oldTrade.getMetrics().getProfitLoss().abs().negate().doubleValue());
+                            }
+                            break;
+                        case BREAK_EVEN:
+                            update.inc("metrics.breakEvenTrades", -1);
+                            break;
+                        case OPEN:
+                            update.inc("metrics.openPositions", -1);
+                            break;
+                    }
+                } else {
+                    // It's a new trade, so totalTrades increases by 1
+                    update.inc("metrics.totalTrades", 1);
+                    // We no longer push trade IDs to an unbounded array in PortfolioEntity
+                }
+
+                // Apply new metrics
+                switch (newTrade.getStatus()) {
+                    case WIN:
+                        update.inc("metrics.winningTrades", 1);
+                        if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
+                            update.inc("metrics.totalProfit", newTrade.getMetrics().getProfitLoss().doubleValue());
+                        }
+                        break;
+                    case LOSS:
+                        update.inc("metrics.losingTrades", 1);
+                        if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
+                            update.inc("metrics.totalLoss", newTrade.getMetrics().getProfitLoss().abs().doubleValue());
+                        }
+                        break;
+                    case BREAK_EVEN:
+                        update.inc("metrics.breakEvenTrades", 1);
+                        break;
+                    case OPEN:
+                        update.inc("metrics.openPositions", 1);
+                        break;
+                }
+
+                mongoTemplate.updateFirst(
+                        Query.query(Criteria.where("portfolioId").is(portfolioId)),
+                        update,
+                        PortfolioEntity.class
+                );
+            } catch (Exception e) {
+                log.error("Error applying trade update delta asynchronously for portfolio {}: {}", portfolioId, e.getMessage(), e);
+            }
     }
 
     private PortfolioModel processTradeDetailsAndGetPortfolio(List<String> tradeIds, String portfolioId, String userId) {
@@ -308,78 +463,98 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
     }
 
     @Override
-    public List<TradeDetails> 
-    processTradeModels(List<TradeModel> trades, String portfolioId) {
+    public List<TradeDetails> processTradeModels(List<TradeModel> trades, String portfolioId) {
         if (trades == null || trades.isEmpty()) {
             return new ArrayList<>();
         }
 
-        // Group trades by symbol to handle multiple securities
-        Map<String, List<TradeModel>> tradesBySymbol = trades.stream()
-                .filter(trade -> trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSymbol() != null)
-                .collect(Collectors.groupingBy(trade -> trade.getInstrumentInfo().getSymbol()));
-        
-        // Process each group of trades separately
-        List<TradeDetails> result = new ArrayList<>();
-        for (Map.Entry<String, List<TradeModel>> entry : tradesBySymbol.entrySet()) {
-            String symbol = entry.getKey();
-            List<TradeModel> symbolTrades = entry.getValue();
-            
-            // Sort trades by execution time (nulls last)
-            List<TradeModel> sortedTrades = symbolTrades.stream()
-                    .sorted(Comparator.comparing(
-                            trade -> trade.getBasicInfo() != null ? trade.getBasicInfo().getOrderExecutionTime() : null,
-                            Comparator.nullsLast(Comparator.naturalOrder())))
-                    .collect(Collectors.toList());
-            
-            if (sortedTrades.isEmpty()) {
-                continue;
-            }
-            
-            // Identify separate trade cycles (buy-sell cycles) within the same symbol
-            List<List<TradeModel>> tradeCycles = identifyTradeCycles(sortedTrades);
-            
-            // Process each trade cycle separately
-            for (List<TradeModel> tradeCycle : tradeCycles) {
-                if (tradeCycle.isEmpty()) {
+        // Measure total processing time for the Grafana trade_processing_duration_seconds panel.
+        long startNanos = System.nanoTime();
+        try {
+            // Group trades by symbol to handle multiple securities
+            Map<String, List<TradeModel>> tradesBySymbol = trades.stream()
+                    .filter(trade -> trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSymbol() != null)
+                    .collect(Collectors.groupingBy(trade -> trade.getInstrumentInfo().getSymbol()));
+
+            // Process each group of trades separately
+            List<TradeDetails> result = new ArrayList<>();
+            for (Map.Entry<String, List<TradeModel>> entry : tradesBySymbol.entrySet()) {
+                String symbol = entry.getKey();
+                List<TradeModel> symbolTrades = entry.getValue();
+
+                // Sort trades by execution time (nulls last)
+                List<TradeModel> sortedTrades = symbolTrades.stream()
+                        .sorted(Comparator.comparing(
+                                trade -> trade.getBasicInfo() != null ? trade.getBasicInfo().getOrderExecutionTime() : null,
+                                Comparator.nullsLast(Comparator.naturalOrder())))
+                        .collect(Collectors.toList());
+
+                if (sortedTrades.isEmpty()) {
                     continue;
                 }
-                
-                // Get the first trade to determine if it's a LONG or SHORT position
-                TradeModel firstTrade = tradeCycle.get(0);
-                TradePositionType tradePositionType = determineTradeType(firstTrade);
-                
-                // Process the trades to build entry and exit information.
-                // calculateEntryInfo/calculateExitInfo already select BUY vs SELL by position type —
-                // do NOT swap for SHORT (that turns open shorts into entryInfo=null → NPE in metrics).
-                EntryExitInfo entryInfo = calculateEntryInfo(tradeCycle, tradePositionType);
-                EntryExitInfo exitInfo = calculateExitInfo(tradeCycle, tradePositionType);
-                
-                // Calculate trade metrics
-                TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
-                
-                // Determine trade status
-                TradeStatus status = determineTradeStatus(entryInfo, exitInfo, metrics);
-                
-                // Build the complete trade model
-                TradeDetails tradeDetails = TradeDetails.builder()
-                        .tradeId(UUID.randomUUID().toString()) // Generate a unique ID for the trade
-                        .portfolioId(portfolioId)
-                        .symbol(symbol)
-                        .instrumentInfo(convertToInstrumentInfo(firstTrade.getInstrumentInfo()))
-                        .tradePositionType(tradePositionType)
-                        .status(status)
-                        .entryInfo(entryInfo)
-                        .exitInfo(exitInfo)
-                        .metrics(metrics)
-                        .tradeExecutions(tradeCycle)
-                        .build();
-                
-                result.add(tradeDetails);
+
+                // Identify separate trade cycles (buy-sell cycles) within the same symbol
+                List<List<TradeModel>> tradeCycles = Observation.createNotStarted("trade.cycle.identification", observationRegistry)
+                        .contextualName("identifyTradeCycles")
+                        .observe(() -> identifyTradeCycles(sortedTrades));
+
+                // Process each trade cycle separately
+                for (List<TradeModel> tradeCycle : tradeCycles) {
+                    if (tradeCycle.isEmpty()) {
+                        continue;
+                    }
+
+                    // Get the first trade to determine if it's a LONG or SHORT position
+                    TradeModel firstTrade = tradeCycle.get(0);
+                    TradePositionType tradePositionType = determineTradeType(firstTrade);
+
+                    // Process the trades to build entry and exit information.
+                    EntryExitInfo entryInfo = Observation.createNotStarted("trade.cycle.entry_info", observationRegistry)
+                            .contextualName("calculateEntryInfo")
+                            .observe(() -> calculateEntryInfo(tradeCycle, tradePositionType));
+                            
+                    EntryExitInfo exitInfo = Observation.createNotStarted("trade.cycle.exit_info", observationRegistry)
+                            .contextualName("calculateExitInfo")
+                            .observe(() -> calculateExitInfo(tradeCycle, tradePositionType));
+
+                    // Calculate trade metrics
+                    TradeMetrics metrics = calculateTradeMetrics(entryInfo, exitInfo, tradePositionType);
+
+                    // Determine trade status
+                    TradeStatus status = determineTradeStatus(entryInfo, exitInfo, metrics);
+
+                    // Build the complete trade model
+                    TradeDetails tradeDetails = TradeDetails.builder()
+                            .tradeId(UUID.randomUUID().toString()) // Generate a unique ID for the trade
+                            .portfolioId(portfolioId)
+                            .symbol(symbol)
+                            .instrumentInfo(convertToInstrumentInfo(firstTrade.getInstrumentInfo()))
+                            .tradePositionType(tradePositionType)
+                            .status(status)
+                            .entryInfo(entryInfo)
+                            .exitInfo(exitInfo)
+                            .metrics(metrics)
+                            .tradeExecutions(tradeCycle)
+                            .build();
+
+                    result.add(tradeDetails);
+
+                    // Record one counter per completed trade, tagged by position type and status.
+                    tradeBusinessMetrics.recordTradeProcessed(
+                            "success",
+                            tradePositionType != null ? tradePositionType.name() : "unknown");
+                }
             }
+
+            return result;
+        } catch (Exception e) {
+            // Record failure counter so Grafana shows failure rate, not just absence of successes.
+            tradeBusinessMetrics.recordTradeProcessed("failure", "unknown");
+            throw e;
+        } finally {
+            // Always record duration — even on failure — so latency percentiles are never skewed.
+            tradeBusinessMetrics.recordProcessingDuration(System.nanoTime() - startNanos);
         }
-        
-        return result;
     }
 
 

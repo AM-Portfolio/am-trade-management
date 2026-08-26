@@ -28,6 +28,18 @@ global:
         path: "apps/data/preprod/services/am-trade-management"
 env:
   SPRING_PROFILES_ACTIVE: "preprod"
+  # Enable Kafka so portfolio/trade sync events are published
+  AM_TRADE_KAFKA_ENABLED: "true"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.infra-dev.svc.cluster.local:9092"
+  KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
+  KAFKA_SASL_MECHANISM: "SCRAM-SHA-256"
+  AM_TRADE_KAFKA_HOLDING_UPDATE_TOPIC: "am-portfolio"
+  AM_TRADE_KAFKA_PORTFOLIO_UPDATE_CONSUMER_ENABLED: "true"
+  AM_TRADE_KAFKA_PORTFOLIO_UPDATE_TOPIC: "am-portfolio-update"
+  AM_TRADE_KAFKA_PORTFOLIO_UPDATE_CONSUMER_GROUP_ID: "am-trade-portfolio-update-group"
+  AM_TRADE_KAFKA_TRADE_CONSUMER_ENABLED: "true"
+  AM_TRADE_KAFKA_TRADE_TOPIC: "am-trade"
+  AM_TRADE_KAFKA_TRADE_CONSUMER_GROUP_ID: "am-trade-group"
 
 ingress:
   enabled: true
