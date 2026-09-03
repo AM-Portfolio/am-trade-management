@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * Implementation of the Portfolio Summary Service
@@ -31,6 +33,10 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
 
     private final PortfolioService portfolioService;
     private final TradeDetailsService tradeDetailsService;
+    private final StringRedisTemplate redisTemplate;
+
+    @Value("${app.demo.portfolio-id:f969745c-f492-4b86-88ed-6588e9f28bb3}")
+    private String demoPortfolioId;
 
     @Override
     public PortfolioModel getPortfolioSummary(String portfolioId) {
@@ -172,6 +178,34 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         
         // Return the full PortfolioModel list so the frontend receives all metrics
         // (winRate, netProfitLoss, totalTrades, etc.) — not just portfolioId + name
-        return portfolioService.findByOwnerId(ownerId);
+        List<PortfolioModel> portfolios = portfolioService.findByOwnerId(ownerId);
+
+        if (portfolios.isEmpty()) {
+            if (demoPortfolioId != null && !demoPortfolioId.trim().isEmpty() && !hasDismissedDemo(ownerId)) {
+                try {
+                    Optional<PortfolioModel> demoPortfolio = portfolioService.findByPortfolioId(demoPortfolioId);
+                    if (demoPortfolio.isPresent()) {
+                        portfolios = new ArrayList<>();
+                        portfolios.add(demoPortfolio.get());
+                        log.info("Injected demo portfolio {} for ownerId {}", demoPortfolioId, ownerId);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to load demo portfolio {}: {}", demoPortfolioId, e.getMessage());
+                }
+            }
+        }
+
+        return portfolios;
+    }
+
+    private boolean hasDismissedDemo(String userId) {
+        if (redisTemplate == null) return false;
+        try {
+            String val = redisTemplate.opsForValue().get("demo:dismissed:" + userId);
+            return "true".equalsIgnoreCase(val);
+        } catch (Exception e) {
+            log.warn("Failed to check demo dismissed status in Redis for {}: {}", userId, e.getMessage());
+            return false;
+        }
     }
 }
