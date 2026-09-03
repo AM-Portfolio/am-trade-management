@@ -183,7 +183,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         List<PortfolioModel> portfolios = portfolioService.findByOwnerId(ownerId);
 
         if (portfolios.isEmpty()) {
-            if (demoPortfolioId != null && !demoPortfolioId.trim().isEmpty() && !hasDismissedDemo(ownerId)) {
+            if (demoPortfolioId != null && !demoPortfolioId.trim().isEmpty()) {
                 try {
                     Optional<PortfolioModel> demoPortfolio = portfolioService.findByPortfolioId(demoPortfolioId);
                     if (demoPortfolio.isPresent()) {
@@ -199,17 +199,6 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         }
 
         return portfolios;
-    }
-
-    private boolean hasDismissedDemo(String userId) {
-        if (redisTemplate == null) return false;
-        try {
-            String val = redisTemplate.opsForValue().get("demo:dismissed:" + userId);
-            return "true".equalsIgnoreCase(val);
-        } catch (Exception e) {
-            log.warn("Failed to check demo dismissed status in Redis for {}: {}", userId, e.getMessage());
-            return false;
-        }
     }
 
     private PortfolioModel cloneDemoPortfolio(PortfolioModel source, String newOwnerId) {
