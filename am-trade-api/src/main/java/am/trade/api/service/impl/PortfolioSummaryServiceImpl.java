@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * Implementation of the Portfolio Summary Service
@@ -31,6 +33,12 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
 
     private final PortfolioService portfolioService;
     private final TradeDetailsService tradeDetailsService;
+    
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private StringRedisTemplate redisTemplate;
+
+    @Value("${app.demo.portfolio-id:}")
+    private String demoPortfolioId;
 
     @Override
     public PortfolioModel getPortfolioSummary(String portfolioId) {
@@ -172,6 +180,41 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         
         // Return the full PortfolioModel list so the frontend receives all metrics
         // (winRate, netProfitLoss, totalTrades, etc.) — not just portfolioId + name
-        return portfolioService.findByOwnerId(ownerId);
+        List<PortfolioModel> portfolios = portfolioService.findByOwnerId(ownerId);
+
+        if (portfolios.isEmpty()) {
+            if (demoPortfolioId != null && !demoPortfolioId.trim().isEmpty()) {
+                try {
+                    Optional<PortfolioModel> demoPortfolio = portfolioService.findByPortfolioId(demoPortfolioId);
+                    if (demoPortfolio.isPresent()) {
+                        PortfolioModel clonedDemo = cloneDemoPortfolio(demoPortfolio.get(), ownerId);
+                        portfolios = new ArrayList<>();
+                        portfolios.add(clonedDemo);
+                        log.info("Injected demo portfolio {} for ownerId {}", demoPortfolioId, ownerId);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to load demo portfolio {}: {}", demoPortfolioId, e.getMessage());
+                }
+            }
+        }
+
+        return portfolios;
+    }
+
+    private PortfolioModel cloneDemoPortfolio(PortfolioModel source, String newOwnerId) {
+        return PortfolioModel.builder()
+            .portfolioId(source.getPortfolioId())
+            .name("Demo Portfolio")
+            .description(source.getDescription())
+            .ownerId(newOwnerId)
+            .active(source.isActive())
+            .currency(source.getCurrency())
+            .initialCapital(source.getInitialCapital())
+            .currentCapital(source.getCurrentCapital())
+            .createdDate(source.getCreatedDate())
+            .lastUpdatedDate(source.getLastUpdatedDate())
+            .metrics(source.getMetrics())
+            .tradeIds(source.getTradeIds())
+            .build();
     }
 }
