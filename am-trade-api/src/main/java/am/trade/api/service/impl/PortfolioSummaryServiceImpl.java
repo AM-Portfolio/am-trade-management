@@ -33,7 +33,9 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
 
     private final PortfolioService portfolioService;
     private final TradeDetailsService tradeDetailsService;
-    private final StringRedisTemplate redisTemplate;
+    
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private StringRedisTemplate redisTemplate;
 
     @Value("${app.demo.portfolio-id:}")
     private String demoPortfolioId;
