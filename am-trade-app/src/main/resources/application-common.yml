@@ -53,3 +53,6 @@ am:
 app:
   jwt:
     internal-secret: ${INTERNAL_SECRET_KEY}
+  demo:
+    # Shared demo portfolio shown to users with 0 trade portfolios. Set via DEMO_PORTFOLIO_ID in Helm.
+    portfolio-id: ${DEMO_PORTFOLIO_ID:}
