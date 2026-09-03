@@ -187,8 +187,9 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
                 try {
                     Optional<PortfolioModel> demoPortfolio = portfolioService.findByPortfolioId(demoPortfolioId);
                     if (demoPortfolio.isPresent()) {
+                        PortfolioModel clonedDemo = cloneDemoPortfolio(demoPortfolio.get(), ownerId);
                         portfolios = new ArrayList<>();
-                        portfolios.add(demoPortfolio.get());
+                        portfolios.add(clonedDemo);
                         log.info("Injected demo portfolio {} for ownerId {}", demoPortfolioId, ownerId);
                     }
                 } catch (Exception e) {
@@ -209,5 +210,22 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             log.warn("Failed to check demo dismissed status in Redis for {}: {}", userId, e.getMessage());
             return false;
         }
+    }
+
+    private PortfolioModel cloneDemoPortfolio(PortfolioModel source, String newOwnerId) {
+        return PortfolioModel.builder()
+            .portfolioId(source.getPortfolioId())
+            .name("Demo Portfolio")
+            .description(source.getDescription())
+            .ownerId(newOwnerId)
+            .active(source.isActive())
+            .currency(source.getCurrency())
+            .initialCapital(source.getInitialCapital())
+            .currentCapital(source.getCurrentCapital())
+            .createdDate(source.getCreatedDate())
+            .lastUpdatedDate(source.getLastUpdatedDate())
+            .metrics(source.getMetrics())
+            .tradeIds(source.getTradeIds())
+            .build();
     }
 }
