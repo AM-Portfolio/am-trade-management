@@ -35,7 +35,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
     private final TradeDetailsService tradeDetailsService;
     private final StringRedisTemplate redisTemplate;
 
-    @Value("${app.demo.portfolio-id:f969745c-f492-4b86-88ed-6588e9f28bb3}")
+    @Value("${app.demo.portfolio-id:}")
     private String demoPortfolioId;
 
     @Override
