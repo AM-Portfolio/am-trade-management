@@ -90,8 +90,7 @@ env:
   KAFKA_SASL_MECHANISM: "SCRAM-SHA-256"
   SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWS_ALGORITHMS: "HS256"
   OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://otel-collector.monitoring.svc.cluster.local:4318/v1/traces"
-  # Shared demo portfolio UUID (non-secret). Env overlays inherit via Helm deep-merge.
-  DEMO_PORTFOLIO_ID: "f969745c-f492-4b86-88ed-6588e9f28bb3"
+  # Shared demo portfolio UUID has been securely moved to Vault
 
 # Ingress configuration (env overlays set hosts)
 ingress:
