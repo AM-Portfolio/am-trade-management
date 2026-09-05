@@ -1,0 +1,7 @@
+# CI-only (feature branches). Written by am-pipelines write-and-push-ci-image.sh.
+# Listed last in Argo Application valueFiles; ignored when missing on main.
+#
+# Example:
+# global:
+#   image:
+#     tag: "1234567890"
