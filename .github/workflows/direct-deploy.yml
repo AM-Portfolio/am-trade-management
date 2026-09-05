@@ -1,0 +1,69 @@
+name: Direct Deploy (Existing Container)
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Service (image / Helm base name)"
+        required: true
+        type: choice
+        options:
+          - am-trade-management-service
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - dev
+          - preprod
+          - prod
+      image_tag:
+        description: "Docker image tag (CI run id preferred)"
+        required: true
+        default: "latest"
+        type: string
+      git_ref:
+        description: "Service repo branch/tag (empty = workflow branch). Preprod feature-branch."
+        required: false
+        default: ""
+        type: string
+      force_helm:
+        description: "Preprod: allow Helm when Argo auto on main (may revert)"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  setup:
+    name: Prepare Parameters
+    runs-on: ubuntu-latest
+    outputs:
+      working_directory: ${{ steps.vars.outputs.working_directory }}
+      language: ${{ steps.vars.outputs.language }}
+      namespace: ${{ steps.vars.outputs.namespace }}
+    steps:
+      - id: vars
+        run: |
+          echo "working_directory=." >> "$GITHUB_OUTPUT"
+          echo "language=java" >> "$GITHUB_OUTPUT"
+          case "${{ github.event.inputs.environment }}" in
+            prod) echo "namespace=am-apps-prod" >> "$GITHUB_OUTPUT" ;;
+            preprod) echo "namespace=am-apps-preprod" >> "$GITHUB_OUTPUT" ;;
+            dev) echo "namespace=am-apps-dev" >> "$GITHUB_OUTPUT" ;;
+            *) echo "Unknown environment"; exit 1 ;;
+          esac
+
+  deploy:
+    name: Execute Deploy
+    needs: setup
+    uses: AM-Portfolio/am-pipelines/.github/workflows/central-deploy.yml@main
+    with:
+      service_name: ${{ github.event.inputs.service }}
+      working_directory: ${{ needs.setup.outputs.working_directory }}
+      language: ${{ needs.setup.outputs.language }}
+      environment: ${{ github.event.inputs.environment }}
+      image_tag: ${{ github.event.inputs.image_tag }}
+      namespace: ${{ needs.setup.outputs.namespace }}
+      git_ref: ${{ github.event.inputs.git_ref }}
+      force_helm: ${{ github.event.inputs.force_helm == 'true' }}
+    secrets: inherit
