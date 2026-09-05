@@ -37,7 +37,7 @@ jobs:
   publish:
     name: Build, Publish and Deploy to Dev
     permissions:
-      contents: read
+      contents: write
       packages: write
       id-token: write
     uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish.yml@main
