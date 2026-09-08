@@ -37,6 +37,15 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
         String userId = UserContext.getUserIdOrThrow();
         log.info("Creating new portfolio for user: {}", userId);
 
+        String kind = request.getKind() != null ? request.getKind() : "BROKER";
+        if ("PAPER".equalsIgnoreCase(kind)) {
+            java.util.Optional<am.trade.persistence.entity.PortfolioEntity> existingPaper =
+                    portfolioPersistenceService.findPaperByOwner(userId);
+            if (existingPaper.isPresent()) {
+                return portfolioPersistenceService.findByPortfolioId(existingPaper.get().getPortfolioId()).orElseThrow();
+            }
+        }
+
         PortfolioModel portfolioModel = PortfolioModel.builder()
                 .portfolioId(UUID.randomUUID().toString())
                 .name(request.getName())
@@ -46,6 +55,7 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
                 .currency(request.getCurrency())
                 .initialCapital(request.getInitialCapital())
                 .currentCapital(request.getInitialCapital()) // Initially same as initial
+                .kind(kind)
                 .createdDate(LocalDateTime.now())
                 .lastUpdatedDate(LocalDateTime.now())
                 .metrics(new PortfolioMetrics())

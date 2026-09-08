@@ -29,7 +29,6 @@ import am.trade.common.models.TradeDetails;
 import am.trade.models.enums.TradePositionType;
 import am.trade.models.enums.TradeStatus;
 import am.trade.services.publisher.TradeHoldingEventPublisher;
-import am.trade.services.publisher.TradeHoldingEventPublisher;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import am.trade.services.service.PortfolioPersistenceService;
@@ -299,6 +298,7 @@ public class TradeApiServiceImpl implements TradeApiService {
                 .action(action)
                 .brokerType(brokerType)
                 .userId(savedTrade.getUserId())
+                .portfolioKind(portfolio != null && portfolio.getKind() != null ? portfolio.getKind() : "BROKER")
                 .equities(List.of(equity))
                 .timestamp(LocalDateTime.now())
                 .build();
@@ -1231,6 +1231,7 @@ public class TradeApiServiceImpl implements TradeApiService {
                 .deleteAllTrades("DELETE".equals(action) || "DELETE_PORTFOLIO".equals(action))
                 .brokerType(brokerType)
                 .userId(userId)
+                .portfolioKind(resolvePortfolioKind(portfolioId))
                 .equities(equities)
                 .timestamp(java.time.LocalDateTime.now())
                 .build();
@@ -1241,5 +1242,11 @@ public class TradeApiServiceImpl implements TradeApiService {
         } catch (Exception e) {
             log.error("Failed to publish bulk portfolio sync event for portfolio: {}. Error: {}", portfolioId, e.getMessage());
         }
+    }
+
+    private String resolvePortfolioKind(String portfolioId) {
+        return portfolioPersistenceService.findByPortfolioId(portfolioId)
+                .map(p -> p.getKind() != null ? p.getKind() : "BROKER")
+                .orElse("BROKER");
     }
 }

@@ -109,6 +109,11 @@ public class TradeManagementServiceImpl implements TradeManagementService {
             trades = tradeDetailsService.findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(userId, portfolioId, startDateTime, endDateTime);
         } else {
             trades = tradeDetailsService.findModelsByUserIdAndEntryInfoTimestampBetween(userId, startDateTime, endDateTime);
+            java.util.Set<String> paperIds = portfolioRepository.findByOwnerId(userId).stream()
+                    .filter(p -> "PAPER".equalsIgnoreCase(p.getKind()))
+                    .map(PortfolioEntity::getPortfolioId)
+                    .collect(Collectors.toSet());
+            trades = trades.stream().filter(t -> !paperIds.contains(t.getPortfolioId())).collect(Collectors.toList());
         }
 
         log.info("Retained {} trades after date filtering", trades.size());

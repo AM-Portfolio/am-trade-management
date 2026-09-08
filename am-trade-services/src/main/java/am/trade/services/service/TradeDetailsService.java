@@ -135,4 +135,8 @@ public interface TradeDetailsService {
      * @return List of trade details matching the criteria
      */
     List<TradeDetails> findByUserIdAndStrategyAndDateRange(String userId, String strategy, LocalDateTime startDate, LocalDateTime endDate);
+
+    Optional<TradeDetails> findBySourceOrderId(String sourceOrderId);
+
+    List<TradeDetails> findModelsByPortfolioIdAndSymbol(String portfolioId, String symbol);
 }

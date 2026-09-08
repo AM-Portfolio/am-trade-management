@@ -1,0 +1,87 @@
+global:
+  image:
+    registry: ghcr.io/am-portfolio
+    pullPolicy: Always
+    imagePullSecrets:
+      - name: regcred
+  vault:
+    enabled: true
+    role: "am-backend-role"
+    authPath: "auth/kubernetes"
+    serviceAccountName: "am-backend-sa"
+
+image:
+  repository: am-oms
+
+replicaCount: 1
+language: python
+port: 8080
+service:
+  port: 8080
+entrypoint: "exec uvicorn am_oms.main:app --host 0.0.0.0 --port 8080"
+
+security:
+  automountServiceAccountToken: true
+config: {}
+
+vault:
+  secretPaths:
+    mongodb:
+      mappings:
+        AM_OMS_MONGO_URI: "url"
+        AM_OMS_MONGO_DATABASE: "AM_OMS_MONGO_DATABASE"
+        AM_OMS_DB_USER: "AM_OMS_DB_USER"
+        AM_OMS_DB_PASSWORD: "AM_OMS_DB_PASSWORD"
+    kafka:
+      mappings:
+        KAFKA_BOOTSTRAP_SERVERS: "bootstrap_servers"
+        KAFKA_USERNAME: "username"
+        KAFKA_PASSWORD: "password"
+        KAFKA_SECURITY_PROTOCOL: "KAFKA_SECURITY_PROTOCOL"
+        KAFKA_SASL_MECHANISM: "KAFKA_SASL_MECHANISM"
+    identity-oidc:
+      mappings:
+        OIDC_JWKS_URL: "OIDC_JWKS_URL"
+        OIDC_ISSUER: "OIDC_ISSUER"
+    trade-management:
+      mappings:
+        AM_TRADE_JOURNAL_BASE_URL: "AM_TRADE_JOURNAL_BASE_URL"
+    market-data:
+      mappings:
+        AM_MARKET_BASE_URL: "url"
+
+env:
+  APP_ENV: production
+  APP_NAME: am-oms
+  APP_PORT: "8080"
+  LOG_LEVEL: INFO
+  TZ: Asia/Kolkata
+  KAFKA_ENABLED: "true"
+  AM_OMS_FILLS_TOPIC: am-oms-fills
+
+probes:
+  port: 8080
+  startup:
+    path: /health/live
+    failureThreshold: 30
+    periodSeconds: 10
+  liveness:
+    path: /health/live
+  readiness:
+    path: /health/ready
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+  hosts: []

@@ -26,6 +26,7 @@ public class PortfolioModel {
     private String currency;
     private BigDecimal initialCapital;
     private BigDecimal currentCapital;
+    private String kind;
     private LocalDateTime createdDate;
     private LocalDateTime lastUpdatedDate;
     

@@ -25,4 +25,5 @@ public class PortfolioCreateRequest {
     
     @NotNull(message = "Initial capital is required")
     private BigDecimal initialCapital;
+    private String kind;
 }

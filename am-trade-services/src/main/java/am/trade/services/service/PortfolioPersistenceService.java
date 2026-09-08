@@ -84,6 +84,10 @@ public class PortfolioPersistenceService {
                 .collect(Collectors.toList());
     }
 
+    public java.util.Optional<PortfolioEntity> findPaperByOwner(String ownerId) {
+        return portfolioRepository.findFirstByOwnerIdAndKind(ownerId, "PAPER");
+    }
+
     /**
      * Find all active portfolios owned by a specific user
      * 

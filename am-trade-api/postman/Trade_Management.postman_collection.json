@@ -7,6 +7,32 @@
     },
     "item": [
         {
+            "name": "Paper isolation",
+            "item": [
+                {
+                    "name": "Paper isolation — trades by paper portfolio",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{trade_base_url}}/v1/trades/details/portfolio/{{paper_portfolio_uuid}}"
+                    }
+                },
+                {
+                    "name": "Paper isolation — journal portfolio kind PAPER",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{trade_base_url}}/v1/portfolio-summary/{{paper_portfolio_uuid}}"
+                    }
+                },
+                {
+                    "name": "Paper isolation — owner summary omits PAPER",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{trade_base_url}}/v1/portfolio-summary/by-owner"
+                    }
+                }
+            ]
+        },
+        {
             "name": "Get Trade Details (Portfolio)",
             "request": {
                 "method": "GET",
