@@ -1,0 +1,37 @@
+environment: preprod
+replicaCount: 1
+
+vault:
+  enabled: true
+  secretPaths:
+    mongodb:
+      path: "apps/data/preprod/infra/mongodb"
+    kafka:
+      path: "apps/data/preprod/infra/kafka"
+    identity-oidc:
+      path: "apps/data/preprod/services/am-identity"
+    trade-management:
+      path: "apps/data/preprod/services/am-trade-management"
+    market-data:
+      path: "apps/data/preprod/services/am-market-data"
+
+env:
+  APP_ENV: preprod
+  LOG_LEVEL: INFO
+  KAFKA_ENABLED: "true"
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      am-apps-preprod-global-cors@kubernetescrd
+  hosts:
+    - host: am-preprod.asrax.in
+      paths:
+        - path: /v1/wallets
+          pathType: Prefix
+        - path: /v1/orders
+          pathType: Prefix

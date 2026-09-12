@@ -1,0 +1,59 @@
+# Production configuration for am-oms.
+# Prod cluster uses Vault Agent Injector — not Secrets Store CSI.
+
+environment: prod
+replicaCount: 1
+
+global:
+  vault:
+    enabled: true
+    csi:
+      enabled: false
+
+vault:
+  enabled: true
+  secretPaths:
+    mongodb:
+      path: "apps/data/prod/infra/mongodb"
+    kafka:
+      path: "apps/data/prod/infra/kafka"
+    identity-oidc:
+      path: "apps/data/prod/services/am-identity"
+    trade-management:
+      path: "apps/data/prod/services/am-trade-management"
+    market-data:
+      path: "apps/data/prod/services/am-market-data"
+
+env:
+  APP_ENV: prod
+  LOG_LEVEL: INFO
+  KAFKA_ENABLED: "true"
+  KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
+  KAFKA_SASL_MECHANISM: "SCRAM-SHA-256"
+  AM_TRADE_JOURNAL_BASE_URL: "http://am-trade-management-service:8080"
+  AM_MARKET_BASE_URL: "http://am-market-data:8080"
+  AM_OMS_MONGO_DATABASE: "am_oms_prod"
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      am-apps-prod-global-cors@kubernetescrd
+  hosts:
+    - host: am.asrax.in
+      paths:
+        - path: /v1/wallets
+          pathType: Prefix
+        - path: /v1/orders
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi

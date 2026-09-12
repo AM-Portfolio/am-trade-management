@@ -1,0 +1,180 @@
+{
+  "info": {
+    "_postman_id": "34493d05-c2a9-453d-aa42-81f765bd9638",
+    "name": "AM OMS",
+    "description": "One collection for am-oms. Shared AM-* environments (Asrax: AM — Local / Dev / Preprod). Auth Get Token first. Paths /v1/wallets and /v1/orders on the gateway host (not /trade-execution). Set oms_base_url to gateway_base_url (https://am-preprod.asrax.in on preprod).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "oms_base_url", "value": "{{gateway_base_url}}" },
+    { "key": "gateway_base_url", "value": "{{gateway_base_url}}" },
+    { "key": "wallet_id", "value": "" },
+    { "key": "order_id", "value": "" },
+    { "key": "paper_portfolio_uuid", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Get Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('token issued', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  var body = pm.response.json();",
+                  "  pm.expect(body.access_token).to.be.ok;",
+                  "  pm.environment.set('access_token', body.access_token);",
+                  "  pm.collectionVariables.set('access_token', body.access_token);",
+                  "  if (body.refresh_token) pm.environment.set('refresh_token', body.refresh_token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"{{test_email}}\",\"password\":\"{{test_password}}\",\"platform\":\"web\"}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{identity_base_url}}/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Paper trading",
+      "item": [
+        { "name": "Health", "request": { "method": "GET", "url": "{{oms_base_url}}/health/live" } },
+        {
+          "name": "Create PAPER wallet",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"kind\":\"PAPER\",\"currency\":\"INR\",\"seedAmount\":\"1000000\"}" },
+            "url": "{{oms_base_url}}/v1/wallets"
+          }
+        },
+        {
+          "name": "Second wallet same owner",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"kind\":\"PAPER\",\"currency\":\"INR\"}" },
+            "url": "{{oms_base_url}}/v1/wallets"
+          }
+        },
+        { "name": "List wallets", "request": { "method": "GET", "url": "{{oms_base_url}}/v1/wallets?kind=PAPER" } },
+        {
+          "name": "BUY MARKET",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"walletId\":\"{{wallet_id}}\",\"venue\":\"PAPER\",\"instrumentType\":\"EQUITY\",\"symbol\":\"RELIANCE\",\"side\":\"BUY\",\"orderType\":\"MARKET\",\"quantity\":\"1\"}" },
+            "url": "{{oms_base_url}}/v1/orders"
+          }
+        },
+        {
+          "name": "BUY overspend",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"walletId\":\"{{wallet_id}}\",\"venue\":\"PAPER\",\"instrumentType\":\"EQUITY\",\"symbol\":\"RELIANCE\",\"side\":\"BUY\",\"orderType\":\"MARKET\",\"quantity\":\"99999999\"}" },
+            "url": "{{oms_base_url}}/v1/orders"
+          }
+        },
+        {
+          "name": "SELL MARKET",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"walletId\":\"{{wallet_id}}\",\"venue\":\"PAPER\",\"instrumentType\":\"EQUITY\",\"symbol\":\"RELIANCE\",\"side\":\"SELL\",\"orderType\":\"MARKET\",\"quantity\":\"1\"}" },
+            "url": "{{oms_base_url}}/v1/orders"
+          }
+        },
+        {
+          "name": "SELL over qty",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"walletId\":\"{{wallet_id}}\",\"venue\":\"PAPER\",\"instrumentType\":\"EQUITY\",\"symbol\":\"RELIANCE\",\"side\":\"SELL\",\"orderType\":\"MARKET\",\"quantity\":\"99999999\"}" },
+            "url": "{{oms_base_url}}/v1/orders"
+          }
+        },
+        {
+          "name": "LTP miss",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"walletId\":\"{{wallet_id}}\",\"venue\":\"PAPER\",\"instrumentType\":\"EQUITY\",\"symbol\":\"NOT_A_REAL_SYMBOL_XYZ\",\"side\":\"BUY\",\"orderType\":\"MARKET\",\"quantity\":\"1\"}" },
+            "url": "{{oms_base_url}}/v1/orders"
+          }
+        },
+        {
+          "name": "OPTION P0",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"walletId\":\"{{wallet_id}}\",\"venue\":\"PAPER\",\"instrumentType\":\"OPTION\",\"symbol\":\"NIFTY\",\"side\":\"BUY\",\"orderType\":\"MARKET\",\"quantity\":\"1\"}" },
+            "url": "{{oms_base_url}}/v1/orders"
+          }
+        },
+        {
+          "name": "LIVE P0",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"walletId\":\"{{wallet_id}}\",\"venue\":\"LIVE\",\"instrumentType\":\"EQUITY\",\"symbol\":\"RELIANCE\",\"side\":\"BUY\",\"orderType\":\"MARKET\",\"quantity\":\"1\"}" },
+            "url": "{{oms_base_url}}/v1/orders"
+          }
+        },
+        {
+          "name": "LIMIT P0",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"walletId\":\"{{wallet_id}}\",\"venue\":\"PAPER\",\"instrumentType\":\"EQUITY\",\"symbol\":\"RELIANCE\",\"side\":\"BUY\",\"orderType\":\"LIMIT\",\"limitPrice\":\"1\",\"quantity\":\"1\"}" },
+            "url": "{{oms_base_url}}/v1/orders"
+          }
+        },
+        { "name": "List orders", "request": { "method": "GET", "url": "{{oms_base_url}}/v1/orders?walletId={{wallet_id}}" } }
+      ]
+    }
+  ]
+}

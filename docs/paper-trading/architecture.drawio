@@ -1,0 +1,330 @@
+<mxfile host="app.diagrams.net" agent="am-architecture-drawio">
+  <diagram id="context" name="Context">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="Context: paper + future live share Python am-oms (OMS+wallet) in am-trade-management repo. Java journal + am-portfolio books. P0 venue=PAPER equity." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="actor" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="240" width="40" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="sys" value="AM product&#10;modern-ui + am-oms (Python)&#10;+ Java journal + am-portfolio" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="210" width="300" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="mkt" value="am-market&#10;LTP (read-only)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="80" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="idp" value="Keycloak / IdP" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="190" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="mongo" value="Mongo&#10;am_oms db + journal db" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="290" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="brk" value="Broker / Upstox&#10;(P2 — not wired)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="390" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="Create paper wallet / Place order" style="endArrow=block;html=1;" edge="1" parent="1" source="actor" target="sys">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="getCurrentPrices" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="sys" target="mkt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="Bearer" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="sys" target="idp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="stores" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="sys" target="mongo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="P2 place/cancel" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="sys" target="brk">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="business" name="BusinessFlow">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="BusinessFlow P0: empty (no broker) → Create paper wallet (virtual 10L) → banner → Place order (not Add Trade) → blotter FILLED → holdings/analytics catch up." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s0" value="0. Empty&#10;no broker, no wallet" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="120" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s1" value="1. Create paper wallet&#10;virtual ₹10L (not payment)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="120" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s2" value="2. Paper banner&#10;available / reserved&#10;empty blotter" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="120" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" value="3. Place MARKET BUY&#10;equity at LTP" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="670" y="120" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s4" value="4. Blotter FILLED&#10;cash updated now" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="120" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s6" value="5. Holdings + journal analytics&#10;(may refresh if Kafka lags)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="120" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s5" value="Reject UX&#10;overspend / LTP / OPTION / LIVE" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="670" y="280" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e0" value="CTA" style="endArrow=block;html=1;" edge="1" parent="1" source="s0" target="s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="seeded" style="endArrow=block;html=1;" edge="1" parent="1" source="s1" target="s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="Place order" style="endArrow=block;html=1;" edge="1" parent="1" source="s2" target="s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="success" style="endArrow=block;html=1;" edge="1" parent="1" source="s3" target="s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="async catch-up" style="endArrow=block;html=1;" edge="1" parent="1" source="s4" target="s6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="validation / LTP fail" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="s3" target="s5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="containers" name="Containers">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="Containers: every edge METHOD /path or Kafka topic. Python am-oms ≠ Java journal. Holdings via TRADE_SYNC only." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ui" value="modern-ui&#10;wallet + Place order + blotter" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="220" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="py" value="am-oms Python&#10;Mongo am_oms&#10;wallets/orders/positions" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="200" width="240" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="mkt" value="am-market&#10;price store" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="40" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="java" value="am-trade-management Java&#10;journal Mongo trade_details&#10;+ PortfolioModel kind=PAPER" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="200" width="250" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="pf" value="am-portfolio&#10;holdings store kind=PAPER" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="200" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="POST /v1/wallets" style="endArrow=block;html=1;" edge="1" parent="1" source="ui" target="py">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="POST /v1/orders" style="endArrow=block;html=1;" edge="1" parent="1" source="ui" target="py">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="250" y="280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" value="POST /v1/market-data/ohlc" style="endArrow=block;html=1;" edge="1" parent="1" source="py" target="mkt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="POST /v1/portfolios kind=PAPER (Bearer)" style="endArrow=block;html=1;" edge="1" parent="1" source="py" target="java">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="Kafka am-oms-fills OrderFillEvent" style="endArrow=block;html=1;" edge="1" parent="1" source="py" target="java">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="Kafka am-portfolio TRADE_SYNC CREATE/BUY/SELL" style="endArrow=block;html=1;" edge="1" parent="1" source="java" target="pf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="GET /v1/portfolios/holdings" style="endArrow=block;html=1;" edge="1" parent="1" source="ui" target="pf">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="130" y="160" as="sourcePoint" />
+            <mxPoint x="980" y="210" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" value="GET /v1/portfolio-summary/{id}" style="endArrow=block;html=1;" edge="1" parent="1" source="ui" target="java">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="130" y="400" as="sourcePoint" />
+            <mxPoint x="760" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="sequence" name="Sequence">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="Sequence: 1 Create wallet (Java first) → 2 Happy MARKET BUY → 3 Reject overspend. Real APIs." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="900" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="a_ui" value="UI" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="70" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a_py" value="am-oms" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="220" y="70" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a_java" value="Java journal" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="70" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a_m" value="am-market" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="630" y="70" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a_p" value="am-portfolio" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="820" y="70" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s1" value="1 POST /v1/wallets PAPER" style="endArrow=block;html=1;" edge="1" parent="1" source="a_ui" target="a_py">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="75" y="180" as="sourcePoint" />
+            <mxPoint x="290" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s1b" value="1b POST /v1/portfolios kind=PAPER" style="endArrow=block;html=1;" edge="1" parent="1" source="a_py" target="a_java">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="360" y="220" as="sourcePoint" />
+            <mxPoint x="490" y="220" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s1c" value="1c TRADE_SYNC CREATE portfolioKind=PAPER" style="endArrow=block;html=1;" edge="1" parent="1" source="a_java" target="a_p">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="260" as="sourcePoint" />
+            <mxPoint x="880" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2" value="2 POST /v1/orders MARKET BUY" style="endArrow=block;html=1;" edge="1" parent="1" source="a_ui" target="a_py">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="75" y="320" as="sourcePoint" />
+            <mxPoint x="290" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2b" value="2b POST /v1/market-data/ohlc" style="endArrow=block;html=1;" edge="1" parent="1" source="a_py" target="a_m">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="360" y="360" as="sourcePoint" />
+            <mxPoint x="690" y="360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2c" value="2c Kafka am-oms-fills" style="endArrow=block;html=1;" edge="1" parent="1" source="a_py" target="a_java">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="360" y="400" as="sourcePoint" />
+            <mxPoint x="490" y="400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2d" value="2d TRADE_SYNC BUY portfolioKind=PAPER" style="endArrow=block;html=1;" edge="1" parent="1" source="a_java" target="a_p">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="440" as="sourcePoint" />
+            <mxPoint x="880" y="440" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s3" value="3 POST /v1/orders overspend → REJECTED (no Kafka)" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="a_ui" target="a_py">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="75" y="520" as="sourcePoint" />
+            <mxPoint x="290" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="data" name="DataIdentity">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="Data / identity: am-oms owns walletId/orderId/cash; Java owns tradeId + portfolio UUID; am-portfolio name vs UUID split unchanged." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t" value="Python Mongo am_oms&#10;walletId ownerId kind=PAPER&#10;available / reserved&#10;orderId + idempotencyKey&#10;position qty per symbol&#10;portfolioUuid + portfolioId name" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="280" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="j" value="Java journal&#10;portfolioId=UUID kind=PAPER&#10;name=Paper ownerId&#10;tradeId + sourceOrderId&#10;entryInfo/exitInfo status OPEN/WIN" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="380" y="90" width="280" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="p" value="am-portfolio&#10;id=UUID&#10;portfolioId=name&#10;kind=PAPER" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="720" y="90" width="220" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="ev1" value="OrderFillEvent am-oms-fills&#10;eventId orderId walletId ownerId&#10;id=journal UUID portfolioId=name&#10;portfolioKind=PAPER qty price" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="160" y="320" width="320" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ev2" value="TRADE_SYNC am-portfolio&#10;id=UUID portfolioId=name&#10;portfolioKind=PAPER action CREATE/BUY/SELL" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="540" y="320" width="320" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="emits" style="endArrow=block;html=1;" edge="1" parent="1" source="t" target="ev1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="consumes" style="endArrow=block;html=1;" edge="1" parent="1" source="ev1" target="j">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="emits" style="endArrow=block;html=1;" edge="1" parent="1" source="j" target="ev2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="maps" style="endArrow=block;html=1;" edge="1" parent="1" source="ev2" target="p">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="security" name="SecurityTrust">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="Security / trust: Bearer owner-scoped; wallet create forwards user token to Java; Kafka fill checks ownerId vs portfolio.ownerId; PAPER vs BROKER isolation." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="idp" value="Keycloak / IdP" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="100" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="Public Python /v1/wallets /v1/orders&#10;+ Java /v1/portfolios&#10;owner from Bearer" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="80" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="kfk" value="Kafka am-oms-fills&#10;no user token&#10;verify ownerId == portfolio.ownerId" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="600" y="80" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="iso" value="Isolation: PAPER wallet/fills/journal&#10;never apply to BROKER/BASKET&#10;owner-summary omits PAPER by default" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="240" width="280" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="Bearer" style="endArrow=block;html=1;" edge="1" parent="1" source="idp" target="api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="after FILLED" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="api" target="kfk">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="failures" name="Failures">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="Failures: trigger → system → user. Cash unchanged on reject. No orphan wallet if Java create fails." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="900" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="f1" value="LTP miss / timeout&#10;→ REJECTED LTP_UNAVAILABLE&#10;→ available unchanged" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="f2" value="Overspend / oversell&#10;→ REJECTED&#10;→ no Kafka, broker untouched" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="310" y="90" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="f3" value="OPTION LIVE LIMIT in P0&#10;→ REJECTED reason code&#10;→ blotter shows reject" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="580" y="90" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="f6" value="Java POST /v1/portfolios fail&#10;→ 502 no Python wallet&#10;→ retry CTA" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="850" y="90" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="f4" value="Kafka lag / publish fail&#10;→ order FILLED in OMS&#10;→ journal/holdings may lag" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="180" y="240" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="f5" value="Kind mismatch or owner mismatch&#10;→ skip consume&#10;→ BROKER book untouched" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="500" y="240" width="280" height="100" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

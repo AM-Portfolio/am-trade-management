@@ -46,12 +46,18 @@ public class PortfolioSummaryController {
     })
     @GetMapping("/by-owner")
     @Observed(name = "portfolio.summary.by.owner", contextualName = "get-portfolio-summaries")
-    public ResponseEntity<?> getPortfolioSummariesForAuthenticatedUser() {
+    public ResponseEntity<?> getPortfolioSummariesForAuthenticatedUser(
+            @RequestParam(name = "includePaper", defaultValue = "false") boolean includePaper) {
         String ownerId = UserContext.getUserIdOrThrow();
         try {
             log.info("Fetching portfolio summaries for ownerId: {}", ownerId);
             List<PortfolioModel> portfolioSummaries = portfolioSummaryService
                     .getPortfolioSummariesByOwnerId(ownerId);
+            if (!includePaper) {
+                portfolioSummaries = portfolioSummaries.stream()
+                        .filter(p -> !"PAPER".equalsIgnoreCase(p.getKind()))
+                        .toList();
+            }
             return ResponseEntity.ok(portfolioSummaries);
         } catch (IllegalArgumentException e) {
             log.error("Invalid owner ID: {}", e.getMessage());
@@ -76,11 +82,17 @@ public class PortfolioSummaryController {
     })
     @GetMapping("/by-owner/{ownerId}")
     public ResponseEntity<?> getPortfolioSummaryByOwnerIdFallback(
-            @Parameter(description = "Owner ID") @PathVariable String ownerId) {
+            @Parameter(description = "Owner ID") @PathVariable String ownerId,
+            @RequestParam(name = "includePaper", defaultValue = "false") boolean includePaper) {
         
         try {
             log.info("Fetching portfolio summaries for ownerId: {}", ownerId);
             List<PortfolioModel> portfolioSummaries = portfolioSummaryService.getPortfolioSummariesByOwnerId(ownerId);
+            if (!includePaper) {
+                portfolioSummaries = portfolioSummaries.stream()
+                        .filter(p -> !"PAPER".equalsIgnoreCase(p.getKind()))
+                        .toList();
+            }
             return ResponseEntity.ok(portfolioSummaries);
         } catch (IllegalArgumentException e) {
             log.error("Invalid portfolio ID: {}", e.getMessage());

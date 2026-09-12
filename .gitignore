@@ -28,6 +28,8 @@ __pycache__/
 *.pyd
 .Python
 *.so
+.venv/
+.pytest_cache/
 
 # JAR files (explicit)
 *.jar

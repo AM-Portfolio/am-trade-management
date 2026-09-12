@@ -22,6 +22,7 @@ public class TradeDetailsMapper {
         
         return TradeDetailsEntity.builder()
                 .tradeId(model.getTradeId())
+                .sourceOrderId(model.getSourceOrderId())
                 .portfolioId(model.getPortfolioId())
                 .symbol(model.getSymbol())
                 .instrumentInfo(model.getInstrumentInfo())
@@ -56,6 +57,7 @@ public class TradeDetailsMapper {
         
         return TradeDetails.builder()
                 .tradeId(entity.getTradeId())
+                .sourceOrderId(entity.getSourceOrderId())
                 .portfolioId(entity.getPortfolioId())
                 .symbol(entity.getSymbol())
                 .instrumentInfo(entity.getInstrumentInfo())

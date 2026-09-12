@@ -44,6 +44,7 @@ public class PortfolioSyncEvent {
     private Boolean deleteAllTrades;
     private String brokerType;
     private String userId;
+    private String portfolioKind;
     private List<EquityPosition> equities;
     private LocalDateTime timestamp;
 }

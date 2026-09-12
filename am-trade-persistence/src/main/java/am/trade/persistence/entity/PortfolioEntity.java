@@ -40,6 +40,7 @@ public class PortfolioEntity {
     private String currency;
     private BigDecimal initialCapital;
     private BigDecimal currentCapital;
+    private String kind;
     private LocalDateTime createdDate;
     private LocalDateTime lastUpdatedDate;
 

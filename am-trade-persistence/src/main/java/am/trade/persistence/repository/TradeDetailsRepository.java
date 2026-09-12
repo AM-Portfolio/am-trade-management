@@ -22,6 +22,10 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
     Optional<TradeDetailsEntity> findById(String id);
     
     Optional<TradeDetailsEntity> findByTradeId(String tradeId);
+
+    Optional<TradeDetailsEntity> findBySourceOrderId(String sourceOrderId);
+
+    List<TradeDetailsEntity> findByPortfolioIdAndSymbol(String portfolioId, String symbol);
     
     List<TradeDetailsEntity> findBySymbol(String symbol);
     

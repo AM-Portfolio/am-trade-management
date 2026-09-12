@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TradeDetails {
     private String tradeId;
+    private String sourceOrderId;
     private String portfolioId;
     private InstrumentInfo instrumentInfo;
     private String symbol;

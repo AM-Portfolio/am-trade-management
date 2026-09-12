@@ -35,6 +35,11 @@ am:
           enabled: true
         topic: am-trade
         consumer-group-id: am-trade-group
+      oms-fills:
+        consumer:
+          enabled: true
+        topic: am-oms-fills
+        consumer-group-id: am-oms-fills-group
       retries: 3
       retry-backoff-ms: 1000
       max-poll-records: 500

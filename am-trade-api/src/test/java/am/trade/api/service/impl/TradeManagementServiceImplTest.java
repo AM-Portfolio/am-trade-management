@@ -94,6 +94,26 @@ class TradeManagementServiceImplTest {
         assertFalse(trades.contains(trade5));
     }
 
+    @Test
+    void ownerWideDateRangeOmitsPaperPortfolios() {
+        TradeDetails broker = createTrade("t1", "broker", LocalDateTime.of(2020, 7, 15, 12, 0));
+        TradeDetails paper = createTrade("t2", "paper", LocalDateTime.of(2020, 7, 15, 12, 0));
+        when(tradeDetailsService.findModelsByUserIdAndEntryInfoTimestampBetween(
+                org.mockito.ArgumentMatchers.eq("test-user"),
+                org.mockito.ArgumentMatchers.any(LocalDateTime.class),
+                org.mockito.ArgumentMatchers.any(LocalDateTime.class)))
+                .thenReturn(Arrays.asList(broker, paper));
+        when(portfolioRepository.findByOwnerId("test-user")).thenReturn(List.of(
+                am.trade.persistence.entity.PortfolioEntity.builder().portfolioId("paper").kind("PAPER").build(),
+                am.trade.persistence.entity.PortfolioEntity.builder().portfolioId("broker").kind("BROKER").build()));
+
+        Map<String, List<TradeDetails>> result = tradeManagementService.getTradeDetailsByMonth(2020, 7, null);
+
+        assertTrue(result.containsKey("broker"));
+        assertFalse(result.containsKey("paper"));
+        assertEquals(1, result.get("broker").size());
+    }
+
     private TradeDetails createTrade(String id, String portfolioId, LocalDateTime entryTime) {
         return TradeDetails.builder()
                 .tradeId(id)

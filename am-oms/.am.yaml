@@ -1,0 +1,17 @@
+name: am-oms
+release: am-oms
+image: ghcr.io/am-portfolio/am-oms
+runtime: python
+language: python
+entrypoint: am_oms.main:app
+port: 8080
+dockerfile: Dockerfile
+context: .
+github:
+  repo: AM-Portfolio/am-trade-management
+  deploy_workflow: direct-deploy.yml
+  service: am-oms
+  ref: main
+deploy:
+  via: helm
+  rebuild: on-change
