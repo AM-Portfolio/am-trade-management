@@ -1,4 +1,4 @@
-﻿package am.trade.dashboard.service.metrics;
+package am.trade.dashboard.service.metrics;
 
 import am.trade.common.models.EntryExitInfo;
 import am.trade.common.models.TradeDetails;
@@ -22,9 +22,9 @@ class TradeDistributionHourGroupingSpec {
     @Test
     void calculateMetrics_fillsHourDayMonthAndWinRates() {
         List<TradeDetails> trades = List.of(
-                trade("t1", LocalDateTime.of(2024, 1, 8, 10, 15), "100"), // Monday 10
-                trade("t2", LocalDateTime.of(2024, 1, 8, 10, 45), "-40"), // Monday 10
-                trade("t3", LocalDateTime.of(2024, 2, 14, 14, 0), "50") // Wednesday 14
+                trade("t1", LocalDateTime.of(2024, 1, 8, 10, 15), "100"),
+                trade("t2", LocalDateTime.of(2024, 1, 8, 10, 45), "-40"),
+                trade("t3", LocalDateTime.of(2024, 2, 14, 14, 0), "50")
         );
 
         TradeDistributionMetrics metrics = service.calculateMetrics(trades);
