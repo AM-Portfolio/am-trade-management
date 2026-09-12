@@ -32,6 +32,8 @@ public interface PortfolioRepository extends MongoRepository<PortfolioEntity, St
      * @return List of portfolios owned by the user
      */
     List<PortfolioEntity> findByOwnerId(String ownerId);
+
+    Optional<PortfolioEntity> findFirstByOwnerIdAndKind(String ownerId, String kind);
     
     /**
      * Find all active portfolios owned by a specific user

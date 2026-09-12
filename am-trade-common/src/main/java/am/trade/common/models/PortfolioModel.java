@@ -41,5 +41,5 @@ public class PortfolioModel {
     
     // Asset allocation
     private List<AssetAllocation> assetAllocations;
-
+    private String kind;
 }

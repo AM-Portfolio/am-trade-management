@@ -433,4 +433,16 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
         log.info("Found {} trades matching portfolio ID and date range criteria", tradeDetails.size());
         return tradeDetails;
     }
+
+    @Override
+    public Optional<TradeDetails> findBySourceOrderId(String sourceOrderId) {
+        return tradeDetailsRepository.findBySourceOrderId(sourceOrderId).map(tradeDetailsMapper::toTradeDetails);
+    }
+
+    @Override
+    public List<TradeDetails> findModelsByPortfolioIdAndSymbol(String portfolioId, String symbol) {
+        return tradeDetailsRepository.findByPortfolioIdAndSymbol(portfolioId, symbol).stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+    }
 }

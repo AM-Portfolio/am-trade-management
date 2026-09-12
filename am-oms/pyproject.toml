@@ -1,0 +1,23 @@
+[project]
+name = "am-oms"
+version = "0.1.0"
+description = "AM order management + paper/live wallet"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.100.0",
+    "uvicorn>=0.30.0",
+    "httpx>=0.24.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "motor>=3.3.0",
+    "aiokafka>=0.10.0",
+    "am-platform-common",
+    "am-platform-security",
+]
+
+[tool.poetry]
+packages = [{ include = "am_oms" }]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

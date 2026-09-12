@@ -1,0 +1,25 @@
+vault:
+  secretPaths:
+    mongodb:
+      mappings:
+        AM_OMS_MONGO_URI: "url"
+        AM_OMS_MONGO_DATABASE: "AM_OMS_MONGO_DATABASE"
+        AM_OMS_DB_USER: "AM_OMS_DB_USER"
+        AM_OMS_DB_PASSWORD: "AM_OMS_DB_PASSWORD"
+    kafka:
+      mappings:
+        KAFKA_BOOTSTRAP_SERVERS: "bootstrap_servers"
+        KAFKA_USERNAME: "username"
+        KAFKA_PASSWORD: "password"
+        KAFKA_SECURITY_PROTOCOL: "KAFKA_SECURITY_PROTOCOL"
+        KAFKA_SASL_MECHANISM: "KAFKA_SASL_MECHANISM"
+    identity-oidc:
+      mappings:
+        OIDC_JWKS_URL: "OIDC_JWKS_URL"
+        OIDC_ISSUER: "OIDC_ISSUER"
+    trade-management:
+      mappings:
+        AM_TRADE_JOURNAL_BASE_URL: "AM_TRADE_JOURNAL_BASE_URL"
+    market-data:
+      mappings:
+        AM_MARKET_BASE_URL: "url"

@@ -1,0 +1,205 @@
+<mxfile host="app.diagrams.net" agent="am-architecture-drawio">
+  <diagram id="context" name="Context">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="Context (C4): actors + systems + external deps. Replace stubs." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="520" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="actor" value="User / Actor" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="200" width="40" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="sys" value="AM product&#10;(system boundary)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="180" width="200" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ext" value="External dep&#10;(market / IdP / …)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="180" width="180" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="uses" style="endArrow=block;html=1;" edge="1" parent="1" source="actor" target="sys">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="depends" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="sys" target="ext">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="business" name="BusinessFlow">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="Business / feature flow: USER-VISIBLE steps (screens → actions → outcomes). Not S2S. Match PLAN P0 journeys." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="720" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s1" value="1. Entry screen&#10;(e.g. Create paper)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="120" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s2" value="2. User action&#10;(submit / trade)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="120" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" value="3. Feedback&#10;(banner / cash / holdings)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="120" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s4" value="4. Reject UX&#10;(error toast / 400)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="280" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="continues" style="endArrow=block;html=1;" edge="1" parent="1" source="s1" target="s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="success" style="endArrow=block;html=1;" edge="1" parent="1" source="s2" target="s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="validation fail" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="s2" target="s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="containers" name="Containers">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="Containers: label EVERY edge with METHOD /path or Kafka topic. Show stores." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="640" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ui" value="UI" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="180" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_a" value="Service A&#10;+ store" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="180" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_b" value="Service B&#10;+ store" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="180" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="METHOD /v1/..." style="endArrow=block;html=1;" edge="1" parent="1" source="ui" target="svc_a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="topic or POST /sync" style="endArrow=block;html=1;" edge="1" parent="1" source="svc_a" target="svc_b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="sequence" name="Sequence">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="Sequence: Create → Happy → Reject. Numbered steps; real APIs." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="560" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="a_ui" value="UI" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a_a" value="Service A" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="80" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a_b" value="Service B" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="80" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s1" value="1 Create" style="endArrow=block;html=1;" edge="1" parent="1" source="a_ui" target="a_a">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="95" y="200" as="sourcePoint" />
+            <mxPoint x="340" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2" value="2 Happy path" style="endArrow=block;html=1;" edge="1" parent="1" source="a_ui" target="a_a">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="95" y="280" as="sourcePoint" />
+            <mxPoint x="340" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s3" value="2b sync" style="endArrow=block;html=1;" edge="1" parent="1" source="a_a" target="a_b">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="400" y="320" as="sourcePoint" />
+            <mxPoint x="580" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s4" value="3 Reject 4xx" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="a_ui" target="a_a">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="95" y="400" as="sourcePoint" />
+            <mxPoint x="340" y="400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="data" name="DataIdentity">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="Data / identity: owners, id fields, ledger, event payload keys." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="560" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t" value="Service A store&#10;id=…&#10;ledger field=…" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="120" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="p" value="Service B store&#10;id=…&#10;name=…&#10;kind=…" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="420" y="120" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ev" value="Event&#10;id=…&#10;portfolioId=…&#10;portfolioKind=…" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="250" y="320" width="220" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="maps" style="endArrow=block;html=1;" edge="1" parent="1" source="t" target="ev">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="maps" style="endArrow=block;html=1;" edge="1" parent="1" source="ev" target="p">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="security" name="SecurityTrust">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="Security / trust: Bearer, owner checks, internal secret, isolation." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="560" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="idp" value="IdP / Keycloak" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="100" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="Public APIs&#10;owner-scoped" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="100" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="int" value="Internal /sync&#10;X-Internal-Secret" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="100" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iso" value="Isolation boundary&#10;(e.g. PAPER vs BROKER)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="260" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="Bearer" style="endArrow=block;html=1;" edge="1" parent="1" source="idp" target="api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="failures" name="Failures">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n" value="Failures: trigger → system behavior → user sees. Replace examples." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="560" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="f1" value="Trigger: dep miss&#10;→ 400&#10;→ cash unchanged" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="100" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="f2" value="Trigger: validation&#10;→ 400&#10;→ no write" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="320" y="100" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="f3" value="Trigger: async lag&#10;→ trade saved&#10;→ holdings may lag" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="580" y="100" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="f4" value="Trigger: kind mismatch&#10;→ reject/skip&#10;→ wrong book untouched" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="320" y="260" width="220" height="90" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

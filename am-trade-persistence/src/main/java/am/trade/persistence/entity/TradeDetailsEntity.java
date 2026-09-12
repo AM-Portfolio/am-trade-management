@@ -62,6 +62,9 @@ public class TradeDetailsEntity {
     @Indexed(unique = true)
     private String tradeId;
 
+    @Indexed(unique = true, sparse = true)
+    private String sourceOrderId;
+
     @Indexed
     private String portfolioId;
 
