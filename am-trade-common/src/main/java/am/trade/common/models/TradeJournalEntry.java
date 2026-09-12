@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,13 +20,27 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@Document(collection = "trade_journal_entries")
 public class TradeJournalEntry {
 
+    @Id
     private String id;
     private String userId;
     private String tradeId;
     private String title;
     private String content;
+    private String entryType;
+    private String journalStatus;
+    private String symbol;
+    private String setup;
+    private String tradeDirection;
+    private String folderId;
+    private String playbookId;
+    private PreTradePlan preTradePlan;
+    private TradeExecution tradeExecution;
+    private PostTradeReview postTradeReview;
+    private Double planAdherenceScore;
+    private Double checklistCompletionPct;
     private Map<String, Object> customFields;
     private LocalDateTime entryDate;
 
