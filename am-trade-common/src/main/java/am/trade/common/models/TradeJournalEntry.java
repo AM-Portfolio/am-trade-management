@@ -20,7 +20,9 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@Document(collection = "trade_journal_entries")
+// Keep camelCase collection name — local/dev DBs already store documents here.
+// Renaming to snake_case would silently empty the journal UI for existing users.
+@Document(collection = "tradeJournalEntry")
 public class TradeJournalEntry {
 
     @Id

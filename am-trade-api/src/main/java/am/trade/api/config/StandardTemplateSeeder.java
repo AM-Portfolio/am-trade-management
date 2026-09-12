@@ -49,6 +49,12 @@ public class StandardTemplateSeeder implements ApplicationRunner {
         seedIfMissing("Options Trade", JournalTemplateCategory.TRADE_RECAP,
                 "Options trade thesis, Greeks awareness, and review.",
                 optionsFields());
+        seedIfMissing("Daily Check-in", JournalTemplateCategory.DAILY_CHECKIN,
+                "Daily mood, bias, and process check-in before or after the session.",
+                dailyCheckInFields());
+        seedIfMissing("Weekly Review", JournalTemplateCategory.WEEKLY_REVIEW,
+                "Guided weekly review of process, P&L themes, and next-week focus.",
+                weeklyReviewFields());
     }
 
     private void seedIfMissing(String name, JournalTemplateCategory category, String description,
@@ -171,6 +177,26 @@ public class StandardTemplateSeeder implements ApplicationRunner {
                 "IV / premium justified",
                 "Max loss defined",
                 "Exit / roll plan ready"
+        );
+    }
+
+    private List<TemplateField> dailyCheckInFields() {
+        return checklist(
+                "Emotional state noted",
+                "Market bias written",
+                "Session goals set",
+                "Risk limits confirmed",
+                "No open unfinished plans"
+        );
+    }
+
+    private List<TemplateField> weeklyReviewFields() {
+        return checklist(
+                "Reviewed all completed trades",
+                "Top mistakes identified",
+                "Lessons captured",
+                "Plan adherence scored",
+                "Next week focus defined"
         );
     }
 }

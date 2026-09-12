@@ -36,7 +36,7 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
                 .description(request.getDescription())
                 .category(request.getCategory())
                 .fields(convertFieldRequests(request.getFields()))
-                .isSystemTemplate(request.getIsSystemTemplate() != null ? request.getIsSystemTemplate() : false)
+                .isSystemTemplate(false)
                 .isRecommended(request.getIsRecommended() != null ? request.getIsRecommended() : false)
                 .usageCount(0)
                 .createdBy(request.getCreatedBy())
@@ -73,7 +73,13 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
             throw new IllegalArgumentException("Cannot update system template");
         }
 
-        // Update fields
+        // Never allow client to promote a template to system
+        if (Boolean.TRUE.equals(request.getIsSystemTemplate())
+                && !Boolean.TRUE.equals(template.getIsSystemTemplate())) {
+            throw new IllegalArgumentException("Cannot set isSystemTemplate to true");
+        }
+
+        // Update fields — isSystemTemplate is intentionally not writable by clients
         template.setName(request.getName());
         template.setDescription(request.getDescription());
         template.setCategory(request.getCategory());

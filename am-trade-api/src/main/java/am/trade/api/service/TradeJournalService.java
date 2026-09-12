@@ -82,4 +82,9 @@ public interface TradeJournalService {
     String exportCsv(String userId, LocalDate start, LocalDate end);
 
     List<TradeJournalEntryResponse> createFromTrades(FromTradesRequest request);
+
+    /**
+     * Import journal stubs from CSV. Header must include tradeId; symbol is optional.
+     */
+    JournalImportResponse importCsv(String csvContent, Boolean createJournalStubs);
 }

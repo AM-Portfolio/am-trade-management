@@ -38,6 +38,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         log.debug("Creating journal entry for user: {}", UserContext.getUserIdOrThrow());
 
         validateRequest(request);
+        assertTradeIdOwnedIfPresent(request.getTradeId());
 
         TradeJournalEntry entry = convertToEntity(request);
         entry.setId(UUID.randomUUID().toString());
@@ -118,6 +119,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     public TradeJournalEntryResponse updateJournalEntry(String entryId, TradeJournalEntryRequest request) {
         log.debug("Updating journal entry with ID: {}", entryId);
         validateRequest(request);
+        assertTradeIdOwnedIfPresent(request.getTradeId());
 
         TradeJournalEntry existingEntry = findOwnedEntry(entryId);
 
@@ -149,14 +151,19 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         if (request.getPlaybookId() != null) {
             existingEntry.setPlaybookId(request.getPlaybookId());
         }
+        if (StringUtils.hasText(request.getTradeId())) {
+            existingEntry.setTradeId(request.getTradeId());
+        }
         if (request.getPreTradePlan() != null) {
-            existingEntry.setPreTradePlan(request.getPreTradePlan());
+            existingEntry.setPreTradePlan(mergePreTradePlan(existingEntry.getPreTradePlan(), request.getPreTradePlan()));
         }
         if (request.getTradeExecution() != null) {
-            existingEntry.setTradeExecution(request.getTradeExecution());
+            existingEntry.setTradeExecution(
+                    mergeTradeExecution(existingEntry.getTradeExecution(), request.getTradeExecution()));
         }
         if (request.getPostTradeReview() != null) {
-            existingEntry.setPostTradeReview(request.getPostTradeReview());
+            existingEntry.setPostTradeReview(
+                    mergePostTradeReview(existingEntry.getPostTradeReview(), request.getPostTradeReview()));
         }
         if (request.getPlanAdherenceScore() != null) {
             existingEntry.setPlanAdherenceScore(request.getPlanAdherenceScore());
@@ -217,7 +224,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     @Override
     public TradeJournalEntryResponse updatePrePlan(String entryId, PreTradePlan preTradePlan) {
         TradeJournalEntry entry = findOwnedEntry(entryId);
-        entry.setPreTradePlan(preTradePlan);
+        entry.setPreTradePlan(mergePreTradePlan(entry.getPreTradePlan(), preTradePlan));
         if (!StringUtils.hasText(entry.getJournalStatus())
                 || JournalStatus.DRAFT.name().equalsIgnoreCase(entry.getJournalStatus())) {
             entry.setJournalStatus(JournalStatus.PLANNED.name());
@@ -230,7 +237,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     @Override
     public TradeJournalEntryResponse updateExecution(String entryId, TradeExecution tradeExecution) {
         TradeJournalEntry entry = findOwnedEntry(entryId);
-        entry.setTradeExecution(tradeExecution);
+        entry.setTradeExecution(mergeTradeExecution(entry.getTradeExecution(), tradeExecution));
 
         String status = entry.getJournalStatus();
         if (status == null
@@ -248,7 +255,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     public TradeJournalEntryResponse updatePostReview(
             String entryId, PostTradeReview postTradeReview, Boolean markCompleted) {
         TradeJournalEntry entry = findOwnedEntry(entryId);
-        entry.setPostTradeReview(postTradeReview);
+        entry.setPostTradeReview(mergePostTradeReview(entry.getPostTradeReview(), postTradeReview));
         applyAutoCalculations(entry);
 
         if (Boolean.TRUE.equals(markCompleted)) {
@@ -609,67 +616,283 @@ public class TradeJournalServiceImpl implements TradeJournalService {
             throw new IllegalArgumentException("tradeIds are required");
         }
 
-        String userId = UserContext.getUserIdOrThrow();
         String status = StringUtils.hasText(request.getJournalStatus())
                 ? request.getJournalStatus()
                 : JournalStatus.COMPLETED.name();
 
         List<TradeJournalEntryResponse> created = new ArrayList<>();
-        LocalDateTime now = LocalDateTime.now();
-
         for (String tradeId : request.getTradeIds()) {
-            TradeDetailsEntity trade = tradeDetailsRepository.findByTradeId(tradeId)
-                    .orElseThrow(() -> new IllegalArgumentException("Trade not found with ID: " + tradeId));
-            assertTradeOwnedByCurrentUser(trade);
-
-            TradeExecution execution = new TradeExecution();
-            if (trade.getEntryInfo() != null) {
-                execution.setEntryDateTime(trade.getEntryInfo().getTimestamp());
-                if (trade.getEntryInfo().getPrice() != null) {
-                    execution.setActualEntryPrice(trade.getEntryInfo().getPrice().doubleValue());
-                }
-                if (trade.getEntryInfo().getQuantity() != null) {
-                    execution.setQuantity(trade.getEntryInfo().getQuantity().doubleValue());
-                }
-            }
-
-            PostTradeReview review = new PostTradeReview();
-            if (trade.getExitInfo() != null) {
-                review.setExitDateTime(trade.getExitInfo().getTimestamp());
-                if (trade.getExitInfo().getPrice() != null) {
-                    review.setActualExitPrice(trade.getExitInfo().getPrice().doubleValue());
-                }
-            }
-            if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
-                review.setActualPnl(trade.getMetrics().getProfitLoss().doubleValue());
-            }
-
-            TradeJournalEntry entry = TradeJournalEntry.builder()
-                    .id(UUID.randomUUID().toString())
-                    .userId(userId)
-                    .tradeId(tradeId)
-                    .title("Trade journal: " + (trade.getSymbol() != null ? trade.getSymbol() : tradeId))
-                    .entryType(JournalEntryType.TRADE_JOURNAL.name())
-                    .journalStatus(status)
-                    .symbol(trade.getSymbol())
-                    .tradeDirection(trade.getTradePositionType() != null ? trade.getTradePositionType().name() : null)
-                    .tradeExecution(execution)
-                    .postTradeReview(review)
-                    .entryDate(trade.getEntryInfo() != null && trade.getEntryInfo().getTimestamp() != null
-                            ? trade.getEntryInfo().getTimestamp()
-                            : now)
-                    .createdAt(now)
-                    .updatedAt(now)
-                    .build();
-
-            applyAutoCalculations(entry);
-            created.add(convertToResponse(tradeJournalRepository.save(entry)));
+            created.add(createStubFromTrade(tradeId, status));
         }
-
         return created;
     }
 
+    @Override
+    public JournalImportResponse importCsv(String csvContent, Boolean createJournalStubs) {
+        if (!StringUtils.hasText(csvContent)) {
+            throw new IllegalArgumentException("csv content is required");
+        }
+
+        boolean createStubs = createJournalStubs == null || Boolean.TRUE.equals(createJournalStubs);
+        String[] lines = csvContent.replace("\r\n", "\n").replace('\r', '\n').split("\n");
+        if (lines.length == 0) {
+            throw new IllegalArgumentException("csv is empty");
+        }
+
+        String headerLine = lines[0].trim();
+        if (!StringUtils.hasText(headerLine)) {
+            throw new IllegalArgumentException("csv header is required");
+        }
+
+        String[] headers = splitCsvLine(headerLine);
+        int tradeIdIdx = -1;
+        for (int i = 0; i < headers.length; i++) {
+            String h = headers[i].trim().replace("\"", "");
+            if ("tradeId".equalsIgnoreCase(h)) {
+                tradeIdIdx = i;
+            }
+        }
+        if (tradeIdIdx < 0) {
+            throw new IllegalArgumentException("csv header must include tradeId");
+        }
+
+        int created = 0;
+        List<JournalImportError> errors = new ArrayList<>();
+
+        for (int i = 1; i < lines.length; i++) {
+            String line = lines[i];
+            if (!StringUtils.hasText(line) || !StringUtils.hasText(line.trim())) {
+                continue;
+            }
+            int row = i + 1;
+            try {
+                String[] cols = splitCsvLine(line);
+                String tradeId = tradeIdIdx < cols.length ? cols[tradeIdIdx].trim().replace("\"", "") : "";
+                if (!StringUtils.hasText(tradeId)) {
+                    throw new IllegalArgumentException("tradeId is required");
+                }
+                if (createStubs) {
+                    createStubFromTrade(tradeId, JournalStatus.COMPLETED.name());
+                    created++;
+                }
+            } catch (Exception e) {
+                errors.add(JournalImportError.builder()
+                        .row(row)
+                        .message(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName())
+                        .build());
+            }
+        }
+
+        return JournalImportResponse.builder()
+                .created(created)
+                .errors(errors)
+                .build();
+    }
+
     // --- Helpers ---
+
+    private TradeJournalEntryResponse createStubFromTrade(String tradeId, String status) {
+        String userId = UserContext.getUserIdOrThrow();
+        LocalDateTime now = LocalDateTime.now();
+
+        TradeDetailsEntity trade = tradeDetailsRepository.findByTradeId(tradeId)
+                .orElseThrow(() -> new IllegalArgumentException("Trade not found with ID: " + tradeId));
+        assertTradeOwnedByCurrentUser(trade);
+
+        TradeExecution execution = new TradeExecution();
+        if (trade.getEntryInfo() != null) {
+            execution.setEntryDateTime(trade.getEntryInfo().getTimestamp());
+            if (trade.getEntryInfo().getPrice() != null) {
+                execution.setActualEntryPrice(trade.getEntryInfo().getPrice().doubleValue());
+            }
+            if (trade.getEntryInfo().getQuantity() != null) {
+                execution.setQuantity(trade.getEntryInfo().getQuantity().doubleValue());
+            }
+        }
+
+        PostTradeReview review = new PostTradeReview();
+        if (trade.getExitInfo() != null) {
+            review.setExitDateTime(trade.getExitInfo().getTimestamp());
+            if (trade.getExitInfo().getPrice() != null) {
+                review.setActualExitPrice(trade.getExitInfo().getPrice().doubleValue());
+            }
+        }
+        if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
+            review.setActualPnl(trade.getMetrics().getProfitLoss().doubleValue());
+        }
+
+        TradeJournalEntry entry = TradeJournalEntry.builder()
+                .id(UUID.randomUUID().toString())
+                .userId(userId)
+                .tradeId(tradeId)
+                .title("Trade journal: " + (trade.getSymbol() != null ? trade.getSymbol() : tradeId))
+                .entryType(JournalEntryType.TRADE_JOURNAL.name())
+                .journalStatus(status)
+                .symbol(trade.getSymbol())
+                .tradeDirection(trade.getTradePositionType() != null ? trade.getTradePositionType().name() : null)
+                .tradeExecution(execution)
+                .postTradeReview(review)
+                .entryDate(trade.getEntryInfo() != null && trade.getEntryInfo().getTimestamp() != null
+                        ? trade.getEntryInfo().getTimestamp()
+                        : now)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        applyAutoCalculations(entry);
+        return convertToResponse(tradeJournalRepository.save(entry));
+    }
+
+    private PreTradePlan mergePreTradePlan(PreTradePlan existing, PreTradePlan incoming) {
+        if (incoming == null) {
+            return existing;
+        }
+        if (existing == null) {
+            existing = new PreTradePlan();
+        }
+        if (incoming.getSetupDescription() != null) {
+            existing.setSetupDescription(incoming.getSetupDescription());
+        }
+        if (incoming.getEntryRationale() != null) {
+            existing.setEntryRationale(incoming.getEntryRationale());
+        }
+        if (incoming.getMarketContext() != null) {
+            existing.setMarketContext(incoming.getMarketContext());
+        }
+        if (incoming.getStrategy() != null) {
+            existing.setStrategy(incoming.getStrategy());
+        }
+        if (incoming.getSetup() != null) {
+            existing.setSetup(incoming.getSetup());
+        }
+        if (incoming.getPlannedEntryPrice() != null) {
+            existing.setPlannedEntryPrice(incoming.getPlannedEntryPrice());
+        }
+        if (incoming.getPlannedStopLoss() != null) {
+            existing.setPlannedStopLoss(incoming.getPlannedStopLoss());
+        }
+        if (incoming.getPlannedTarget() != null) {
+            existing.setPlannedTarget(incoming.getPlannedTarget());
+        }
+        if (incoming.getPlannedQuantity() != null) {
+            existing.setPlannedQuantity(incoming.getPlannedQuantity());
+        }
+        if (incoming.getPlannedRiskAmount() != null) {
+            existing.setPlannedRiskAmount(incoming.getPlannedRiskAmount());
+        }
+        if (incoming.getPlannedRiskPercent() != null) {
+            existing.setPlannedRiskPercent(incoming.getPlannedRiskPercent());
+        }
+        if (incoming.getPlannedRRRatio() != null) {
+            existing.setPlannedRRRatio(incoming.getPlannedRRRatio());
+        }
+        if (incoming.getSetupChecklist() != null) {
+            existing.setSetupChecklist(incoming.getSetupChecklist());
+        }
+        if (incoming.getConfirmedChecklistItems() != null) {
+            existing.setConfirmedChecklistItems(incoming.getConfirmedChecklistItems());
+        }
+        return existing;
+    }
+
+    private TradeExecution mergeTradeExecution(TradeExecution existing, TradeExecution incoming) {
+        if (incoming == null) {
+            return existing;
+        }
+        if (existing == null) {
+            existing = new TradeExecution();
+        }
+        if (incoming.getEntryDateTime() != null) {
+            existing.setEntryDateTime(incoming.getEntryDateTime());
+        }
+        if (incoming.getActualEntryPrice() != null) {
+            existing.setActualEntryPrice(incoming.getActualEntryPrice());
+        }
+        if (incoming.getQuantity() != null) {
+            existing.setQuantity(incoming.getQuantity());
+        }
+        if (incoming.getBroker() != null) {
+            existing.setBroker(incoming.getBroker());
+        }
+        if (incoming.getOrderType() != null) {
+            existing.setOrderType(incoming.getOrderType());
+        }
+        if (incoming.getExternalOrderId() != null) {
+            existing.setExternalOrderId(incoming.getExternalOrderId());
+        }
+        if (incoming.getNotes() != null) {
+            existing.setNotes(incoming.getNotes());
+        }
+        return existing;
+    }
+
+    private PostTradeReview mergePostTradeReview(PostTradeReview existing, PostTradeReview incoming) {
+        if (incoming == null) {
+            return existing;
+        }
+        if (existing == null) {
+            existing = new PostTradeReview();
+        }
+        if (incoming.getExitDateTime() != null) {
+            existing.setExitDateTime(incoming.getExitDateTime());
+        }
+        if (incoming.getActualExitPrice() != null) {
+            existing.setActualExitPrice(incoming.getActualExitPrice());
+        }
+        if (incoming.getActualPnl() != null) {
+            existing.setActualPnl(incoming.getActualPnl());
+        }
+        if (incoming.getActualRMultiple() != null) {
+            existing.setActualRMultiple(incoming.getActualRMultiple());
+        }
+        if (incoming.getFollowedStopLoss() != null) {
+            existing.setFollowedStopLoss(incoming.getFollowedStopLoss());
+        }
+        if (incoming.getFollowedTarget() != null) {
+            existing.setFollowedTarget(incoming.getFollowedTarget());
+        }
+        if (incoming.getTradeOutcome() != null) {
+            existing.setTradeOutcome(incoming.getTradeOutcome());
+        }
+        if (incoming.getWhatWentWell() != null) {
+            existing.setWhatWentWell(incoming.getWhatWentWell());
+        }
+        if (incoming.getWhatCouldBeImproved() != null) {
+            existing.setWhatCouldBeImproved(incoming.getWhatCouldBeImproved());
+        }
+        if (incoming.getLessonLearned() != null) {
+            existing.setLessonLearned(incoming.getLessonLearned());
+        }
+        if (incoming.getMistakeCategory() != null) {
+            existing.setMistakeCategory(incoming.getMistakeCategory());
+        }
+        if (incoming.getExecutionScore() != null) {
+            existing.setExecutionScore(incoming.getExecutionScore());
+        }
+        if (incoming.getEmotionalState() != null) {
+            existing.setEmotionalState(incoming.getEmotionalState());
+        }
+        if (incoming.getPostChecklist() != null) {
+            existing.setPostChecklist(incoming.getPostChecklist());
+        }
+        if (incoming.getCompletedChecklistItems() != null) {
+            existing.setCompletedChecklistItems(incoming.getCompletedChecklistItems());
+        }
+        return existing;
+    }
+
+    private void assertTradeIdOwnedIfPresent(String tradeId) {
+        if (!StringUtils.hasText(tradeId)) {
+            return;
+        }
+        TradeDetailsEntity trade = tradeDetailsRepository.findByTradeId(tradeId)
+                .orElseThrow(() -> new IllegalArgumentException("Trade not found with ID: " + tradeId));
+        assertTradeOwnedByCurrentUser(trade);
+    }
+
+    private String[] splitCsvLine(String line) {
+        return line.split(",", -1);
+    }
 
     TradeJournalEntry convertToEntity(TradeJournalEntryRequest request) {
         return TradeJournalEntry.builder()

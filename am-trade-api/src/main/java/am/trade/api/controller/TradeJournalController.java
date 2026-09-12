@@ -242,6 +242,39 @@ public class TradeJournalController {
         }
     }
 
+    @Operation(summary = "Import journal stubs from CSV (JSON body with csv text)")
+    @PostMapping(value = "/import", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> importCsvJson(@RequestBody JournalImportRequest request) {
+        try {
+            String csv = request != null ? request.getCsv() : null;
+            Boolean createStubs = request != null ? request.getCreateJournalStubs() : Boolean.TRUE;
+            return ResponseEntity.ok(tradeJournalService.importCsv(csv, createStubs));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.badRequest(e.getMessage(), "/api/v1/journal/import"));
+        }
+    }
+
+    @Operation(summary = "Import journal stubs from CSV file upload")
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Object> importCsvFile(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(required = false, defaultValue = "true") Boolean createJournalStubs) {
+        try {
+            if (file == null || file.isEmpty()) {
+                throw new IllegalArgumentException("file is required");
+            }
+            String csv = new String(file.getBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            return ResponseEntity.ok(tradeJournalService.importCsv(csv, createJournalStubs));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.badRequest(e.getMessage(), "/api/v1/journal/import"));
+        } catch (java.io.IOException e) {
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.badRequest("Failed to read uploaded file", "/api/v1/journal/import"));
+        }
+    }
+
     @Operation(summary = "Bulk archive journal entries")
     @PostMapping("/bulk/archive")
     public ResponseEntity<Object> bulkArchive(@Valid @RequestBody JournalBulkRequest request) {
