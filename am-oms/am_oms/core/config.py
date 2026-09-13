@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     journal_base_url: str = Field(default="http://am-trade-management-service:8080", alias="AM_TRADE_JOURNAL_BASE_URL")
     market_base_url: str = Field(default="", alias="AM_MARKET_BASE_URL")
     market_ohlc_path: str = Field(default="/v1/market-data/ohlc", alias="AM_MARKET_OHLC_PATH")
+    market_calendar_status_path: str = Field(
+        default="/v1/market-calendar/status", alias="AM_MARKET_CALENDAR_STATUS_PATH"
+    )
+    matcher_http_timeout: float = Field(default=3.0, alias="AM_OMS_MATCHER_HTTP_TIMEOUT")
+    matcher_tick_budget: float = Field(default=8.0, alias="AM_OMS_MATCHER_TICK_BUDGET")
+    calendar_cache_seconds: float = Field(default=20.0, alias="AM_OMS_CALENDAR_CACHE_SECONDS")
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
 
     @computed_field  # type: ignore[prop-decorator]

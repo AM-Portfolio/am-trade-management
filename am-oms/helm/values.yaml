@@ -58,6 +58,10 @@ env:
   TZ: Asia/Kolkata
   KAFKA_ENABLED: "true"
   AM_OMS_FILLS_TOPIC: am-oms-fills
+  AM_MARKET_CALENDAR_STATUS_PATH: /v1/market-calendar/status
+  AM_OMS_MATCHER_HTTP_TIMEOUT: "3"
+  AM_OMS_MATCHER_TICK_BUDGET: "8"
+  AM_OMS_CALENDAR_CACHE_SECONDS: "20"
 
 probes:
   port: 8080

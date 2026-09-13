@@ -104,6 +104,8 @@ class OrderCreateRequest(BaseModel):
     trailJump: str | None = None
     entryType: OrderType | None = None
     option: OptionLeg | None = None
+    amo: bool = False
+    productMode: str | None = None
 
 
 class OrderResponse(BaseModel):
@@ -146,6 +148,19 @@ class PositionResponse(BaseModel):
 
 class PositionListResponse(BaseModel):
     items: list[PositionResponse]
+
+
+class CancelAllResponse(BaseModel):
+    cancelled: int
+
+
+class PrefsResponse(BaseModel):
+    ownerId: str
+    orderTypeFavorite: str
+
+
+class PrefsUpdateRequest(BaseModel):
+    orderTypeFavorite: str
 
 
 def now() -> datetime:
