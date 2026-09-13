@@ -36,6 +36,7 @@ public class TradeDistributionMetricsService {
         
         // Group trades by various dimensions
         Map<String, List<TradeDetails>> tradesByDay = new HashMap<>();
+        Map<String, List<TradeDetails>> tradesByHour = new HashMap<>();
         Map<String, List<TradeDetails>> tradesByMonth = new HashMap<>();
         Map<String, List<TradeDetails>> tradesByAssetClass = new HashMap<>();
         Map<String, List<TradeDetails>> tradesByStrategy = new HashMap<>();
@@ -52,6 +53,10 @@ public class TradeDistributionMetricsService {
             // Group by day of week
             String dayOfWeek = trade.getEntryInfo().getTimestamp().getDayOfWeek().toString();
             tradesByDay.computeIfAbsent(dayOfWeek, k -> new ArrayList<>()).add(trade);
+
+            // Group by entry hour of day (0–23, exchange-local timestamp as stored)
+            String hour = String.valueOf(trade.getEntryInfo().getTimestamp().getHour());
+            tradesByHour.computeIfAbsent(hour, k -> new ArrayList<>()).add(trade);
             
             // Group by month
             String month = trade.getEntryInfo().getTimestamp().getMonth().toString();
@@ -78,13 +83,15 @@ public class TradeDistributionMetricsService {
         
         // Calculate performance by day of week
         Map<String, BigDecimal> profitByDay = calculateProfitByCategory(tradesByDay);
-        // Win rate by day calculated but not stored as there's no corresponding field in the domain model
-        calculateWinRateByCategory(tradesByDay);
+        Map<String, BigDecimal> winRateByDay = calculateWinRateByCategory(tradesByDay);
+
+        // Calculate performance by hour of day
+        Map<String, BigDecimal> profitByHour = calculateProfitByCategory(tradesByHour);
+        Map<String, BigDecimal> winRateByHour = calculateWinRateByCategory(tradesByHour);
         
         // Calculate performance by month
         Map<String, BigDecimal> profitByMonth = calculateProfitByCategory(tradesByMonth);
-        // Win rate by month calculated but not stored as there's no corresponding field in the domain model
-        calculateWinRateByCategory(tradesByMonth);
+        Map<String, BigDecimal> winRateByMonth = calculateWinRateByCategory(tradesByMonth);
         
         // Calculate performance by asset class
         Map<String, BigDecimal> profitByAssetClass = calculateProfitByCategory(tradesByAssetClass);
@@ -105,10 +112,15 @@ public class TradeDistributionMetricsService {
         // Set metrics
         metrics.setTradesByDay(convertToTradeCount(tradesByDay));
         metrics.setProfitByDay(profitByDay);
-        // No setWinRateByDay method in TradeDistributionMetrics domain model
+        metrics.setWinRateByDay(winRateByDay);
+
+        metrics.setTradesByHour(convertToTradeCount(tradesByHour));
+        metrics.setProfitByHour(profitByHour);
+        metrics.setWinRateByHour(winRateByHour);
         
         metrics.setTradesByMonth(convertToTradeCount(tradesByMonth));
         metrics.setProfitByMonth(profitByMonth);
+        metrics.setWinRateByMonth(winRateByMonth);
         
         // Convert string-based maps to enum-based maps for asset class
         Map<AssetClass, Integer> tradeCountByAssetClass = new HashMap<>();

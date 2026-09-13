@@ -31,6 +31,11 @@ public class TradeDistributionMetrics {
     private Map<String, BigDecimal> profitByHour;
     private Map<String, BigDecimal> profitByMonth;
     private Map<String, BigDecimal> profitByQuarter;
+
+    // Win rate by time period (percent 0–100)
+    private Map<String, BigDecimal> winRateByDay;
+    private Map<String, BigDecimal> winRateByHour;
+    private Map<String, BigDecimal> winRateByMonth;
     
     // Asset class distribution
     private Map<AssetClass, Integer> tradeCountByAssetClass;
