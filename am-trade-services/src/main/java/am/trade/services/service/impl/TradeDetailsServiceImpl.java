@@ -445,4 +445,29 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
                 .map(tradeDetailsMapper::toTradeDetails)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public long backfillMissingUserId(String portfolioId, String userId) {
+        if (portfolioId == null || portfolioId.isBlank() || userId == null || userId.isBlank()) {
+            return 0L;
+        }
+        org.springframework.data.mongodb.core.query.Query query =
+                new org.springframework.data.mongodb.core.query.Query();
+        query.addCriteria(org.springframework.data.mongodb.core.query.Criteria.where("portfolioId").is(portfolioId)
+                .andOperator(new org.springframework.data.mongodb.core.query.Criteria().orOperator(
+                        org.springframework.data.mongodb.core.query.Criteria.where("userId").exists(false),
+                        org.springframework.data.mongodb.core.query.Criteria.where("userId").is(null),
+                        org.springframework.data.mongodb.core.query.Criteria.where("userId").is(""))));
+        org.springframework.data.mongodb.core.query.Update update =
+                new org.springframework.data.mongodb.core.query.Update().set("userId", userId);
+        com.mongodb.client.result.UpdateResult result =
+                mongoTemplate.updateMulti(query, update, TradeDetailsEntity.class);
+        long modified = result.getModifiedCount();
+        if (modified > 0) {
+            log.info("Backfilled userId={} on {} trade_details rows for portfolioId={}",
+                    userId, modified, portfolioId);
+        }
+        return modified;
+    }
 }

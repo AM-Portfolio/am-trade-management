@@ -139,4 +139,10 @@ public interface TradeDetailsService {
     Optional<TradeDetails> findBySourceOrderId(String sourceOrderId);
 
     List<TradeDetails> findModelsByPortfolioIdAndSymbol(String portfolioId, String symbol);
+
+    /**
+     * Assign {@code userId} to trades in a portfolio that were saved without an owner
+     * (e.g. older Kafka doc-parser imports). Returns how many documents were updated.
+     */
+    long backfillMissingUserId(String portfolioId, String userId);
 }
