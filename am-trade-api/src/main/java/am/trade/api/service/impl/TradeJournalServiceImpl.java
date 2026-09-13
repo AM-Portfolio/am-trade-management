@@ -12,6 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
@@ -56,6 +60,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @Cacheable(value = "trade-journals", key = "#entryId")
     public TradeJournalEntryResponse getJournalEntry(String entryId) {
         log.debug("Getting journal entry with ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
@@ -116,6 +121,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CachePut(value = "trade-journals", key = "#entryId")
     public TradeJournalEntryResponse updateJournalEntry(String entryId, TradeJournalEntryRequest request) {
         log.debug("Updating journal entry with ID: {}", entryId);
         validateRequest(request);
@@ -214,6 +220,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CacheEvict(value = "trade-journals", key = "#entryId")
     public void deleteJournalEntry(String entryId) {
         log.debug("Deleting journal entry with ID: {}", entryId);
         findOwnedEntry(entryId);
@@ -222,7 +229,9 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CachePut(value = "trade-journals", key = "#entryId")
     public TradeJournalEntryResponse updatePrePlan(String entryId, PreTradePlan preTradePlan) {
+        log.debug("Updating pre-trade plan for journal entry ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
         entry.setPreTradePlan(mergePreTradePlan(entry.getPreTradePlan(), preTradePlan));
         if (!StringUtils.hasText(entry.getJournalStatus())
@@ -235,7 +244,9 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CachePut(value = "trade-journals", key = "#entryId")
     public TradeJournalEntryResponse updateExecution(String entryId, TradeExecution tradeExecution) {
+        log.debug("Updating trade execution for journal entry ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
         entry.setTradeExecution(mergeTradeExecution(entry.getTradeExecution(), tradeExecution));
 
@@ -252,8 +263,10 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CachePut(value = "trade-journals", key = "#entryId")
     public TradeJournalEntryResponse updatePostReview(
             String entryId, PostTradeReview postTradeReview, Boolean markCompleted) {
+        log.debug("Updating post-trade review for journal entry ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
         entry.setPostTradeReview(mergePostTradeReview(entry.getPostTradeReview(), postTradeReview));
         applyAutoCalculations(entry);
@@ -267,7 +280,9 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CachePut(value = "trade-journals", key = "#entryId")
     public TradeJournalEntryResponse linkTrade(String entryId, String tradeId) {
+        log.debug("Linking trade ID: {} to journal entry ID: {}", tradeId, entryId);
         if (!StringUtils.hasText(tradeId)) {
             throw new IllegalArgumentException("tradeId is required");
         }
@@ -504,7 +519,9 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CachePut(value = "trade-journals", key = "#entryId")
     public TradeJournalEntryResponse addAttachment(String entryId, JournalAttachmentRequest request) {
+        log.debug("Adding attachment to journal entry ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
         if (request == null || !StringUtils.hasText(request.getFileUrl())) {
             throw new IllegalArgumentException("fileUrl is required for attachment");
@@ -529,7 +546,9 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CachePut(value = "trade-journals", key = "#entryId")
     public TradeJournalEntryResponse removeAttachment(String entryId, String fileUrl) {
+        log.debug("Removing attachment from journal entry ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
         if (entry.getAttachments() != null) {
             entry.getAttachments().removeIf(a -> Objects.equals(a.getFileUrl(), fileUrl));
@@ -1096,6 +1115,9 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     private void validateRequest(TradeJournalEntryRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request cannot be null");
+        }
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("Title is required");
         }
