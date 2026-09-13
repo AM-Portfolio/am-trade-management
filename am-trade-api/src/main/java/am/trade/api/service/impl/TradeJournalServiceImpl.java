@@ -1096,6 +1096,9 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     private void validateRequest(TradeJournalEntryRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request cannot be null");
+        }
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("Title is required");
         }
