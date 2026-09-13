@@ -38,6 +38,7 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
     private final TradeDistributionMetricsService distributionMetricsService;
     private final TradeTimingMetricsService timingMetricsService;
     private final TradePatternMetricsService patternMetricsService;
+    private final StrategyMetricsService strategyMetricsService;
 
     private static final List<String> AVAILABLE_METRIC_TYPES = Arrays.asList(
         "PERFORMANCE", "RISK", "DISTRIBUTION", "TIMING", "PATTERN", "STRATEGY", 
@@ -599,8 +600,7 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
         }
         
         if (metricTypes.contains("STRATEGY")) {
-            // Assuming there's a method to calculate strategy metrics
-            // response.setStrategyMetrics(strategyMetricsService.calculateMetrics(trades));
+            response.setStrategyMetrics(strategyMetricsService.calculateMetrics(trades));
         }
         
         if (metricTypes.contains("FREQUENCY")) {

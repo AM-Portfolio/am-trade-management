@@ -36,7 +36,7 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
                 .description(request.getDescription())
                 .category(request.getCategory())
                 .fields(convertFieldRequests(request.getFields()))
-                .isSystemTemplate(request.getIsSystemTemplate() != null ? request.getIsSystemTemplate() : false)
+                .isSystemTemplate(false)
                 .isRecommended(request.getIsRecommended() != null ? request.getIsRecommended() : false)
                 .usageCount(0)
                 .createdBy(request.getCreatedBy())
@@ -73,7 +73,13 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
             throw new IllegalArgumentException("Cannot update system template");
         }
 
-        // Update fields
+        // Never allow client to promote a template to system
+        if (Boolean.TRUE.equals(request.getIsSystemTemplate())
+                && !Boolean.TRUE.equals(template.getIsSystemTemplate())) {
+            throw new IllegalArgumentException("Cannot set isSystemTemplate to true");
+        }
+
+        // Update fields — isSystemTemplate is intentionally not writable by clients
         template.setName(request.getName());
         template.setDescription(request.getDescription());
         template.setCategory(request.getCategory());
@@ -192,6 +198,8 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
 
         JournalTemplate template = findTemplateById(request.getTemplateId());
 
+        validateRequiredFields(template, request.getFieldValues());
+
         // Increment usage count
         template.setUsageCount(template.getUsageCount() != null ? template.getUsageCount() + 1 : 1);
         template.setUpdatedAt(LocalDateTime.now());
@@ -201,12 +209,15 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
         String content = buildJournalContent(template, request.getFieldValues());
         String title = request.getCustomTitle() != null ? request.getCustomTitle() : template.getName();
 
-        // Create journal entry
+        // Create journal entry — playbookId references the template used
         TradeJournalEntryRequest journalRequest = TradeJournalEntryRequest.builder()
                 .tradeId(request.getTradeId())
                 .title(title)
                 .content(content)
                 .customFields(request.getFieldValues())
+                .playbookId(template.getId())
+                .entryType(am.trade.common.models.JournalEntryType.TRADE_JOURNAL.name())
+                .journalStatus(am.trade.common.models.JournalStatus.PLANNED.name())
                 .entryDate(LocalDateTime.now())
                 .build();
 
@@ -214,6 +225,31 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
         log.info("Journal entry created from template {} with ID: {}", template.getId(), journalEntry.getId());
 
         return journalEntry;
+    }
+
+    /**
+     * Ensure all TemplateField.required fields have non-empty values before creating an entry.
+     */
+    private void validateRequiredFields(JournalTemplate template, Map<String, Object> fieldValues) {
+        if (template.getFields() == null || template.getFields().isEmpty()) {
+            return;
+        }
+
+        List<String> missing = new ArrayList<>();
+        for (TemplateField field : template.getFields()) {
+            if (!Boolean.TRUE.equals(field.getRequired())) {
+                continue;
+            }
+            Object value = fieldValues != null ? fieldValues.get(field.getFieldId()) : null;
+            if (value == null || value.toString().trim().isEmpty()) {
+                missing.add(field.getFieldLabel() != null ? field.getFieldLabel() : field.getFieldId());
+            }
+        }
+
+        if (!missing.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Missing required template fields: " + String.join(", ", missing));
+        }
     }
 
     // --- Helper Methods ---

@@ -153,3 +153,6 @@ am-trade-app/src/main/resources/application-local.yml
 
 # SPT Test Files
 spt/
+
+# Application logs
+logs/

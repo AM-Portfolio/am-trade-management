@@ -13,50 +13,82 @@ import java.util.List;
  * Repository for trade journal entries
  */
 @Repository
-public interface TradeJournalRepository extends MongoRepository<TradeJournalEntry, String> {
-    
+public interface TradeJournalRepository extends MongoRepository<TradeJournalEntry, String>, TradeJournalRepositoryCustom {
+
     /**
      * Find journal entries by user ID ordered by entry date descending
-     * 
-     * @param userId User ID
-     * @param pageable Pagination information
-     * @return Page of journal entries
      */
     Page<TradeJournalEntry> findByUserIdOrderByEntryDateDesc(String userId, Pageable pageable);
-    
+
     /**
      * Find journal entries by trade ID ordered by entry date descending
-     * 
-     * @param tradeId Trade ID
-     * @return List of journal entries
      */
     List<TradeJournalEntry> findByTradeIdOrderByEntryDateDesc(String tradeId);
-    
+
+    /**
+     * Find journal entries by user ID and trade ID
+     */
+    List<TradeJournalEntry> findByUserIdAndTradeIdOrderByEntryDateDesc(String userId, String tradeId);
+
     /**
      * Find journal entries by user ID and date range ordered by entry date descending
-     * 
-     * @param userId User ID
-     * @param startDate Start date
-     * @param endDate End date
-     * @param pageable Pagination information
-     * @return Page of journal entries
      */
     Page<TradeJournalEntry> findByUserIdAndEntryDateBetweenOrderByEntryDateDesc(
             String userId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
-    
+
+    /**
+     * Find all journal entries for a user in a date range (no pagination)
+     */
+    List<TradeJournalEntry> findByUserIdAndEntryDateBetween(
+            String userId, LocalDateTime startDate, LocalDateTime endDate);
+
+    /**
+     * Find by user and journal status
+     */
+    List<TradeJournalEntry> findByUserIdAndJournalStatus(String userId, String journalStatus);
+
+    /**
+     * Find by user and entry type
+     */
+    List<TradeJournalEntry> findByUserIdAndEntryType(String userId, String entryType);
+
+    /**
+     * Find by user and symbol (case-insensitive)
+     */
+    List<TradeJournalEntry> findByUserIdAndSymbolIgnoreCase(String userId, String symbol);
+
+    /**
+     * Find by user and folder
+     */
+    List<TradeJournalEntry> findByUserIdAndFolderId(String userId, String folderId);
+
+    /**
+     * Find by user and playbook
+     */
+    List<TradeJournalEntry> findByUserIdAndPlaybookId(String userId, String playbookId);
+
+    /**
+     * Find by user and tag IDs containing any of the given tags
+     */
+    List<TradeJournalEntry> findByUserIdAndTagIdsIn(String userId, List<String> tagIds);
+
+    /**
+     * Find entries by IDs owned by user
+     */
+    List<TradeJournalEntry> findByUserIdAndIdIn(String userId, List<String> ids);
+
     /**
      * Count journal entries by user ID
-     * 
-     * @param userId User ID
-     * @return Count of journal entries
      */
     long countByUserId(String userId);
-    
+
     /**
      * Count journal entries by trade ID
-     * 
-     * @param tradeId Trade ID
-     * @return Count of journal entries
      */
     long countByTradeId(String tradeId);
+
+    /**
+     * Count by user and status
+     */
+    long countByUserIdAndJournalStatus(String userId, String journalStatus);
 }
