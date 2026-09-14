@@ -328,12 +328,41 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
             LocalDateTime endDateTime) {
         
         // Basic query by portfolio IDs and date range - already returns domain models
-        List<TradeDetails> trades = tradeDetailsService.findByPortfolioIdInAndEntryInfoTimestampBetween(
-                filterRequest.getPortfolioIds(), startDateTime, endDateTime);
-        
-        // Apply additional filters if needed
-        
-        // Return the trades directly since they're already domain models
+        List<TradeDetails> trades = new ArrayList<>(
+                tradeDetailsService.findByPortfolioIdInAndEntryInfoTimestampBetween(
+                        filterRequest.getPortfolioIds(), startDateTime, endDateTime));
+
+        // Mongo `$gte/$lte` on entryInfo.timestamp excludes documents where timestamp is null.
+        // Broker "Imported Holding" rows often lack an entry timestamp, which emptied Analysis
+        // (totalTradesCount=0) even though Holdings still listed the same positions.
+        // Include those rows; session bucketing already tracks skippedMissingEntryCount.
+        List<TradeDetails> allForPortfolios =
+                tradeDetailsService.findByPortfolioIdIn(filterRequest.getPortfolioIds());
+        if (allForPortfolios == null || allForPortfolios.isEmpty()) {
+            return trades;
+        }
+
+        Set<String> seenIds = trades.stream()
+                .map(TradeDetails::getTradeId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(HashSet::new));
+
+        for (TradeDetails trade : allForPortfolios) {
+            String tradeId = trade.getTradeId();
+            if (tradeId != null && seenIds.contains(tradeId)) {
+                continue;
+            }
+            LocalDateTime entryTs = trade.getEntryInfo() != null
+                    ? trade.getEntryInfo().getTimestamp()
+                    : null;
+            if (entryTs == null) {
+                trades.add(trade);
+                if (tradeId != null) {
+                    seenIds.add(tradeId);
+                }
+            }
+        }
+
         return trades;
     }
     
