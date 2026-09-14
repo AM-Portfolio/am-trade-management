@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from am_platform_common import APIException, InternalServerError, LoggingMiddleware, setup_logging
-from am_oms.api.routers import orders, wallets
+from am_oms.api.routers import orders, prefs, wallets
 from am_oms.core.config import get_settings
 from am_oms.core.database import close_db, get_database, init_db, ping_db
 from am_oms.deps import get_clients
@@ -54,3 +54,4 @@ async def ready() -> dict:
 
 app.include_router(wallets)
 app.include_router(orders)
+app.include_router(prefs)

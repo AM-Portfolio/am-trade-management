@@ -13,7 +13,10 @@ async def init_db() -> None:
     await _db.wallets.create_index([("ownerId", 1), ("kind", 1)], unique=True)
     await _db.orders.create_index([("ownerId", 1), ("idempotencyKey", 1)], unique=True)
     await _db.orders.create_index("orderId", unique=True)
+    await _db.orders.create_index([("venue", 1), ("status", 1), ("symbol", 1)])
+    await _db.orders.create_index([("ownerId", 1), ("walletId", 1), ("createdAt", -1)])
     await _db.positions.create_index([("walletId", 1), ("symbol", 1)], unique=True)
+    await _db.prefs.create_index("ownerId", unique=True)
 
 
 def get_database() -> AsyncIOMotorDatabase:
