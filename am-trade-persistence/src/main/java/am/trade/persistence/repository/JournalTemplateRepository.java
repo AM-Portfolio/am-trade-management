@@ -26,4 +26,8 @@ public interface JournalTemplateRepository extends MongoRepository<JournalTempla
     List<JournalTemplate> findByNameContainingIgnoreCase(String name);
 
     List<JournalTemplate> findByTagsContaining(String tag);
+
+    java.util.Optional<JournalTemplate> findByName(String name);
+
+    boolean existsByName(String name);
 }

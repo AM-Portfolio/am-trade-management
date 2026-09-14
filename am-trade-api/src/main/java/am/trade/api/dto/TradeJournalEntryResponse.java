@@ -2,6 +2,9 @@ package am.trade.api.dto;
 
 import am.trade.common.models.Attachment;
 import am.trade.common.models.BehaviorPatternSummary;
+import am.trade.common.models.PreTradePlan;
+import am.trade.common.models.PostTradeReview;
+import am.trade.common.models.TradeExecution;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -38,6 +41,42 @@ public class TradeJournalEntryResponse {
 
     @Schema(description = "Journal entry content/body")
     private String content;
+
+    @Schema(description = "Entry type")
+    private String entryType;
+
+    @Schema(description = "Journal status")
+    private String journalStatus;
+
+    @Schema(description = "Symbol for the trade setup")
+    private String symbol;
+
+    @Schema(description = "Setup identifier")
+    private String setup;
+
+    @Schema(description = "Trade direction (LONG/SHORT)")
+    private String tradeDirection;
+
+    @Schema(description = "Folder ID for organizing journal entries")
+    private String folderId;
+
+    @Schema(description = "Playbook/template ID associated with this entry")
+    private String playbookId;
+
+    @Schema(description = "Pre-trade plan details")
+    private PreTradePlan preTradePlan;
+
+    @Schema(description = "Actual trade execution details")
+    private TradeExecution tradeExecution;
+
+    @Schema(description = "Post-trade review details")
+    private PostTradeReview postTradeReview;
+
+    @Schema(description = "Plan adherence score (0-100)")
+    private Double planAdherenceScore;
+
+    @Schema(description = "Checklist completion percentage (0-100)")
+    private Double checklistCompletionPct;
 
     @Schema(description = "Custom fields for extensibility")
     private Map<String, Object> customFields;

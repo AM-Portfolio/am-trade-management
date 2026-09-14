@@ -2,6 +2,9 @@ package am.trade.api.dto;
 
 import am.trade.common.models.Attachment;
 import am.trade.common.models.BehaviorPatternSummary;
+import am.trade.common.models.PreTradePlan;
+import am.trade.common.models.PostTradeReview;
+import am.trade.common.models.TradeExecution;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,8 +32,21 @@ public class TradeJournalEntryRequest {
     @NotBlank(message = "Title is required")
     private String title;
 
-    @NotBlank(message = "Content is required")
     private String content;
+
+    private String entryType;
+    private String journalStatus;
+    private String symbol;
+    private String setup;
+    private String tradeDirection;
+    private String folderId;
+    private String playbookId;
+
+    private PreTradePlan preTradePlan;
+    private TradeExecution tradeExecution;
+    private PostTradeReview postTradeReview;
+    private Double planAdherenceScore;
+    private Double checklistCompletionPct;
 
     private Map<String, Object> customFields;
 

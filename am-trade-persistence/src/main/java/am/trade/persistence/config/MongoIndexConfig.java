@@ -150,10 +150,165 @@ public class MongoIndexConfig {
         }
 
         if (failed == 0) {
-            log.info("MongoDB index setup complete: {}/{} indexes OK.", created, created + failed);
+            log.info("MongoDB index setup complete for trade_details: {}/{} indexes OK.", created, created + failed);
         } else {
-            log.warn("MongoDB index setup complete with issues: {}/{} indexes OK, {} FAILED. " +
+            log.warn("MongoDB index setup complete with issues for trade_details: {}/{} indexes OK, {} FAILED. " +
                      "Check logs above for details.", created, created + failed, failed);
+        }
+
+        createTradeJournalIndexes();
+    }
+
+    private void createTradeJournalIndexes() {
+        log.info("Creating MongoDB indexes for tradeJournalEntry collection...");
+        IndexOperations journalOps = mongoTemplate.indexOps("tradeJournalEntry");
+        int created = 0;
+        int failed = 0;
+
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("userId", Sort.Direction.ASC)
+                    .on("entryDate", Sort.Direction.DESC)
+                    .named("idx_journal_user_entry_date")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_user_entry_date");
+        } catch (Exception e) {
+            failed++;
+            log.error("[ERROR] idx_journal_user_entry_date FAILED", e);
+        }
+
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("userId", Sort.Direction.ASC)
+                    .on("journalStatus", Sort.Direction.ASC)
+                    .named("idx_journal_user_status")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_user_status");
+        } catch (Exception e) {
+            failed++;
+            log.error("[ERROR] idx_journal_user_status FAILED", e);
+        }
+
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("userId", Sort.Direction.ASC)
+                    .on("symbol", Sort.Direction.ASC)
+                    .named("idx_journal_user_symbol")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_user_symbol");
+        } catch (Exception e) {
+            failed++;
+            log.error("[ERROR] idx_journal_user_symbol FAILED", e);
+        }
+
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("tradeId", Sort.Direction.ASC)
+                    .named("idx_journal_trade_id")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_trade_id");
+        } catch (Exception e) {
+            failed++;
+            log.error("[ERROR] idx_journal_trade_id FAILED", e);
+        }
+
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("folderId", Sort.Direction.ASC)
+                    .named("idx_journal_folder_id")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_folder_id");
+        } catch (Exception e) {
+            failed++;
+            log.error("[ERROR] idx_journal_folder_id FAILED", e);
+        }
+
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("userId", Sort.Direction.ASC)
+                    .on("folderId", Sort.Direction.ASC)
+                    .named("idx_journal_user_folder_id")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_user_folder_id");
+        } catch (Exception e) {
+            failed++;
+            log.error("[ERROR] idx_journal_user_folder_id FAILED", e);
+        }
+
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("playbookId", Sort.Direction.ASC)
+                    .named("idx_journal_playbook_id")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_playbook_id");
+        } catch (Exception e) {
+            failed++;
+            log.error("[ERROR] idx_journal_playbook_id FAILED", e);
+        }
+
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("userId", Sort.Direction.ASC)
+                    .on("playbookId", Sort.Direction.ASC)
+                    .named("idx_journal_user_playbook_id")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_user_playbook_id");
+        } catch (Exception e) {
+            failed++;
+            log.error("[ERROR] idx_journal_user_playbook_id FAILED", e);
+        }
+
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("tagIds", Sort.Direction.ASC)
+                    .named("idx_journal_tag_ids")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_tag_ids");
+        } catch (Exception e) {
+            failed++;
+            log.error("[ERROR] idx_journal_tag_ids FAILED", e);
+        }
+
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("userId", Sort.Direction.ASC)
+                    .on("tagIds", Sort.Direction.ASC)
+                    .named("idx_journal_user_tag_ids")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_user_tag_ids");
+        } catch (Exception e) {
+            failed++;
+            log.error("[ERROR] idx_journal_user_tag_ids FAILED", e);
+        }
+
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("userId", Sort.Direction.ASC)
+                    .on("entryType", Sort.Direction.ASC)
+                    .named("idx_journal_user_entry_type")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_user_entry_type");
+        } catch (Exception e) {
+            failed++;
+            log.error("[ERROR] idx_journal_user_entry_type FAILED", e);
+        }
+
+        if (failed == 0) {
+            log.info("MongoDB index setup complete for tradeJournalEntry: {}/{} indexes OK.", created, created + failed);
+        } else {
+            log.warn("MongoDB index setup for tradeJournalEntry with issues: {}/{} OK, {} FAILED.",
+                    created, created + failed, failed);
         }
     }
 }
