@@ -34,4 +34,13 @@ public class TradeCharacteristicsFilter {
     
     @Schema(description = "Filter trades by maximum holding time in hours")
     private Integer maxHoldingTimeHours;
+
+    /**
+     * Holding-style filter for Analysis Timing (and related metrics).
+     * Same clocks for everyone; this only subsets trades by hold duration.
+     * Values: {@code SCALPER} (&lt;15m), {@code INTRADAY} (15m–&lt;24h), {@code SWING} (≥24h).
+     * Null / blank = all styles.
+     */
+    @Schema(description = "Holding style: SCALPER, INTRADAY, or SWING (null = all)")
+    private String holdingStyle;
 }

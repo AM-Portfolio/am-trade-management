@@ -494,6 +494,15 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
                         })
                         .collect(Collectors.toList());
             }
+
+            // Holding style: SCALPER / INTRADAY / SWING (Analysis Timing filter)
+            String holdingStyle = filterRequest.getTradeCharacteristics().getHoldingStyle();
+            if (holdingStyle != null && !holdingStyle.isBlank()) {
+                String style = holdingStyle.trim().toUpperCase();
+                trades = trades.stream()
+                        .filter(trade -> matchesHoldingStyle(trade, style))
+                        .collect(Collectors.toList());
+            }
         }
         
         // Apply profit/loss filters
@@ -816,5 +825,28 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
             default:
                 return start.toString() + " to " + end.toString();
         }
+    }
+
+    /**
+     * Holding-style buckets aligned with Timing style hint:
+     * SCALPER &lt;15m, INTRADAY 15m–&lt;24h, SWING ≥24h. Requires entry+exit and non-negative duration.
+     */
+    static boolean matchesHoldingStyle(TradeDetails trade, String style) {
+        if (trade.getEntryInfo() == null || trade.getEntryInfo().getTimestamp() == null
+                || trade.getExitInfo() == null || trade.getExitInfo().getTimestamp() == null) {
+            return false;
+        }
+        long minutes = ChronoUnit.MINUTES.between(
+                trade.getEntryInfo().getTimestamp(),
+                trade.getExitInfo().getTimestamp());
+        if (minutes < 0) {
+            return false;
+        }
+        return switch (style) {
+            case "SCALPER" -> minutes < 15;
+            case "INTRADAY" -> minutes >= 15 && minutes < 24 * 60;
+            case "SWING" -> minutes >= 24 * 60;
+            default -> true;
+        };
     }
 }
