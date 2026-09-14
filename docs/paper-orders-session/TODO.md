@@ -112,7 +112,7 @@ Resume from the first unchecked item under **Execute**.
 - [x] Sync Postman cloud collection (MCP) if needed
 - [ ] Test Plan row: `GET /v1/market-calendar/status` (market-data)
 - [ ] Test Plan rows: MARKET closed, LIMIT closed, cancel-all, prefs, orders from/to
-- [ ] Deploy order: **am-oms → am-modern-ui** (preprod); market-data already has calendar
+- [x] Deploy order: **am-oms → am-trade-management → am-portfolio** (preprod via auto/helm); modern-ui local with `AM_ENV=preprod` (not cluster UI deploy)
 - [ ] Unit + Test Plan verified *(unit: 14 pytest green; calendar smoke / deploy still open)*
 - [ ] Write `REPORT.md` only after verified
 - [ ] PR only if user asks
