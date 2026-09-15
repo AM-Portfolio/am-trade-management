@@ -173,7 +173,43 @@
             "url": "{{oms_base_url}}/v1/orders"
           }
         },
-        { "name": "List orders", "request": { "method": "GET", "url": "{{oms_base_url}}/v1/orders?walletId={{wallet_id}}" } }
+        {
+          "name": "AMO reject",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"walletId\":\"{{wallet_id}}\",\"venue\":\"PAPER\",\"instrumentType\":\"EQUITY\",\"symbol\":\"RELIANCE\",\"side\":\"BUY\",\"orderType\":\"MARKET\",\"quantity\":\"1\",\"amo\":true}" },
+            "url": "{{oms_base_url}}/v1/orders"
+          }
+        },
+        {
+          "name": "MIS product reject",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"walletId\":\"{{wallet_id}}\",\"venue\":\"PAPER\",\"instrumentType\":\"EQUITY\",\"symbol\":\"RELIANCE\",\"side\":\"BUY\",\"orderType\":\"MARKET\",\"quantity\":\"1\",\"productMode\":\"MIS\"}" },
+            "url": "{{oms_base_url}}/v1/orders"
+          }
+        },
+        { "name": "List orders", "request": { "method": "GET", "url": "{{oms_base_url}}/v1/orders?walletId={{wallet_id}}" } },
+        { "name": "List orders from/to", "request": { "method": "GET", "url": "{{oms_base_url}}/v1/orders?walletId={{wallet_id}}&from={{from_iso}}&to={{to_iso}}" } },
+        { "name": "Cancel all", "request": { "method": "POST", "url": "{{oms_base_url}}/v1/orders/cancel-all?walletId={{wallet_id}}" } },
+        { "name": "Get prefs", "request": { "method": "GET", "url": "{{oms_base_url}}/v1/prefs" } },
+        {
+          "name": "Put prefs favorite",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"orderTypeFavorite\":\"MARKET\"}" },
+            "url": "{{oms_base_url}}/v1/prefs"
+          }
+        }
       ]
     }
   ]

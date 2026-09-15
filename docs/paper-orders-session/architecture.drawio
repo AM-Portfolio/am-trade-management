@@ -1,0 +1,378 @@
+<mxfile host="65bd71144e">
+    <diagram id="context" name="Context">
+        <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="n" value="Context: paper-orders-session — PAPER only; LIVE not enabled" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" parent="1" vertex="1">
+                    <mxGeometry x="40" y="20" width="700" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="actor" value="Trader" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="220" width="40" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="sys" value="AM Paper Desk&#10;am_paper_ui + am-oms&#10;PaperExecutionEngine" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="200" width="240" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="cal" value="am-market-data&#10;GET /v1/market-calendar/status&#10;(open / holiday / session)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="580" y="100" width="220" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="ohlc" value="am-market-data&#10;POST /v1/market-data/ohlc&#10;lastPrice (batch)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="580" y="220" width="220" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="kafka" value="Kafka&#10;am-oms-fills" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="580" y="340" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" value="Buy / Sell / Orders / Cancel all" style="endArrow=block;html=1;" parent="1" source="actor" target="sys" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" value="session SoT" style="endArrow=block;html=1;dashed=1;" parent="1" source="sys" target="cal" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" value="LTP for fill/match" style="endArrow=block;html=1;dashed=1;" parent="1" source="sys" target="ohlc" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" value="on FILLED" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="sys" target="kafka">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="business" name="BusinessFlow">
+        <mxGraphModel dx="815" dy="557" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="n" value="BusinessFlow — user-visible order flow (P0). Diamonds = decisions. Paper cash is virtual." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" parent="1" vertex="1">
+                    <mxGeometry x="40" y="20" width="900" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="s0" value="Enable paper&#10;(virtual cash)" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="80" width="130" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="s1" value="Watchlist&#10;Buy / Sell" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="210" y="80" width="120" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="s2" value="Order ticket&#10;favorite type&#10;(first-time MARKET)&#10;CTA: at market / Place" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="70" width="160" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="s3" value="Submit order" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="570" y="85" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="dType" value="Order type?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="560" y="200" width="140" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="dSesM" value="Session phase?&#10;(calendar status)" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="280" y="320" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="dSesL" value="Session phase?&#10;(calendar status)" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="760" y="320" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="rejPre" value="Activity + toast&#10;MARKET_PREOPEN&#10;REJECTED&#10;no position" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="340" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="rejClosed" value="Activity + toast&#10;MARKET_CLOSED&#10;(weekend/holiday/after hours)&#10;REJECTED · no position" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="460" width="200" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="dLast" value="lastPrice&#10;available?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="290" y="500" width="140" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="fillM" value="Executed&#10;FILLED + position&#10;(Buy at market)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="290" y="660" width="150" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="rejLtp" value="Activity + toast&#10;LTP_UNAVAILABLE&#10;(never use prevClose)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="660" width="180" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="pend" value="Pending&#10;ACCEPTED&#10;(LIMIT / SUPER / TRAIL / STOP)&#10;paper: touch ≠ exchange book" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="760" y="480" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="dOpen" value="Later: OPEN&#10;+ LTP touches limit?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="780" y="640" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="fillL" value="Executed&#10;FILLED + position" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1020" y="660" width="150" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="cancel" value="Cancel / Cancel all&#10;→ CANCELLED&#10;reserves freed" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1020" y="500" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="e0" value="wallet ready" style="endArrow=block;html=1;" parent="1" source="s0" target="s1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" value="opens ticket" style="endArrow=block;html=1;" parent="1" source="s1" target="s2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" value="" style="endArrow=block;html=1;" parent="1" source="s2" target="s3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" value="" style="endArrow=block;html=1;" parent="1" source="s3" target="dType" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" value="MARKET" style="endArrow=block;html=1;" parent="1" source="dType" target="dSesM" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="480" y="240"/>
+                            <mxPoint x="360" y="240"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e5" value="LIMIT / SUPER / TRAIL / STOP" style="endArrow=block;html=1;" parent="1" source="dType" target="dSesL" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="760" y="240"/>
+                            <mxPoint x="840" y="240"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e6" value="PREOPEN" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="dSesM" target="rejPre">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" value="CLOSED / HOLIDAY" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="dSesM" target="rejClosed">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="200" y="370"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e8" value="OPEN" style="endArrow=block;html=1;" edge="1" parent="1" source="dSesM" target="dLast">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e9" value="yes" style="endArrow=block;html=1;" edge="1" parent="1" source="dLast" target="fillM">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" value="no" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="dLast" target="rejLtp">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e11" value="not OPEN → rest&#10;OPEN → rest or touch" style="endArrow=block;html=1;" edge="1" parent="1" source="dSesL" target="pend">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e12" value="matcher when OPEN" style="endArrow=block;html=1;" edge="1" parent="1" source="pend" target="dOpen">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e13" value="yes" style="endArrow=block;html=1;" edge="1" parent="1" source="dOpen" target="fillL">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e14" value="no — stay Pending" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="dOpen" target="pend">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="740" y="690"/>
+                            <mxPoint x="740" y="530"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e15" value="user Cancel all" style="endArrow=block;html=1;" edge="1" parent="1" source="pend" target="cancel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="containers" name="Containers">
+        <mxGraphModel dx="815" dy="557" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="n" value="Containers — every edge labeled METHOD /path or Kafka topic" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" parent="1" vertex="1">
+                    <mxGeometry x="40" y="20" width="700" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="ui" value="am_paper_ui&#10;desk · ticket · Orders&#10;Executed / Pending / Activity" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="180" width="180" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="oms" value="am-oms&#10;Mongo: orders wallets prefs&#10;PaperExecutionEngine&#10;isolated matcher (batch LTP)" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="160" width="240" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="md" value="am-market-data&#10;calendar + OHLC" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="80" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="kf" value="Kafka&#10;am-oms-fills" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="260" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" value="POST /v1/orders&#10;POST /v1/orders/cancel-all&#10;GET /v1/orders?from&amp;to&#10;GET/PUT /v1/prefs" style="endArrow=block;html=1;" parent="1" source="ui" target="oms" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" value="GET /v1/market-calendar/status&#10;POST /v1/market-data/ohlc&#10;refresh=false batch" style="endArrow=block;html=1;" parent="1" source="oms" target="md" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" value="topic am-oms-fills" style="endArrow=block;html=1;" parent="1" source="oms" target="kf" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="sequence" name="Sequence">
+        <mxGraphModel dx="815" dy="557" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="n" value="Sequence — Happy LIMIT fill + Reject MARKET when closed. Numbered steps; real APIs." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" parent="1" vertex="1">
+                    <mxGeometry x="40" y="20" width="900" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="h_ui" value="UI" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1" vertex="1" parent="1">
+                    <mxGeometry x="80" y="70" width="100" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="h_oms" value="am-oms" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1" vertex="1" parent="1">
+                    <mxGeometry x="320" y="70" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="h_cal" value="market-calendar" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1" vertex="1" parent="1">
+                    <mxGeometry x="560" y="70" width="140" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="h_ohlc" value="OHLC / lastPrice" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1" vertex="1" parent="1">
+                    <mxGeometry x="800" y="70" width="140" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="note1" value="HAPPY: LIMIT while CLOSED → rest → OPEN touch → FILLED" style="text;html=1;fontStyle=2" vertex="1" parent="1">
+                    <mxGeometry x="40" y="130" width="520" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="a1" value="1 POST /v1/orders&#10;LIMIT BUY" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=6;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="170" width="140" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="a2" value="2 GET /v1/market-calendar/status&#10;→ CLOSED / HOLIDAY" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=6;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="170" width="200" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="a3" value="3 ACCEPTED&#10;Pending + reserve cash" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=6;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="250" width="160" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="a4" value="4 matcher tick (OPEN)&#10;GET status (cached) +&#10;POST ohlc batch lastPrice" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=6;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="250" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="a5" value="5 touch → FILLED&#10;position + Kafka fill&#10;→ Executed" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=6;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="350" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="ea1" value="" style="endArrow=block;html=1;" edge="1" parent="1" source="a1" target="a2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ea2" value="no immediate fill" style="endArrow=block;html=1;" edge="1" parent="1" source="a2" target="a3">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="400" y="240"/>
+                            <mxPoint x="140" y="240"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ea3" value="" style="endArrow=block;html=1;" edge="1" parent="1" source="a3" target="a4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ea4" value="ltp &lt;= limit" style="endArrow=block;html=1;" edge="1" parent="1" source="a4" target="a5">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="410" y="360"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ea4b" value="prices" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="a4" target="h_ohlc">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="870" y="285"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ea2b" value="" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="a2" target="h_cal">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="630" y="195"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="note2" value="REJECT: MARKET when CLOSED / HOLIDAY / weekend" style="text;html=1;fontStyle=2" vertex="1" parent="1">
+                    <mxGeometry x="40" y="460" width="480" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="r1" value="1 POST /v1/orders MARKET" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=6;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="500" width="160" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="r2" value="2 GET /v1/market-calendar/status&#10;open=false reason=HOLIDAY|WEEKEND|OUTSIDE_SESSION" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=6;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="490" width="280" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="r3" value="3 REJECTED MARKET_CLOSED&#10;(or MARKET_PREOPEN)&#10;Activity + toast · cash unchanged" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=6;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="590" width="240" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="er1" value="" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="r1" target="r2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="er2" value="no OHLC fill" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="r2" target="r3">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="440" y="580"/>
+                            <mxPoint x="180" y="580"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="note3" value="CANCEL ALL: POST /v1/orders/cancel-all → ACCEPTED→CANCELLED (race-safe) → reserves released" style="text;html=1;fontStyle=2" vertex="1" parent="1">
+                    <mxGeometry x="40" y="700" width="800" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="data" name="DataIdentity">
+        <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="n" value="DataIdentity — ids and ledger fields" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" parent="1" vertex="1">
+                    <mxGeometry x="40" y="20" width="560" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="t" value="orders&#10;orderId ownerId walletId&#10;venue=PAPER status&#10;filledQuantity rejectReason&#10;limitPrice / trigger / ocoGroupId" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="90" width="260" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="p" value="wallets&#10;walletId ownerId&#10;available reserved&#10;portfolioUuid" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="90" width="220" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="pr" value="prefs&#10;ownerId&#10;orderTypeFavorite" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="270" width="200" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="cal" value="market-calendar status DTO&#10;exchange open reason&#10;sessionStart sessionEnd asOf" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+                    <mxGeometry x="320" y="270" width="240" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="ev" value="fill event Kafka&#10;orderId walletId ownerId&#10;portfolioKind=PAPER qty price" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="420" width="260" height="100" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="security" name="SecurityTrust">
+        <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="n" value="SecurityTrust — Bearer + owner/wallet isolation PAPER" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" parent="1" vertex="1">
+                    <mxGeometry x="40" y="20" width="560" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="idp" value="Keycloak" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="100" width="140" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="api" value="OMS /v1/*&#10;ownerId = JWT subject&#10;wallet ownership check" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="100" width="220" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="iso" value="Isolation&#10;Venue.PAPER only&#10;LIVE_NOT_ENABLED&#10;matcher venue=PAPER" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="240" width="220" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" value="Bearer JWT" style="endArrow=block;html=1;" parent="1" source="idp" target="api" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="failures" name="Failures">
+        <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="n" value="Failures — trigger → system → user outcome" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=2" parent="1" vertex="1">
+                    <mxGeometry x="40" y="20" width="560" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="f1" value="status HOLIDAY/WEEKEND + MARKET&#10;→ REJECTED MARKET_CLOSED&#10;→ toast + Activity; cash unchanged" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="90" width="280" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2" value="PREOPEN + MARKET&#10;→ REJECTED MARKET_PREOPEN&#10;→ toast + Activity" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="90" width="260" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="f3" value="OPEN but no lastPrice&#10;→ LTP_UNAVAILABLE&#10;→ never fill from prevClose" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="660" y="90" width="240" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="f4" value="calendar HTTP down&#10;→ fail-closed MARKET; LIMIT rests&#10;→ log calendar_unavailable" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="220" width="280" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="f5" value="matcher timeout&#10;→ skip tick&#10;→ Pending stays; API responsive" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+                    <mxGeometry x="360" y="220" width="260" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="f6" value="cancel vs fill race&#10;→ conditional ACCEPTED→CANCELLED&#10;→ no double money move" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+                    <mxGeometry x="660" y="220" width="260" height="90" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

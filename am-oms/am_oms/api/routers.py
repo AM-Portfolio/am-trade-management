@@ -1,13 +1,24 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Header, Query, Request
 from fastapi.responses import JSONResponse
 from am_platform_common import APIResponse
 from am_platform_security import AuthContext, require_auth_context
 from am_oms.deps import get_oms
-from am_oms.schemas import OrderCreateRequest, OrderListResponse, WalletCreateRequest, WalletListResponse
+from am_oms.schemas import (
+    CancelAllResponse,
+    OrderCreateRequest,
+    OrderListResponse,
+    PrefsResponse,
+    PrefsUpdateRequest,
+    WalletCreateRequest,
+    WalletListResponse,
+)
 from am_oms.services import Oms
 
 wallets = APIRouter(prefix="/v1/wallets", tags=["wallets"])
 orders = APIRouter(prefix="/v1/orders", tags=["orders"])
+prefs = APIRouter(prefix="/v1/prefs", tags=["prefs"])
 
 
 def _token(request: Request) -> str:
@@ -54,8 +65,26 @@ async def create_order(
 
 
 @orders.get("", response_model=APIResponse[OrderListResponse])
-async def list_orders(walletId: str | None = None, status: str | None = Query(None), ctx: AuthContext = Depends(require_auth_context()), oms: Oms = Depends(get_oms)):
-    return APIResponse(data=OrderListResponse(items=await oms.list_orders(ctx.subject, walletId, status)))
+async def list_orders(
+    walletId: str | None = None,
+    status: str | None = Query(None),
+    from_: datetime | None = Query(None, alias="from"),
+    to: datetime | None = Query(None),
+    ctx: AuthContext = Depends(require_auth_context()),
+    oms: Oms = Depends(get_oms),
+):
+    items = await oms.list_orders(ctx.subject, walletId, status, from_dt=from_, to_dt=to)
+    return APIResponse(data=OrderListResponse(items=items))
+
+
+@orders.post("/cancel-all", response_model=APIResponse[CancelAllResponse])
+async def cancel_all(
+    walletId: str = Query(...),
+    ctx: AuthContext = Depends(require_auth_context()),
+    oms: Oms = Depends(get_oms),
+):
+    n = await oms.cancel_all_orders(ctx.subject, walletId)
+    return APIResponse(data=CancelAllResponse(cancelled=n))
 
 
 @orders.get("/{order_id}")
@@ -71,3 +100,17 @@ async def cancel_order(order_id: str, ctx: AuthContext = Depends(require_auth_co
 @orders.post("/{order_id}/replace")
 async def replace_order():
     return JSONResponse({"error_code": "REPLACE_NOT_ENABLED", "message": "replace P1"}, status_code=400)
+
+
+@prefs.get("", response_model=APIResponse[PrefsResponse])
+async def get_prefs(ctx: AuthContext = Depends(require_auth_context()), oms: Oms = Depends(get_oms)):
+    return APIResponse(data=await oms.get_prefs(ctx.subject))
+
+
+@prefs.put("", response_model=APIResponse[PrefsResponse])
+async def put_prefs(
+    req: PrefsUpdateRequest,
+    ctx: AuthContext = Depends(require_auth_context()),
+    oms: Oms = Depends(get_oms),
+):
+    return APIResponse(data=await oms.put_prefs(ctx.subject, req.orderTypeFavorite))
