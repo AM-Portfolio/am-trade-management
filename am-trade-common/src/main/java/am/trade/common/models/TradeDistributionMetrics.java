@@ -25,17 +25,33 @@ public class TradeDistributionMetrics {
     private Map<String, Integer> tradesByHour; // Hour of day distribution
     private Map<String, Integer> tradesByMonth; // Month distribution
     private Map<String, Integer> tradesByQuarter; // Quarter distribution
-    
+    /** NSE session entry windows (always includes all SESSION_* + OTHER keys). */
+    private Map<String, Integer> tradesBySession;
+
     // Performance by time period
     private Map<String, BigDecimal> profitByDay;
     private Map<String, BigDecimal> profitByHour;
     private Map<String, BigDecimal> profitByMonth;
     private Map<String, BigDecimal> profitByQuarter;
+    private Map<String, BigDecimal> profitBySession;
 
-    // Win rate by time period (percent 0–100)
+    // Win rate by time period (percent 0–100); null when no eligible (non-null PnL) trades
     private Map<String, BigDecimal> winRateByDay;
     private Map<String, BigDecimal> winRateByHour;
     private Map<String, BigDecimal> winRateByMonth;
+    private Map<String, BigDecimal> winRateBySession;
+
+    // Avg PnL = sum(non-null PnL) / eligible count; null when eligible=0
+    private Map<String, BigDecimal> avgPnlByDay;
+    private Map<String, BigDecimal> avgPnlByHour;
+    private Map<String, BigDecimal> avgPnlByMonth;
+    private Map<String, BigDecimal> avgPnlBySession;
+
+    /** Trades with non-null PnL in each bucket (Win% / Avg PnL denominator). */
+    private Map<String, Integer> eligibleTradesByDay;
+    private Map<String, Integer> eligibleTradesByHour;
+    private Map<String, Integer> eligibleTradesByMonth;
+    private Map<String, Integer> eligibleTradesBySession;
     
     // Asset class distribution
     private Map<AssetClass, Integer> tradeCountByAssetClass;
@@ -71,4 +87,12 @@ public class TradeDistributionMetrics {
     private Map<String, Integer> tradesBySetup; // Different trade setups
     private Map<String, BigDecimal> profitBySetup;
     private Map<String, BigDecimal> winRateBySetup;
+
+    // Honesty meta for Timing Analysis
+    private Integer skippedMissingEntryCount;
+    private Integer openOrMissingPnlCount;
+    private Integer badTimestampCount;
+    /** entry_local_as_stored — UI should not claim IST for non-India books. */
+    private String timezoneNote;
+    private TradingStyleHint tradingStyleHint;
 }

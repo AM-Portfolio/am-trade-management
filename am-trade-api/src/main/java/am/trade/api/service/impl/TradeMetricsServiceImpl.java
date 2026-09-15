@@ -328,12 +328,41 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
             LocalDateTime endDateTime) {
         
         // Basic query by portfolio IDs and date range - already returns domain models
-        List<TradeDetails> trades = tradeDetailsService.findByPortfolioIdInAndEntryInfoTimestampBetween(
-                filterRequest.getPortfolioIds(), startDateTime, endDateTime);
-        
-        // Apply additional filters if needed
-        
-        // Return the trades directly since they're already domain models
+        List<TradeDetails> trades = new ArrayList<>(
+                tradeDetailsService.findByPortfolioIdInAndEntryInfoTimestampBetween(
+                        filterRequest.getPortfolioIds(), startDateTime, endDateTime));
+
+        // Mongo `$gte/$lte` on entryInfo.timestamp excludes documents where timestamp is null.
+        // Broker "Imported Holding" rows often lack an entry timestamp, which emptied Analysis
+        // (totalTradesCount=0) even though Holdings still listed the same positions.
+        // Include those rows; session bucketing already tracks skippedMissingEntryCount.
+        List<TradeDetails> allForPortfolios =
+                tradeDetailsService.findByPortfolioIdIn(filterRequest.getPortfolioIds());
+        if (allForPortfolios == null || allForPortfolios.isEmpty()) {
+            return trades;
+        }
+
+        Set<String> seenIds = trades.stream()
+                .map(TradeDetails::getTradeId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(HashSet::new));
+
+        for (TradeDetails trade : allForPortfolios) {
+            String tradeId = trade.getTradeId();
+            if (tradeId != null && seenIds.contains(tradeId)) {
+                continue;
+            }
+            LocalDateTime entryTs = trade.getEntryInfo() != null
+                    ? trade.getEntryInfo().getTimestamp()
+                    : null;
+            if (entryTs == null) {
+                trades.add(trade);
+                if (tradeId != null) {
+                    seenIds.add(tradeId);
+                }
+            }
+        }
+
         return trades;
     }
     
@@ -492,6 +521,15 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
                             
                             return meetsMinHours && meetsMaxHours;
                         })
+                        .collect(Collectors.toList());
+            }
+
+            // Holding style: SCALPER / INTRADAY / SWING (Analysis Timing filter)
+            String holdingStyle = filterRequest.getTradeCharacteristics().getHoldingStyle();
+            if (holdingStyle != null && !holdingStyle.isBlank()) {
+                String style = holdingStyle.trim().toUpperCase();
+                trades = trades.stream()
+                        .filter(trade -> matchesHoldingStyle(trade, style))
                         .collect(Collectors.toList());
             }
         }
@@ -816,5 +854,28 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
             default:
                 return start.toString() + " to " + end.toString();
         }
+    }
+
+    /**
+     * Holding-style buckets aligned with Timing style hint:
+     * SCALPER &lt;15m, INTRADAY 15m–&lt;24h, SWING ≥24h. Requires entry+exit and non-negative duration.
+     */
+    static boolean matchesHoldingStyle(TradeDetails trade, String style) {
+        if (trade.getEntryInfo() == null || trade.getEntryInfo().getTimestamp() == null
+                || trade.getExitInfo() == null || trade.getExitInfo().getTimestamp() == null) {
+            return false;
+        }
+        long minutes = ChronoUnit.MINUTES.between(
+                trade.getEntryInfo().getTimestamp(),
+                trade.getExitInfo().getTimestamp());
+        if (minutes < 0) {
+            return false;
+        }
+        return switch (style) {
+            case "SCALPER" -> minutes < 15;
+            case "INTRADAY" -> minutes >= 15 && minutes < 24 * 60;
+            case "SWING" -> minutes >= 24 * 60;
+            default -> true;
+        };
     }
 }

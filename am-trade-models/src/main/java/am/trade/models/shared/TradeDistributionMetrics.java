@@ -21,16 +21,33 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TradeDistributionMetrics {
     // Time-based distribution
-    private Map<String, Integer> tradesByDay; // Day of week distribution
-    private Map<String, Integer> tradesByHour; // Hour of day distribution
-    private Map<String, Integer> tradesByMonth; // Month distribution
-    private Map<String, Integer> tradesByQuarter; // Quarter distribution
-    
+    private Map<String, Integer> tradesByDay;
+    private Map<String, Integer> tradesByHour;
+    private Map<String, Integer> tradesByMonth;
+    private Map<String, Integer> tradesByQuarter;
+    private Map<String, Integer> tradesBySession;
+
     // Performance by time period
     private Map<String, BigDecimal> profitByDay;
     private Map<String, BigDecimal> profitByHour;
     private Map<String, BigDecimal> profitByMonth;
     private Map<String, BigDecimal> profitByQuarter;
+    private Map<String, BigDecimal> profitBySession;
+
+    private Map<String, BigDecimal> winRateByDay;
+    private Map<String, BigDecimal> winRateByHour;
+    private Map<String, BigDecimal> winRateByMonth;
+    private Map<String, BigDecimal> winRateBySession;
+
+    private Map<String, BigDecimal> avgPnlByDay;
+    private Map<String, BigDecimal> avgPnlByHour;
+    private Map<String, BigDecimal> avgPnlByMonth;
+    private Map<String, BigDecimal> avgPnlBySession;
+
+    private Map<String, Integer> eligibleTradesByDay;
+    private Map<String, Integer> eligibleTradesByHour;
+    private Map<String, Integer> eligibleTradesByMonth;
+    private Map<String, Integer> eligibleTradesBySession;
     
     // Asset class distribution
     private Map<AssetClass, Integer> tradeCountByAssetClass;
@@ -48,22 +65,28 @@ public class TradeDistributionMetrics {
     private Map<String, BigDecimal> winRateByStrategy;
     
     // Trade duration distribution
-    private Map<String, Integer> tradesByDuration; // Categorized by duration ranges
+    private Map<String, Integer> tradesByDuration;
     private Map<String, BigDecimal> profitByDuration;
     private Map<String, BigDecimal> winRateByDuration;
     
     // Position size distribution
-    private Map<String, Integer> tradesByPositionSize; // Categorized by size ranges
+    private Map<String, Integer> tradesByPositionSize;
     private Map<String, BigDecimal> profitByPositionSize;
     private Map<String, BigDecimal> winRateByPositionSize;
     
     // Market condition distribution
-    private Map<String, Integer> tradesByMarketCondition; // Bull, bear, sideways
+    private Map<String, Integer> tradesByMarketCondition;
     private Map<String, BigDecimal> profitByMarketCondition;
     private Map<String, BigDecimal> winRateByMarketCondition;
     
     // Trade setup distribution
-    private Map<String, Integer> tradesBySetup; // Different trade setups
+    private Map<String, Integer> tradesBySetup;
     private Map<String, BigDecimal> profitBySetup;
     private Map<String, BigDecimal> winRateBySetup;
+
+    private Integer skippedMissingEntryCount;
+    private Integer openOrMissingPnlCount;
+    private Integer badTimestampCount;
+    private String timezoneNote;
+    private TradingStyleHint tradingStyleHint;
 }

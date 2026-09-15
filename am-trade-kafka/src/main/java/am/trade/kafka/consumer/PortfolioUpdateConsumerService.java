@@ -175,7 +175,7 @@ public class PortfolioUpdateConsumerService {
             instrumentInfo.setIsin(equity.getIsin());
             trade.setInstrumentInfo(instrumentInfo);
 
-            // Entry Info
+            // Entry Info — timestamp required for Analysis metrics date queries
             EntryExitInfo entryInfo = new EntryExitInfo();
             entryInfo.setQuantity(equity.getQuantity().intValue());
             entryInfo.setPrice(equity.getAvgBuyingPrice() != null
@@ -184,7 +184,12 @@ public class PortfolioUpdateConsumerService {
             entryInfo.setTotalValue(equity.getInvestmentValue() != null
                     ? BigDecimal.valueOf(equity.getInvestmentValue())
                     : entryInfo.getPrice().multiply(BigDecimal.valueOf(entryInfo.getQuantity())));
+            entryInfo.setTimestamp(java.time.LocalDateTime.now());
             trade.setEntryInfo(entryInfo);
+
+            if (equity.getCurrentPrice() != null) {
+                trade.setCurrentPrice(BigDecimal.valueOf(equity.getCurrentPrice()));
+            }
 
             newTrades.add(trade);
         }
