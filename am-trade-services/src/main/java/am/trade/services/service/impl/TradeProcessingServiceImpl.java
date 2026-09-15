@@ -463,7 +463,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
     }
 
     @Override
-    public List<TradeDetails> processTradeModels(List<TradeModel> trades, String portfolioId) {
+    public List<TradeDetails> processTradeModels(List<TradeModel> trades, String portfolioId, String userId) {
         if (trades == null || trades.isEmpty()) {
             return new ArrayList<>();
         }
@@ -527,6 +527,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                     TradeDetails tradeDetails = TradeDetails.builder()
                             .tradeId(UUID.randomUUID().toString()) // Generate a unique ID for the trade
                             .portfolioId(portfolioId)
+                            .userId(userId)
                             .symbol(symbol)
                             .instrumentInfo(convertToInstrumentInfo(firstTrade.getInstrumentInfo()))
                             .tradePositionType(tradePositionType)

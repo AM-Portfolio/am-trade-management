@@ -122,6 +122,9 @@ public class TradeConsumerService {
     }
 
     private void processMessage(TradeUpdateEvent event) {
+        if (event.getUserId() == null || event.getUserId().isBlank()) {
+            throw new IllegalArgumentException("TradeUpdateEvent missing userId — cannot import trades without an owner");
+        }
         log.info("Processing trade update event with {} trades for user: {}", event.getTrades().size(), event.getUserId());
 
         String portfolioId = event.getPortfolioId();
@@ -132,7 +135,8 @@ public class TradeConsumerService {
         }
 
         // Step 1: Convert raw TradeModels to TradeDetails and persist them
-        List<TradeDetails> tradeDetails = tradeProcessingService.processTradeModels(event.getTrades(), portfolioId);
+        List<TradeDetails> tradeDetails = tradeProcessingService.processTradeModels(
+                event.getTrades(), portfolioId, event.getUserId());
         List<TradeDetails> savedTrades = tradeDetailsService.saveAllTradeDetails(tradeDetails);
 
         // Step 2: Run portfolio aggregation (e.g., compute net position per symbol)

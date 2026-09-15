@@ -17,9 +17,10 @@ public interface TradeProcessingService {
      * 
      * @param trades List of trades to process
      * @param portfolioId The portfolio ID
+     * @param userId Owner of the trades (required for user-scoped holdings/trade queries)
      * @return List of complete trades with WIN, LOSS, or OPEN status
      */
-    List<TradeDetails> processTradeModels(List<TradeModel> trades, String portfolioId);
+    List<TradeDetails> processTradeModels(List<TradeModel> trades, String portfolioId, String userId);
 
     /**
      * Process a list of trade executions (buy/sell orders) into complete trades
