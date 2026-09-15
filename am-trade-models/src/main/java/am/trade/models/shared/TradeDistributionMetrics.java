@@ -48,6 +48,25 @@ public class TradeDistributionMetrics {
     private Map<String, Integer> eligibleTradesByHour;
     private Map<String, Integer> eligibleTradesByMonth;
     private Map<String, Integer> eligibleTradesBySession;
+
+    /** Mean hold duration in minutes (valid entry+exit only); null key when sample=0. */
+    private Map<String, BigDecimal> avgHoldMinutesByDay;
+    private Map<String, BigDecimal> avgHoldMinutesByHour;
+    private Map<String, BigDecimal> avgHoldMinutesByMonth;
+    private Map<String, BigDecimal> avgHoldMinutesBySession;
+
+    /**
+     * Avg win ÷ |avg loss| for eligible trades in bucket (same as overall winLossRatio).
+     * Null when no wins or no losses — not a stop-based R-multiple.
+     */
+    private Map<String, BigDecimal> riskRewardByDay;
+    private Map<String, BigDecimal> riskRewardByHour;
+    private Map<String, BigDecimal> riskRewardByMonth;
+    private Map<String, BigDecimal> riskRewardBySession;
+
+    /** Best session by avg PnL among buckets with eligible ≥ 3; null if none qualify. */
+    private String bestSessionKey;
+    private BigDecimal bestSessionAvgPnl;
     
     // Asset class distribution
     private Map<AssetClass, Integer> tradeCountByAssetClass;

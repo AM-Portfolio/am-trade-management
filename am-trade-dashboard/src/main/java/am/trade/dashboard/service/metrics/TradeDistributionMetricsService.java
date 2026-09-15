@@ -187,6 +187,8 @@ public class TradeDistributionMetricsService {
         metrics.setWinRateByDay(calculateWinRateByCategory(tradesByDay));
         metrics.setAvgPnlByDay(calculateAvgPnlByCategory(tradesByDay));
         metrics.setEligibleTradesByDay(calculateEligibleCountByCategory(tradesByDay));
+        metrics.setAvgHoldMinutesByDay(calculateAvgHoldMinutesByCategory(tradesByDay));
+        metrics.setRiskRewardByDay(calculateRiskRewardByCategory(tradesByDay));
     }
 
     private void applyHourMetrics(
@@ -197,6 +199,8 @@ public class TradeDistributionMetricsService {
         metrics.setWinRateByHour(calculateWinRateByCategory(tradesByHour));
         metrics.setAvgPnlByHour(calculateAvgPnlByCategory(tradesByHour));
         metrics.setEligibleTradesByHour(calculateEligibleCountByCategory(tradesByHour));
+        metrics.setAvgHoldMinutesByHour(calculateAvgHoldMinutesByCategory(tradesByHour));
+        metrics.setRiskRewardByHour(calculateRiskRewardByCategory(tradesByHour));
     }
 
     private void applyMonthMetrics(
@@ -207,6 +211,8 @@ public class TradeDistributionMetricsService {
         metrics.setWinRateByMonth(calculateWinRateByCategory(tradesByMonth));
         metrics.setAvgPnlByMonth(calculateAvgPnlByCategory(tradesByMonth));
         metrics.setEligibleTradesByMonth(calculateEligibleCountByCategory(tradesByMonth));
+        metrics.setAvgHoldMinutesByMonth(calculateAvgHoldMinutesByCategory(tradesByMonth));
+        metrics.setRiskRewardByMonth(calculateRiskRewardByCategory(tradesByMonth));
     }
 
     private void applySessionMetrics(
@@ -217,6 +223,39 @@ public class TradeDistributionMetricsService {
         metrics.setWinRateBySession(calculateWinRateByCategoryPreservingKeys(tradesBySession));
         metrics.setAvgPnlBySession(calculateAvgPnlByCategoryPreservingKeys(tradesBySession));
         metrics.setEligibleTradesBySession(calculateEligibleCountByCategoryPreservingKeys(tradesBySession));
+        metrics.setAvgHoldMinutesBySession(
+                calculateAvgHoldMinutesByCategoryPreservingKeys(tradesBySession));
+        metrics.setRiskRewardBySession(
+                calculateRiskRewardByCategoryPreservingKeys(tradesBySession));
+        applyBestSession(metrics);
+    }
+
+    private static final int BEST_SESSION_MIN_ELIGIBLE = 3;
+
+    private void applyBestSession(TradeDistributionMetrics metrics) {
+        Map<String, BigDecimal> avgPnl = metrics.getAvgPnlBySession();
+        Map<String, Integer> eligible = metrics.getEligibleTradesBySession();
+        if (avgPnl == null || eligible == null) {
+            return;
+        }
+        String bestKey = null;
+        BigDecimal bestAvg = null;
+        for (String key : SESSION_KEYS) {
+            int e = eligible.getOrDefault(key, 0);
+            if (e < BEST_SESSION_MIN_ELIGIBLE) {
+                continue;
+            }
+            BigDecimal avg = avgPnl.get(key);
+            if (avg == null) {
+                continue;
+            }
+            if (bestAvg == null || avg.compareTo(bestAvg) > 0) {
+                bestAvg = avg;
+                bestKey = key;
+            }
+        }
+        metrics.setBestSessionKey(bestKey);
+        metrics.setBestSessionAvgPnl(bestAvg);
     }
 
     static TradingStyleHint inferTradingStyleHint(List<TradeDetails> trades) {
@@ -458,6 +497,94 @@ public class TradeDistributionMetricsService {
         }
         BigDecimal sum = pnls.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
         return sum.divide(BigDecimal.valueOf(pnls.size()), 4, ROUNDING_MODE);
+    }
+
+    private Map<String, BigDecimal> calculateAvgHoldMinutesByCategory(
+            Map<String, List<TradeDetails>> tradesByCategory) {
+        Map<String, BigDecimal> out = new HashMap<>();
+        for (Map.Entry<String, List<TradeDetails>> entry : tradesByCategory.entrySet()) {
+            out.put(entry.getKey(), avgHoldMinutesFor(entry.getValue()));
+        }
+        return out;
+    }
+
+    private Map<String, BigDecimal> calculateAvgHoldMinutesByCategoryPreservingKeys(
+            Map<String, List<TradeDetails>> tradesByCategory) {
+        Map<String, BigDecimal> out = new LinkedHashMap<>();
+        for (Map.Entry<String, List<TradeDetails>> entry : tradesByCategory.entrySet()) {
+            out.put(entry.getKey(), avgHoldMinutesFor(entry.getValue()));
+        }
+        return out;
+    }
+
+    private BigDecimal avgHoldMinutesFor(List<TradeDetails> categoryTrades) {
+        BigDecimal totalMinutes = BigDecimal.ZERO;
+        int sample = 0;
+        for (TradeDetails trade : categoryTrades) {
+            Duration hold = holdDurationOrNull(trade);
+            if (hold == null || hold.isNegative()) {
+                continue;
+            }
+            totalMinutes = totalMinutes.add(
+                    BigDecimal.valueOf(hold.toMillis())
+                            .divide(BigDecimal.valueOf(60_000L), 4, ROUNDING_MODE));
+            sample++;
+        }
+        if (sample == 0) {
+            return null;
+        }
+        return totalMinutes.divide(BigDecimal.valueOf(sample), 4, ROUNDING_MODE);
+    }
+
+    private Map<String, BigDecimal> calculateRiskRewardByCategory(
+            Map<String, List<TradeDetails>> tradesByCategory) {
+        Map<String, BigDecimal> out = new HashMap<>();
+        for (Map.Entry<String, List<TradeDetails>> entry : tradesByCategory.entrySet()) {
+            out.put(entry.getKey(), riskRewardFor(entry.getValue()));
+        }
+        return out;
+    }
+
+    private Map<String, BigDecimal> calculateRiskRewardByCategoryPreservingKeys(
+            Map<String, List<TradeDetails>> tradesByCategory) {
+        Map<String, BigDecimal> out = new LinkedHashMap<>();
+        for (Map.Entry<String, List<TradeDetails>> entry : tradesByCategory.entrySet()) {
+            out.put(entry.getKey(), riskRewardFor(entry.getValue()));
+        }
+        return out;
+    }
+
+    /**
+     * Avg win ÷ |avg loss|. Null when no wins or no losses (not a stop-based R-multiple).
+     */
+    private BigDecimal riskRewardFor(List<TradeDetails> categoryTrades) {
+        BigDecimal totalWin = BigDecimal.ZERO;
+        BigDecimal totalLossAbs = BigDecimal.ZERO;
+        int winCount = 0;
+        int lossCount = 0;
+        for (TradeDetails trade : categoryTrades) {
+            if (trade.getMetrics() == null || trade.getMetrics().getProfitLoss() == null) {
+                continue;
+            }
+            BigDecimal pnl = trade.getMetrics().getProfitLoss();
+            int cmp = pnl.compareTo(BigDecimal.ZERO);
+            if (cmp > 0) {
+                totalWin = totalWin.add(pnl);
+                winCount++;
+            } else if (cmp < 0) {
+                totalLossAbs = totalLossAbs.add(pnl.abs());
+                lossCount++;
+            }
+        }
+        if (winCount == 0 || lossCount == 0) {
+            return null;
+        }
+        BigDecimal avgWin = totalWin.divide(BigDecimal.valueOf(winCount), 4, ROUNDING_MODE);
+        BigDecimal avgLoss = totalLossAbs.divide(BigDecimal.valueOf(lossCount), 4, ROUNDING_MODE);
+        if (avgLoss.compareTo(BigDecimal.ZERO) == 0) {
+            return null;
+        }
+        return avgWin.divide(avgLoss, 4, ROUNDING_MODE);
     }
 
     private Map<String, Integer> calculateEligibleCountByCategory(

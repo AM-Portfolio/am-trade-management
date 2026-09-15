@@ -236,6 +236,52 @@ class TradeDistributionSessionGroupingSpec {
         assertEquals(2, metrics.getTradesByMonth().get("JANUARY"));
     }
 
+    @Test
+    void avgHoldMinutesAndRiskReward_bySession() {
+        // Session 09:15–11:00: +100 in 20m, -50 in 10m → avg hold 15m, R:R = 100/50 = 2
+        List<TradeDetails> trades = List.of(
+                trade("w", LocalDateTime.of(2024, 1, 8, 10, 0),
+                        LocalDateTime.of(2024, 1, 8, 10, 20), "100"),
+                trade("l", LocalDateTime.of(2024, 1, 8, 10, 30),
+                        LocalDateTime.of(2024, 1, 8, 10, 40), "-50"),
+                // only wins → R:R null
+                trade("solo", LocalDateTime.of(2024, 1, 8, 12, 0),
+                        LocalDateTime.of(2024, 1, 8, 12, 30), "10")
+        );
+
+        TradeDistributionMetrics metrics = service.calculateMetrics(trades);
+
+        assertEquals(0, new BigDecimal("15.0000")
+                .compareTo(metrics.getAvgHoldMinutesBySession().get(SESSION_0915_1100)));
+        assertEquals(0, new BigDecimal("2.0000")
+                .compareTo(metrics.getRiskRewardBySession().get(SESSION_0915_1100)));
+        assertNull(metrics.getRiskRewardBySession().get(SESSION_1100_1300));
+        assertEquals(0, new BigDecimal("30.0000")
+                .compareTo(metrics.getAvgHoldMinutesBySession().get(SESSION_1100_1300)));
+    }
+
+    @Test
+    void bestSession_requiresMinEligibleThree() {
+        List<TradeDetails> trades = new ArrayList<>();
+        // 3 trades in 09:15 session avg +10
+        for (int i = 0; i < 3; i++) {
+            trades.add(trade("a" + i,
+                    LocalDateTime.of(2024, 1, 8, 10, i),
+                    LocalDateTime.of(2024, 1, 8, 10, i).plusMinutes(5),
+                    "10"));
+        }
+        // 2 trades in 11:00 session with higher avg — not enough sample
+        trades.add(trade("b0", LocalDateTime.of(2024, 1, 8, 12, 0),
+                LocalDateTime.of(2024, 1, 8, 12, 5), "100"));
+        trades.add(trade("b1", LocalDateTime.of(2024, 1, 8, 12, 10),
+                LocalDateTime.of(2024, 1, 8, 12, 15), "100"));
+
+        TradeDistributionMetrics metrics = service.calculateMetrics(trades);
+
+        assertEquals(SESSION_0915_1100, metrics.getBestSessionKey());
+        assertEquals(0, new BigDecimal("10.0000").compareTo(metrics.getBestSessionAvgPnl()));
+    }
+
     private static TradeDetails trade(
             String id, LocalDateTime entry, LocalDateTime exit, String pnl) {
         return TradeDetails.builder()

@@ -77,6 +77,9 @@ public class AverageTradeCalculator extends AbstractBigDecimalMetricCalculator {
             List<TradeDetails> losingTrades = validTrades.stream()
                     .filter(trade -> trade.getMetrics().getProfitLoss().compareTo(BigDecimal.ZERO) < 0)
                     .collect(Collectors.toList());
+
+            metrics.setWinningTradesCount(winningTrades.size());
+            metrics.setLosingTradesCount(losingTrades.size());
             
             // Calculate average winning trade
             if (!winningTrades.isEmpty()) {

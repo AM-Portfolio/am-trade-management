@@ -2,6 +2,7 @@ package am.trade.dashboard.service.metrics.calculator;
 
 import am.trade.common.models.PerformanceMetrics;
 import am.trade.common.models.TradeDetails;
+import am.trade.dashboard.service.metrics.calculator.impl.AverageHoldingTimeCalculator;
 import am.trade.dashboard.service.metrics.calculator.impl.AverageTradeCalculator;
 import am.trade.dashboard.service.metrics.calculator.impl.BestWorstDayCalculator;
 import am.trade.dashboard.service.metrics.calculator.impl.ConsistencyMetricsCalculator;
@@ -124,6 +125,21 @@ public class MetricsRegistry {
                         log.error("Error calculating average trade metrics", e);
                     }
                 });
+
+        // Process AverageHoldingTimeCalculator (fractional hours + minutes)
+        calculators.stream()
+                .filter(c -> c instanceof AverageHoldingTimeCalculator)
+                .findFirst()
+                .ifPresent(calculator -> {
+                    try {
+                        AverageHoldingTimeCalculator holdCalculator =
+                                (AverageHoldingTimeCalculator) calculator;
+                        holdCalculator.applyHoldingTimes(trades, metrics);
+                        log.debug("Applied average holding time metrics");
+                    } catch (Exception e) {
+                        log.error("Error calculating average holding time metrics", e);
+                    }
+                });
         
         // Process BestWorstDayCalculator
         calculators.stream()
@@ -164,6 +180,7 @@ public class MetricsRegistry {
         return calculator instanceof TimeBasedReturnCalculator ||
                calculator instanceof LargestTradeCalculator ||
                calculator instanceof AverageTradeCalculator ||
+               calculator instanceof AverageHoldingTimeCalculator ||
                calculator instanceof BestWorstDayCalculator ||
                calculator instanceof ConsistencyMetricsCalculator;
     }
@@ -216,6 +233,7 @@ public class MetricsRegistry {
         setters.put("averageHoldingTimeWinning", PerformanceMetrics::setAverageHoldingTimeWinning);
         setters.put("averageHoldingTimeLosing", PerformanceMetrics::setAverageHoldingTimeLosing);
         setters.put("averageHoldingTimeOverall", PerformanceMetrics::setAverageHoldingTimeOverall);
+        setters.put("averageHoldingTimeMinutes", PerformanceMetrics::setAverageHoldingTimeMinutes);
         
         // Efficiency metrics
         setters.put("returnOnCapital", PerformanceMetrics::setReturnOnCapital);
