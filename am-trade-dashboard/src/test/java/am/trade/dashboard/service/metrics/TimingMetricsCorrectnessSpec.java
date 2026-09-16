@@ -139,6 +139,65 @@ class TimingMetricsCorrectnessSpec {
                 .compareTo(avg));
     }
 
+    @Test
+    void avgPnlPerActiveDay_sameDayVsTwoDays_andNullPnlExcluded() {
+        // 3 eligible trades same calendar day → activeDays=1, avg/day = sum
+        List<TradeDetails> sameDay = List.of(
+                trade("a", LocalDateTime.of(2024, 8, 11, 10, 0),
+                        LocalDateTime.of(2024, 8, 11, 10, 10), "100"),
+                trade("b", LocalDateTime.of(2024, 8, 11, 10, 30),
+                        LocalDateTime.of(2024, 8, 11, 10, 40), "50"),
+                trade("c", LocalDateTime.of(2024, 8, 11, 14, 0),
+                        LocalDateTime.of(2024, 8, 11, 14, 10), "-20")
+        );
+        TradeDistributionMetrics d1 = distService.calculateMetrics(sameDay);
+        assertEquals(1, d1.getActiveTradingDaysCount());
+        assertEquals(0, new BigDecimal("130").compareTo(d1.getAvgPnlPerActiveDay()));
+        assertEquals(1, d1.getActiveTradingDaysByMonth().get("AUGUST"));
+        assertEquals(0, new BigDecimal("130")
+                .compareTo(d1.getAvgPnlPerActiveDayByMonth().get("AUGUST")));
+        // per trade still 130/3
+        assertEquals(0, new BigDecimal("130")
+                .divide(BigDecimal.valueOf(3), 4, java.math.RoundingMode.HALF_UP)
+                .compareTo(d1.getAvgPnlByMonth().get("AUGUST")));
+
+        // 2 calendar days → denom=2; null PnL does not add an active day
+        List<TradeDetails> twoDays = List.of(
+                trade("a", LocalDateTime.of(2024, 8, 11, 10, 0),
+                        LocalDateTime.of(2024, 8, 11, 10, 10), "90"),
+                trade("b", LocalDateTime.of(2024, 8, 20, 10, 0),
+                        LocalDateTime.of(2024, 8, 20, 10, 10), "10"),
+                tradeNullPnl("open", LocalDateTime.of(2024, 8, 25, 10, 0),
+                        LocalDateTime.of(2024, 8, 25, 10, 10))
+        );
+        TradeDistributionMetrics d2 = distService.calculateMetrics(twoDays);
+        assertEquals(2, d2.getActiveTradingDaysCount());
+        assertEquals(0, new BigDecimal("50").compareTo(d2.getAvgPnlPerActiveDay()));
+        assertEquals(2, d2.getActiveTradingDaysByMonth().get("AUGUST"));
+        assertEquals(0, new BigDecimal("50")
+                .compareTo(d2.getAvgPnlPerActiveDayByMonth().get("AUGUST")));
+        // Aug-style: 34 trades across 9 active days → avg/trade vs avg/active day
+        List<TradeDetails> thirtyFour = new java.util.ArrayList<>();
+        BigDecimal perTrade = new BigDecimal("83090").divide(BigDecimal.valueOf(34), 4,
+                java.math.RoundingMode.HALF_UP);
+        LocalDateTime base = LocalDateTime.of(2024, 8, 11, 10, 0);
+        for (int i = 0; i < 34; i++) {
+            int dayOffset = i % 9; // 9 active days
+            thirtyFour.add(trade("t" + i, base.plusDays(dayOffset).plusMinutes(i),
+                    base.plusDays(dayOffset).plusMinutes(i + 5), perTrade.toPlainString()));
+        }
+        TradeDistributionMetrics d3 = distService.calculateMetrics(thirtyFour);
+        assertEquals(9, d3.getActiveTradingDaysCount());
+        assertEquals(34, d3.getEligibleTradesByMonth().get("AUGUST"));
+        BigDecimal monthProfit = d3.getProfitByMonth().get("AUGUST");
+        BigDecimal avgTrade = d3.getAvgPnlByMonth().get("AUGUST");
+        BigDecimal avgDay = d3.getAvgPnlPerActiveDayByMonth().get("AUGUST");
+        assertEquals(0, monthProfit.divide(BigDecimal.valueOf(34), 4, java.math.RoundingMode.HALF_UP)
+                .compareTo(avgTrade));
+        assertEquals(0, monthProfit.divide(BigDecimal.valueOf(9), 4, java.math.RoundingMode.HALF_UP)
+                .compareTo(avgDay));
+    }
+
     private static BigDecimal sum(Map<String, BigDecimal> map) {
         return map.values().stream()
                 .filter(v -> v != null)

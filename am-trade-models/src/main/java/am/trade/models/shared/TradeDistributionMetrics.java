@@ -44,10 +44,24 @@ public class TradeDistributionMetrics {
     private Map<String, BigDecimal> avgPnlByMonth;
     private Map<String, BigDecimal> avgPnlBySession;
 
+    /** Avg PnL / distinct entry dates (eligible only); null when no active days. */
+    private Map<String, BigDecimal> avgPnlPerActiveDayByDay;
+    private Map<String, BigDecimal> avgPnlPerActiveDayByHour;
+    private Map<String, BigDecimal> avgPnlPerActiveDayByMonth;
+    private Map<String, BigDecimal> avgPnlPerActiveDayBySession;
+
     private Map<String, Integer> eligibleTradesByDay;
     private Map<String, Integer> eligibleTradesByHour;
     private Map<String, Integer> eligibleTradesByMonth;
     private Map<String, Integer> eligibleTradesBySession;
+
+    private Map<String, Integer> activeTradingDaysByDay;
+    private Map<String, Integer> activeTradingDaysByHour;
+    private Map<String, Integer> activeTradingDaysByMonth;
+    private Map<String, Integer> activeTradingDaysBySession;
+
+    private Integer activeTradingDaysCount;
+    private BigDecimal avgPnlPerActiveDay;
 
     /** Mean hold duration in minutes (valid entry+exit only); null key when sample=0. */
     private Map<String, BigDecimal> avgHoldMinutesByDay;

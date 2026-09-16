@@ -10,12 +10,15 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static java.math.RoundingMode.HALF_UP;
@@ -90,6 +93,8 @@ public class TradeDistributionMetricsService {
         int skippedMissingEntry = 0;
         int openOrMissingPnl = 0;
         int badTimestamp = 0;
+        Set<LocalDate> overallActiveDays = new HashSet<>();
+        BigDecimal overallEligiblePnl = BigDecimal.ZERO;
 
         for (TradeDetails trade : trades) {
             if (trade.getMetrics() == null || trade.getMetrics().getProfitLoss() == null) {
@@ -107,6 +112,11 @@ public class TradeDistributionMetricsService {
             accumulate(hourStats, String.valueOf(entryTs.getHour()), trade);
             accumulate(monthStats, entryTs.getMonth().toString(), trade);
             accumulate(sessionStats, resolveSessionKey(entryTs), trade);
+
+            if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
+                overallActiveDays.add(entryTs.toLocalDate());
+                overallEligiblePnl = overallEligiblePnl.add(trade.getMetrics().getProfitLoss());
+            }
 
             if (trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSegment() != null) {
                 String assetClass = trade.getInstrumentInfo().getSegment().toString();
@@ -129,17 +139,22 @@ public class TradeDistributionMetricsService {
 
         applyTimingDimension(metrics::setTradesByDay, metrics::setProfitByDay, metrics::setWinRateByDay,
                 metrics::setAvgPnlByDay, metrics::setEligibleTradesByDay, metrics::setAvgHoldMinutesByDay,
-                metrics::setRiskRewardByDay, dayStats, false);
+                metrics::setRiskRewardByDay, metrics::setActiveTradingDaysByDay,
+                metrics::setAvgPnlPerActiveDayByDay, dayStats, false);
         applyTimingDimension(metrics::setTradesByHour, metrics::setProfitByHour, metrics::setWinRateByHour,
                 metrics::setAvgPnlByHour, metrics::setEligibleTradesByHour, metrics::setAvgHoldMinutesByHour,
-                metrics::setRiskRewardByHour, hourStats, false);
+                metrics::setRiskRewardByHour, metrics::setActiveTradingDaysByHour,
+                metrics::setAvgPnlPerActiveDayByHour, hourStats, false);
         applyTimingDimension(metrics::setTradesByMonth, metrics::setProfitByMonth, metrics::setWinRateByMonth,
                 metrics::setAvgPnlByMonth, metrics::setEligibleTradesByMonth, metrics::setAvgHoldMinutesByMonth,
-                metrics::setRiskRewardByMonth, monthStats, false);
+                metrics::setRiskRewardByMonth, metrics::setActiveTradingDaysByMonth,
+                metrics::setAvgPnlPerActiveDayByMonth, monthStats, false);
         applyTimingDimension(metrics::setTradesBySession, metrics::setProfitBySession, metrics::setWinRateBySession,
                 metrics::setAvgPnlBySession, metrics::setEligibleTradesBySession, metrics::setAvgHoldMinutesBySession,
-                metrics::setRiskRewardBySession, sessionStats, true);
+                metrics::setRiskRewardBySession, metrics::setActiveTradingDaysBySession,
+                metrics::setAvgPnlPerActiveDayBySession, sessionStats, true);
         applyBestSession(metrics);
+        applyOverallActiveDayAvg(metrics, overallActiveDays, overallEligiblePnl);
 
         Map<String, BigDecimal> profitByAssetClass = calculateProfitByCategory(tradesByAssetClass);
         Map<String, BigDecimal> winRateByAssetClass = calculateWinRateByCategory(tradesByAssetClass);
@@ -204,6 +219,8 @@ public class TradeDistributionMetricsService {
             Consumer<Map<String, Integer>> eligibleSetter,
             Consumer<Map<String, BigDecimal>> avgHoldSetter,
             Consumer<Map<String, BigDecimal>> riskRewardSetter,
+            Consumer<Map<String, Integer>> activeDaysSetter,
+            Consumer<Map<String, BigDecimal>> avgPnlPerActiveDaySetter,
             Map<String, TimingBucketStats> stats,
             boolean preserveKeyOrder) {
         Map<String, Integer> trades = preserveKeyOrder ? new LinkedHashMap<>() : new HashMap<>();
@@ -213,6 +230,8 @@ public class TradeDistributionMetricsService {
         Map<String, Integer> eligible = preserveKeyOrder ? new LinkedHashMap<>() : new HashMap<>();
         Map<String, BigDecimal> avgHold = preserveKeyOrder ? new LinkedHashMap<>() : new HashMap<>();
         Map<String, BigDecimal> riskReward = preserveKeyOrder ? new LinkedHashMap<>() : new HashMap<>();
+        Map<String, Integer> activeDays = preserveKeyOrder ? new LinkedHashMap<>() : new HashMap<>();
+        Map<String, BigDecimal> avgPerActiveDay = preserveKeyOrder ? new LinkedHashMap<>() : new HashMap<>();
 
         for (Map.Entry<String, TimingBucketStats> entry : stats.entrySet()) {
             String key = entry.getKey();
@@ -224,6 +243,8 @@ public class TradeDistributionMetricsService {
             avgPnl.put(key, s.avgPnl());
             avgHold.put(key, s.avgHoldMinutes());
             riskReward.put(key, s.riskReward());
+            activeDays.put(key, s.activeDayCount());
+            avgPerActiveDay.put(key, s.avgPnlPerActiveDay());
         }
 
         tradesSetter.accept(trades);
@@ -233,6 +254,22 @@ public class TradeDistributionMetricsService {
         eligibleSetter.accept(eligible);
         avgHoldSetter.accept(avgHold);
         riskRewardSetter.accept(riskReward);
+        activeDaysSetter.accept(activeDays);
+        avgPnlPerActiveDaySetter.accept(avgPerActiveDay);
+    }
+
+    private static void applyOverallActiveDayAvg(
+            TradeDistributionMetrics metrics,
+            Set<LocalDate> overallActiveDays,
+            BigDecimal overallEligiblePnl) {
+        int days = overallActiveDays.size();
+        metrics.setActiveTradingDaysCount(days);
+        if (days == 0) {
+            metrics.setAvgPnlPerActiveDay(null);
+            return;
+        }
+        metrics.setAvgPnlPerActiveDay(
+                overallEligiblePnl.divide(BigDecimal.valueOf(days), 4, ROUNDING_MODE));
     }
 
     /**
@@ -248,6 +285,7 @@ public class TradeDistributionMetricsService {
         BigDecimal totalLossAbs = BigDecimal.ZERO;
         BigDecimal holdMinutesSum = BigDecimal.ZERO;
         int holdSample;
+        final Set<LocalDate> activeDays = new HashSet<>();
 
         void accept(TradeDetails trade) {
             tradeCount++;
@@ -263,6 +301,9 @@ public class TradeDistributionMetricsService {
                     lossCount++;
                     totalLossAbs = totalLossAbs.add(pnl.abs());
                 }
+                if (trade.getEntryInfo() != null && trade.getEntryInfo().getTimestamp() != null) {
+                    activeDays.add(trade.getEntryInfo().getTimestamp().toLocalDate());
+                }
             }
             Duration hold = HoldingStyleClassifier.holdDurationOrNull(trade);
             if (hold != null && !hold.isNegative()) {
@@ -271,6 +312,10 @@ public class TradeDistributionMetricsService {
                                 .divide(BigDecimal.valueOf(60_000L), 4, ROUNDING_MODE));
                 holdSample++;
             }
+        }
+
+        int activeDayCount() {
+            return activeDays.size();
         }
 
         BigDecimal winRate() {
@@ -285,6 +330,14 @@ public class TradeDistributionMetricsService {
                 return null;
             }
             return pnlSum.divide(BigDecimal.valueOf(eligibleCount), 4, ROUNDING_MODE);
+        }
+
+        BigDecimal avgPnlPerActiveDay() {
+            int days = activeDayCount();
+            if (days == 0) {
+                return null;
+            }
+            return pnlSum.divide(BigDecimal.valueOf(days), 4, ROUNDING_MODE);
         }
 
         BigDecimal avgHoldMinutes() {
@@ -418,9 +471,14 @@ public class TradeDistributionMetricsService {
     }
 
     private TradeDistributionMetrics emptyMetricsSkeleton() {
-        Map<String, List<TradeDetails>> emptySession = emptySessionBuckets();
         TradeDistributionMetrics metrics = new TradeDistributionMetrics();
-        applySessionMetrics(metrics, emptySession);
+        applyTimingDimension(metrics::setTradesBySession, metrics::setProfitBySession, metrics::setWinRateBySession,
+                metrics::setAvgPnlBySession, metrics::setEligibleTradesBySession, metrics::setAvgHoldMinutesBySession,
+                metrics::setRiskRewardBySession, metrics::setActiveTradingDaysBySession,
+                metrics::setAvgPnlPerActiveDayBySession, emptySessionStats(), true);
+        applyBestSession(metrics);
+        metrics.setActiveTradingDaysCount(0);
+        metrics.setAvgPnlPerActiveDay(null);
         metrics.setSkippedMissingEntryCount(0);
         metrics.setOpenOrMissingPnlCount(0);
         metrics.setBadTimestampCount(0);
