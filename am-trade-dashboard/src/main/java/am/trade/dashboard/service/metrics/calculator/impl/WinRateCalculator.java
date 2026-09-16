@@ -9,27 +9,38 @@ import java.math.RoundingMode;
 import java.util.List;
 
 /**
- * Calculator for win rate metrics
+ * Calculator for win rate metrics.
+ * Win % = wins (pnl &gt; 0) / eligible (non-null pnl). Returns null when eligible=0.
  */
 @Component
 public class WinRateCalculator implements MetricsCalculator {
 
-    private static final int SCALE = 2; // Win rate typically shown as percentage with 2 decimal places
+    private static final int SCALE = 2;
     private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
     
     @Override
     public BigDecimal calculate(List<TradeDetails> trades) {
         if (trades == null || trades.isEmpty()) {
-            return BigDecimal.ZERO;
+            return null;
         }
-        
-        long winCount = trades.stream()
-                .filter(t -> t.getMetrics() != null && t.getMetrics().getProfitLoss() != null && 
-                       t.getMetrics().getProfitLoss().compareTo(BigDecimal.ZERO) > 0)
-                .count();
-        
-        // Calculate as percentage
-        return BigDecimal.valueOf(winCount * 100.0 / trades.size()).setScale(SCALE, ROUNDING_MODE);
+
+        long eligible = 0;
+        long winCount = 0;
+        for (TradeDetails t : trades) {
+            if (t.getMetrics() == null || t.getMetrics().getProfitLoss() == null) {
+                continue;
+            }
+            eligible++;
+            if (t.getMetrics().getProfitLoss().compareTo(BigDecimal.ZERO) > 0) {
+                winCount++;
+            }
+        }
+
+        if (eligible == 0) {
+            return null;
+        }
+
+        return BigDecimal.valueOf(winCount * 100.0 / eligible).setScale(SCALE, ROUNDING_MODE);
     }
     
     @Override

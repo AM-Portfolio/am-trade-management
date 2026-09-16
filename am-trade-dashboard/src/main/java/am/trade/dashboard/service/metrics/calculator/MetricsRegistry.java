@@ -63,7 +63,11 @@ public class MetricsRegistry {
             try {
                 String metricName = calculator.getMetricName();
                 BigDecimal value = calculator.calculate(trades);
-                
+                if (value == null) {
+                    log.debug("Skipped metric {} (null / not applicable)", metricName);
+                    continue;
+                }
+
                 BiConsumer<PerformanceMetrics, BigDecimal> setter = metricSetters.get(metricName);
                 if (setter != null) {
                     setter.accept(metrics, value);

@@ -51,6 +51,7 @@ class AverageHoldingTimeAndWinCountSpec {
 
         assertEquals(2, metrics.getWinningTradesCount());
         assertEquals(1, metrics.getLosingTradesCount());
+        assertEquals(4, metrics.getEligibleTradesCount());
     }
 
     private static TradeDetails trade(

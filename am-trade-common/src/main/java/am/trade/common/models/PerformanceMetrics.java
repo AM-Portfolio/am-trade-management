@@ -58,6 +58,8 @@ public class PerformanceMetrics {
     /** Wins (pnl &gt; 0) / losses (pnl &lt; 0); break-even excluded from both. */
     private Integer winningTradesCount;
     private Integer losingTradesCount;
+    /** Trades with non-null profitLoss (Win% / Avg PnL denominator). */
+    private Integer eligibleTradesCount;
     
     // Efficiency metrics
     private BigDecimal returnOnCapital; // Profit / Capital used
