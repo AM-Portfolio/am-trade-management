@@ -107,6 +107,10 @@ public class TradeManagementServiceImpl implements TradeManagementService {
         // If portfolio ID is provided, filter by it
         if (portfolioId != null && !portfolioId.isEmpty()) {
             trades = tradeDetailsService.findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(userId, portfolioId, startDateTime, endDateTime);
+            if (trades.isEmpty()) {
+                healOrphanedImportedTrades(portfolioId, userId);
+                trades = tradeDetailsService.findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(userId, portfolioId, startDateTime, endDateTime);
+            }
         } else {
             trades = tradeDetailsService.findModelsByUserIdAndEntryInfoTimestampBetween(userId, startDateTime, endDateTime);
             java.util.Set<String> paperIds = portfolioRepository.findByOwnerId(userId).stream()
@@ -128,19 +132,40 @@ public class TradeManagementServiceImpl implements TradeManagementService {
     }
 
     @Override
+    public List<TradeDetails> getAllTradesByTradePortfolioId(String portfolioId) {
+        String userId = com.am.security.context.UserContext.getUserIdOrThrow();
+        List<TradeDetails> trades = tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId);
+        if (trades.isEmpty()) {
+            healOrphanedImportedTrades(portfolioId, userId);
+            trades = tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId);
+        }
+        enrichWithLivePrices(trades);
+        return trades;
+    }
+
+    @Override
     public Page<TradeDetails> getTradeDetailsByPortfolio(String portfolioId, Pageable pageable) {
         String userId = com.am.security.context.UserContext.getUserIdOrThrow();
         Page<TradeDetails> page = tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId, pageable);
+        if (page.isEmpty()) {
+            healOrphanedImportedTrades(portfolioId, userId);
+            page = tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId, pageable);
+        }
         enrichWithLivePrices(page.getContent());
         return page;
     }
 
-    @Override
-    public List<TradeDetails> getAllTradesByTradePortfolioId(String portfolioId) {
-        String userId = com.am.security.context.UserContext.getUserIdOrThrow();
-        List<TradeDetails> trades = tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId);
-        enrichWithLivePrices(trades);
-        return trades;
+    /**
+     * Doc-parser Kafka imports historically saved trades without {@code userId}.
+     * Holdings queries filter by userId+portfolioId, so those rows look missing.
+     * Only heal when the authenticated user owns the portfolio.
+     */
+    private void healOrphanedImportedTrades(String portfolioId, String userId) {
+        Optional<PortfolioEntity> portfolio = portfolioRepository.findByPortfolioId(portfolioId);
+        if (portfolio.isEmpty() || !userId.equals(portfolio.get().getOwnerId())) {
+            return;
+        }
+        tradeDetailsService.backfillMissingUserId(portfolioId, userId);
     }
 
     @Override
@@ -150,6 +175,10 @@ public class TradeManagementServiceImpl implements TradeManagementService {
 
         String userId = com.am.security.context.UserContext.getUserIdOrThrow();
         List<TradeDetails> filteredTrades = tradeDetailsService.findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(userId, portfolioId, startDateTime, endDateTime);
+        if (filteredTrades.isEmpty()) {
+            healOrphanedImportedTrades(portfolioId, userId);
+            filteredTrades = tradeDetailsService.findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(userId, portfolioId, startDateTime, endDateTime);
+        }
                 
         enrichWithLivePrices(filteredTrades);
         return filteredTrades;
