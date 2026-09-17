@@ -368,35 +368,25 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
     }
     
     private List<TradeDetails> applyAdditionalFilters(List<TradeDetails> trades, MetricsFilterRequest filterRequest) {
-        if (trades.isEmpty()) {
+        if (trades == null || trades.isEmpty()) {
             return trades;
         }
+
+        List<TradeDetails> filtered = filterByInstrument(trades, filterRequest);
+        filtered = filterByTradeCharacteristics(filtered, filterRequest);
+        filtered = filterByHoldingTime(filtered, filterRequest);
+        filtered = filterByHoldingStyle(filtered, filterRequest);
+        filtered = filterByProfitLoss(filtered, filterRequest);
+
+        return filtered;
+    }
+
+    private List<TradeDetails> filterByInstrument(List<TradeDetails> trades, MetricsFilterRequest filterRequest) {
+        List<TradeDetails> filtered = trades;
         
-        // Initialize filter objects if they are null to prevent NullPointerExceptions
-        if (filterRequest.getTradeCharacteristics() == null) {
-            filterRequest.setTradeCharacteristics(new TradeCharacteristicsFilter());
-        }
-        
-        if (filterRequest.getInstrumentFilters() == null) {
-            filterRequest.setInstrumentFilters(new InstrumentFilterCriteria());
-        }
-        
-        if (filterRequest.getProfitLossFilters() == null) {
-            filterRequest.setProfitLossFilters(new ProfitLossFilter());
-        }
-        
-        // Apply in-memory filters based on the filter request
-        
-        if (filterRequest.getTradeCharacteristics().getStrategies() != null && !filterRequest.getTradeCharacteristics().getStrategies().isEmpty()) {
-            trades = trades.stream()
-                    .filter(trade -> trade.getStrategy() != null && 
-                            filterRequest.getTradeCharacteristics().getStrategies().contains(trade.getStrategy()))
-                    .collect(Collectors.toList());
-        }
-        
-        // Filter by specific instruments
+        // Filter by explicit instrument symbols
         if (filterRequest.getInstruments() != null && !filterRequest.getInstruments().isEmpty()) {
-            trades = trades.stream()
+            filtered = filtered.stream()
                     .filter(trade -> trade.getInstrumentInfo() != null && 
                             filterRequest.getInstruments().contains(trade.getInstrumentInfo().getRawSymbol()))
                     .collect(Collectors.toList());
@@ -407,7 +397,7 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
             // Apply market segment filter
             if (filterRequest.getInstrumentFilters().getMarketSegments() != null && 
                 !filterRequest.getInstrumentFilters().getMarketSegments().isEmpty()) {
-                trades = trades.stream()
+                filtered = filtered.stream()
                         .filter(trade -> trade.getInstrumentInfo() != null && 
                                 trade.getInstrumentInfo().getSegment() != null && 
                                 filterRequest.getInstrumentFilters().getMarketSegments()
@@ -418,7 +408,7 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
             // Apply base symbol filter
             if (filterRequest.getInstrumentFilters().getBaseSymbols() != null && 
                 !filterRequest.getInstrumentFilters().getBaseSymbols().isEmpty()) {
-                trades = trades.stream()
+                filtered = filtered.stream()
                         .filter(trade -> trade.getInstrumentInfo() != null && 
                                 trade.getInstrumentInfo().getBaseSymbol() != null && 
                                 filterRequest.getInstrumentFilters().getBaseSymbols()
@@ -429,7 +419,7 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
             // Apply index type filter
             if (filterRequest.getInstrumentFilters().getIndexTypes() != null && 
                 !filterRequest.getInstrumentFilters().getIndexTypes().isEmpty()) {
-                trades = trades.stream()
+                filtered = filtered.stream()
                         .filter(trade -> trade.getInstrumentInfo() != null && 
                                 trade.getInstrumentInfo().getIndexType() != null && 
                                 filterRequest.getInstrumentFilters().getIndexTypes()
@@ -440,7 +430,7 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
             // Apply derivative type filter
             if (filterRequest.getInstrumentFilters().getDerivativeTypes() != null && 
                 !filterRequest.getInstrumentFilters().getDerivativeTypes().isEmpty()) {
-                trades = trades.stream()
+                filtered = filtered.stream()
                         .filter(trade -> {
                             if (trade.getInstrumentInfo() == null || 
                                 trade.getInstrumentInfo().getDerivativeInfo() == null) {
@@ -462,126 +452,148 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
                         .collect(Collectors.toList());
             }
         }
-        
-        // Apply trade characteristics filters
-        if (filterRequest.getTradeCharacteristics() != null) {
-            // Filter by trade directions
-            if (filterRequest.getTradeCharacteristics().getDirections() != null && 
-                !filterRequest.getTradeCharacteristics().getDirections().isEmpty()) {
-                trades = trades.stream()
-                        .filter(trade -> trade.getTradePositionType() != null && 
-                                filterRequest.getTradeCharacteristics().getDirections().contains(trade.getTradePositionType().name()))
-                        .collect(Collectors.toList());
-            }
-            
-            // Filter by trade statuses
-            if (filterRequest.getTradeCharacteristics().getStatuses() != null && 
-                !filterRequest.getTradeCharacteristics().getStatuses().isEmpty()) {
-                trades = trades.stream()
-                        .filter(trade -> trade.getStatus() != null && 
-                                filterRequest.getTradeCharacteristics().getStatuses().contains(trade.getStatus().name()))
-                        .collect(Collectors.toList());
-            }
-            
-            // Filter by strategies
-            if (filterRequest.getTradeCharacteristics().getStrategies() != null && 
-                !filterRequest.getTradeCharacteristics().getStrategies().isEmpty()) {
-                trades = trades.stream()
-                        .filter(trade -> trade.getStrategy() != null && 
-                                filterRequest.getTradeCharacteristics().getStrategies().contains(trade.getStrategy()))
-                        .collect(Collectors.toList());
-            }
-            
-            // Filter by tags
-            if (filterRequest.getTradeCharacteristics().getTags() != null && 
-                !filterRequest.getTradeCharacteristics().getTags().isEmpty()) {
-                trades = trades.stream()
-                        .filter(trade -> trade.getTags() != null && 
-                                !Collections.disjoint(trade.getTags(), filterRequest.getTradeCharacteristics().getTags()))
-                        .collect(Collectors.toList());
-            }
-            
-            // Filter by holding time
-            if (filterRequest.getTradeCharacteristics().getMinHoldingTimeHours() != null || 
-                filterRequest.getTradeCharacteristics().getMaxHoldingTimeHours() != null) {
-                trades = trades.stream()
-                        .filter(trade -> {
-                            if (trade.getEntryInfo() == null || trade.getEntryInfo().getTimestamp() == null) {
-                                return false;
-                            }
-                            
-                            LocalDateTime exitTime = (trade.getExitInfo() != null && trade.getExitInfo().getTimestamp() != null) ? 
-                                    trade.getExitInfo().getTimestamp() : LocalDateTime.now();
-                            
-                            long holdingHours = ChronoUnit.HOURS.between(trade.getEntryInfo().getTimestamp(), exitTime);
-                            
-                            boolean meetsMinHours = filterRequest.getTradeCharacteristics().getMinHoldingTimeHours() == null || 
-                                    holdingHours >= filterRequest.getTradeCharacteristics().getMinHoldingTimeHours();
-                            boolean meetsMaxHours = filterRequest.getTradeCharacteristics().getMaxHoldingTimeHours() == null || 
-                                    holdingHours <= filterRequest.getTradeCharacteristics().getMaxHoldingTimeHours();
-                            
-                            return meetsMinHours && meetsMaxHours;
-                        })
-                        .collect(Collectors.toList());
-            }
+        return filtered;
+    }
 
-            // Holding style: SCALPER / INTRADAY / SWING (Analysis Timing filter)
-            String holdingStyle = filterRequest.getTradeCharacteristics().getHoldingStyle();
-            if (holdingStyle != null && !holdingStyle.isBlank()) {
-                String style = holdingStyle.trim().toUpperCase();
-                trades = trades.stream()
-                        .filter(trade -> HoldingStyleClassifier.matchesStyle(trade, style))
-                        .collect(Collectors.toList());
-            }
+    private List<TradeDetails> filterByTradeCharacteristics(List<TradeDetails> trades, MetricsFilterRequest filterRequest) {
+        if (filterRequest.getTradeCharacteristics() == null) {
+            return trades;
         }
         
-        // Apply profit/loss filters
-        if (filterRequest.getProfitLossFilters() != null) {
-            // Filter by min profit/loss
-            if (filterRequest.getProfitLossFilters().getMinProfitLoss() != null) {
-                trades = trades.stream()
-                        .filter(trade -> trade.getMetrics() != null && 
-                                trade.getMetrics().getProfitLoss() != null && 
-                                trade.getMetrics().getProfitLoss().doubleValue() >= filterRequest.getProfitLossFilters().getMinProfitLoss())
-                        .collect(Collectors.toList());
-            }
-            
-            // Filter by max profit/loss
-            if (filterRequest.getProfitLossFilters().getMaxProfitLoss() != null) {
-                trades = trades.stream()
-                        .filter(trade -> trade.getMetrics() != null && 
-                                trade.getMetrics().getProfitLoss() != null && 
-                                trade.getMetrics().getProfitLoss().doubleValue() <= filterRequest.getProfitLossFilters().getMaxProfitLoss())
-                        .collect(Collectors.toList());
-            }
-            
-            // Filter by position size
-            if (filterRequest.getProfitLossFilters().getMinPositionSize() != null || 
-                filterRequest.getProfitLossFilters().getMaxPositionSize() != null) {
-                trades = trades.stream()
-                        .filter(trade -> {
-                            if (trade.getEntryInfo() == null || 
-                                    trade.getEntryInfo().getPrice() == null || 
-                                    trade.getEntryInfo().getQuantity() == null) {
-                                return false;
-                            }
-                            
-                            double positionSize = trade.getEntryInfo().getPrice()
-                                    .multiply(new java.math.BigDecimal(trade.getEntryInfo().getQuantity().toString()))
-                                    .doubleValue();
-                            
-                            boolean meetsMinSize = filterRequest.getProfitLossFilters().getMinPositionSize() == null || 
-                                    positionSize >= filterRequest.getProfitLossFilters().getMinPositionSize();
-                            boolean meetsMaxSize = filterRequest.getProfitLossFilters().getMaxPositionSize() == null || 
-                                    positionSize <= filterRequest.getProfitLossFilters().getMaxPositionSize();
-                            
-                            return meetsMinSize && meetsMaxSize;
-                        })
-                        .collect(Collectors.toList());
-            }
+        List<TradeDetails> filtered = trades;
+        // Filter by trade directions
+        if (filterRequest.getTradeCharacteristics().getDirections() != null && 
+            !filterRequest.getTradeCharacteristics().getDirections().isEmpty()) {
+            filtered = filtered.stream()
+                    .filter(trade -> trade.getTradePositionType() != null && 
+                            filterRequest.getTradeCharacteristics().getDirections().contains(trade.getTradePositionType().name()))
+                    .collect(Collectors.toList());
         }
         
+        // Filter by trade statuses
+        if (filterRequest.getTradeCharacteristics().getStatuses() != null && 
+            !filterRequest.getTradeCharacteristics().getStatuses().isEmpty()) {
+            filtered = filtered.stream()
+                    .filter(trade -> trade.getStatus() != null && 
+                            filterRequest.getTradeCharacteristics().getStatuses().contains(trade.getStatus().name()))
+                    .collect(Collectors.toList());
+        }
+        
+        // Filter by strategies
+        if (filterRequest.getTradeCharacteristics().getStrategies() != null && 
+            !filterRequest.getTradeCharacteristics().getStrategies().isEmpty()) {
+            filtered = filtered.stream()
+                    .filter(trade -> trade.getStrategy() != null && 
+                            filterRequest.getTradeCharacteristics().getStrategies().contains(trade.getStrategy()))
+                    .collect(Collectors.toList());
+        }
+        
+        // Filter by tags
+        if (filterRequest.getTradeCharacteristics().getTags() != null && 
+            !filterRequest.getTradeCharacteristics().getTags().isEmpty()) {
+            filtered = filtered.stream()
+                    .filter(trade -> trade.getTags() != null && 
+                            !Collections.disjoint(trade.getTags(), filterRequest.getTradeCharacteristics().getTags()))
+                    .collect(Collectors.toList());
+        }
+        return filtered;
+    }
+
+    private List<TradeDetails> filterByHoldingTime(List<TradeDetails> trades, MetricsFilterRequest filterRequest) {
+        if (filterRequest.getTradeCharacteristics() == null) {
+            return trades;
+        }
+        if (filterRequest.getTradeCharacteristics().getMinHoldingTimeHours() == null && 
+            filterRequest.getTradeCharacteristics().getMaxHoldingTimeHours() == null) {
+            return trades;
+        }
+        
+        return trades.stream()
+                .filter(trade -> {
+                    if (trade.getEntryInfo() == null || trade.getEntryInfo().getTimestamp() == null) {
+                        return false;
+                    }
+                    
+                    LocalDateTime exitTime = (trade.getExitInfo() != null && trade.getExitInfo().getTimestamp() != null) ? 
+                            trade.getExitInfo().getTimestamp() : LocalDateTime.now();
+                    
+                    long holdingHours = ChronoUnit.HOURS.between(trade.getEntryInfo().getTimestamp(), exitTime);
+                    
+                    boolean meetsMinHours = filterRequest.getTradeCharacteristics().getMinHoldingTimeHours() == null || 
+                            holdingHours >= filterRequest.getTradeCharacteristics().getMinHoldingTimeHours();
+                    boolean meetsMaxHours = filterRequest.getTradeCharacteristics().getMaxHoldingTimeHours() == null || 
+                            holdingHours <= filterRequest.getTradeCharacteristics().getMaxHoldingTimeHours();
+                    
+                    return meetsMinHours && meetsMaxHours;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<TradeDetails> filterByHoldingStyle(List<TradeDetails> trades, MetricsFilterRequest filterRequest) {
+        if (filterRequest.getTradeCharacteristics() == null) {
+            return trades;
+        }
+        
+        String holdingStyle = filterRequest.getTradeCharacteristics().getHoldingStyle();
+        if (holdingStyle != null && !holdingStyle.isBlank()) {
+            String style = holdingStyle.trim().toUpperCase();
+            return trades.stream()
+                    .filter(trade -> HoldingStyleClassifier.matchesStyle(trade, style))
+                    .collect(Collectors.toList());
+        }
         return trades;
+    }
+
+    private List<TradeDetails> filterByProfitLoss(List<TradeDetails> trades, MetricsFilterRequest filterRequest) {
+        if (filterRequest.getProfitLossFilters() == null) {
+            return trades;
+        }
+        
+        List<TradeDetails> filtered = trades;
+        // Filter by min profit/loss
+        if (filterRequest.getProfitLossFilters().getMinProfitLoss() != null) {
+            filtered = filtered.stream()
+                    .filter(trade -> trade.getMetrics() != null && 
+                            trade.getMetrics().getProfitLoss() != null && 
+                            trade.getMetrics().getProfitLoss().doubleValue() >= filterRequest.getProfitLossFilters().getMinProfitLoss())
+                    .collect(Collectors.toList());
+        }
+        
+        // Filter by max profit/loss
+        if (filterRequest.getProfitLossFilters().getMaxProfitLoss() != null) {
+            filtered = filtered.stream()
+                    .filter(trade -> trade.getMetrics() != null && 
+                            trade.getMetrics().getProfitLoss() != null && 
+                            trade.getMetrics().getProfitLoss().doubleValue() <= filterRequest.getProfitLossFilters().getMaxProfitLoss())
+                    .collect(Collectors.toList());
+        }
+        
+        // Filter by position size
+        if (filterRequest.getProfitLossFilters().getMinPositionSize() != null || 
+            filterRequest.getProfitLossFilters().getMaxPositionSize() != null) {
+            filtered = filtered.stream()
+                    .filter(trade -> {
+                        if (trade.getEntryInfo() == null || 
+                                trade.getEntryInfo().getPrice() == null || 
+                                trade.getEntryInfo().getQuantity() == null) {
+                            return false;
+                        }
+                        
+                        double positionSize = trade.getEntryInfo().getPrice()
+                                .multiply(new java.math.BigDecimal(trade.getEntryInfo().getQuantity().toString()))
+                                .doubleValue();
+                        
+                        boolean meetsMinSize = filterRequest.getProfitLossFilters().getMinPositionSize() == null || 
+                                positionSize >= filterRequest.getProfitLossFilters().getMinPositionSize();
+                        boolean meetsMaxSize = filterRequest.getProfitLossFilters().getMaxPositionSize() == null || 
+                                positionSize <= filterRequest.getProfitLossFilters().getMaxPositionSize();
+                        
+                        return meetsMinSize && meetsMaxSize;
+                    })
+                    .collect(Collectors.toList());
+        }
+        
+        return filtered;
     }
 
     
