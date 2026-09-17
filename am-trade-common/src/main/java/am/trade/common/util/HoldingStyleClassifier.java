@@ -60,7 +60,7 @@ public final class HoldingStyleClassifier {
         if (classified == null) {
             return false;
         }
-        String normalized = style.trim().toUpperCase(java.util.Locale.ROOT);
+        String normalized = style.trim().toUpperCase();
         return switch (normalized) {
             case "SCALPER", "INTRADAY", "SWING" -> classified.equals(normalized);
             default -> true;

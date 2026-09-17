@@ -137,49 +137,22 @@ public class TradeDistributionMetricsService {
             }
         }
 
-        TimingDimensionMaps dayMaps = applyTimingDimension(dayStats, false);
-        metrics.setTradesByDay(dayMaps.trades());
-        metrics.setProfitByDay(dayMaps.profit());
-        metrics.setWinRateByDay(dayMaps.winRate());
-        metrics.setAvgPnlByDay(dayMaps.avgPnl());
-        metrics.setEligibleTradesByDay(dayMaps.eligible());
-        metrics.setAvgHoldMinutesByDay(dayMaps.avgHold());
-        metrics.setRiskRewardByDay(dayMaps.riskReward());
-        metrics.setActiveTradingDaysByDay(dayMaps.activeDays());
-        metrics.setAvgPnlPerActiveDayByDay(dayMaps.avgPerActiveDay());
-
-        TimingDimensionMaps hourMaps = applyTimingDimension(hourStats, false);
-        metrics.setTradesByHour(hourMaps.trades());
-        metrics.setProfitByHour(hourMaps.profit());
-        metrics.setWinRateByHour(hourMaps.winRate());
-        metrics.setAvgPnlByHour(hourMaps.avgPnl());
-        metrics.setEligibleTradesByHour(hourMaps.eligible());
-        metrics.setAvgHoldMinutesByHour(hourMaps.avgHold());
-        metrics.setRiskRewardByHour(hourMaps.riskReward());
-        metrics.setActiveTradingDaysByHour(hourMaps.activeDays());
-        metrics.setAvgPnlPerActiveDayByHour(hourMaps.avgPerActiveDay());
-
-        TimingDimensionMaps monthMaps = applyTimingDimension(monthStats, false);
-        metrics.setTradesByMonth(monthMaps.trades());
-        metrics.setProfitByMonth(monthMaps.profit());
-        metrics.setWinRateByMonth(monthMaps.winRate());
-        metrics.setAvgPnlByMonth(monthMaps.avgPnl());
-        metrics.setEligibleTradesByMonth(monthMaps.eligible());
-        metrics.setAvgHoldMinutesByMonth(monthMaps.avgHold());
-        metrics.setRiskRewardByMonth(monthMaps.riskReward());
-        metrics.setActiveTradingDaysByMonth(monthMaps.activeDays());
-        metrics.setAvgPnlPerActiveDayByMonth(monthMaps.avgPerActiveDay());
-
-        TimingDimensionMaps sessionMaps = applyTimingDimension(sessionStats, true);
-        metrics.setTradesBySession(sessionMaps.trades());
-        metrics.setProfitBySession(sessionMaps.profit());
-        metrics.setWinRateBySession(sessionMaps.winRate());
-        metrics.setAvgPnlBySession(sessionMaps.avgPnl());
-        metrics.setEligibleTradesBySession(sessionMaps.eligible());
-        metrics.setAvgHoldMinutesBySession(sessionMaps.avgHold());
-        metrics.setRiskRewardBySession(sessionMaps.riskReward());
-        metrics.setActiveTradingDaysBySession(sessionMaps.activeDays());
-        metrics.setAvgPnlPerActiveDayBySession(sessionMaps.avgPerActiveDay());
+        applyTimingDimension(metrics::setTradesByDay, metrics::setProfitByDay, metrics::setWinRateByDay,
+                metrics::setAvgPnlByDay, metrics::setEligibleTradesByDay, metrics::setAvgHoldMinutesByDay,
+                metrics::setRiskRewardByDay, metrics::setActiveTradingDaysByDay,
+                metrics::setAvgPnlPerActiveDayByDay, dayStats, false);
+        applyTimingDimension(metrics::setTradesByHour, metrics::setProfitByHour, metrics::setWinRateByHour,
+                metrics::setAvgPnlByHour, metrics::setEligibleTradesByHour, metrics::setAvgHoldMinutesByHour,
+                metrics::setRiskRewardByHour, metrics::setActiveTradingDaysByHour,
+                metrics::setAvgPnlPerActiveDayByHour, hourStats, false);
+        applyTimingDimension(metrics::setTradesByMonth, metrics::setProfitByMonth, metrics::setWinRateByMonth,
+                metrics::setAvgPnlByMonth, metrics::setEligibleTradesByMonth, metrics::setAvgHoldMinutesByMonth,
+                metrics::setRiskRewardByMonth, metrics::setActiveTradingDaysByMonth,
+                metrics::setAvgPnlPerActiveDayByMonth, monthStats, false);
+        applyTimingDimension(metrics::setTradesBySession, metrics::setProfitBySession, metrics::setWinRateBySession,
+                metrics::setAvgPnlBySession, metrics::setEligibleTradesBySession, metrics::setAvgHoldMinutesBySession,
+                metrics::setRiskRewardBySession, metrics::setActiveTradingDaysBySession,
+                metrics::setAvgPnlPerActiveDayBySession, sessionStats, true);
         applyBestSession(metrics);
         applyOverallActiveDayAvg(metrics, overallActiveDays, overallEligiblePnl);
 
@@ -238,18 +211,16 @@ public class TradeDistributionMetricsService {
         return map;
     }
 
-    private record TimingDimensionMaps(
-            Map<String, Integer> trades,
-            Map<String, BigDecimal> profit,
-            Map<String, BigDecimal> winRate,
-            Map<String, BigDecimal> avgPnl,
-            Map<String, Integer> eligible,
-            Map<String, BigDecimal> avgHold,
-            Map<String, BigDecimal> riskReward,
-            Map<String, Integer> activeDays,
-            Map<String, BigDecimal> avgPerActiveDay) {}
-
-    private TimingDimensionMaps applyTimingDimension(
+    private void applyTimingDimension(
+            Consumer<Map<String, Integer>> tradesSetter,
+            Consumer<Map<String, BigDecimal>> profitSetter,
+            Consumer<Map<String, BigDecimal>> winRateSetter,
+            Consumer<Map<String, BigDecimal>> avgPnlSetter,
+            Consumer<Map<String, Integer>> eligibleSetter,
+            Consumer<Map<String, BigDecimal>> avgHoldSetter,
+            Consumer<Map<String, BigDecimal>> riskRewardSetter,
+            Consumer<Map<String, Integer>> activeDaysSetter,
+            Consumer<Map<String, BigDecimal>> avgPnlPerActiveDaySetter,
             Map<String, TimingBucketStats> stats,
             boolean preserveKeyOrder) {
         Map<String, Integer> trades = preserveKeyOrder ? new LinkedHashMap<>() : new HashMap<>();
@@ -276,7 +247,15 @@ public class TradeDistributionMetricsService {
             avgPerActiveDay.put(key, s.avgPnlPerActiveDay());
         }
 
-        return new TimingDimensionMaps(trades, profit, winRate, avgPnl, eligible, avgHold, riskReward, activeDays, avgPerActiveDay);
+        tradesSetter.accept(trades);
+        profitSetter.accept(profit);
+        winRateSetter.accept(winRate);
+        avgPnlSetter.accept(avgPnl);
+        eligibleSetter.accept(eligible);
+        avgHoldSetter.accept(avgHold);
+        riskRewardSetter.accept(riskReward);
+        activeDaysSetter.accept(activeDays);
+        avgPnlPerActiveDaySetter.accept(avgPerActiveDay);
     }
 
     private static void applyOverallActiveDayAvg(
@@ -381,7 +360,20 @@ public class TradeDistributionMetricsService {
         }
     }
 
-
+    private void applySessionMetrics(
+            TradeDistributionMetrics metrics,
+            Map<String, List<TradeDetails>> tradesBySession) {
+        metrics.setTradesBySession(convertToTradeCountPreservingKeys(tradesBySession));
+        metrics.setProfitBySession(calculateProfitByCategoryPreservingKeys(tradesBySession));
+        metrics.setWinRateBySession(calculateWinRateByCategoryPreservingKeys(tradesBySession));
+        metrics.setAvgPnlBySession(calculateAvgPnlByCategoryPreservingKeys(tradesBySession));
+        metrics.setEligibleTradesBySession(calculateEligibleCountByCategoryPreservingKeys(tradesBySession));
+        metrics.setAvgHoldMinutesBySession(
+                calculateAvgHoldMinutesByCategoryPreservingKeys(tradesBySession));
+        metrics.setRiskRewardBySession(
+                calculateRiskRewardByCategoryPreservingKeys(tradesBySession));
+        applyBestSession(metrics);
+    }
 
     private static final int BEST_SESSION_MIN_ELIGIBLE = 3;
 
@@ -480,16 +472,10 @@ public class TradeDistributionMetricsService {
 
     private TradeDistributionMetrics emptyMetricsSkeleton() {
         TradeDistributionMetrics metrics = new TradeDistributionMetrics();
-        TimingDimensionMaps sessionMaps = applyTimingDimension(emptySessionStats(), true);
-        metrics.setTradesBySession(sessionMaps.trades());
-        metrics.setProfitBySession(sessionMaps.profit());
-        metrics.setWinRateBySession(sessionMaps.winRate());
-        metrics.setAvgPnlBySession(sessionMaps.avgPnl());
-        metrics.setEligibleTradesBySession(sessionMaps.eligible());
-        metrics.setAvgHoldMinutesBySession(sessionMaps.avgHold());
-        metrics.setRiskRewardBySession(sessionMaps.riskReward());
-        metrics.setActiveTradingDaysBySession(sessionMaps.activeDays());
-        metrics.setAvgPnlPerActiveDayBySession(sessionMaps.avgPerActiveDay());
+        applyTimingDimension(metrics::setTradesBySession, metrics::setProfitBySession, metrics::setWinRateBySession,
+                metrics::setAvgPnlBySession, metrics::setEligibleTradesBySession, metrics::setAvgHoldMinutesBySession,
+                metrics::setRiskRewardBySession, metrics::setActiveTradingDaysBySession,
+                metrics::setAvgPnlPerActiveDayBySession, emptySessionStats(), true);
         applyBestSession(metrics);
         metrics.setActiveTradingDaysCount(0);
         metrics.setAvgPnlPerActiveDay(null);
@@ -506,7 +492,13 @@ public class TradeDistributionMetricsService {
         return metrics;
     }
 
-
+    private static Map<String, List<TradeDetails>> emptySessionBuckets() {
+        Map<String, List<TradeDetails>> map = new LinkedHashMap<>();
+        for (String key : SESSION_KEYS) {
+            map.put(key, new ArrayList<>());
+        }
+        return map;
+    }
 
     private String calculateDurationCategory(TradeDetails trade) {
         if (trade.getEntryInfo() == null || trade.getEntryInfo().getTimestamp() == null ||
@@ -566,7 +558,14 @@ public class TradeDistributionMetricsService {
         return profitByCategory;
     }
 
-
+    private Map<String, BigDecimal> calculateProfitByCategoryPreservingKeys(
+            Map<String, List<TradeDetails>> tradesByCategory) {
+        Map<String, BigDecimal> profitByCategory = new LinkedHashMap<>();
+        for (Map.Entry<String, List<TradeDetails>> entry : tradesByCategory.entrySet()) {
+            profitByCategory.put(entry.getKey(), sumProfit(entry.getValue()));
+        }
+        return profitByCategory;
+    }
 
     private BigDecimal sumProfit(List<TradeDetails> categoryTrades) {
         return categoryTrades.stream()
@@ -586,7 +585,14 @@ public class TradeDistributionMetricsService {
         return winRateByCategory;
     }
 
-
+    private Map<String, BigDecimal> calculateWinRateByCategoryPreservingKeys(
+            Map<String, List<TradeDetails>> tradesByCategory) {
+        Map<String, BigDecimal> winRateByCategory = new LinkedHashMap<>();
+        for (Map.Entry<String, List<TradeDetails>> entry : tradesByCategory.entrySet()) {
+            winRateByCategory.put(entry.getKey(), winRateFor(entry.getValue()));
+        }
+        return winRateByCategory;
+    }
 
     private BigDecimal winRateFor(List<TradeDetails> categoryTrades) {
         long eligible = categoryTrades.stream()
@@ -610,7 +616,14 @@ public class TradeDistributionMetricsService {
         return avg;
     }
 
-
+    private Map<String, BigDecimal> calculateAvgPnlByCategoryPreservingKeys(
+            Map<String, List<TradeDetails>> tradesByCategory) {
+        Map<String, BigDecimal> avg = new LinkedHashMap<>();
+        for (Map.Entry<String, List<TradeDetails>> entry : tradesByCategory.entrySet()) {
+            avg.put(entry.getKey(), avgPnlFor(entry.getValue()));
+        }
+        return avg;
+    }
 
     private BigDecimal avgPnlFor(List<TradeDetails> categoryTrades) {
         List<BigDecimal> pnls = categoryTrades.stream()
@@ -633,7 +646,14 @@ public class TradeDistributionMetricsService {
         return out;
     }
 
-
+    private Map<String, BigDecimal> calculateAvgHoldMinutesByCategoryPreservingKeys(
+            Map<String, List<TradeDetails>> tradesByCategory) {
+        Map<String, BigDecimal> out = new LinkedHashMap<>();
+        for (Map.Entry<String, List<TradeDetails>> entry : tradesByCategory.entrySet()) {
+            out.put(entry.getKey(), avgHoldMinutesFor(entry.getValue()));
+        }
+        return out;
+    }
 
     private BigDecimal avgHoldMinutesFor(List<TradeDetails> categoryTrades) {
         BigDecimal totalMinutes = BigDecimal.ZERO;
@@ -663,7 +683,14 @@ public class TradeDistributionMetricsService {
         return out;
     }
 
-
+    private Map<String, BigDecimal> calculateRiskRewardByCategoryPreservingKeys(
+            Map<String, List<TradeDetails>> tradesByCategory) {
+        Map<String, BigDecimal> out = new LinkedHashMap<>();
+        for (Map.Entry<String, List<TradeDetails>> entry : tradesByCategory.entrySet()) {
+            out.put(entry.getKey(), riskRewardFor(entry.getValue()));
+        }
+        return out;
+    }
 
     /**
      * Avg win ÷ |avg loss|. Null when no wins or no losses (not a stop-based R-multiple).
@@ -707,7 +734,14 @@ public class TradeDistributionMetricsService {
         return counts;
     }
 
-
+    private Map<String, Integer> calculateEligibleCountByCategoryPreservingKeys(
+            Map<String, List<TradeDetails>> tradesByCategory) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        for (Map.Entry<String, List<TradeDetails>> entry : tradesByCategory.entrySet()) {
+            counts.put(entry.getKey(), eligibleCount(entry.getValue()));
+        }
+        return counts;
+    }
 
     private int eligibleCount(List<TradeDetails> categoryTrades) {
         return (int) categoryTrades.stream()
@@ -723,5 +757,12 @@ public class TradeDistributionMetricsService {
         return tradeCountByCategory;
     }
 
-
+    private Map<String, Integer> convertToTradeCountPreservingKeys(
+            Map<String, List<TradeDetails>> tradesByCategory) {
+        Map<String, Integer> tradeCountByCategory = new LinkedHashMap<>();
+        for (Map.Entry<String, List<TradeDetails>> entry : tradesByCategory.entrySet()) {
+            tradeCountByCategory.put(entry.getKey(), entry.getValue().size());
+        }
+        return tradeCountByCategory;
+    }
 }

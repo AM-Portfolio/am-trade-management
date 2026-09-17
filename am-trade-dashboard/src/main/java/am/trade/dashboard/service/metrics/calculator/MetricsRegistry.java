@@ -88,78 +88,90 @@ public class MetricsRegistry {
      * @param metrics PerformanceMetrics object to update
      */
     private void processSpecialCalculators(List<TradeDetails> trades, PerformanceMetrics metrics) {
-        handleTimeBasedReturnCalculator(trades, metrics);
-        handleLargestTradeCalculator(trades, metrics);
-        handleAverageTradeCalculator(trades, metrics);
-        handleAverageHoldingTimeCalculator(trades, metrics);
-        handleBestWorstDayCalculator(trades, metrics);
-        handleConsistencyMetricsCalculator(trades, metrics);
-    }
+        // Process TimeBasedReturnCalculator
+        calculators.stream()
+                .filter(c -> c instanceof TimeBasedReturnCalculator)
+                .findFirst()
+                .ifPresent(calculator -> {
+                    try {
+                        TimeBasedReturnCalculator timeCalculator = (TimeBasedReturnCalculator) calculator;
+                        timeCalculator.calculateTimeBasedReturns(trades, metrics);
+                        log.debug("Applied time-based return metrics");
+                    } catch (Exception e) {
+                        log.error("Error calculating time-based metrics", e);
+                    }
+                });
+        
+        // Process LargestTradeCalculator
+        calculators.stream()
+                .filter(c -> c instanceof LargestTradeCalculator)
+                .findFirst()
+                .ifPresent(calculator -> {
+                    try {
+                        LargestTradeCalculator largestTradeCalculator = (LargestTradeCalculator) calculator;
+                        largestTradeCalculator.calculateLargestTrades(trades, metrics);
+                        log.debug("Applied largest trade metrics");
+                    } catch (Exception e) {
+                        log.error("Error calculating largest trade metrics", e);
+                    }
+                });
+        
+        // Process AverageTradeCalculator
+        calculators.stream()
+                .filter(c -> c instanceof AverageTradeCalculator)
+                .findFirst()
+                .ifPresent(calculator -> {
+                    try {
+                        AverageTradeCalculator averageTradeCalculator = (AverageTradeCalculator) calculator;
+                        averageTradeCalculator.calculateAverageTrades(trades, metrics);
+                        log.debug("Applied average trade metrics");
+                    } catch (Exception e) {
+                        log.error("Error calculating average trade metrics", e);
+                    }
+                });
 
-    private void handleTimeBasedReturnCalculator(List<TradeDetails> trades, PerformanceMetrics metrics) {
-        calculators.stream().filter(c -> c instanceof TimeBasedReturnCalculator).findFirst().ifPresent(calculator -> {
-            try {
-                ((TimeBasedReturnCalculator) calculator).calculateTimeBasedReturns(trades, metrics);
-                log.debug("Applied time-based return metrics");
-            } catch (Exception e) {
-                log.error("Error calculating time-based metrics", e);
-            }
-        });
-    }
-
-    private void handleLargestTradeCalculator(List<TradeDetails> trades, PerformanceMetrics metrics) {
-        calculators.stream().filter(c -> c instanceof LargestTradeCalculator).findFirst().ifPresent(calculator -> {
-            try {
-                ((LargestTradeCalculator) calculator).calculateLargestTrades(trades, metrics);
-                log.debug("Applied largest trade metrics");
-            } catch (Exception e) {
-                log.error("Error calculating largest trade metrics", e);
-            }
-        });
-    }
-
-    private void handleAverageTradeCalculator(List<TradeDetails> trades, PerformanceMetrics metrics) {
-        calculators.stream().filter(c -> c instanceof AverageTradeCalculator).findFirst().ifPresent(calculator -> {
-            try {
-                ((AverageTradeCalculator) calculator).calculateAverageTrades(trades, metrics);
-                log.debug("Applied average trade metrics");
-            } catch (Exception e) {
-                log.error("Error calculating average trade metrics", e);
-            }
-        });
-    }
-
-    private void handleAverageHoldingTimeCalculator(List<TradeDetails> trades, PerformanceMetrics metrics) {
-        calculators.stream().filter(c -> c instanceof AverageHoldingTimeCalculator).findFirst().ifPresent(calculator -> {
-            try {
-                ((AverageHoldingTimeCalculator) calculator).applyHoldingTimes(trades, metrics);
-                log.debug("Applied average holding time metrics");
-            } catch (IllegalArgumentException | ArithmeticException e) {
-                log.error("Error calculating average holding time metrics", e);
-            }
-        });
-    }
-
-    private void handleBestWorstDayCalculator(List<TradeDetails> trades, PerformanceMetrics metrics) {
-        calculators.stream().filter(c -> c instanceof BestWorstDayCalculator).findFirst().ifPresent(calculator -> {
-            try {
-                ((BestWorstDayCalculator) calculator).calculateBestWorstDays(trades, metrics);
-                log.debug("Applied best/worst day metrics");
-            } catch (Exception e) {
-                log.error("Error calculating best/worst day metrics", e);
-            }
-        });
-    }
-
-    private void handleConsistencyMetricsCalculator(List<TradeDetails> trades, PerformanceMetrics metrics) {
-        calculators.stream().filter(c -> c instanceof ConsistencyMetricsCalculator).findFirst().ifPresent(calculator -> {
-            try {
-                ((ConsistencyMetricsCalculator) calculator).calculateConsistencyMetrics(trades, metrics);
-                log.debug("Applied consistency metrics");
-            } catch (Exception e) {
-                log.error("Error calculating consistency metrics", e);
-            }
-        });
+        // Process AverageHoldingTimeCalculator (fractional hours + minutes)
+        calculators.stream()
+                .filter(c -> c instanceof AverageHoldingTimeCalculator)
+                .findFirst()
+                .ifPresent(calculator -> {
+                    try {
+                        AverageHoldingTimeCalculator holdCalculator =
+                                (AverageHoldingTimeCalculator) calculator;
+                        holdCalculator.applyHoldingTimes(trades, metrics);
+                        log.debug("Applied average holding time metrics");
+                    } catch (Exception e) {
+                        log.error("Error calculating average holding time metrics", e);
+                    }
+                });
+        
+        // Process BestWorstDayCalculator
+        calculators.stream()
+                .filter(c -> c instanceof BestWorstDayCalculator)
+                .findFirst()
+                .ifPresent(calculator -> {
+                    try {
+                        BestWorstDayCalculator bestWorstDayCalculator = (BestWorstDayCalculator) calculator;
+                        bestWorstDayCalculator.calculateBestWorstDays(trades, metrics);
+                        log.debug("Applied best/worst day metrics");
+                    } catch (Exception e) {
+                        log.error("Error calculating best/worst day metrics", e);
+                    }
+                });
+        
+        // Process ConsistencyMetricsCalculator
+        calculators.stream()
+                .filter(c -> c instanceof ConsistencyMetricsCalculator)
+                .findFirst()
+                .ifPresent(calculator -> {
+                    try {
+                        ConsistencyMetricsCalculator consistencyCalculator = (ConsistencyMetricsCalculator) calculator;
+                        consistencyCalculator.calculateConsistencyMetrics(trades, metrics);
+                        log.debug("Applied consistency metrics");
+                    } catch (Exception e) {
+                        log.error("Error calculating consistency metrics", e);
+                    }
+                });
     }
     
     /**
