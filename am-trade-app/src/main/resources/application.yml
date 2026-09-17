@@ -97,6 +97,8 @@ management:
       exposure:
         include: health,info,metrics,prometheus
   endpoint:
+    prometheus:
+      enabled: true
     health:
       probes:
         enabled: true
@@ -109,6 +111,13 @@ management:
     tags:
       # Required for Grafana Technical / Services Service dropdown
       application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        external.api.call: true
+      slo:
+        http.server.requests: 100ms, 500ms, 1s, 5s, 10s, 20s, 30s
+        external.api.call: 50ms, 200ms, 500ms, 1s, 5s, 10s, 30s
   health:
     livenessstate:
       enabled: true
