@@ -10,7 +10,7 @@ import java.util.List;
  * Abstract base class for metric calculators that return BigDecimal values.
  * Provides common functionality for BigDecimal-based metrics.
  */
-public abstract class AbstractBigDecimalMetricCalculator implements MetricCalculator<BigDecimal> {
+public abstract class AbstractBigDecimalMetricCalculator implements MetricsCalculator {
 
     protected static final int DEFAULT_SCALE = 4;
     protected static final RoundingMode DEFAULT_ROUNDING_MODE = RoundingMode.HALF_UP;

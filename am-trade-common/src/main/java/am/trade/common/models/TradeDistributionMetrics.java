@@ -47,11 +47,53 @@ public class TradeDistributionMetrics {
     private Map<String, BigDecimal> avgPnlByMonth;
     private Map<String, BigDecimal> avgPnlBySession;
 
+    /**
+     * Avg PnL per active trading day = sum(non-null PnL) / distinct entry dates (eligible only).
+     * Empty calendar days never counted. Null when activeTradingDays=0.
+     */
+    private Map<String, BigDecimal> avgPnlPerActiveDayByDay;
+    private Map<String, BigDecimal> avgPnlPerActiveDayByHour;
+    private Map<String, BigDecimal> avgPnlPerActiveDayByMonth;
+    private Map<String, BigDecimal> avgPnlPerActiveDayBySession;
+
     /** Trades with non-null PnL in each bucket (Win% / Avg PnL denominator). */
     private Map<String, Integer> eligibleTradesByDay;
     private Map<String, Integer> eligibleTradesByHour;
     private Map<String, Integer> eligibleTradesByMonth;
     private Map<String, Integer> eligibleTradesBySession;
+
+    /** Distinct entry calendar dates with eligible PnL in each bucket. */
+    private Map<String, Integer> activeTradingDaysByDay;
+    private Map<String, Integer> activeTradingDaysByHour;
+    private Map<String, Integer> activeTradingDaysByMonth;
+    private Map<String, Integer> activeTradingDaysBySession;
+
+    /**
+     * Distinct entry calendar dates with eligible PnL across the Timing universe
+     * (trades with entry timestamp).
+     */
+    private Integer activeTradingDaysCount;
+    /** Overall eligible PnL ÷ activeTradingDaysCount; null when count=0. */
+    private BigDecimal avgPnlPerActiveDay;
+
+    /** Mean hold duration in minutes (valid entry+exit only); null key when sample=0. */
+    private Map<String, BigDecimal> avgHoldMinutesByDay;
+    private Map<String, BigDecimal> avgHoldMinutesByHour;
+    private Map<String, BigDecimal> avgHoldMinutesByMonth;
+    private Map<String, BigDecimal> avgHoldMinutesBySession;
+
+    /**
+     * Avg win ÷ |avg loss| for eligible trades in bucket (same as overall winLossRatio).
+     * Null when no wins or no losses — not a stop-based R-multiple.
+     */
+    private Map<String, BigDecimal> riskRewardByDay;
+    private Map<String, BigDecimal> riskRewardByHour;
+    private Map<String, BigDecimal> riskRewardByMonth;
+    private Map<String, BigDecimal> riskRewardBySession;
+
+    /** Best session by avg PnL among buckets with eligible ≥ 3; null if none qualify. */
+    private String bestSessionKey;
+    private BigDecimal bestSessionAvgPnl;
     
     // Asset class distribution
     private Map<AssetClass, Integer> tradeCountByAssetClass;

@@ -9,6 +9,7 @@ import am.trade.api.dto.TimePeriodFilter;
 import am.trade.api.dto.TradeCharacteristicsFilter;
 import am.trade.api.service.TradeMetricsService;
 import am.trade.common.models.*;
+import am.trade.common.util.HoldingStyleClassifier;
 import am.trade.dashboard.service.metrics.*;
 import am.trade.services.service.TradeDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -529,7 +530,7 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
             if (holdingStyle != null && !holdingStyle.isBlank()) {
                 String style = holdingStyle.trim().toUpperCase();
                 trades = trades.stream()
-                        .filter(trade -> matchesHoldingStyle(trade, style))
+                        .filter(trade -> HoldingStyleClassifier.matchesStyle(trade, style))
                         .collect(Collectors.toList());
             }
         }
@@ -857,25 +858,9 @@ public class TradeMetricsServiceImpl implements TradeMetricsService {
     }
 
     /**
-     * Holding-style buckets aligned with Timing style hint:
-     * SCALPER &lt;15m, INTRADAY 15m–&lt;24h, SWING ≥24h. Requires entry+exit and non-negative duration.
+     * @deprecated use {@link HoldingStyleClassifier#matchesStyle(TradeDetails, String)}
      */
     static boolean matchesHoldingStyle(TradeDetails trade, String style) {
-        if (trade.getEntryInfo() == null || trade.getEntryInfo().getTimestamp() == null
-                || trade.getExitInfo() == null || trade.getExitInfo().getTimestamp() == null) {
-            return false;
-        }
-        long minutes = ChronoUnit.MINUTES.between(
-                trade.getEntryInfo().getTimestamp(),
-                trade.getExitInfo().getTimestamp());
-        if (minutes < 0) {
-            return false;
-        }
-        return switch (style) {
-            case "SCALPER" -> minutes < 15;
-            case "INTRADAY" -> minutes >= 15 && minutes < 24 * 60;
-            case "SWING" -> minutes >= 24 * 60;
-            default -> true;
-        };
+        return HoldingStyleClassifier.matchesStyle(trade, style);
     }
 }

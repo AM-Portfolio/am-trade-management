@@ -2,6 +2,7 @@ package am.trade.dashboard.service.metrics.calculator;
 
 import am.trade.common.models.PerformanceMetrics;
 import am.trade.common.models.TradeDetails;
+import am.trade.dashboard.service.metrics.calculator.impl.AverageHoldingTimeCalculator;
 import am.trade.dashboard.service.metrics.calculator.impl.AverageTradeCalculator;
 import am.trade.dashboard.service.metrics.calculator.impl.BestWorstDayCalculator;
 import am.trade.dashboard.service.metrics.calculator.impl.ConsistencyMetricsCalculator;
@@ -44,8 +45,6 @@ public class MetricsRegistry {
             return;
         }
         
-        log.debug("Calculating metrics using {} calculators", calculators.size());
-        
         // Get mapping of metric names to setters
         Map<String, BiConsumer<PerformanceMetrics, BigDecimal>> metricSetters = getMetricSetters();
         
@@ -62,11 +61,13 @@ public class MetricsRegistry {
             try {
                 String metricName = calculator.getMetricName();
                 BigDecimal value = calculator.calculate(trades);
-                
+                if (value == null) {
+                    continue;
+                }
+
                 BiConsumer<PerformanceMetrics, BigDecimal> setter = metricSetters.get(metricName);
                 if (setter != null) {
                     setter.accept(metrics, value);
-                    log.debug("Applied metric {}: {}", metricName, value);
                 } else {
                     log.warn("No setter found for metric: {}", metricName);
                 }
@@ -91,7 +92,6 @@ public class MetricsRegistry {
                     try {
                         TimeBasedReturnCalculator timeCalculator = (TimeBasedReturnCalculator) calculator;
                         timeCalculator.calculateTimeBasedReturns(trades, metrics);
-                        log.debug("Applied time-based return metrics");
                     } catch (Exception e) {
                         log.error("Error calculating time-based metrics", e);
                     }
@@ -105,7 +105,6 @@ public class MetricsRegistry {
                     try {
                         LargestTradeCalculator largestTradeCalculator = (LargestTradeCalculator) calculator;
                         largestTradeCalculator.calculateLargestTrades(trades, metrics);
-                        log.debug("Applied largest trade metrics");
                     } catch (Exception e) {
                         log.error("Error calculating largest trade metrics", e);
                     }
@@ -119,9 +118,22 @@ public class MetricsRegistry {
                     try {
                         AverageTradeCalculator averageTradeCalculator = (AverageTradeCalculator) calculator;
                         averageTradeCalculator.calculateAverageTrades(trades, metrics);
-                        log.debug("Applied average trade metrics");
                     } catch (Exception e) {
                         log.error("Error calculating average trade metrics", e);
+                    }
+                });
+
+        // Process AverageHoldingTimeCalculator (fractional hours + minutes)
+        calculators.stream()
+                .filter(c -> c instanceof AverageHoldingTimeCalculator)
+                .findFirst()
+                .ifPresent(calculator -> {
+                    try {
+                        AverageHoldingTimeCalculator holdCalculator =
+                                (AverageHoldingTimeCalculator) calculator;
+                        holdCalculator.applyHoldingTimes(trades, metrics);
+                    } catch (Exception e) {
+                        log.error("Error calculating average holding time metrics", e);
                     }
                 });
         
@@ -133,7 +145,6 @@ public class MetricsRegistry {
                     try {
                         BestWorstDayCalculator bestWorstDayCalculator = (BestWorstDayCalculator) calculator;
                         bestWorstDayCalculator.calculateBestWorstDays(trades, metrics);
-                        log.debug("Applied best/worst day metrics");
                     } catch (Exception e) {
                         log.error("Error calculating best/worst day metrics", e);
                     }
@@ -147,7 +158,6 @@ public class MetricsRegistry {
                     try {
                         ConsistencyMetricsCalculator consistencyCalculator = (ConsistencyMetricsCalculator) calculator;
                         consistencyCalculator.calculateConsistencyMetrics(trades, metrics);
-                        log.debug("Applied consistency metrics");
                     } catch (Exception e) {
                         log.error("Error calculating consistency metrics", e);
                     }
@@ -164,6 +174,7 @@ public class MetricsRegistry {
         return calculator instanceof TimeBasedReturnCalculator ||
                calculator instanceof LargestTradeCalculator ||
                calculator instanceof AverageTradeCalculator ||
+               calculator instanceof AverageHoldingTimeCalculator ||
                calculator instanceof BestWorstDayCalculator ||
                calculator instanceof ConsistencyMetricsCalculator;
     }
@@ -216,14 +227,13 @@ public class MetricsRegistry {
         setters.put("averageHoldingTimeWinning", PerformanceMetrics::setAverageHoldingTimeWinning);
         setters.put("averageHoldingTimeLosing", PerformanceMetrics::setAverageHoldingTimeLosing);
         setters.put("averageHoldingTimeOverall", PerformanceMetrics::setAverageHoldingTimeOverall);
+        setters.put("averageHoldingTimeMinutes", PerformanceMetrics::setAverageHoldingTimeMinutes);
         
         // Efficiency metrics
         setters.put("returnOnCapital", PerformanceMetrics::setReturnOnCapital);
         setters.put("returnPerUnit", PerformanceMetrics::setReturnPerUnit);
         setters.put("tradesPerDay", (metrics, value) -> {
-            // Custom handling for metrics that don't have direct setters
-            // This is just an example of how to handle custom metrics
-            log.debug("Trades per day: {}", value);
+            // No direct setter for tradesPerDay; metric is tracked via distribution service
         });
         
         return setters;

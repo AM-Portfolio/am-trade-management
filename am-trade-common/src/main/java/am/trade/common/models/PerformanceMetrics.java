@@ -50,7 +50,16 @@ public class PerformanceMetrics {
     // Time metrics
     private BigDecimal averageHoldingTimeWinning; // In days
     private BigDecimal averageHoldingTimeLosing; // In days
-    private BigDecimal averageHoldingTimeOverall; // In days
+    /** Overall average hold — fractional hours (legacy field; prefer averageHoldingTimeMinutes). */
+    private BigDecimal averageHoldingTimeOverall;
+    /** Overall average hold in minutes (fractional). Preferred for Timing KPI. */
+    private BigDecimal averageHoldingTimeMinutes;
+
+    /** Wins (pnl &gt; 0) / losses (pnl &lt; 0); break-even excluded from both. */
+    private Integer winningTradesCount;
+    private Integer losingTradesCount;
+    /** Trades with non-null profitLoss (Win% / Avg PnL denominator). */
+    private Integer eligibleTradesCount;
     
     // Efficiency metrics
     private BigDecimal returnOnCapital; // Profit / Capital used
