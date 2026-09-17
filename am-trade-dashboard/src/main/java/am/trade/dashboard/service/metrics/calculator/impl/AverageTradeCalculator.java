@@ -67,6 +67,8 @@ public class AverageTradeCalculator extends AbstractBigDecimalMetricCalculator {
                     
             if (validTrades.isEmpty()) {
                 metrics.setEligibleTradesCount(0);
+                metrics.setWinningTradesCount(0);
+                metrics.setLosingTradesCount(0);
                 return;
             }
 

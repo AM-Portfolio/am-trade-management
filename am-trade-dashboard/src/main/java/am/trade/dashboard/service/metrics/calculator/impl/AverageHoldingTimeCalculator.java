@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Calculator for average holding time.
@@ -45,9 +46,8 @@ public class AverageHoldingTimeCalculator extends AbstractBigDecimalMetricCalcul
      * Sets fractional-hour overall hold and precise minutes on {@code metrics}.
      */
     public void applyHoldingTimes(List<TradeDetails> trades, PerformanceMetrics metrics) {
-        if (trades == null || metrics == null) {
-            return;
-        }
+        Objects.requireNonNull(trades, "trades must not be null");
+        Objects.requireNonNull(metrics, "metrics must not be null");
         BigDecimal totalHoldingMinutes = BigDecimal.ZERO;
         int sample = 0;
         for (TradeDetails trade : trades) {
