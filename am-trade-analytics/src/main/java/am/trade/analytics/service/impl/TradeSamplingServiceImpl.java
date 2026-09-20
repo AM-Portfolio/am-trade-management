@@ -21,16 +21,11 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class TradeSamplingServiceImpl implements TradeSamplingService {
 
     private final TradeSamplingConfig samplingConfig;
     private final RedisTemplate<String, Object> redisTemplate;
-
-    public TradeSamplingServiceImpl(TradeSamplingConfig samplingConfig, 
-                                    @org.springframework.beans.factory.annotation.Autowired(required = false) RedisTemplate<String, Object> redisTemplate) {
-        this.samplingConfig = samplingConfig;
-        this.redisTemplate = redisTemplate;
-    }
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final String USER_TRADE_COUNT_KEY = "trade:count:%s:%s"; // user:date
@@ -38,8 +33,8 @@ public class TradeSamplingServiceImpl implements TradeSamplingService {
     
     @Override
     public boolean shouldStoreTradeReplay(TradeReplayRequest request, BigDecimal profitLossPercentage, BigDecimal volatility) {
-        // If sampling is disabled or redis is unavailable, always store
-        if (!samplingConfig.isEnabled() || redisTemplate == null) {
+        // If sampling is disabled, always store
+        if (!samplingConfig.isEnabled()) {
             return true;
         }
         
@@ -90,7 +85,7 @@ public class TradeSamplingServiceImpl implements TradeSamplingService {
     
     @Override
     public void updateSamplingStatistics(TradeReplay tradeReplay, boolean wasStored) {
-        if (!samplingConfig.isEnabled() || redisTemplate == null) {
+        if (!samplingConfig.isEnabled()) {
             return;
         }
         

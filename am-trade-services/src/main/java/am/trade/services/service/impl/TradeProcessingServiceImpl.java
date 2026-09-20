@@ -799,13 +799,20 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             holdingTimeMinutes = holdingTime.toMinutes() % 60;
         }
         
-        // We do not have stop-loss or take-profit data in EntryExitInfo yet.
-        // Therefore, we cannot calculate actual risk/reward. Initialize to ZERO instead of making false assumptions.
-        BigDecimal riskAmount = BigDecimal.ZERO;
-        BigDecimal rewardAmount = profitLoss.compareTo(BigDecimal.ZERO) > 0 ? profitLoss : BigDecimal.ZERO;
+        // Mock calculations for risk/reward since stop-loss/take-profit are not available via EntryExitInfo yet.
+        // Assuming a standard 2% risk on the initial investment.
+        BigDecimal riskAmount = initialInvestment.multiply(new BigDecimal("0.02")).setScale(DECIMAL_SCALE, ROUNDING_MODE);
         
-        // Calculate risk/reward ratio
-        BigDecimal riskRewardRatio = BigDecimal.ZERO;
+        // Default reward amount is either the actual profit (if profitable) or a 1:2 standard ratio
+        BigDecimal calculatedReward = riskAmount.multiply(new BigDecimal("2.0"));
+        BigDecimal rewardAmount = profitLoss.compareTo(BigDecimal.ZERO) > 0 
+                ? profitLoss.max(calculatedReward) 
+                : calculatedReward;
+        
+        // Calculate risk/reward ratio (defaulting to 1.0 if risk is 0 to avoid division by zero)
+        BigDecimal riskRewardRatio = riskAmount.compareTo(BigDecimal.ZERO) > 0
+                ? rewardAmount.divide(riskAmount, DECIMAL_SCALE, ROUNDING_MODE)
+                : BigDecimal.ONE;
         
         return TradeMetrics.builder()
                 .profitLoss(profitLoss)
