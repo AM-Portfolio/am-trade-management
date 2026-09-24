@@ -327,9 +327,13 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                                 if (trade.getInstrumentInfo().getIsin() == null) {
                                     trade.getInstrumentInfo().setIsin(isinKey);
                                 }
-                                if (resolvedDesc != null && !resolvedDesc.isEmpty()) {
-                                    trade.getInstrumentInfo().setDescription(resolvedDesc);
-                                }
+                            }
+                        }
+                        
+                        if (resolvedDesc != null && !resolvedDesc.isEmpty() && trade.getInstrumentInfo() != null) {
+                            trade.getInstrumentInfo().setDescription(resolvedDesc);
+                            if (trade.getInstrumentInfo().getIsin() == null) {
+                                trade.getInstrumentInfo().setIsin(isinKey);
                             }
                         }
                     }
