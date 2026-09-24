@@ -182,4 +182,43 @@ public class MarketDataApiClient {
         }
         return currentPrices;
     }
+
+    public Map<String, Map<String, String>> resolveTickersByIsins(List<String> isins) {
+        if (isins == null || isins.isEmpty()) {
+            return new HashMap<>();
+        }
+        
+        String url = "/v1/market-data/instruments/isin";
+        log.debug("Resolving {} ISINs via API", isins.size());
+        
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restTemplate.postForObject(url, isins, Map.class);
+            if (response != null) {
+                Map<String, Map<String, String>> result = new HashMap<>();
+                response.forEach((k, v) -> {
+                    if (k != null && v != null) {
+                        Map<String, String> instrumentInfo = new HashMap<>();
+                        if (v instanceof Map) {
+                            Map<?, ?> mapValue = (Map<?, ?>) v;
+                            if (mapValue.containsKey("symbol") && mapValue.get("symbol") != null) {
+                                instrumentInfo.put("symbol", String.valueOf(mapValue.get("symbol")).trim());
+                            }
+                            if (mapValue.containsKey("description") && mapValue.get("description") != null) {
+                                instrumentInfo.put("description", String.valueOf(mapValue.get("description")).trim());
+                            }
+                        } else if (v instanceof String) {
+                            instrumentInfo.put("symbol", ((String) v).trim());
+                        }
+                        result.put(String.valueOf(k).trim().toUpperCase(), instrumentInfo);
+                    }
+                });
+                return result;
+            }
+        } catch (RestClientException e) {
+            log.error("Failed to resolve ISINs: {}", isins, e);
+        }
+        
+        return new HashMap<>();
+    }
 }
