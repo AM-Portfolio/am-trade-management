@@ -182,4 +182,59 @@ public class MarketDataApiClient {
         }
         return currentPrices;
     }
+
+    public Map<String, Map<String, String>> resolveTickersByIsins(List<String> isins) {
+        if (isins == null || isins.isEmpty()) {
+            return new HashMap<>();
+        }
+        
+        String url = "/v1/securities/batch-search";
+        log.debug("Resolving {} ISINs via API", isins.size());
+        
+        try {
+            Map<String, Object> requestPayload = new HashMap<>();
+            requestPayload.put("queries", isins);
+            requestPayload.put("limit", 1);
+            requestPayload.put("searchFields", java.util.Arrays.asList("ISIN"));
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restTemplate.postForObject(url, requestPayload, Map.class);
+            if (response != null) {
+                Map<String, Map<String, String>> result = new HashMap<>();
+                
+                Object resultsObj = response.get("results");
+                if (resultsObj instanceof List) {
+                    List<?> resultsList = (List<?>) resultsObj;
+                    for (Object res : resultsList) {
+                        if (res instanceof Map) {
+                            Map<?, ?> queryResult = (Map<?, ?>) res;
+                            String query = (String) queryResult.get("query");
+                            Object matchesObj = queryResult.get("matches");
+                            if (matchesObj instanceof List) {
+                                List<?> matchesList = (List<?>) matchesObj;
+                                if (!matchesList.isEmpty()) {
+                                    Map<?, ?> match = (Map<?, ?>) matchesList.get(0);
+                                    Map<String, String> instrumentInfo = new HashMap<>();
+                                    if (match.get("symbol") != null) {
+                                        instrumentInfo.put("symbol", (String) match.get("symbol"));
+                                    }
+                                    if (match.get("companyName") != null) {
+                                        instrumentInfo.put("description", (String) match.get("companyName"));
+                                    }
+                                    if (query != null) {
+                                        result.put(query.trim().toUpperCase(), instrumentInfo);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                return result;
+            }
+        } catch (RestClientException e) {
+            log.error("Failed to resolve ISINs: {}", isins, e);
+        }
+        
+        return new HashMap<>();
+    }
 }

@@ -6,6 +6,7 @@ import am.trade.models.enums.TradeStatus;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.api.service.TradeManagementService;
 import am.trade.api.client.MarketDataApiClient;
+import am.trade.common.util.ValidationUtils;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -48,6 +49,7 @@ public class TradeManagementServiceImpl implements TradeManagementService {
     private final TradeDetailsMapper tradeDetailsMapper;
     private final AppLogger log;
     private final MarketDataApiClient marketDataApiClient;
+    private final ValidationUtils validationUtils;
 
     @Override
     public Map<String, List<TradeDetails>> getTradeDetailsByDay(LocalDate date, String portfolioId) {
@@ -279,6 +281,64 @@ public class TradeManagementServiceImpl implements TradeManagementService {
     private void enrichWithLivePrices(List<TradeDetails> trades) {
         if (trades == null || trades.isEmpty()) {
             return;
+        }
+
+        // Resolve ISINs to Symbols first.
+        // instrumentInfo.isin is the authoritative ISIN field; fall back to getSymbol() only
+        // when isin is absent (legacy trades where symbol field held the raw ISIN).
+        List<String> isinsToResolve = trades.stream()
+                .map(trade -> {
+                    am.trade.common.models.InstrumentInfo info = trade.getInstrumentInfo();
+                    if (info != null && info.getIsin() != null && !info.getIsin().isBlank()) {
+                        return info.getIsin().trim().toUpperCase();
+                    }
+                    String sym = trade.getSymbol();
+                    return sym != null ? sym.trim().toUpperCase() : null;
+                })
+                .filter(s -> s != null && validationUtils.isValidIsin(s))
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (!isinsToResolve.isEmpty()) {
+            Map<String, Map<String, String>> resolvedSymbols = marketDataApiClient.resolveTickersByIsins(isinsToResolve);
+            if (resolvedSymbols != null && !resolvedSymbols.isEmpty()) {
+                trades.forEach(trade -> {
+                    // Derive the ISIN key for this trade using the same priority as above
+                    am.trade.common.models.InstrumentInfo info = trade.getInstrumentInfo();
+                    final String isinKey;
+                    if (info != null && info.getIsin() != null && !info.getIsin().isBlank()) {
+                        isinKey = info.getIsin().trim().toUpperCase();
+                    } else {
+                        String sym = trade.getSymbol();
+                        isinKey = (sym != null && validationUtils.isValidIsin(sym.trim()))
+                                ? sym.trim().toUpperCase() : null;
+                    }
+
+                    if (isinKey != null && resolvedSymbols.containsKey(isinKey)) {
+                        Map<String, String> resolved = resolvedSymbols.get(isinKey);
+                        String resolvedSymbol = resolved.get("symbol");
+                        String resolvedDesc = resolved.get("description");
+
+                        if (resolvedSymbol != null && !resolvedSymbol.isEmpty()) {
+                            trade.setSymbol(resolvedSymbol);
+                            if (trade.getInstrumentInfo() != null) {
+                                trade.getInstrumentInfo().setSymbol(resolvedSymbol);
+                                // Persist ISIN in the dedicated field if not already set
+                                if (trade.getInstrumentInfo().getIsin() == null) {
+                                    trade.getInstrumentInfo().setIsin(isinKey);
+                                }
+                            }
+                        }
+                        
+                        if (resolvedDesc != null && !resolvedDesc.isEmpty() && trade.getInstrumentInfo() != null) {
+                            trade.getInstrumentInfo().setDescription(resolvedDesc);
+                            if (trade.getInstrumentInfo().getIsin() == null) {
+                                trade.getInstrumentInfo().setIsin(isinKey);
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         List<TradeDetails> openTrades = trades.stream()

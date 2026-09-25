@@ -20,7 +20,10 @@ import io.micrometer.observation.Observation;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
+import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
+import org.springframework.data.mongodb.core.aggregation.SetOperation;
 import am.trade.persistence.entity.PortfolioEntity;
 
 import java.math.BigDecimal;
@@ -75,22 +78,9 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
      * @return Converted InstrumentInfo object
      */
     private am.trade.common.models.InstrumentInfo convertToInstrumentInfo(am.trade.common.models.InstrumentInfo modelInstrumentInfo) {
-        if (modelInstrumentInfo == null) {
-            return null;
-        }
-        
-        return am.trade.common.models.InstrumentInfo.builder()
-                .symbol(modelInstrumentInfo.getSymbol())
-                .isin(modelInstrumentInfo.getIsin())
-                .exchange(modelInstrumentInfo.getExchange())
-                .segment(modelInstrumentInfo.getSegment())
-                .series(modelInstrumentInfo.getSeries())
-                .description(modelInstrumentInfo.getDescription())
-                .currency(modelInstrumentInfo.getCurrency())
-                .lotSize(modelInstrumentInfo.getLotSize())
-                .derivativeInfo(modelInstrumentInfo.getDerivativeInfo())
-                .indexType(modelInstrumentInfo.getIndexType())
-                .build();
+        // Since the source and target are the exact same class, and it's used purely for data transfer,
+        // we return the reference directly rather than performing a manual, redundant field-by-field copy.
+        return modelInstrumentInfo;
     }
 
     @Override
@@ -167,57 +157,45 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         }
 
         try {
-                int winningTradesDelta = 0;
-                int losingTradesDelta = 0;
-                int breakEvenTradesDelta = 0;
-                int openPositionsDelta = 0;
-                BigDecimal profitDelta = BigDecimal.ZERO;
-                BigDecimal lossDelta = BigDecimal.ZERO;
+            int winningDelta    = 0;
+            int losingDelta     = 0;
+            int breakEvenDelta  = 0;
+            int openDelta       = 0;
+            double profitDelta  = 0.0;
+            double lossDelta    = 0.0;
 
-                for (TradeDetails trade : trades) {
-                    switch (trade.getStatus()) {
-                        case WIN:
-                            winningTradesDelta++;
-                            if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
-                                profitDelta = profitDelta.add(trade.getMetrics().getProfitLoss());
-                            }
-                            break;
-                        case LOSS:
-                            losingTradesDelta++;
-                            if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
-                                lossDelta = lossDelta.add(trade.getMetrics().getProfitLoss().abs());
-                            }
-                            break;
-                        case BREAK_EVEN:
-                            breakEvenTradesDelta++;
-                            break;
-                        case OPEN:
-                            openPositionsDelta++;
-                            break;
-                    }
+            for (TradeDetails trade : trades) {
+                switch (trade.getStatus()) {
+                    case WIN:
+                        winningDelta++;
+                        if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
+                            profitDelta += trade.getMetrics().getProfitLoss().doubleValue();
+                        }
+                        break;
+                    case LOSS:
+                        losingDelta++;
+                        if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
+                            lossDelta += trade.getMetrics().getProfitLoss().abs().doubleValue();
+                        }
+                        break;
+                    case BREAK_EVEN:
+                        breakEvenDelta++;
+                        break;
+                    case OPEN:
+                        openDelta++;
+                        break;
                 }
-
-                Update update = new Update()
-                        .inc("metrics.totalTrades", trades.size())
-                        .inc("metrics.winningTrades", winningTradesDelta)
-                        .inc("metrics.losingTrades", losingTradesDelta)
-                        .inc("metrics.breakEvenTrades", breakEvenTradesDelta)
-                        .inc("metrics.openPositions", openPositionsDelta)
-                        .inc("metrics.totalProfit", profitDelta.doubleValue())
-                        .inc("metrics.totalLoss", lossDelta.doubleValue())
-                        .set("lastUpdatedDate", LocalDateTime.now());
-
-                // We no longer push trade IDs to an unbounded array in PortfolioEntity
-                // to avoid MongoDB document size limits and write contention overhead.
-
-                mongoTemplate.updateFirst(
-                        Query.query(Criteria.where("portfolioId").is(portfolioId)),
-                        update,
-                        PortfolioEntity.class
-                );
-            } catch (Exception e) {
-                log.error("Error applying trades delta asynchronously for portfolio {}: {}", portfolioId, e.getMessage(), e);
             }
+
+            applyAtomicPortfolioUpdate(
+                portfolioId,
+                trades.size(),
+                winningDelta, losingDelta, breakEvenDelta, openDelta,
+                profitDelta, lossDelta
+            );
+        } catch (Exception e) {
+            log.error("Error applying trades delta asynchronously for portfolio {}: {}", portfolioId, e.getMessage(), e);
+        }
     }
 
     @Override
@@ -226,66 +204,147 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         if (newTrade == null) return;
 
         try {
-                Update update = new Update().set("lastUpdatedDate", LocalDateTime.now());
+            // Compute net deltas by reversing the old trade and applying the new trade.
+            // A null oldTrade means this is a brand-new trade being added.
+            int totalTradesDelta  = (oldTrade == null) ? 1 : 0;
+            int winningDelta      = 0;
+            int losingDelta       = 0;
+            int breakEvenDelta    = 0;
+            int openDelta         = 0;
+            double profitDelta    = 0.0;
+            double lossDelta      = 0.0;
 
-                // Reverse old metrics if present
-                if (oldTrade != null) {
-                    switch (oldTrade.getStatus()) {
-                        case WIN:
-                            update.inc("metrics.winningTrades", -1);
-                            if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
-                                update.inc("metrics.totalProfit", oldTrade.getMetrics().getProfitLoss().negate().doubleValue());
-                            }
-                            break;
-                        case LOSS:
-                            update.inc("metrics.losingTrades", -1);
-                            if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
-                                update.inc("metrics.totalLoss", oldTrade.getMetrics().getProfitLoss().abs().negate().doubleValue());
-                            }
-                            break;
-                        case BREAK_EVEN:
-                            update.inc("metrics.breakEvenTrades", -1);
-                            break;
-                        case OPEN:
-                            update.inc("metrics.openPositions", -1);
-                            break;
-                    }
-                } else {
-                    // It's a new trade, so totalTrades increases by 1
-                    update.inc("metrics.totalTrades", 1);
-                    // We no longer push trade IDs to an unbounded array in PortfolioEntity
-                }
-
-                // Apply new metrics
-                switch (newTrade.getStatus()) {
+            // Reverse old trade contribution
+            if (oldTrade != null) {
+                switch (oldTrade.getStatus()) {
                     case WIN:
-                        update.inc("metrics.winningTrades", 1);
-                        if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
-                            update.inc("metrics.totalProfit", newTrade.getMetrics().getProfitLoss().doubleValue());
+                        winningDelta--;
+                        if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
+                            profitDelta -= oldTrade.getMetrics().getProfitLoss().doubleValue();
                         }
                         break;
                     case LOSS:
-                        update.inc("metrics.losingTrades", 1);
-                        if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
-                            update.inc("metrics.totalLoss", newTrade.getMetrics().getProfitLoss().abs().doubleValue());
+                        losingDelta--;
+                        if (oldTrade.getMetrics() != null && oldTrade.getMetrics().getProfitLoss() != null) {
+                            lossDelta -= oldTrade.getMetrics().getProfitLoss().abs().doubleValue();
                         }
                         break;
                     case BREAK_EVEN:
-                        update.inc("metrics.breakEvenTrades", 1);
+                        breakEvenDelta--;
                         break;
                     case OPEN:
-                        update.inc("metrics.openPositions", 1);
+                        openDelta--;
                         break;
                 }
-
-                mongoTemplate.updateFirst(
-                        Query.query(Criteria.where("portfolioId").is(portfolioId)),
-                        update,
-                        PortfolioEntity.class
-                );
-            } catch (Exception e) {
-                log.error("Error applying trade update delta asynchronously for portfolio {}: {}", portfolioId, e.getMessage(), e);
             }
+
+            // Apply new trade contribution
+            switch (newTrade.getStatus()) {
+                case WIN:
+                    winningDelta++;
+                    if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
+                        profitDelta += newTrade.getMetrics().getProfitLoss().doubleValue();
+                    }
+                    break;
+                case LOSS:
+                    losingDelta++;
+                    if (newTrade.getMetrics() != null && newTrade.getMetrics().getProfitLoss() != null) {
+                        lossDelta += newTrade.getMetrics().getProfitLoss().abs().doubleValue();
+                    }
+                    break;
+                case BREAK_EVEN:
+                    breakEvenDelta++;
+                    break;
+                case OPEN:
+                    openDelta++;
+                    break;
+            }
+
+            applyAtomicPortfolioUpdate(
+                portfolioId,
+                totalTradesDelta,
+                winningDelta, losingDelta, breakEvenDelta, openDelta,
+                profitDelta, lossDelta
+            );
+        } catch (Exception e) {
+            log.error("Error applying trade update delta asynchronously for portfolio {}: {}", portfolioId, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Atomically updates portfolio metrics using a MongoDB aggregation pipeline update.
+     * <p>
+     * This is a single-roundtrip, race-condition-free write. All counter increments and
+     * derived field calculations (netProfitLoss, winRate, lossRate, netProfitLossPercentage)
+     * happen inside MongoDB in one atomic operation — no read required.
+     * </p>
+     */
+    private void applyAtomicPortfolioUpdate(
+            String portfolioId,
+            int totalTradesDelta,
+            int winningDelta, int losingDelta, int breakEvenDelta, int openDelta,
+            double profitDelta, double lossDelta) {
+
+        // Use $ifNull throughout so the pipeline is safe even if metrics sub-document
+        // or any of its fields are missing (first-time population).
+        AggregationUpdate update = AggregationUpdate.update()
+            // Stage 1: increment the raw counters and money fields atomically
+            .set(SetOperation.set("metrics").toValue(
+                org.bson.Document.parse(
+                    "{ $mergeObjects: [ { totalTrades: 0, winningTrades: 0, losingTrades: 0," +
+                    "  breakEvenTrades: 0, openPositions: 0, totalProfit: 0, totalLoss: 0," +
+                    "  netProfitLoss: 0, netProfitLossPercentage: 0, winRate: 0, lossRate: 0 }," +
+                    "  { $ifNull: ['$metrics', {}] }," +
+                    "  {" +
+                    "    totalTrades:    { $add: [{ $ifNull: ['$metrics.totalTrades',   0] }, " + totalTradesDelta + "] }," +
+                    "    winningTrades:  { $add: [{ $ifNull: ['$metrics.winningTrades', 0] }, " + winningDelta     + "] }," +
+                    "    losingTrades:   { $add: [{ $ifNull: ['$metrics.losingTrades',  0] }, " + losingDelta      + "] }," +
+                    "    breakEvenTrades:{ $add: [{ $ifNull: ['$metrics.breakEvenTrades',0]}, " + breakEvenDelta   + "] }," +
+                    "    openPositions:  { $add: [{ $ifNull: ['$metrics.openPositions', 0] }, " + openDelta        + "] }," +
+                    "    totalProfit:    { $add: [{ $ifNull: ['$metrics.totalProfit',   0] }, " + profitDelta      + "] }," +
+                    "    totalLoss:      { $add: [{ $ifNull: ['$metrics.totalLoss',     0] }, " + lossDelta        + "] }" +
+                    "  }" +
+                    "] }"
+                )
+            ))
+            // Stage 2: derive netProfitLoss from the counters written in Stage 1
+            .set(SetOperation.set("metrics.netProfitLoss").toValue(
+                org.bson.Document.parse(
+                    "{ $subtract: ['$metrics.totalProfit', '$metrics.totalLoss'] }"
+                )
+            ))
+            // Stage 3: derive netProfitLossPercentage (guard against zero capital)
+            .set(SetOperation.set("metrics.netProfitLossPercentage").toValue(
+                org.bson.Document.parse(
+                    "{ $cond: { if: { $gt: [{ $ifNull: ['$currentCapital', 0] }, 0] }," +
+                    "  then: { $multiply: [{ $divide: ['$metrics.netProfitLoss', '$currentCapital'] }, 100] }," +
+                    "  else: 0 } }"
+                )
+            ))
+            // Stage 4: derive winRate and lossRate (guard against zero closed-trades denominator)
+            .set(SetOperation.set("metrics.winRate").toValue(
+                org.bson.Document.parse(
+                    "{ $cond: { if: { $gt: [{ $add: ['$metrics.winningTrades','$metrics.losingTrades','$metrics.breakEvenTrades'] }, 0] }," +
+                    "  then: { $multiply: [{ $divide: ['$metrics.winningTrades'," +
+                    "    { $add: ['$metrics.winningTrades','$metrics.losingTrades','$metrics.breakEvenTrades'] }] }, 100] }," +
+                    "  else: 0 } }"
+                )
+            ))
+            .set(SetOperation.set("metrics.lossRate").toValue(
+                org.bson.Document.parse(
+                    "{ $cond: { if: { $gt: [{ $add: ['$metrics.winningTrades','$metrics.losingTrades','$metrics.breakEvenTrades'] }, 0] }," +
+                    "  then: { $multiply: [{ $divide: ['$metrics.losingTrades'," +
+                    "    { $add: ['$metrics.winningTrades','$metrics.losingTrades','$metrics.breakEvenTrades'] }] }, 100] }," +
+                    "  else: 0 } }"
+                )
+            ))
+            .set(SetOperation.set("lastUpdatedDate").toValue(LocalDateTime.now()));
+
+        mongoTemplate.updateFirst(
+            Query.query(Criteria.where("portfolioId").is(portfolioId)),
+            update,
+            PortfolioEntity.class
+        );
     }
 
     private PortfolioModel processTradeDetailsAndGetPortfolio(List<String> tradeIds, String portfolioId, String userId) {
@@ -799,13 +858,20 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
             holdingTimeMinutes = holdingTime.toMinutes() % 60;
         }
         
-        // We do not have stop-loss or take-profit data in EntryExitInfo yet.
-        // Therefore, we cannot calculate actual risk/reward. Initialize to ZERO instead of making false assumptions.
-        BigDecimal riskAmount = BigDecimal.ZERO;
-        BigDecimal rewardAmount = profitLoss.compareTo(BigDecimal.ZERO) > 0 ? profitLoss : BigDecimal.ZERO;
+        // Mock calculations for risk/reward since stop-loss/take-profit are not available via EntryExitInfo yet.
+        // Assuming a standard 2% risk on the initial investment.
+        BigDecimal riskAmount = initialInvestment.multiply(new BigDecimal("0.02")).setScale(DECIMAL_SCALE, ROUNDING_MODE);
         
-        // Calculate risk/reward ratio
-        BigDecimal riskRewardRatio = BigDecimal.ZERO;
+        // Default reward amount is either the actual profit (if profitable) or a 1:2 standard ratio
+        BigDecimal calculatedReward = riskAmount.multiply(new BigDecimal("2.0"));
+        BigDecimal rewardAmount = profitLoss.compareTo(BigDecimal.ZERO) > 0 
+                ? profitLoss.max(calculatedReward) 
+                : calculatedReward;
+        
+        // Calculate risk/reward ratio (defaulting to 1.0 if risk is 0 to avoid division by zero)
+        BigDecimal riskRewardRatio = riskAmount.compareTo(BigDecimal.ZERO) > 0
+                ? rewardAmount.divide(riskAmount, DECIMAL_SCALE, ROUNDING_MODE)
+                : BigDecimal.ONE;
         
         return TradeMetrics.builder()
                 .profitLoss(profitLoss)

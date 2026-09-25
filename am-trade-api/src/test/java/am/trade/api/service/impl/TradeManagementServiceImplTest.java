@@ -42,7 +42,7 @@ class TradeManagementServiceImplTest {
     void setUp() {
         com.am.security.context.UserContext.setUserId("test-user");
         tradeManagementService = new TradeManagementServiceImpl(tradeDetailsService, portfolioRepository,
-                tradeDetailsMapper, appLogger, marketDataApiClient);
+                tradeDetailsMapper, appLogger, marketDataApiClient, new am.trade.common.util.ValidationUtils());
     }
 
     @org.junit.jupiter.api.AfterEach
