@@ -202,7 +202,13 @@ public class MarketDataApiClient {
             if (response != null) {
                 Map<String, Map<String, String>> result = new HashMap<>();
                 
-                Object resultsObj = response.get("results");
+                // am-market-data-service commonly wraps responses in a "data" envelope
+                Map<?, ?> dataMap = response;
+                if (response.containsKey("data") && response.get("data") instanceof Map) {
+                    dataMap = (Map<?, ?>) response.get("data");
+                }
+                
+                Object resultsObj = dataMap.get("results");
                 if (resultsObj instanceof List) {
                     List<?> resultsList = (List<?>) resultsObj;
                     for (Object res : resultsList) {
