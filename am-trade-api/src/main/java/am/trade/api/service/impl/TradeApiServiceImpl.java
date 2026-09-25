@@ -1157,18 +1157,29 @@ public class TradeApiServiceImpl implements TradeApiService {
     public am.trade.common.models.PortfolioModel recalculatePortfolio(String portfolioId, String userId) {
         log.info("Service: Manually recalculating all metrics for portfolio: {} for user: {}", portfolioId, userId);
 
-        // 1. Fetch ALL trades for this portfolio from the database
-        List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+        // 1. Fetch ALL trades for this portfolio and enforce ISIN resolution via TradeManagementService
+        List<TradeDetails> allTrades = tradeManagementService.getAllTradesByTradePortfolioId(portfolioId);
         log.info("Found {} historical trades to process for portfolio {}", allTrades.size(), portfolioId);
 
-        // 2. Trigger the synchronous processing for all these trades
+        // 2. Save the newly enriched trades back to the database to fix stale ISIN symbols permanently
+        if (allTrades != null && !allTrades.isEmpty()) {
+            tradeDetailsService.saveAllTradeDetails(allTrades);
+        }
+
+        // 3. Trigger the synchronous processing for all these trades
         // This will rebuild the PortfolioMetrics from scratch
         tradeProcessingService.processTradeDetailsWithObjects(allTrades, portfolioId, userId);
 
-        // 3. Return the updated portfolio
-        return portfolioPersistenceService.findByPortfolioId(portfolioId)
+        // 4. Fetch the updated portfolio to get its name
+        am.trade.common.models.PortfolioModel updatedPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId)
                 .orElseThrow(() -> new am.trade.exceptions.TradeException("Portfolio not found with ID: " + portfolioId,
                         org.springframework.http.HttpStatus.NOT_FOUND));
+
+        // 5. Publish a REPLACE_ALL event to am-portfolio-service so its holdings are wiped and replaced
+        // with the newly corrected symbols
+        publishBulkPortfolioSyncEvent(portfolioId, updatedPortfolio.getName(), userId, allTrades, "REPLACE_ALL");
+
+        return updatedPortfolio;
     }
 
     @Override
