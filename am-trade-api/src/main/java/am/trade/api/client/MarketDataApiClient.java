@@ -188,31 +188,47 @@ public class MarketDataApiClient {
             return new HashMap<>();
         }
         
-        String url = "/v1/market-data/instruments/isin";
+        String url = "/v1/securities/batch-search";
         log.debug("Resolving {} ISINs via API", isins.size());
         
         try {
+            Map<String, Object> requestPayload = new HashMap<>();
+            requestPayload.put("queries", isins);
+            requestPayload.put("limit", 1);
+            requestPayload.put("searchFields", java.util.Arrays.asList("ISIN"));
+
             @SuppressWarnings("unchecked")
-            Map<String, Object> response = restTemplate.postForObject(url, isins, Map.class);
+            Map<String, Object> response = restTemplate.postForObject(url, requestPayload, Map.class);
             if (response != null) {
                 Map<String, Map<String, String>> result = new HashMap<>();
-                response.forEach((k, v) -> {
-                    if (k != null && v != null) {
-                        Map<String, String> instrumentInfo = new HashMap<>();
-                        if (v instanceof Map) {
-                            Map<?, ?> mapValue = (Map<?, ?>) v;
-                            if (mapValue.containsKey("symbol") && mapValue.get("symbol") != null) {
-                                instrumentInfo.put("symbol", String.valueOf(mapValue.get("symbol")).trim());
+                
+                Object resultsObj = response.get("results");
+                if (resultsObj instanceof List) {
+                    List<?> resultsList = (List<?>) resultsObj;
+                    for (Object res : resultsList) {
+                        if (res instanceof Map) {
+                            Map<?, ?> queryResult = (Map<?, ?>) res;
+                            String query = (String) queryResult.get("query");
+                            Object matchesObj = queryResult.get("matches");
+                            if (matchesObj instanceof List) {
+                                List<?> matchesList = (List<?>) matchesObj;
+                                if (!matchesList.isEmpty()) {
+                                    Map<?, ?> match = (Map<?, ?>) matchesList.get(0);
+                                    Map<String, String> instrumentInfo = new HashMap<>();
+                                    if (match.get("symbol") != null) {
+                                        instrumentInfo.put("symbol", (String) match.get("symbol"));
+                                    }
+                                    if (match.get("companyName") != null) {
+                                        instrumentInfo.put("description", (String) match.get("companyName"));
+                                    }
+                                    if (query != null) {
+                                        result.put(query.trim().toUpperCase(), instrumentInfo);
+                                    }
+                                }
                             }
-                            if (mapValue.containsKey("description") && mapValue.get("description") != null) {
-                                instrumentInfo.put("description", String.valueOf(mapValue.get("description")).trim());
-                            }
-                        } else if (v instanceof String) {
-                            instrumentInfo.put("symbol", ((String) v).trim());
                         }
-                        result.put(String.valueOf(k).trim().toUpperCase(), instrumentInfo);
                     }
-                });
+                }
                 return result;
             }
         } catch (RestClientException e) {
