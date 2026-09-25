@@ -199,6 +199,14 @@ public class MarketDataApiClient {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(url, requestPayload, Map.class);
+            
+            try {
+                String jsonResponse = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(response);
+                log.error("==== BATCH SEARCH RAW RESPONSE ==== : {}", jsonResponse);
+            } catch(Exception ex) {
+                log.error("Failed to serialize response", ex);
+            }
+
             if (response != null) {
                 Map<String, Map<String, String>> result = new HashMap<>();
                 
@@ -221,12 +229,28 @@ public class MarketDataApiClient {
                                 if (!matchesList.isEmpty()) {
                                     Map<?, ?> match = (Map<?, ?>) matchesList.get(0);
                                     Map<String, String> instrumentInfo = new HashMap<>();
-                                    if (match.get("symbol") != null) {
-                                        instrumentInfo.put("symbol", (String) match.get("symbol"));
+                                    
+                                    // am-market-data-service may return "ticker", "nseSymbol" instead of "symbol"
+                                    String ticker = null;
+                                    if (match.get("ticker") != null) {
+                                        ticker = (String) match.get("ticker");
+                                    } else if (match.get("nseSymbol") != null) {
+                                        ticker = (String) match.get("nseSymbol");
+                                    } else if (match.get("symbol") != null) {
+                                        ticker = (String) match.get("symbol");
                                     }
+                                    
+                                    if (ticker != null) {
+                                        instrumentInfo.put("symbol", ticker);
+                                    }
+                                    
+                                    // am-market-data-service may return "name" instead of "companyName"
                                     if (match.get("companyName") != null) {
                                         instrumentInfo.put("description", (String) match.get("companyName"));
+                                    } else if (match.get("name") != null) {
+                                        instrumentInfo.put("description", (String) match.get("name"));
                                     }
+                                    
                                     if (query != null) {
                                         result.put(query.trim().toUpperCase(), instrumentInfo);
                                     }
