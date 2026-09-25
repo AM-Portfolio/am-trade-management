@@ -2,4 +2,5 @@
 # Last valueFile in Argo Application — overrides am-gitops image-tags while values revision is this branch.
 global:
   image:
-    tag: "36115031904"
+    digest: ""
+    tag: "36136857810"
