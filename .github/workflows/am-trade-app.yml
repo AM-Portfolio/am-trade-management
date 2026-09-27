@@ -60,17 +60,20 @@ jobs:
   setup-matrix:
     runs-on: ubuntu-latest
     outputs:
-      envs: ${{ steps.set-envs.outputs.envs }}
+      lower_envs: ${{ steps.set-envs.outputs.lower_envs }}
+      higher_envs: ${{ steps.set-envs.outputs.higher_envs }}
     steps:
       - id: set-envs
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master" ]]; then
-            echo 'envs=["dev", "preprod", "prod", "dr"]' >> $GITHUB_OUTPUT
+            echo 'lower_envs=["dev", "preprod"]' >> $GITHUB_OUTPUT
+            echo 'higher_envs=["prod", "dr"]' >> $GITHUB_OUTPUT
           else
-            echo 'envs=["dev", "preprod"]' >> $GITHUB_OUTPUT
+            echo 'lower_envs=["dev", "preprod"]' >> $GITHUB_OUTPUT
+            echo 'higher_envs=[]' >> $GITHUB_OUTPUT
           fi
 
-  contabo-approve:
+  contabo-approve-lower:
     name: Contabo Argo -> ${{ matrix.env }} (approve)
     needs: [publish, setup-matrix]
     if: |
@@ -81,7 +84,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env: ${{ fromJson(needs.setup-matrix.outputs.envs) }}
+        env: ${{ fromJson(needs.setup-matrix.outputs.lower_envs) }}
     runs-on: ubuntu-latest
     environment: ${{ matrix.env }}
     permissions:
@@ -144,6 +147,47 @@ jobs:
           gh workflow run set-image-tag.yml -R AM-Portfolio/am-gitops \
             -f service="${INPUT_SERVICE_NAME}" -f env="${INPUT_ENVIRONMENT}" -f tag="${INPUT_IMAGE_TAG}"
           echo "Done! The am-gitops repository will automatically sync this to Argo CD."
+
+  contabo-approve-higher:
+    name: Contabo Argo -> ${{ matrix.env }} (approve)
+    needs: [publish, contabo-approve-lower, setup-matrix]
+    if: |
+      always() &&
+      github.event_name == 'push' &&
+      needs.setup-matrix.outputs.higher_envs != '[]' &&
+      needs.publish.result != 'cancelled' &&
+      needs.publish.outputs.image_tag != '' &&
+      needs.contabo-approve-lower.result == 'success'
+    strategy:
+      fail-fast: false
+      matrix:
+        env: ${{ fromJson(needs.setup-matrix.outputs.higher_envs) }}
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.env }}
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Checkout am-pipelines scripts
+        uses: actions/checkout@v4
+        with:
+          repository: AM-Portfolio/am-pipelines
+          path: am-pipelines-repo
+          ref: main
+          token: ${{ secrets.GITHUB_PAT || secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Resolve image tag
+        id: tag
+        env:
+          TAG_FROM_PUBLISH: ${{ needs.publish.outputs.image_tag }}
+        run: |
+          set -euo pipefail
+          TAG="${TAG_FROM_PUBLISH:-}"
+          if [[ -z "$TAG" ]]; then
+            echo "::error::No image tag from publish"
+            exit 1
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Contabo promote + wait (prod/dr)
         if: matrix.env == 'prod' || matrix.env == 'dr'
