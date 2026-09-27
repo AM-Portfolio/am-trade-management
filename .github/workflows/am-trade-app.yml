@@ -120,7 +120,6 @@ jobs:
         run: |
           set -euo pipefail
           sleep 5
-          sed -i 's/APP="${SVC}-${ENV}"/APP="${SVC%-service}-${ENV}"/' am-pipelines-repo/scripts/ci/argo-*.sh || true
           chmod +x am-pipelines-repo/scripts/ci/argo-api-lib.sh
           if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master" ]]; then
             # Main branch already pinned in GitOps via publish job
@@ -143,7 +142,6 @@ jobs:
           INPUT_IMAGE_TAG: ${{ steps.tag.outputs.tag }}
         run: |
           set -euo pipefail
-          sed -i 's/APP="${SVC}-${ENV}"/APP="${SVC%-service}-${ENV}"/' am-pipelines-repo/scripts/ci/argo-*.sh || true
           chmod +x am-pipelines-repo/scripts/ci/argo-api-lib.sh
           chmod +x am-pipelines-repo/scripts/ci/argo-pin-and-wait.sh
           am-pipelines-repo/scripts/ci/argo-pin-and-wait.sh
@@ -159,7 +157,6 @@ jobs:
           INPUT_IMAGE_TAG: ${{ steps.tag.outputs.tag }}
         run: |
           set -euo pipefail
-          sed -i 's/APP="${SVC}-${ENV}"/APP="${SVC%-service}-${ENV}"/' am-pipelines-repo/scripts/ci/argo-*.sh || true
           chmod +x am-pipelines-repo/scripts/ci/argo-api-lib.sh
           chmod +x am-pipelines-repo/scripts/ci/argo-promote-and-wait.sh
           am-pipelines-repo/scripts/ci/argo-promote-and-wait.sh
