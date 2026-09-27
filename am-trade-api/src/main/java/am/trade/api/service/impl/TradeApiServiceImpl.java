@@ -1154,6 +1154,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     }
 
     @Override
+    @org.springframework.cache.annotation.CacheEvict(cacheNames = {"analyticsCache", "portfolioSummary", "tradeSummaryCache"}, allEntries = true)
     public am.trade.common.models.PortfolioModel recalculatePortfolio(String portfolioId, String userId) {
         log.info("Service: Manually recalculating all metrics for portfolio: {} for user: {}", portfolioId, userId);
 
@@ -1184,7 +1185,7 @@ public class TradeApiServiceImpl implements TradeApiService {
 
     @Override
     public void publishBulkPortfolioSyncEvent(String portfolioId, String portfolioName, String userId, List<TradeDetails> trades, String action) {
-        if ((trades == null || trades.isEmpty()) && !List.of("CREATE", "UPDATE", "DELETE", "DELETE_PORTFOLIO").contains(action)) {
+        if ((trades == null || trades.isEmpty()) && !List.of("CREATE", "UPDATE", "DELETE", "DELETE_PORTFOLIO", "REPLACE_ALL").contains(action)) {
             return;
         }
 
@@ -1252,6 +1253,7 @@ public class TradeApiServiceImpl implements TradeApiService {
             tradeHoldingEventPublisher.publishHoldingUpdate(syncEvent);
         } catch (Exception e) {
             log.error("Failed to publish bulk portfolio sync event for portfolio: {}. Error: {}", portfolioId, e.getMessage());
+            throw new am.trade.exceptions.TradeException("Failed to publish bulk portfolio sync event", org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

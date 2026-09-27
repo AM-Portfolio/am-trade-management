@@ -225,11 +225,11 @@ public class MarketDataApiClient {
                                     
                                     // am-market-data-service may return "ticker", "nseSymbol" instead of "symbol"
                                     String ticker = null;
-                                    if (match.get("ticker") != null) {
+                                    if (match.get("ticker") != null && !((String) match.get("ticker")).trim().isEmpty()) {
                                         ticker = (String) match.get("ticker");
-                                    } else if (match.get("nseSymbol") != null) {
+                                    } else if (match.get("nseSymbol") != null && !((String) match.get("nseSymbol")).trim().isEmpty()) {
                                         ticker = (String) match.get("nseSymbol");
-                                    } else if (match.get("symbol") != null) {
+                                    } else if (match.get("symbol") != null && !((String) match.get("symbol")).trim().isEmpty()) {
                                         ticker = (String) match.get("symbol");
                                     }
                                     
@@ -238,9 +238,9 @@ public class MarketDataApiClient {
                                     }
                                     
                                     // am-market-data-service may return "name" instead of "companyName"
-                                    if (match.get("companyName") != null) {
+                                    if (match.get("companyName") != null && !((String) match.get("companyName")).trim().isEmpty()) {
                                         instrumentInfo.put("description", (String) match.get("companyName"));
-                                    } else if (match.get("name") != null) {
+                                    } else if (match.get("name") != null && !((String) match.get("name")).trim().isEmpty()) {
                                         instrumentInfo.put("description", (String) match.get("name"));
                                     }
                                     
