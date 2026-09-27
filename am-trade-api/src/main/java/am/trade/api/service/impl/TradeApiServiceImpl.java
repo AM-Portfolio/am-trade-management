@@ -1213,14 +1213,45 @@ public class TradeApiServiceImpl implements TradeApiService {
             
             java.math.BigDecimal investmentValue = entryQuantity.multiply(entryPrice);
 
+            boolean hasExitInfo = trade.getExitInfo() != null && trade.getExitInfo().getQuantity() != null;
+            String tradeStatus;
+            if (!hasExitInfo) {
+                tradeStatus = "OPEN";
+            } else if (trade.getStatus() != null) {
+                tradeStatus = trade.getStatus().name();
+            } else {
+                log.warn("Trade {} has exitInfo but no status set. Defaulting tradeStatus to OPEN in Kafka event.", trade.getTradeId());
+                tradeStatus = "OPEN";
+            }
+
+            java.math.BigDecimal sellQuantity = null;
+            java.math.BigDecimal sellPrice = null;
+            java.math.BigDecimal saleValue = null;
+            java.math.BigDecimal profitLoss = null;
+
+            if (hasExitInfo) {
+                sellQuantity = java.math.BigDecimal.valueOf(trade.getExitInfo().getQuantity());
+                sellPrice = trade.getExitInfo().getPrice() != null ? trade.getExitInfo().getPrice() : java.math.BigDecimal.ZERO;
+                saleValue = sellPrice.multiply(sellQuantity);
+
+                java.math.BigDecimal proportionalCost = entryQuantity.compareTo(java.math.BigDecimal.ZERO) != 0
+                        ? investmentValue.multiply(sellQuantity).divide(entryQuantity, 2, java.math.RoundingMode.HALF_UP)
+                        : java.math.BigDecimal.ZERO;
+                profitLoss = saleValue.subtract(proportionalCost);
+            }
+
             am.trade.models.kafka.EquityPosition equity = am.trade.models.kafka.EquityPosition.builder()
                     .symbol(trade.getSymbol())
                     .assetType(assetType)
                     .quantity(entryQuantity)
                     .avgBuyingPrice(entryPrice)
                     .investmentValue(investmentValue)
+                    .sellQuantity(sellQuantity)
+                    .sellPrice(sellPrice)
+                    .saleValue(saleValue)
+                    .profitLoss(profitLoss)
                     .action(equityAction)
-                    .tradeStatus("OPEN")
+                    .tradeStatus(tradeStatus)
                     .isin(isin)
                     .build();
             equities.add(equity);
