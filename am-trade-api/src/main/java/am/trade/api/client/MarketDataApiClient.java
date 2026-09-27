@@ -199,10 +199,17 @@ public class MarketDataApiClient {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(url, requestPayload, Map.class);
+
             if (response != null) {
                 Map<String, Map<String, String>> result = new HashMap<>();
                 
-                Object resultsObj = response.get("results");
+                // am-market-data-service commonly wraps responses in a "data" envelope
+                Map<?, ?> dataMap = response;
+                if (response.containsKey("data") && response.get("data") instanceof Map) {
+                    dataMap = (Map<?, ?>) response.get("data");
+                }
+                
+                Object resultsObj = dataMap.get("results");
                 if (resultsObj instanceof List) {
                     List<?> resultsList = (List<?>) resultsObj;
                     for (Object res : resultsList) {
@@ -215,12 +222,28 @@ public class MarketDataApiClient {
                                 if (!matchesList.isEmpty()) {
                                     Map<?, ?> match = (Map<?, ?>) matchesList.get(0);
                                     Map<String, String> instrumentInfo = new HashMap<>();
-                                    if (match.get("symbol") != null) {
-                                        instrumentInfo.put("symbol", (String) match.get("symbol"));
+                                    
+                                    // am-market-data-service may return "ticker", "nseSymbol" instead of "symbol"
+                                    String ticker = null;
+                                    if (match.get("ticker") != null && !((String) match.get("ticker")).trim().isEmpty()) {
+                                        ticker = (String) match.get("ticker");
+                                    } else if (match.get("nseSymbol") != null && !((String) match.get("nseSymbol")).trim().isEmpty()) {
+                                        ticker = (String) match.get("nseSymbol");
+                                    } else if (match.get("symbol") != null && !((String) match.get("symbol")).trim().isEmpty()) {
+                                        ticker = (String) match.get("symbol");
                                     }
-                                    if (match.get("companyName") != null) {
+                                    
+                                    if (ticker != null) {
+                                        instrumentInfo.put("symbol", ticker);
+                                    }
+                                    
+                                    // am-market-data-service may return "name" instead of "companyName"
+                                    if (match.get("companyName") != null && !((String) match.get("companyName")).trim().isEmpty()) {
                                         instrumentInfo.put("description", (String) match.get("companyName"));
+                                    } else if (match.get("name") != null && !((String) match.get("name")).trim().isEmpty()) {
+                                        instrumentInfo.put("description", (String) match.get("name"));
                                     }
+                                    
                                     if (query != null) {
                                         result.put(query.trim().toUpperCase(), instrumentInfo);
                                     }

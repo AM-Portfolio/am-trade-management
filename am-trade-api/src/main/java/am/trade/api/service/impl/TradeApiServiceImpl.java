@@ -1154,26 +1154,38 @@ public class TradeApiServiceImpl implements TradeApiService {
     }
 
     @Override
+    @org.springframework.cache.annotation.CacheEvict(cacheNames = {"analyticsCache", "portfolioSummary", "tradeSummaryCache"}, allEntries = true)
     public am.trade.common.models.PortfolioModel recalculatePortfolio(String portfolioId, String userId) {
         log.info("Service: Manually recalculating all metrics for portfolio: {} for user: {}", portfolioId, userId);
 
-        // 1. Fetch ALL trades for this portfolio from the database
-        List<TradeDetails> allTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
+        // 1. Fetch ALL trades for this portfolio and enforce ISIN resolution via TradeManagementService
+        List<TradeDetails> allTrades = tradeManagementService.getAllTradesByTradePortfolioId(portfolioId);
         log.info("Found {} historical trades to process for portfolio {}", allTrades.size(), portfolioId);
 
-        // 2. Trigger the synchronous processing for all these trades
+        // 2. Save the newly enriched trades back to the database to fix stale ISIN symbols permanently
+        if (allTrades != null && !allTrades.isEmpty()) {
+            tradeDetailsService.saveAllTradeDetails(allTrades);
+        }
+
+        // 3. Trigger the synchronous processing for all these trades
         // This will rebuild the PortfolioMetrics from scratch
         tradeProcessingService.processTradeDetailsWithObjects(allTrades, portfolioId, userId);
 
-        // 3. Return the updated portfolio
-        return portfolioPersistenceService.findByPortfolioId(portfolioId)
+        // 4. Fetch the updated portfolio to get its name
+        am.trade.common.models.PortfolioModel updatedPortfolio = portfolioPersistenceService.findByPortfolioId(portfolioId)
                 .orElseThrow(() -> new am.trade.exceptions.TradeException("Portfolio not found with ID: " + portfolioId,
                         org.springframework.http.HttpStatus.NOT_FOUND));
+
+        // 5. Publish a REPLACE_ALL event to am-portfolio-service so its holdings are wiped and replaced
+        // with the newly corrected symbols
+        publishBulkPortfolioSyncEvent(portfolioId, updatedPortfolio.getName(), userId, allTrades, "REPLACE_ALL");
+
+        return updatedPortfolio;
     }
 
     @Override
     public void publishBulkPortfolioSyncEvent(String portfolioId, String portfolioName, String userId, List<TradeDetails> trades, String action) {
-        if ((trades == null || trades.isEmpty()) && !List.of("CREATE", "UPDATE", "DELETE", "DELETE_PORTFOLIO").contains(action)) {
+        if ((trades == null || trades.isEmpty()) && !List.of("CREATE", "UPDATE", "DELETE", "DELETE_PORTFOLIO", "REPLACE_ALL").contains(action)) {
             return;
         }
 
@@ -1185,32 +1197,7 @@ public class TradeApiServiceImpl implements TradeApiService {
         String equityAction = "DELETE_PORTFOLIO".equals(action) ? "DELETE" : action;
 
         for (TradeDetails trade : safeTrades) {
-            String assetType = trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSegment() != null
-                    ? trade.getInstrumentInfo().getSegment().name()
-                    : "EQUITY";
-
-            String isin = trade.getInstrumentInfo() != null ? trade.getInstrumentInfo().getIsin() : null;
-
-            java.math.BigDecimal entryQuantity = trade.getEntryInfo() != null && trade.getEntryInfo().getQuantity() != null
-                    ? java.math.BigDecimal.valueOf(trade.getEntryInfo().getQuantity())
-                    : java.math.BigDecimal.ZERO;
-
-            java.math.BigDecimal entryPrice = trade.getEntryInfo() != null && trade.getEntryInfo().getPrice() != null
-                    ? trade.getEntryInfo().getPrice()
-                    : java.math.BigDecimal.ZERO;
-            
-            java.math.BigDecimal investmentValue = entryQuantity.multiply(entryPrice);
-
-            am.trade.models.kafka.EquityPosition equity = am.trade.models.kafka.EquityPosition.builder()
-                    .symbol(trade.getSymbol())
-                    .assetType(assetType)
-                    .quantity(entryQuantity)
-                    .avgBuyingPrice(entryPrice)
-                    .investmentValue(investmentValue)
-                    .action(equityAction)
-                    .tradeStatus("OPEN")
-                    .isin(isin)
-                    .build();
+            am.trade.models.kafka.EquityPosition equity = buildEquityPosition(trade, equityAction);
             equities.add(equity);
 
             if ("OTHER".equals(brokerType) && trade.getTradeExecutions() != null && !trade.getTradeExecutions().isEmpty()) {
@@ -1238,10 +1225,54 @@ public class TradeApiServiceImpl implements TradeApiService {
 
         log.info("Publishing bulk portfolio sync event for portfolioId: {} with {} trades, action: {}", portfolioId, safeTrades.size(), action);
         try {
+            // NOTE: publishHoldingUpdate is @Async — this call returns immediately after dispatching
+            // to the executor. Actual Kafka send results (success/failure) are handled asynchronously
+            // inside KafkaProducerService.sendToKafka() via CompletableFuture.whenComplete.
+            // This catch block only fires for dispatch-level failures (e.g. thread pool exhaustion,
+            // NPE in argument setup) — not for Kafka broker-level send failures.
+            // We intentionally do NOT throw here: the trade recalculation has already committed
+            // to the database and rolling it back via a 500 would leave the caller in a false-failure
+            // state. Kafka delivery failure is logged asynchronously and can be retried separately.
             tradeHoldingEventPublisher.publishHoldingUpdate(syncEvent);
         } catch (Exception e) {
-            log.error("Failed to publish bulk portfolio sync event for portfolio: {}. Error: {}", portfolioId, e.getMessage());
+            log.error("Failed to dispatch portfolio sync event to async executor for portfolio: {}. " +
+                    "Trade data was saved successfully. Kafka event delivery should be retried manually. Error: {}",
+                    portfolioId, e.getMessage(), e);
         }
+    }
+
+    private am.trade.models.kafka.EquityPosition buildEquityPosition(TradeDetails trade, String equityAction) {
+        String assetType = trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSegment() != null
+                ? trade.getInstrumentInfo().getSegment().name() : "EQUITY";
+        String isin = trade.getInstrumentInfo() != null ? trade.getInstrumentInfo().getIsin() : null;
+        java.math.BigDecimal entryQuantity = trade.getEntryInfo() != null && trade.getEntryInfo().getQuantity() != null
+                ? java.math.BigDecimal.valueOf(trade.getEntryInfo().getQuantity()) : java.math.BigDecimal.ZERO;
+        java.math.BigDecimal entryPrice = trade.getEntryInfo() != null && trade.getEntryInfo().getPrice() != null
+                ? trade.getEntryInfo().getPrice() : java.math.BigDecimal.ZERO;
+        java.math.BigDecimal investmentValue = entryQuantity.multiply(entryPrice);
+        boolean hasExitInfo = trade.getExitInfo() != null && trade.getExitInfo().getQuantity() != null;
+        String tradeStatus;
+        if (!hasExitInfo) {
+            tradeStatus = "OPEN";
+        } else if (trade.getStatus() != null) {
+            tradeStatus = trade.getStatus().name();
+        } else {
+            log.warn("Trade {} has exitInfo but no status set. Defaulting tradeStatus to OPEN in Kafka event.", trade.getTradeId());
+            tradeStatus = "OPEN";
+        }
+        java.math.BigDecimal sellQuantity = null, sellPrice = null, saleValue = null, profitLoss = null;
+        if (hasExitInfo) {
+            sellQuantity = java.math.BigDecimal.valueOf(trade.getExitInfo().getQuantity());
+            sellPrice = trade.getExitInfo().getPrice() != null ? trade.getExitInfo().getPrice() : java.math.BigDecimal.ZERO;
+            saleValue = sellPrice.multiply(sellQuantity);
+            java.math.BigDecimal proportionalCost = entryQuantity.compareTo(java.math.BigDecimal.ZERO) != 0
+                    ? investmentValue.multiply(sellQuantity).divide(entryQuantity, 2, java.math.RoundingMode.HALF_UP) : java.math.BigDecimal.ZERO;
+            profitLoss = saleValue.subtract(proportionalCost);
+        }
+        return am.trade.models.kafka.EquityPosition.builder().symbol(trade.getSymbol()).assetType(assetType)
+                .quantity(entryQuantity).avgBuyingPrice(entryPrice).investmentValue(investmentValue)
+                .sellQuantity(sellQuantity).sellPrice(sellPrice).saleValue(saleValue).profitLoss(profitLoss)
+                .action(equityAction).tradeStatus(tradeStatus).isin(isin).build();
     }
 
     private String resolvePortfolioKind(String portfolioId) {
