@@ -52,6 +52,12 @@ public class TradeManagementServiceImpl implements TradeManagementService {
     private final ValidationUtils validationUtils;
 
     @Override
+    public LocalDate getMostRecentTradeDate(String portfolioId) {
+        String userId = com.am.security.context.UserContext.getUserIdOrThrow();
+        return tradeDetailsService.findMostRecentTradeDateByUserAndPortfolio(userId, portfolioId);
+    }
+    
+    @Override
     public Map<String, List<TradeDetails>> getTradeDetailsByDay(LocalDate date, String portfolioId) {
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime endOfDay = date.plusDays(1).atStartOfDay().minusNanos(1);

@@ -123,4 +123,14 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
     
     @Query("{'userId': ?0, 'symbol': ?1, 'entryInfo.timestamp': {$gte: ?2, $lte: ?3}}")
     List<TradeDetailsEntity> findByUserIdAndSymbolAndEntryInfoTimestampBetween(String userId, String symbol, LocalDateTime startDate, LocalDateTime endDate);
+
+    /**
+     * Find the most recent trade for a user and portfolio
+     */
+    Optional<TradeDetailsEntity> findFirstByUserIdAndPortfolioIdOrderByEntryInfoTimestampDesc(String userId, String portfolioId);
+
+    /**
+     * Find the most recent trade for a user across all portfolios
+     */
+    Optional<TradeDetailsEntity> findFirstByUserIdOrderByEntryInfoTimestampDesc(String userId);
 }

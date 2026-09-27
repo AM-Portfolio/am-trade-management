@@ -56,6 +56,24 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     }
     
     @Override
+    public java.time.LocalDate findMostRecentTradeDateByUserAndPortfolio(String userId, String portfolioId) {
+        log.debug("Finding most recent trade date for user: {}, portfolio: {}", userId, portfolioId);
+        Optional<TradeDetailsEntity> latestTrade;
+        if (portfolioId != null && !portfolioId.isEmpty()) {
+            latestTrade = tradeDetailsRepository.findFirstByUserIdAndPortfolioIdOrderByEntryInfoTimestampDesc(userId, portfolioId);
+        } else {
+            latestTrade = tradeDetailsRepository.findFirstByUserIdOrderByEntryInfoTimestampDesc(userId);
+        }
+        
+        return latestTrade.map(entity -> {
+            if (entity.getEntryInfo() != null && entity.getEntryInfo().getTimestamp() != null) {
+                return entity.getEntryInfo().getTimestamp().toLocalDate();
+            }
+            return null;
+        }).orElse(null);
+    }
+    
+    @Override
     @org.springframework.transaction.annotation.Transactional
     public void deleteByTradeId(String tradeId) {
         log.debug("Deleting trade details by trade ID: {}", tradeId);

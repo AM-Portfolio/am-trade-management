@@ -34,6 +34,31 @@ public class TradeManagementController {
 
     private final TradeManagementService tradeManagementService;
 
+    @Operation(summary = "Get the date of the most recent trade in a portfolio")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Date retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/most-recent-date")
+    public ResponseEntity<?> getMostRecentTradeDate(
+            @Parameter(description = "Optional portfolio ID to filter trades") @RequestParam(required = false) String portfolioId) {
+
+        LocalDate recentDate = tradeManagementService.getMostRecentTradeDate(portfolioId);
+
+        if (recentDate != null) {
+            return ResponseEntity.ok(Map.of(
+                "date", recentDate.toString(),
+                "year", recentDate.getYear()
+            ));
+        } else {
+            return ResponseEntity.ok(Map.of(
+                "date", LocalDate.now().toString(),
+                "year", LocalDate.now().getYear()
+            ));
+        }
+    }
+
     /**
      * Get trade details for a specific day
      * 

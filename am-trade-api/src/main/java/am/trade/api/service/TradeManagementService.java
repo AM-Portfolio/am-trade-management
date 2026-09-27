@@ -17,6 +17,11 @@ import java.util.Map;
 public interface TradeManagementService {
     
     /**
+     * Get the most recent trade date for the current user and an optional portfolio
+     */
+    LocalDate getMostRecentTradeDate(String portfolioId);
+    
+    /**
      * Get trade details for a specific day grouped by portfolio
      * 
      * @param date The date to retrieve trades for

@@ -19,6 +19,8 @@ public interface TradeDetailsService {
     
     Optional<TradeDetails> findModelByTradeId(String tradeId);
     
+    java.time.LocalDate findMostRecentTradeDateByUserAndPortfolio(String userId, String portfolioId);
+    
     void deleteByTradeId(String tradeId);
     
     List<TradeDetails> findModelsBySymbol(String symbol);
