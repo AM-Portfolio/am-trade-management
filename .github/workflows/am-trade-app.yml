@@ -65,9 +65,9 @@ jobs:
       - id: set-envs
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master" ]]; then
-            echo 'envs=["dev", "preprod", "prod", "dr"]' >> $GITHUB_OUTPUT
+            echo 'envs=["preprod", "prod", "dr"]' >> $GITHUB_OUTPUT
           else
-            echo 'envs=["dev", "preprod"]' >> $GITHUB_OUTPUT
+            echo 'envs=["preprod"]' >> $GITHUB_OUTPUT
           fi
 
   contabo-approve:
