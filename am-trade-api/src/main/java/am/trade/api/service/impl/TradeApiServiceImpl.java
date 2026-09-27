@@ -1225,10 +1225,19 @@ public class TradeApiServiceImpl implements TradeApiService {
 
         log.info("Publishing bulk portfolio sync event for portfolioId: {} with {} trades, action: {}", portfolioId, safeTrades.size(), action);
         try {
+            // NOTE: publishHoldingUpdate is @Async — this call returns immediately after dispatching
+            // to the executor. Actual Kafka send results (success/failure) are handled asynchronously
+            // inside KafkaProducerService.sendToKafka() via CompletableFuture.whenComplete.
+            // This catch block only fires for dispatch-level failures (e.g. thread pool exhaustion,
+            // NPE in argument setup) — not for Kafka broker-level send failures.
+            // We intentionally do NOT throw here: the trade recalculation has already committed
+            // to the database and rolling it back via a 500 would leave the caller in a false-failure
+            // state. Kafka delivery failure is logged asynchronously and can be retried separately.
             tradeHoldingEventPublisher.publishHoldingUpdate(syncEvent);
         } catch (Exception e) {
-            log.error("Failed to publish bulk portfolio sync event for portfolio: {}. Error: {}", portfolioId, e.getMessage());
-            throw new am.trade.exceptions.TradeException("Failed to publish bulk portfolio sync event", org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Failed to dispatch portfolio sync event to async executor for portfolio: {}. " +
+                    "Trade data was saved successfully. Kafka event delivery should be retried manually. Error: {}",
+                    portfolioId, e.getMessage(), e);
         }
     }
 
