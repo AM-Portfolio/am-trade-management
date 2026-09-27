@@ -1197,63 +1197,7 @@ public class TradeApiServiceImpl implements TradeApiService {
         String equityAction = "DELETE_PORTFOLIO".equals(action) ? "DELETE" : action;
 
         for (TradeDetails trade : safeTrades) {
-            String assetType = trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSegment() != null
-                    ? trade.getInstrumentInfo().getSegment().name()
-                    : "EQUITY";
-
-            String isin = trade.getInstrumentInfo() != null ? trade.getInstrumentInfo().getIsin() : null;
-
-            java.math.BigDecimal entryQuantity = trade.getEntryInfo() != null && trade.getEntryInfo().getQuantity() != null
-                    ? java.math.BigDecimal.valueOf(trade.getEntryInfo().getQuantity())
-                    : java.math.BigDecimal.ZERO;
-
-            java.math.BigDecimal entryPrice = trade.getEntryInfo() != null && trade.getEntryInfo().getPrice() != null
-                    ? trade.getEntryInfo().getPrice()
-                    : java.math.BigDecimal.ZERO;
-            
-            java.math.BigDecimal investmentValue = entryQuantity.multiply(entryPrice);
-
-            boolean hasExitInfo = trade.getExitInfo() != null && trade.getExitInfo().getQuantity() != null;
-            String tradeStatus;
-            if (!hasExitInfo) {
-                tradeStatus = "OPEN";
-            } else if (trade.getStatus() != null) {
-                tradeStatus = trade.getStatus().name();
-            } else {
-                log.warn("Trade {} has exitInfo but no status set. Defaulting tradeStatus to OPEN in Kafka event.", trade.getTradeId());
-                tradeStatus = "OPEN";
-            }
-
-            java.math.BigDecimal sellQuantity = null;
-            java.math.BigDecimal sellPrice = null;
-            java.math.BigDecimal saleValue = null;
-            java.math.BigDecimal profitLoss = null;
-
-            if (hasExitInfo) {
-                sellQuantity = java.math.BigDecimal.valueOf(trade.getExitInfo().getQuantity());
-                sellPrice = trade.getExitInfo().getPrice() != null ? trade.getExitInfo().getPrice() : java.math.BigDecimal.ZERO;
-                saleValue = sellPrice.multiply(sellQuantity);
-
-                java.math.BigDecimal proportionalCost = entryQuantity.compareTo(java.math.BigDecimal.ZERO) != 0
-                        ? investmentValue.multiply(sellQuantity).divide(entryQuantity, 2, java.math.RoundingMode.HALF_UP)
-                        : java.math.BigDecimal.ZERO;
-                profitLoss = saleValue.subtract(proportionalCost);
-            }
-
-            am.trade.models.kafka.EquityPosition equity = am.trade.models.kafka.EquityPosition.builder()
-                    .symbol(trade.getSymbol())
-                    .assetType(assetType)
-                    .quantity(entryQuantity)
-                    .avgBuyingPrice(entryPrice)
-                    .investmentValue(investmentValue)
-                    .sellQuantity(sellQuantity)
-                    .sellPrice(sellPrice)
-                    .saleValue(saleValue)
-                    .profitLoss(profitLoss)
-                    .action(equityAction)
-                    .tradeStatus(tradeStatus)
-                    .isin(isin)
-                    .build();
+            am.trade.models.kafka.EquityPosition equity = buildEquityPosition(trade, equityAction);
             equities.add(equity);
 
             if ("OTHER".equals(brokerType) && trade.getTradeExecutions() != null && !trade.getTradeExecutions().isEmpty()) {
@@ -1286,6 +1230,40 @@ public class TradeApiServiceImpl implements TradeApiService {
             log.error("Failed to publish bulk portfolio sync event for portfolio: {}. Error: {}", portfolioId, e.getMessage());
             throw new am.trade.exceptions.TradeException("Failed to publish bulk portfolio sync event", org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private am.trade.models.kafka.EquityPosition buildEquityPosition(TradeDetails trade, String equityAction) {
+        String assetType = trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSegment() != null
+                ? trade.getInstrumentInfo().getSegment().name() : "EQUITY";
+        String isin = trade.getInstrumentInfo() != null ? trade.getInstrumentInfo().getIsin() : null;
+        java.math.BigDecimal entryQuantity = trade.getEntryInfo() != null && trade.getEntryInfo().getQuantity() != null
+                ? java.math.BigDecimal.valueOf(trade.getEntryInfo().getQuantity()) : java.math.BigDecimal.ZERO;
+        java.math.BigDecimal entryPrice = trade.getEntryInfo() != null && trade.getEntryInfo().getPrice() != null
+                ? trade.getEntryInfo().getPrice() : java.math.BigDecimal.ZERO;
+        java.math.BigDecimal investmentValue = entryQuantity.multiply(entryPrice);
+        boolean hasExitInfo = trade.getExitInfo() != null && trade.getExitInfo().getQuantity() != null;
+        String tradeStatus;
+        if (!hasExitInfo) {
+            tradeStatus = "OPEN";
+        } else if (trade.getStatus() != null) {
+            tradeStatus = trade.getStatus().name();
+        } else {
+            log.warn("Trade {} has exitInfo but no status set. Defaulting tradeStatus to OPEN in Kafka event.", trade.getTradeId());
+            tradeStatus = "OPEN";
+        }
+        java.math.BigDecimal sellQuantity = null, sellPrice = null, saleValue = null, profitLoss = null;
+        if (hasExitInfo) {
+            sellQuantity = java.math.BigDecimal.valueOf(trade.getExitInfo().getQuantity());
+            sellPrice = trade.getExitInfo().getPrice() != null ? trade.getExitInfo().getPrice() : java.math.BigDecimal.ZERO;
+            saleValue = sellPrice.multiply(sellQuantity);
+            java.math.BigDecimal proportionalCost = entryQuantity.compareTo(java.math.BigDecimal.ZERO) != 0
+                    ? investmentValue.multiply(sellQuantity).divide(entryQuantity, 2, java.math.RoundingMode.HALF_UP) : java.math.BigDecimal.ZERO;
+            profitLoss = saleValue.subtract(proportionalCost);
+        }
+        return am.trade.models.kafka.EquityPosition.builder().symbol(trade.getSymbol()).assetType(assetType)
+                .quantity(entryQuantity).avgBuyingPrice(entryPrice).investmentValue(investmentValue)
+                .sellQuantity(sellQuantity).sellPrice(sellPrice).saleValue(saleValue).profitLoss(profitLoss)
+                .action(equityAction).tradeStatus(tradeStatus).isin(isin).build();
     }
 
     private String resolvePortfolioKind(String portfolioId) {
