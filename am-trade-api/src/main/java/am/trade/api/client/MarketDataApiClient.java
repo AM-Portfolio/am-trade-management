@@ -199,13 +199,6 @@ public class MarketDataApiClient {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(url, requestPayload, Map.class);
-            
-            try {
-                String jsonResponse = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(response);
-                log.error("==== BATCH SEARCH RAW RESPONSE ==== : {}", jsonResponse);
-            } catch(Exception ex) {
-                log.error("Failed to serialize response", ex);
-            }
 
             if (response != null) {
                 Map<String, Map<String, String>> result = new HashMap<>();
