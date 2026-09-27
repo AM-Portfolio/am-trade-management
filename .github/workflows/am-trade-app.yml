@@ -67,7 +67,7 @@ jobs:
           if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master" ]]; then
             echo 'envs=["preprod", "prod", "dr"]' >> $GITHUB_OUTPUT
           else
-            echo 'envs=["preprod"]' >> $GITHUB_OUTPUT
+            echo 'envs=["preprod", "dev"]' >> $GITHUB_OUTPUT
           fi
 
   contabo-approve:
@@ -131,20 +131,19 @@ jobs:
             am-pipelines-repo/scripts/ci/argo-pin-and-wait.sh
           fi
 
-      - name: Contabo pin + wait (dev)
+      - name: Contabo pin (dev) - async
         if: matrix.env == 'dev'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_PAT || secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
-          ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
-          ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
           INPUT_SERVICE_NAME: am-trade-management-service
           INPUT_ENVIRONMENT: ${{ matrix.env }}
           INPUT_IMAGE_TAG: ${{ steps.tag.outputs.tag }}
         run: |
           set -euo pipefail
-          chmod +x am-pipelines-repo/scripts/ci/argo-api-lib.sh
-          chmod +x am-pipelines-repo/scripts/ci/argo-pin-and-wait.sh
-          am-pipelines-repo/scripts/ci/argo-pin-and-wait.sh
+          echo "Dispatching set-image-tag to am-gitops (async for dev)..."
+          gh workflow run set-image-tag.yml -R AM-Portfolio/am-gitops \
+            -f service="${INPUT_SERVICE_NAME}" -f env="${INPUT_ENVIRONMENT}" -f tag="${INPUT_IMAGE_TAG}"
+          echo "Done! The am-gitops repository will automatically sync this to Argo CD."
 
       - name: Contabo promote + wait (prod/dr)
         if: matrix.env == 'prod' || matrix.env == 'dr'
