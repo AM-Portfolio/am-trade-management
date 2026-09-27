@@ -54,4 +54,109 @@ jobs:
       deploy_preprod: ${{ github.event_name != 'workflow_dispatch' && true || inputs.deploy_preprod_helm }}
       gitops_write_preprod: ${{ github.event_name != 'workflow_dispatch' && true || inputs.gitops_write_preprod }}
       force_preprod_helm: ${{ github.event_name == 'workflow_dispatch' && inputs.force_preprod_helm || false }}
+      contabo_wait_preprod: false
     secrets: inherit
+
+  setup-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      envs: ${{ steps.set-envs.outputs.envs }}
+    steps:
+      - id: set-envs
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo 'envs=["dev", "preprod", "prod", "dr"]' >> $GITHUB_OUTPUT
+          else
+            echo 'envs=["dev", "preprod"]' >> $GITHUB_OUTPUT
+          fi
+
+  contabo-approve:
+    name: Contabo Argo -> ${{ matrix.env }} (approve)
+    needs: [publish, setup-matrix]
+    if: |
+      always() &&
+      github.event_name == 'push' &&
+      needs.publish.result != 'cancelled' &&
+      needs.publish.outputs.image_tag != ''
+    strategy:
+      fail-fast: false
+      matrix:
+        env: ${{ fromJson(needs.setup-matrix.outputs.envs) }}
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.env }}
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Checkout am-pipelines scripts
+        uses: actions/checkout@v4
+        with:
+          repository: AM-Portfolio/am-pipelines
+          path: am-pipelines-repo
+          ref: main
+          token: ${{ secrets.GITHUB_PAT || secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Resolve image tag
+        id: tag
+        env:
+          TAG_FROM_PUBLISH: ${{ needs.publish.outputs.image_tag }}
+        run: |
+          set -euo pipefail
+          TAG="${TAG_FROM_PUBLISH:-}"
+          if [[ -z "$TAG" ]]; then
+            echo "::error::No image tag from publish"
+            exit 1
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Contabo pin/sync + wait (preprod)
+        if: matrix.env == 'preprod'
+        env:
+          ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+          ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+          INPUT_SERVICE_NAME: am-trade-management-service
+          INPUT_ENVIRONMENT: preprod
+          INPUT_IMAGE_TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          sleep 5
+          chmod +x am-pipelines-repo/scripts/ci/argo-api-lib.sh
+          if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master" ]]; then
+            # Main branch already pinned in GitOps via publish job
+            chmod +x am-pipelines-repo/scripts/ci/argo-sync-and-wait.sh
+            am-pipelines-repo/scripts/ci/argo-sync-and-wait.sh
+          else
+            # Feature branches need to pin temporarily
+            chmod +x am-pipelines-repo/scripts/ci/argo-pin-and-wait.sh
+            am-pipelines-repo/scripts/ci/argo-pin-and-wait.sh
+          fi
+
+      - name: Contabo pin + wait (dev)
+        if: matrix.env == 'dev'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_PAT || secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+          ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+          ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+          INPUT_SERVICE_NAME: am-trade-management-service
+          INPUT_ENVIRONMENT: ${{ matrix.env }}
+          INPUT_IMAGE_TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          chmod +x am-pipelines-repo/scripts/ci/argo-api-lib.sh
+          chmod +x am-pipelines-repo/scripts/ci/argo-pin-and-wait.sh
+          am-pipelines-repo/scripts/ci/argo-pin-and-wait.sh
+
+      - name: Contabo promote + wait (prod/dr)
+        if: matrix.env == 'prod' || matrix.env == 'dr'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_PAT || secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+          ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+          ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+          INPUT_SERVICE_NAME: am-trade-management-service
+          INPUT_ENVIRONMENT: ${{ matrix.env }}
+          INPUT_IMAGE_TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          chmod +x am-pipelines-repo/scripts/ci/argo-api-lib.sh
+          chmod +x am-pipelines-repo/scripts/ci/argo-promote-and-wait.sh
+          am-pipelines-repo/scripts/ci/argo-promote-and-wait.sh
