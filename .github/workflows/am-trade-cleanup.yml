@@ -1,0 +1,24 @@
+name: Container Cleanup — AM Trade Management
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag to delete (e.g. sha-abc1234)"
+        required: true
+        type: string
+
+jobs:
+  cleanup:
+    name: Delete am-trade-management-service image tag — ${{ github.event.inputs.tag }}
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete container image tag
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: "am-trade-management-service"
+          package-type: "container"
+          min-versions-to-keep: 5
+          delete-only-pre-release-versions: "false"
