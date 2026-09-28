@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "AM Trade Management Flow",
+    "animation": "trace",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "output": "trade-repo-flow.html"
+  },
+  "lanes": [
+    { "id": "client", "label": "Client Layer" },
+    { "id": "api", "label": "API & Entry" },
+    { "id": "core", "label": "Business Logic & Models" },
+    { "id": "data", "label": "Persistence" },
+    { "id": "async", "label": "Events & Analytics" }
+  ],
+  "phases": [
+    { "id": "request", "label": "Request", "fromCol": 0, "toCol": 1 },
+    { "id": "process", "label": "Process", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "persist", "label": "Store & Analyze", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["user", "app", "api", "services", "persistence", "db"],
+  "nodes": [
+    { "id": "user", "lane": "client", "col": 0, "type": "external", "label": "Clients", "sublabel": "Web / Mobile", "width": 132 },
+    { "id": "app", "lane": "api", "col": 1, "type": "frontend", "label": "am-trade-app", "sublabel": "Spring Boot App", "width": 132 },
+    { "id": "api", "lane": "api", "col": 2, "type": "backend", "label": "am-trade-api", "sublabel": "REST Controllers", "width": 132 },
+    { "id": "models", "lane": "core", "col": 2, "type": "backend", "label": "am-trade-models", "sublabel": "Domains & DTOs", "width": 132 },
+    { "id": "services", "lane": "core", "col": 3, "type": "backend", "label": "am-trade-services", "sublabel": "Business Logic", "tag": "Core logic", "width": 132 },
+    { "id": "exceptions", "lane": "core", "col": 4, "type": "security", "label": "am-trade-exceptions", "sublabel": "Error Hierarchy", "width": 132 },
+    { "id": "common", "lane": "core", "col": 5, "type": "backend", "label": "am-trade-common", "sublabel": "Shared Utils", "width": 132 },
+    { "id": "persistence", "lane": "data", "col": 3, "type": "backend", "label": "am-trade-persistence", "sublabel": "Data Access", "width": 132 },
+    { "id": "db", "lane": "data", "col": 4, "type": "database", "label": "Database", "sublabel": "Storage", "width": 132 },
+    { "id": "kafka", "lane": "async", "col": 3, "type": "messagebus", "label": "am-trade-kafka", "sublabel": "Event Messaging", "width": 132 },
+    { "id": "analytics", "lane": "async", "col": 4, "type": "backend", "label": "am-trade-analytics", "sublabel": "Analytics Engine", "width": 132 },
+    { "id": "dashboard", "lane": "async", "col": 5, "type": "frontend", "label": "am-trade-dashboard", "sublabel": "UI Widgets", "width": 132 }
+  ],
+  "edges": [
+    { "id": "client-app", "from": "user", "to": "app", "variant": "emphasis" },
+    { "id": "app-api", "from": "app", "to": "api", "variant": "emphasis" },
+    { "id": "api-models", "from": "api", "to": "models", "label": "parse request", "variant": "default" },
+    { "id": "api-services", "from": "api", "to": "services", "label": "process", "variant": "emphasis" },
+    { "id": "services-exceptions", "from": "services", "to": "exceptions", "label": "throws on error", "variant": "security", "role": "error" },
+    { "id": "services-common", "from": "services", "to": "common", "label": "uses", "variant": "dashed" },
+    { "id": "services-persistence", "from": "services", "to": "persistence", "label": "save state", "variant": "emphasis" },
+    { "id": "persistence-db", "from": "persistence", "to": "db", "variant": "emphasis" },
+    { "id": "services-kafka", "from": "services", "to": "kafka", "label": "emit event", "variant": "dashed", "role": "branch" },
+    { "id": "kafka-analytics", "from": "kafka", "to": "analytics", "label": "consume", "variant": "default" },
+    { "id": "analytics-dashboard", "from": "analytics", "to": "dashboard", "label": "serve metrics", "variant": "default" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Module Dependencies",
+      "items": [
+        "All requests start at the Spring Boot application entry point.",
+        "The REST controllers in am-trade-api map to the am-trade-models.",
+        "Business logic relies on the exception hierarchy and common utilities."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Data and Events",
+      "items": [
+        "Trade persistence layer saves synchronous state.",
+        "The kafka module emits async events which power analytics and the dashboard."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0">
+  <title>AM Trade Management Brag Video</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      width: 1920px;
+      height: 1080px;
+      background-color: #0d1117;
+      color: #c9d1d9;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .slide {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      text-align: center;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      font-size: 110px;
+      font-weight: 800;
+      margin: 0;
+      color: #58a6ff;
+      letter-spacing: -2px;
+    }
+
+    h2 {
+      font-size: 70px;
+      font-weight: 600;
+      margin-top: 20px;
+      color: #8b949e;
+    }
+
+    .highlight {
+      color: #3fb950;
+    }
+
+    .code-box {
+      font-family: 'JetBrains Mono', monospace;
+      background: #161b22;
+      border: 1px solid #30363d;
+      padding: 40px;
+      border-radius: 20px;
+      font-size: 48px;
+      text-align: left;
+      margin-top: 50px;
+      color: #e6edf3;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    /* Animations */
+    @keyframes slideInOut {
+      0% { opacity: 0; transform: translateY(40px) scale(0.95); }
+      10% { opacity: 1; transform: translateY(0) scale(1); }
+      90% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-40px) scale(1.05); }
+    }
+    
+    @keyframes slideInStay {
+      0% { opacity: 0; transform: translateY(40px) scale(0.95); }
+      10% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .slide-1 { animation: slideInOut 4s linear forwards 0s; }
+    .slide-2 { animation: slideInOut 6s linear forwards 4s; }
+    .slide-3 { animation: slideInOut 6s linear forwards 10s; }
+    .slide-4 { animation: slideInOut 6s linear forwards 16s; }
+    .slide-5 { animation: slideInStay 3s linear forwards 22s; }
+
+    .fade-up {
+      opacity: 0;
+      animation: fadeUpIn 1s forwards;
+    }
+
+    @keyframes fadeUpIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Slide 1: Hook (0-4s) -->
+  <div class="slide slide-1">
+    <h1>AM Trade Management</h1>
+    <h2>The Core Trading Engine</h2>
+  </div>
+
+  <!-- Slide 2: How It Works (4-10s) -->
+  <div class="slide slide-2">
+    <h1>How It Works</h1>
+    <h2>A modular microservice architecture built for scale.</h2>
+    <div class="code-box">
+      <span style="color: #79c0ff;">App Entry:</span> am-trade-app<br>
+      <span style="color: #79c0ff;">Controllers:</span> am-trade-api<br>
+      <span style="color: #79c0ff;">Business Logic:</span> am-trade-services<br>
+      <span style="color: #79c0ff;">Data Access:</span> am-trade-persistence
+    </div>
+  </div>
+
+  <!-- Slide 3: Data Flow (10-16s) -->
+  <div class="slide slide-3">
+    <h1>Asynchronous Data Flow</h1>
+    <h2>Trade logic flows smoothly into real-time analytics.</h2>
+    <div style="font-size: 60px; font-weight: 600; color: #d2a8ff; margin-top: 50px;">
+      Client &rarr; API &rarr; Services &rarr; Database<br>
+      <span style="font-size: 40px; color: #8b949e;">(Sync Persistence)</span><br><br>
+      Services &rarr; Kafka &rarr; Analytics &rarr; Dashboard<br>
+      <span style="font-size: 40px; color: #8b949e;">(Async Event Streams)</span>
+    </div>
+  </div>
+
+  <!-- Slide 4: Authentication for Freshers (16-22s) -->
+  <div class="slide slide-4">
+    <h1>Authentication Demystified</h1>
+    <h2>Gateway-Enforced Security Model</h2>
+    <div class="code-box">
+      <span style="color: #8b949e;">// SecurityConfig.java</span><br>
+      <span style="color: #ff7b72;">Gateway</span> handles JWTs &amp; Blocks direct access.<br>
+      Internal <span style="color: #ff7b72;">Service Layer</span> endpoints are left open!<br><br>
+      <span style="color: #a5d6ff;">auth</span>.<span style="color: #d2a8ff;">requestMatchers</span>(<span style="color: #a5d6ff;">"/**"</span>).<span style="color: #d2a8ff;">permitAll</span>()
+    </div>
+  </div>
+
+  <!-- Slide 5: Outro (22-25s) -->
+  <div class="slide slide-5">
+    <h1>Clean Code. Robust Architecture.</h1>
+    <h2 class="highlight">am-trade-management</h2>
+  </div>
+
+</body>
+</html>
