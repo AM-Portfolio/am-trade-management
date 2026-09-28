@@ -62,3 +62,8 @@ jobs:
           context: .
           push: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') }}
           tags: ghcr.io/am-portfolio/am-trade-management-service:${{ github.run_id }}
+          build-args: |
+            BASE_REGISTRY=ghcr.io/am-portfolio/
+            GITHUB_PACKAGES_USERNAME=${{ github.actor }}
+            GITHUB_PACKAGES_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            BUILD_ID=${{ github.run_id }}
