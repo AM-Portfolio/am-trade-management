@@ -14,11 +14,11 @@ on:
 
 jobs:
   publish:
-    name: Build & Publish
+    name: Publish UI
     permissions:
       contents: write
       packages: write
-    uses: ./.github/workflows/central-build-publish-no-deploy.yml
+    uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish-contabo.yml@main
     with:
       language: 'java'
       working_directory: '.'
