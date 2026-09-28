@@ -1,4 +1,9 @@
-name: Manual Deploy — AM Trade Management
+# Manual Contabo Argo deploy for all 4 envs — waits Healthy/Synced or FAILS.
+# Job uses GitHub Environment ${{ inputs.environment }} so Required reviewers
+# (Settings → Environments: dev, preprod, prod, dr) must Approve before Contabo runs.
+# preprod also auto-deploys on main merge via Publish; use this to re-roll or pin a tag.
+# prod/dr: after Approve → promote PR → human CODEOWNERS merge → Contabo sync+wait.
+name: Manual Deploy (AM Trade Management)
 
 on:
   workflow_dispatch:
@@ -9,7 +14,7 @@ on:
         type: string
         default: ""
       environment:
-        description: "Target Environment"
+        description: "Target Environment (Contabo Argo only; GitHub Environment approval)"
         required: true
         default: "dev"
         type: choice
@@ -68,16 +73,9 @@ jobs:
           INPUT_IMAGE_TAG: ${{ steps.tag.outputs.tag }}
         run: |
           set -euo pipefail
-          if [[ "$INPUT_ENVIRONMENT" == "dev" ]]; then
-            echo "Dispatching set-image-tag to am-gitops (async for dev)..."
-            gh workflow run set-image-tag.yml -R AM-Portfolio/am-gitops \
-              -f service="${INPUT_SERVICE_NAME}" -f env="${INPUT_ENVIRONMENT}" -f tag="${INPUT_IMAGE_TAG}"
-            echo "Done! The am-gitops repository will automatically sync this to Argo CD."
-          else
-            chmod +x am-pipelines-repo/scripts/ci/argo-api-lib.sh
-            chmod +x am-pipelines-repo/scripts/ci/argo-pin-and-wait.sh
-            am-pipelines-repo/scripts/ci/argo-pin-and-wait.sh
-          fi
+          chmod +x am-pipelines-repo/scripts/ci/argo-api-lib.sh
+          chmod +x am-pipelines-repo/scripts/ci/argo-pin-and-wait.sh
+          am-pipelines-repo/scripts/ci/argo-pin-and-wait.sh
 
       - name: Promote + verify Contabo (prod/dr)
         if: inputs.environment == 'prod' || inputs.environment == 'dr'
