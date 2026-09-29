@@ -1,0 +1,26 @@
+﻿name: Fix GHCR package access
+on:
+  workflow_dispatch:
+jobs:
+  link:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Link or recreate package for Actions write
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eux
+          PKG=am-trade-management-service
+          REPO_ID=$(gh api repos/${{ github.repository }} --jq .id)
+          echo "repo_id=$REPO_ID"
+          # Try link first
+          if gh api --method PUT "orgs/${{ github.repository_owner }}/packages/container/${PKG}/repositories/${REPO_ID}"; then
+            echo "LINKED_OK"
+          else
+            echo "LINK_FAILED — deleting package so next publish recreates it linked to this repo"
+            gh api --method DELETE "orgs/${{ github.repository_owner }}/packages/container/${PKG}" || true
+            echo "DELETED_OR_MISSING"
+          fi
