@@ -1,4 +1,4 @@
-﻿name: Fix GHCR package access
+name: Fix GHCR package access
 on:
   workflow_dispatch:
 jobs:
@@ -7,8 +7,8 @@ jobs:
     permissions:
       packages: write
       contents: read
-          steps:
-      - name: Link package to repo + grant Actions write
+    steps:
+      - name: Link package to repo and verify push
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -16,22 +16,11 @@ jobs:
           PKG=am-trade-management-service
           REPO_ID=$(gh api repos/${{ github.repository }} --jq .id)
           echo "repo_id=$REPO_ID"
-          # Show current linked repos
           gh api "orgs/${{ github.repository_owner }}/packages/container/$PKG/repositories" || true
-          # Link repository to package
-          gh api --method PUT \
-            "orgs/${{ github.repository_owner }}/packages/container/$PKG/repositories/$REPO_ID" \
-            -i || true
-          # Set package to inherit access from linked repo if supported
-          gh api --method PUT \
-            "orgs/${{ github.repository_owner }}/packages/container/$PKG" \
-            -f repository_id="$REPO_ID" || true
-          # Retry link
-          gh api --method PUT \
-            "orgs/${{ github.repository_owner }}/packages/container/$PKG/repositories/$REPO_ID"
-          echo "LINKED"
-          # Verify push
+          gh api --method PUT "orgs/${{ github.repository_owner }}/packages/container/$PKG/repositories/$REPO_ID"
+          echo LINKED_OK
           echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           echo "FROM scratch" > Df
-          docker build -f Df -t ghcr.io/am-portfolio/$PKG:acl-probe2 .
-          docker push ghcr.io/am-portfolio/$PKG:acl-probe2 && echo REAL_PUSH_OK || echo REAL_PUSH_FAIL
+          docker build -f Df -t "ghcr.io/am-portfolio/$PKG:acl-probe3" .
+          docker push "ghcr.io/am-portfolio/$PKG:acl-probe3"
+          echo REAL_PUSH_OK
