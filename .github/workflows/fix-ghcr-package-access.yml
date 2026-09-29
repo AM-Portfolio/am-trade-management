@@ -7,27 +7,31 @@ jobs:
     permissions:
       packages: write
       contents: read
-    steps:
-      - name: Inspect and fix package ACL
+          steps:
+      - name: Link package to repo + grant Actions write
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eux
           PKG=am-trade-management-service
           REPO_ID=$(gh api repos/${{ github.repository }} --jq .id)
-          echo "repo_id=$REPO_ID actor=${{ github.actor }}"
-          echo "=== org packages (names) ==="
-          gh api "orgs/${{ github.repository_owner }}/packages?package_type=container&per_page=100" --jq '.[].name' || echo "list_org_fail"
-          echo "=== get package ==="
-          gh api "orgs/${{ github.repository_owner }}/packages/container/$PKG" || echo "get_org_fail"
-          echo "=== user packages ==="
-          gh api "user/packages?package_type=container&per_page=100" --jq '.[].name' || echo "list_user_fail"
-          echo "=== docker login + probe ==="
+          echo "repo_id=$REPO_ID"
+          # Show current linked repos
+          gh api "orgs/${{ github.repository_owner }}/packages/container/$PKG/repositories" || true
+          # Link repository to package
+          gh api --method PUT \
+            "orgs/${{ github.repository_owner }}/packages/container/$PKG/repositories/$REPO_ID" \
+            -i || true
+          # Set package to inherit access from linked repo if supported
+          gh api --method PUT \
+            "orgs/${{ github.repository_owner }}/packages/container/$PKG" \
+            -f repository_id="$REPO_ID" || true
+          # Retry link
+          gh api --method PUT \
+            "orgs/${{ github.repository_owner }}/packages/container/$PKG/repositories/$REPO_ID"
+          echo "LINKED"
+          # Verify push
           echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          # Create a tiny linked package under repo-qualified name to prove GITHUB_TOKEN can write
-          echo "FROM scratch" > Dockerfile.probe
-          docker build -f Dockerfile.probe -t "ghcr.io/am-portfolio/am-trade-management/ci-write-probe:${{ github.run_id }}" .
-          docker push "ghcr.io/am-portfolio/am-trade-management/ci-write-probe:${{ github.run_id }}" && echo "PROBE_PUSH_OK" || echo "PROBE_PUSH_FAIL"
-          # Try push to the real package name with empty layer image (will fail if ACL blocked)
-          docker tag "ghcr.io/am-portfolio/am-trade-management/ci-write-probe:${{ github.run_id }}" "ghcr.io/am-portfolio/$PKG:acl-probe"
-          docker push "ghcr.io/am-portfolio/$PKG:acl-probe" && echo "REAL_PUSH_OK" || echo "REAL_PUSH_FAIL"
+          echo "FROM scratch" > Df
+          docker build -f Df -t ghcr.io/am-portfolio/$PKG:acl-probe2 .
+          docker push ghcr.io/am-portfolio/$PKG:acl-probe2 && echo REAL_PUSH_OK || echo REAL_PUSH_FAIL
