@@ -27,6 +27,6 @@ jobs:
     with:
       language: "java"
       working_directory: "."
-      image_name: "am-trade-management-service"
+      image_name: "am-trade-management/am-trade-management-service"
       build_context: "."
     secrets: inherit
