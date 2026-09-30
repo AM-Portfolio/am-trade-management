@@ -1,9 +1,7 @@
-AM_MARKET_DATA_API_URL: ${AM_MARKET_DATA_API_URL:http://localhost:8092}
-
 market-data:
   api:
-    # Base URL for the market data API
-    base-url: ${AM_MARKET_DATA_API_URL}
+    # Base URL for the market data API (env wins; no self-referential AM_MARKET_DATA_API_URL key)
+    base-url: ${AM_MARKET_DATA_API_URL:http://localhost:8092}
     # Path for historical data endpoint
     historical-data-path: /v1/market-data/historical-data
     # Connection timeout in milliseconds

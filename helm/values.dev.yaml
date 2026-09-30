@@ -71,6 +71,8 @@ ingress:
 
 env:
   SPRING_PROFILES_ACTIVE: "dev"
+  # Concrete URL — avoid Spring circular placeholder on AM_MARKET_DATA_API_URL
+  AM_MARKET_DATA_API_URL: "http://am-market-data-dev:8080"
   AM_TRADE_CACHE_ENABLED: "false"
   SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration"
   # Enable Kafka so portfolio/trade sync events are published

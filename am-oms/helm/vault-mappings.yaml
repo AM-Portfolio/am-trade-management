@@ -2,7 +2,7 @@ vault:
   secretPaths:
     mongodb:
       mappings:
-        AM_OMS_MONGO_URI: "url"
+        AM_OMS_MONGO_URI: "AM_OMS_MONGO_URI"
         AM_OMS_MONGO_DATABASE: "AM_OMS_MONGO_DATABASE"
         AM_OMS_DB_USER: "AM_OMS_DB_USER"
         AM_OMS_DB_PASSWORD: "AM_OMS_DB_PASSWORD"

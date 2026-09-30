@@ -58,6 +58,9 @@ public class CacheConfig {
     @Value("${spring.data.redis.password:}")
     private String redisPassword;
 
+    @Value("${spring.data.redis.username:}")
+    private String redisUsername;
+
     /**
      * Custom Lettuce connection factory with MicrometerTracing injected.
      * This is what makes "redis.get", "redis.set" spans appear in Grafana Tempo.
@@ -70,6 +73,9 @@ public class CacheConfig {
         redisConfig.setHostName(redisHost);
         redisConfig.setPort(redisPort);
 
+        if (redisUsername != null && !redisUsername.isBlank()) {
+            redisConfig.setUsername(redisUsername);
+        }
         if (redisPassword != null && !redisPassword.isBlank()) {
             redisConfig.setPassword(redisPassword);
         }

@@ -1,0 +1,39 @@
+# Dev / Kind fleet — am-oms
+environment: dev
+replicaCount: 1
+
+vault:
+  enabled: true
+  secretPaths:
+    mongodb:
+      path: "apps/data/dev/infra/mongodb"
+    kafka:
+      path: "apps/data/dev/infra/kafka"
+    identity-oidc:
+      path: "apps/data/dev/services/am-identity"
+    trade-management:
+      path: "apps/data/dev/services/am-trade-management"
+    market-data:
+      path: "apps/data/dev/services/am-market-data"
+
+env:
+  APP_ENV: dev
+  LOG_LEVEL: DEBUG
+  # kafka-dev:9094 not reachable from apps fleet yet
+  KAFKA_ENABLED: "false"
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      am-apps-dev-dev-global-cors@kubernetescrd
+  hosts:
+    - host: am-dev.asrax.in
+      paths:
+        - path: /v1/wallets
+          pathType: Prefix
+        - path: /v1/orders
+          pathType: Prefix

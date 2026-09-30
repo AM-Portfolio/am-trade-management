@@ -28,6 +28,8 @@ global:
         path: "apps/data/preprod/services/am-trade-management"
 env:
   SPRING_PROFILES_ACTIVE: "preprod"
+  # Concrete URL — avoid Spring circular placeholder on AM_MARKET_DATA_API_URL
+  AM_MARKET_DATA_API_URL: "http://am-market-data-preprod:8080"
   # Enable Kafka so portfolio/trade sync events are published
   AM_TRADE_KAFKA_ENABLED: "true"
   KAFKA_BOOTSTRAP_SERVERS: "kafka.infra-dev.svc.cluster.local:9092"
