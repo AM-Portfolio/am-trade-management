@@ -24,5 +24,4 @@ jobs:
       working_directory: '.'
       image_name: 'am-trade-management-service'
       build_context: '.'
-      skip_secrets_scan: true
     secrets: inherit
