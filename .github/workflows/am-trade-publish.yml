@@ -14,7 +14,7 @@ on:
 
 jobs:
   publish:
-    name: Publish UI
+    name: Publish AM Trade Management
     permissions:
       contents: write
       packages: write
