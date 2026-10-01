@@ -20,7 +20,8 @@ global:
     serviceAccountName: "am-backend-sa"
 
 image:
-  repository: am-trade-management-service
+  # CI Contabo publish pushes repo-scoped GHCR: <git-repo>/<image_name>
+  repository: am-trade-management/am-trade-management-service
 
 service:
   type: ClusterIP
