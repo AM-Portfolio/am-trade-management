@@ -18,6 +18,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -62,6 +63,7 @@ public class PortfolioUpdateConsumerService {
             groupId = "${am.trade.kafka.portfolio-update.consumer-group-id:am-trade-portfolio-update-group}",
             containerFactory = "kafkaListenerContainerFactory"
     )
+    @CacheEvict(cacheNames = {"analyticsCache", "portfolioSummary", "tradeSummaryCache"}, allEntries = true)
     public void consume(String message, Acknowledgment acknowledgment) throws Exception {
         log.info("Received portfolio update message: {}", message);
 
