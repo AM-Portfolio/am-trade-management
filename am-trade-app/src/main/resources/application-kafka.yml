@@ -27,7 +27,7 @@ am:
         enabled: true
       portfolio-update:
         topic: am-portfolio-update
-        consumer-group-id: am-trade-portfolio-update-group-v3
+        consumer-group-id: am-trade-portfolio-update-group-v4
         consumer:
           enabled: true
       trade:

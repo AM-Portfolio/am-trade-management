@@ -10,6 +10,8 @@ import am.trade.models.kafka.inbound.PortfolioUpdateInboundEvent;
 import am.trade.services.service.PortfolioService;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
+import am.trade.services.service.TradeSummaryService;
+import am.trade.common.models.TradeSummaryBasic;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +59,7 @@ public class PortfolioUpdateConsumerService {
     private final TradeDetailsService tradeDetailsService;
     private final PortfolioService portfolioService;
     private final TradeProcessingService tradeProcessingService;
+    private final TradeSummaryService tradeSummaryService;
 
     @KafkaListener(
             topics = "${am.trade.kafka.portfolio-update.topic:am-portfolio-update}",
@@ -133,6 +136,14 @@ public class PortfolioUpdateConsumerService {
             try {
                 portfolioService.deleteByPortfolioId(portfolioId);
                 tradeDetailsService.deleteByPortfolioId(portfolioId);
+                
+                // Fix: Also delete associated Trade Summaries (Dashboard data)
+                List<TradeSummaryBasic> summaries = tradeSummaryService.findBasicByPortfolioId(portfolioId);
+                for (TradeSummaryBasic summary : summaries) {
+                    log.info("Deleting associated TradeSummary ID={}", summary.getId());
+                    tradeSummaryService.deleteTradeSummary(summary.getId());
+                }
+                
                 log.info("Successfully deleted portfolio and its trades for portfolioId={}", portfolioId);
             } catch (Exception e) {
                 log.error("Failed to delete portfolio/trades for portfolioId={}: {}", portfolioId, e.getMessage(), e);
