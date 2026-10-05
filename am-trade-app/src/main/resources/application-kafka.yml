@@ -4,7 +4,7 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: ${KAFKA_CONSUMER_GROUP:am-trade-group}
-      auto-offset-reset: earliest
+      auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       properties:
@@ -27,7 +27,7 @@ am:
         enabled: true
       portfolio-update:
         topic: am-portfolio-update
-        consumer-group-id: am-trade-portfolio-update-group-v4
+        consumer-group-id: am-trade-portfolio-update-group
         consumer:
           enabled: true
       trade:
