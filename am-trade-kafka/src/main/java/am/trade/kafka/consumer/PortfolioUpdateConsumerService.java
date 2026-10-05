@@ -126,6 +126,18 @@ public class PortfolioUpdateConsumerService {
             return;
         }
 
+        if ("DELETE".equalsIgnoreCase(event.getAction())) {
+            log.info("Deleting portfolio and trades for portfolioId={}", portfolioId);
+            try {
+                portfolioService.deleteByPortfolioId(portfolioId);
+                tradeDetailsService.deleteByPortfolioId(portfolioId);
+                log.info("Successfully deleted portfolio and its trades for portfolioId={}", portfolioId);
+            } catch (Exception e) {
+                log.error("Failed to delete portfolio/trades for portfolioId={}: {}", portfolioId, e.getMessage(), e);
+            }
+            return;
+        }
+
         // Upsert the portfolio record in the trade-management database so it appears
         // in the UI dropdown. Without this, trades get created but the portfolio is invisible.
         upsertPortfolio(portfolioId, userId, event.getName(), event.getBrokerType());
