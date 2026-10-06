@@ -4,7 +4,10 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: ${KAFKA_CONSUMER_GROUP:am-trade-group}
-      auto-offset-reset: latest
+      # earliest: after group reset/bump, catch up missed am-portfolio-update events
+      # (upsert + symbol dedupe make replay safe). latest caused Demo Portfolio when
+      # fan-out landed while the consumer was down/restarting.
+      auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       properties:
@@ -27,7 +30,8 @@ am:
         enabled: true
       portfolio-update:
         topic: am-portfolio-update
-        consumer-group-id: am-trade-portfolio-update-group
+        # bump group so earliest reset re-reads topic after Oct 5 latest revert
+        consumer-group-id: am-trade-portfolio-update-group-v5
         consumer:
           enabled: true
       trade:
