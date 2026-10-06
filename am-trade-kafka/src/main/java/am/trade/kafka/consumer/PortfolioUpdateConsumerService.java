@@ -8,6 +8,7 @@ import am.trade.models.enums.TradeStatus;
 import am.trade.models.kafka.inbound.InboundEquityModel;
 import am.trade.models.kafka.inbound.PortfolioUpdateInboundEvent;
 import am.trade.services.service.PortfolioService;
+import am.trade.services.service.PortfolioSyncInstrumentResolver;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import am.trade.services.service.TradeSummaryService;
@@ -73,6 +74,7 @@ public class PortfolioUpdateConsumerService {
     private final PortfolioService portfolioService;
     private final TradeProcessingService tradeProcessingService;
     private final TradeSummaryService tradeSummaryService;
+    private final PortfolioSyncInstrumentResolver portfolioSyncInstrumentResolver;
 
     @Value("${app.demo.portfolio-id:}")
     private String demoPortfolioId;
@@ -181,10 +183,8 @@ public class PortfolioUpdateConsumerService {
             return;
         }
 
-        // Fetch ALL existing trades for this portfolio once, rather than querying per symbol.
-        // This is far more efficient when a portfolio has 50+ holdings.
         List<TradeDetails> existingTrades = tradeDetailsService.findModelsByPortfolioId(portfolioId);
-        List<TradeDetails> newTrades = new ArrayList<>();
+        List<TradeDetails> candidates = new ArrayList<>();
 
         for (InboundEquityModel equity : event.getEquities()) {
             if (equity.getSymbol() == null || equity.getQuantity() == null || equity.getQuantity() <= 0) {
@@ -192,36 +192,30 @@ public class PortfolioUpdateConsumerService {
                 continue;
             }
 
-            String symbol = equity.getSymbol().toUpperCase();
-
-            // Dedup check: skip if any trade already exists for this symbol in this portfolio
-            boolean alreadyExists = existingTrades.stream()
-                    .anyMatch(t -> symbol.equalsIgnoreCase(t.getSymbol()));
-
-            if (alreadyExists) {
-                log.debug("Trade already exists for symbol {} in portfolio {}. Skipping.", symbol, portfolioId);
-                continue;
+            String rawSymbol = equity.getSymbol().toUpperCase();
+            String isin = equity.getIsin() != null ? equity.getIsin().trim().toUpperCase() : null;
+            // When Kafka sends ISIN as symbol, park it in isin for resolvers.
+            if (isin == null && rawSymbol.length() == 12 && rawSymbol.startsWith("IN")) {
+                isin = rawSymbol;
             }
-
-            log.info("Creating baseline 'Imported Holding' trade for portfolioId: {}, symbol: {}, userId: {}",
-                    portfolioId, symbol, userId);
 
             TradeDetails trade = new TradeDetails();
             trade.setTradeId(UUID.randomUUID().toString());
             trade.setPortfolioId(portfolioId);
             trade.setUserId(userId);
-            trade.setSymbol(symbol);
+            trade.setSymbol(rawSymbol);
             trade.setStatus(TradeStatus.OPEN);
             trade.setTradePositionType(TradePositionType.LONG);
             trade.setStrategy("Imported Holding");
 
-            // Instrument Info
             am.trade.common.models.InstrumentInfo instrumentInfo = new am.trade.common.models.InstrumentInfo();
-            instrumentInfo.setSymbol(symbol);
-            instrumentInfo.setIsin(equity.getIsin());
+            instrumentInfo.setSymbol(rawSymbol);
+            instrumentInfo.setIsin(isin);
+            if (equity.getName() != null && !equity.getName().isBlank()) {
+                instrumentInfo.setDescription(equity.getName().trim());
+            }
             trade.setInstrumentInfo(instrumentInfo);
 
-            // Entry Info — timestamp required for Analysis metrics date queries
             EntryExitInfo entryInfo = new EntryExitInfo();
             entryInfo.setQuantity(equity.getQuantity().intValue());
             entryInfo.setPrice(equity.getAvgBuyingPrice() != null
@@ -237,9 +231,97 @@ public class PortfolioUpdateConsumerService {
                 trade.setCurrentPrice(BigDecimal.valueOf(equity.getCurrentPrice()));
             }
 
+            candidates.add(trade);
+        }
+
+        Map<String, String> rawSymbolByTradeId = new java.util.HashMap<>();
+        for (TradeDetails trade : candidates) {
+            rawSymbolByTradeId.put(trade.getTradeId(), trade.getSymbol());
+        }
+
+        // Resolve ISIN/SYMBOL/NAME → NSE ticker before dedupe/persist (every stock).
+        if (!candidates.isEmpty() && portfolioSyncInstrumentResolver != null) {
+            portfolioSyncInstrumentResolver.resolveForSync(candidates);
+        }
+
+        List<TradeDetails> newTrades = new ArrayList<>();
+        List<TradeDetails> symbolCorrections = new ArrayList<>();
+
+        for (TradeDetails trade : candidates) {
+            String symbol = trade.getSymbol() != null ? trade.getSymbol().toUpperCase() : null;
+            String rawSymbol = rawSymbolByTradeId.get(trade.getTradeId());
+            String isin = trade.getInstrumentInfo() != null ? trade.getInstrumentInfo().getIsin() : null;
+            String name = trade.getInstrumentInfo() != null ? trade.getInstrumentInfo().getDescription() : null;
+
+            Optional<TradeDetails> existingOpt = Optional.empty();
+            if (isin != null && !isin.isBlank()) {
+                existingOpt = existingTrades.stream()
+                        .filter(t -> t.getInstrumentInfo() != null
+                                && isin.equalsIgnoreCase(t.getInstrumentInfo().getIsin()))
+                        .findFirst();
+            }
+            if (existingOpt.isEmpty() && symbol != null) {
+                existingOpt = existingTrades.stream()
+                        .filter(t -> symbol.equalsIgnoreCase(t.getSymbol()))
+                        .findFirst();
+            }
+            if (existingOpt.isEmpty() && rawSymbol != null) {
+                existingOpt = existingTrades.stream()
+                        .filter(t -> rawSymbol.equalsIgnoreCase(t.getSymbol()))
+                        .findFirst();
+            }
+            if (existingOpt.isEmpty() && name != null && !name.isBlank()) {
+                existingOpt = existingTrades.stream()
+                        .filter(t -> t.getInstrumentInfo() != null
+                                && name.equalsIgnoreCase(t.getInstrumentInfo().getDescription()))
+                        .findFirst();
+            }
+
+            if (existingOpt.isPresent()) {
+                TradeDetails existing = existingOpt.get();
+                boolean changed = false;
+                if (symbol != null && !symbol.equalsIgnoreCase(existing.getSymbol())) {
+                    log.info("Correcting trade symbol {} → {} portfolioId={}",
+                            existing.getSymbol(), symbol, portfolioId);
+                    existing.setSymbol(symbol);
+                    changed = true;
+                }
+                if (existing.getInstrumentInfo() == null) {
+                    existing.setInstrumentInfo(trade.getInstrumentInfo());
+                    changed = true;
+                } else {
+                    if (symbol != null) {
+                        existing.getInstrumentInfo().setSymbol(symbol);
+                    }
+                    if (isin != null && (existing.getInstrumentInfo().getIsin() == null
+                            || existing.getInstrumentInfo().getIsin().isBlank())) {
+                        existing.getInstrumentInfo().setIsin(isin);
+                        changed = true;
+                    }
+                    if (name != null) {
+                        existing.getInstrumentInfo().setDescription(name);
+                    }
+                }
+                if (changed) {
+                    symbolCorrections.add(existing);
+                }
+                continue;
+            }
+
+            log.info("Creating baseline 'Imported Holding' trade for portfolioId: {}, symbol: {}, userId: {}",
+                    portfolioId, symbol, userId);
             newTrades.add(trade);
         }
-        
+
+        if (!symbolCorrections.isEmpty()) {
+            try {
+                tradeDetailsService.saveAllTradeDetails(symbolCorrections);
+                log.info("Persisted {} symbol corrections for portfolio {}", symbolCorrections.size(), portfolioId);
+            } catch (Exception e) {
+                log.error("Failed to persist symbol corrections for portfolio {}: {}", portfolioId, e.getMessage(), e);
+            }
+        }
+
         if (!newTrades.isEmpty()) {
             try {
                 List<TradeDetails> savedList = tradeDetailsService.saveAllTradeDetails(newTrades);

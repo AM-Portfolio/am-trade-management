@@ -260,4 +260,73 @@ public class MarketDataApiClient {
         
         return new HashMap<>();
     }
+
+    /**
+     * Generic securities batch-search (SYMBOL / NAME) keyed by the original query uppercase.
+     */
+    public Map<String, Map<String, String>> resolveTickersByQueries(List<String> queries, List<String> searchFields) {
+        if (queries == null || queries.isEmpty()) {
+            return new HashMap<>();
+        }
+        String url = "/v1/securities/batch-search";
+        try {
+            Map<String, Object> requestPayload = new HashMap<>();
+            requestPayload.put("queries", queries);
+            requestPayload.put("limit", 1);
+            requestPayload.put("searchFields",
+                    searchFields != null && !searchFields.isEmpty() ? searchFields : java.util.Arrays.asList("SYMBOL", "NAME"));
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restTemplate.postForObject(url, requestPayload, Map.class);
+            if (response == null) {
+                return new HashMap<>();
+            }
+
+            Map<?, ?> dataMap = response;
+            if (response.containsKey("data") && response.get("data") instanceof Map) {
+                dataMap = (Map<?, ?>) response.get("data");
+            }
+
+            Map<String, Map<String, String>> result = new HashMap<>();
+            Object resultsObj = dataMap.get("results");
+            if (resultsObj instanceof List) {
+                for (Object res : (List<?>) resultsObj) {
+                    if (!(res instanceof Map)) {
+                        continue;
+                    }
+                    Map<?, ?> queryResult = (Map<?, ?>) res;
+                    String query = (String) queryResult.get("query");
+                    Object matchesObj = queryResult.get("matches");
+                    if (!(matchesObj instanceof List) || ((List<?>) matchesObj).isEmpty()) {
+                        continue;
+                    }
+                    Map<?, ?> match = (Map<?, ?>) ((List<?>) matchesObj).get(0);
+                    Map<String, String> instrumentInfo = new HashMap<>();
+                    String ticker = null;
+                    if (match.get("ticker") != null && !((String) match.get("ticker")).trim().isEmpty()) {
+                        ticker = (String) match.get("ticker");
+                    } else if (match.get("nseSymbol") != null && !((String) match.get("nseSymbol")).trim().isEmpty()) {
+                        ticker = (String) match.get("nseSymbol");
+                    } else if (match.get("symbol") != null && !((String) match.get("symbol")).trim().isEmpty()) {
+                        ticker = (String) match.get("symbol");
+                    }
+                    if (ticker != null) {
+                        instrumentInfo.put("symbol", ticker.trim().toUpperCase());
+                    }
+                    if (match.get("companyName") != null && !((String) match.get("companyName")).trim().isEmpty()) {
+                        instrumentInfo.put("description", (String) match.get("companyName"));
+                    } else if (match.get("name") != null && !((String) match.get("name")).trim().isEmpty()) {
+                        instrumentInfo.put("description", (String) match.get("name"));
+                    }
+                    if (query != null && !instrumentInfo.isEmpty()) {
+                        result.put(query.trim().toUpperCase(), instrumentInfo);
+                    }
+                }
+            }
+            return result;
+        } catch (RestClientException e) {
+            log.error("Failed to resolve queries: {}", queries, e);
+            return new HashMap<>();
+        }
+    }
 }

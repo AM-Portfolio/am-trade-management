@@ -58,6 +58,62 @@ public class PortfolioSyncInstrumentResolverImpl implements PortfolioSyncInstrum
         for (TradeDetails trade : trades) {
             applyResolved(trade, resolved);
         }
+
+        // SYMBOL/NAME canonicalize for broker aliases (IDEA→VODAFONEIDEA) and ISIN misses.
+        applySymbolNameFallback(trades);
+    }
+
+    private void applySymbolNameFallback(List<TradeDetails> trades) {
+        List<String> queries = new java.util.ArrayList<>();
+        for (TradeDetails trade : trades) {
+            String sym = trade.getSymbol();
+            if (sym != null && !sym.isBlank() && !validationUtils.isValidIsin(sym.trim())) {
+                queries.add(sym.trim().toUpperCase());
+            }
+            InstrumentInfo info = trade.getInstrumentInfo();
+            if (info != null && info.getDescription() != null && !info.getDescription().isBlank()) {
+                queries.add(info.getDescription().trim());
+            }
+        }
+        queries = queries.stream().distinct().collect(Collectors.toList());
+        if (queries.isEmpty()) {
+            return;
+        }
+        try {
+            Map<String, Map<String, String>> byQuery = marketDataApiClient.resolveTickersByQueries(
+                    queries, java.util.Arrays.asList("SYMBOL", "NAME"));
+            if (byQuery == null || byQuery.isEmpty()) {
+                return;
+            }
+            for (TradeDetails trade : trades) {
+                Map<String, String> hit = null;
+                String sym = trade.getSymbol();
+                if (sym != null) {
+                    hit = byQuery.get(sym.trim().toUpperCase());
+                }
+                if (hit == null && trade.getInstrumentInfo() != null
+                        && trade.getInstrumentInfo().getDescription() != null) {
+                    hit = byQuery.get(trade.getInstrumentInfo().getDescription().trim().toUpperCase());
+                    if (hit == null) {
+                        hit = byQuery.get(trade.getInstrumentInfo().getDescription().trim());
+                    }
+                }
+                if (hit == null) {
+                    continue;
+                }
+                String ticker = hit.get("symbol");
+                if (ticker != null && !ticker.isBlank() && !validationUtils.isValidIsin(ticker)) {
+                    trade.setSymbol(ticker.trim().toUpperCase());
+                    ensureInstrumentInfo(trade).setSymbol(ticker.trim().toUpperCase());
+                }
+                String description = hit.get("description");
+                if (description != null && !description.isBlank()) {
+                    ensureInstrumentInfo(trade).setDescription(description.trim());
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("SYMBOL/NAME fallback resolve failed: {}", ex.getMessage());
+        }
     }
 
     private void applyResolved(TradeDetails trade, Map<String, Map<String, String>> resolved) {
