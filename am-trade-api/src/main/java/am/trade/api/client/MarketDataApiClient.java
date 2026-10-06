@@ -104,8 +104,7 @@ public class MarketDataApiClient {
             if (result != null) {
                 // Filter out negative cache values (-1.0)
                 result.forEach((k, v) -> {
-                    // 0.0 is a miss (unknown ticker) — never serve/cache as a real LTP.
-                    if (v != null && v > 0.0) {
+                    if (v != null && v >= 0.0) {
                         filteredResult.put(k, v);
                     }
                 });
@@ -114,7 +113,7 @@ public class MarketDataApiClient {
             Map<String, Double> result = fetchFromApi(cleanSymbols);
             if (result != null) {
                 result.forEach((k, v) -> {
-                    if (v != null && v > 0.0) {
+                    if (v != null && v >= 0.0) {
                         filteredResult.put(k, v);
                     }
                 });
