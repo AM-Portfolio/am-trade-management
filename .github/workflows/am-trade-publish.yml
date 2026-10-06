@@ -3,13 +3,8 @@ name: AM Trade Publish
 on:
   push:
     branches: ["main", "develop", "feature/**", "test/**", "fix/**", "hotfix/**"]
-    paths:
-      - '**'
-      - '.github/workflows/am-trade-publish.yml'
   pull_request:
     branches: ["main", "develop"]
-    paths:
-      - '**'
   workflow_dispatch:
 
 jobs:
