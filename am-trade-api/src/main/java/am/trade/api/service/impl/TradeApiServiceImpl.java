@@ -29,6 +29,7 @@ import am.trade.common.models.TradeDetails;
 import am.trade.models.enums.TradePositionType;
 import am.trade.models.enums.TradeStatus;
 import am.trade.services.publisher.TradeHoldingEventPublisher;
+import am.trade.services.service.PortfolioSyncInstrumentResolver;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import am.trade.services.service.PortfolioPersistenceService;
@@ -54,6 +55,7 @@ public class TradeApiServiceImpl implements TradeApiService {
     private final TradeValidator tradeValidator;
     private final FavoriteFilterService favoriteFilterService;
     private final TradeHoldingEventPublisher tradeHoldingEventPublisher;
+    private final PortfolioSyncInstrumentResolver portfolioSyncInstrumentResolver;
 
     @Override
     public List<TradeDetails> getTradeDetailsByPortfolioAndSymbols(String portfolioId, List<String> symbols) {
@@ -177,6 +179,15 @@ public class TradeApiServiceImpl implements TradeApiService {
      * @param action     "BUY", "SELL", or "UPDATE"
      */
     private void publishPortfolioSyncEvent(TradeDetails savedTrade, String action) {
+        // Resolve ISIN→ticker (+ name) before Kafka so portfolio does not store ISINs as symbols
+        portfolioSyncInstrumentResolver.resolveForSync(savedTrade);
+        try {
+            tradeDetailsService.saveTradeDetails(savedTrade);
+        } catch (Exception ex) {
+            log.warn("Failed to persist resolved symbol before portfolio sync (tradeId={}): {}",
+                    savedTrade.getTradeId(), ex.getMessage());
+        }
+
         // ── Instrument metadata ──────────────────────────────────────────────
         String assetType = savedTrade.getInstrumentInfo() != null
                 && savedTrade.getInstrumentInfo().getSegment() != null
@@ -185,6 +196,9 @@ public class TradeApiServiceImpl implements TradeApiService {
 
         String isin = savedTrade.getInstrumentInfo() != null
                 ? savedTrade.getInstrumentInfo().getIsin()
+                : null;
+        String name = savedTrade.getInstrumentInfo() != null
+                ? savedTrade.getInstrumentInfo().getDescription()
                 : null;
 
         // ── Trade status ─────────────────────────────────────────────────────
@@ -257,6 +271,7 @@ public class TradeApiServiceImpl implements TradeApiService {
                 .tradeStatus(tradeStatus)
                 .action(action)
                 .isin(isin)
+                .name(name)
                 .build();
 
         // ── Resolve broker type from first trade execution ───────────────────
@@ -1191,13 +1206,24 @@ public class TradeApiServiceImpl implements TradeApiService {
 
         List<TradeDetails> safeTrades = trades != null ? trades : Collections.emptyList();
 
+        // One batch ISIN→ticker resolve for all equities before building Kafka payload
+        if (!safeTrades.isEmpty()) {
+            portfolioSyncInstrumentResolver.resolveForSync(safeTrades);
+            try {
+                tradeDetailsService.saveAllTradeDetails(safeTrades);
+            } catch (Exception ex) {
+                log.warn("Failed to persist resolved symbols before bulk portfolio sync: {}", ex.getMessage());
+            }
+        }
+
         List<am.trade.models.kafka.EquityPosition> equities = new java.util.ArrayList<>();
         String brokerType = "OTHER";
 
         String equityAction = "DELETE_PORTFOLIO".equals(action) ? "DELETE" : action;
 
         for (TradeDetails trade : safeTrades) {
-            am.trade.models.kafka.EquityPosition equity = buildEquityPosition(trade, equityAction);
+            // Already resolved above — build without re-calling market-data per row
+            am.trade.models.kafka.EquityPosition equity = buildEquityPositionWithoutResolve(trade, equityAction);
             equities.add(equity);
 
             if ("OTHER".equals(brokerType) && trade.getTradeExecutions() != null && !trade.getTradeExecutions().isEmpty()) {
@@ -1242,9 +1268,15 @@ public class TradeApiServiceImpl implements TradeApiService {
     }
 
     private am.trade.models.kafka.EquityPosition buildEquityPosition(TradeDetails trade, String equityAction) {
+        portfolioSyncInstrumentResolver.resolveForSync(trade);
+        return buildEquityPositionWithoutResolve(trade, equityAction);
+    }
+
+    private am.trade.models.kafka.EquityPosition buildEquityPositionWithoutResolve(TradeDetails trade, String equityAction) {
         String assetType = trade.getInstrumentInfo() != null && trade.getInstrumentInfo().getSegment() != null
                 ? trade.getInstrumentInfo().getSegment().name() : "EQUITY";
         String isin = trade.getInstrumentInfo() != null ? trade.getInstrumentInfo().getIsin() : null;
+        String name = trade.getInstrumentInfo() != null ? trade.getInstrumentInfo().getDescription() : null;
         java.math.BigDecimal entryQuantity = trade.getEntryInfo() != null && trade.getEntryInfo().getQuantity() != null
                 ? java.math.BigDecimal.valueOf(trade.getEntryInfo().getQuantity()) : java.math.BigDecimal.ZERO;
         java.math.BigDecimal entryPrice = trade.getEntryInfo() != null && trade.getEntryInfo().getPrice() != null
@@ -1272,7 +1304,7 @@ public class TradeApiServiceImpl implements TradeApiService {
         return am.trade.models.kafka.EquityPosition.builder().symbol(trade.getSymbol()).assetType(assetType)
                 .quantity(entryQuantity).avgBuyingPrice(entryPrice).investmentValue(investmentValue)
                 .sellQuantity(sellQuantity).sellPrice(sellPrice).saleValue(saleValue).profitLoss(profitLoss)
-                .action(equityAction).tradeStatus(tradeStatus).isin(isin).build();
+                .action(equityAction).tradeStatus(tradeStatus).isin(isin).name(name).build();
     }
 
     private String resolvePortfolioKind(String portfolioId) {

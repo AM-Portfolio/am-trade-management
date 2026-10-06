@@ -43,6 +43,8 @@ public class EquityPosition {
 
     // --- Instrument metadata ---
     private String isin;
+    /** Company / scheme name (from instrumentInfo.description when known). */
+    private String name;
     private String sector;
     private String industry;
     private String marketCap;
