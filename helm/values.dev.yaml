@@ -83,5 +83,4 @@ env:
   AM_TRADE_KAFKA_TRADE_CONSUMER_ENABLED: "true"
   AM_TRADE_KAFKA_TRADE_TOPIC: "am-trade"
   AM_TRADE_KAFKA_TRADE_CONSUMER_GROUP_ID: "am-trade-group"
-  # In-cluster am-portfolio for Demo catch-up when Kafka fan-out was missed
-  AM_PORTFOLIO_SERVICE_URL: "http://am-portfolio-dev:8080"
+  SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: "earliest"

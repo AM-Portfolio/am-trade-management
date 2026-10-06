@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -26,6 +27,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Set;
 
 /**
  * Kafka consumer that listens to portfolio update events published by am-portfolio.
@@ -55,11 +57,25 @@ import java.util.UUID;
 @ConditionalOnProperty(name = "am.trade.kafka.portfolio-update.consumer.enabled", havingValue = "true", matchIfMissing = false)
 public class PortfolioUpdateConsumerService {
 
+    /**
+     * Sources that must not create/overwrite trade Mongo rows.
+     * <ul>
+     *   <li>{@code TRADE} — our own sync echo (infinite-loop guard)</li>
+     *   <li>{@code DEMO} / {@code PORTFOLIO_CALC} — portfolio calc / demo fallback;
+     *       demo uses a shared portfolio UUID attributed to many users, which breaks
+     *       upsert-by-portfolioId (first owner wins → others stuck on Demo inject)</li>
+     * </ul>
+     */
+    private static final Set<String> IGNORED_SOURCES = Set.of("TRADE", "DEMO", "PORTFOLIO_CALC");
+
     private final ObjectMapper objectMapper;
     private final TradeDetailsService tradeDetailsService;
     private final PortfolioService portfolioService;
     private final TradeProcessingService tradeProcessingService;
     private final TradeSummaryService tradeSummaryService;
+
+    @Value("${app.demo.portfolio-id:}")
+    private String demoPortfolioId;
 
     @KafkaListener(
             topics = "${am.trade.kafka.portfolio-update.topic:am-portfolio-update}",
@@ -72,13 +88,18 @@ public class PortfolioUpdateConsumerService {
 
         PortfolioUpdateInboundEvent event = objectMapper.readValue(message, PortfolioUpdateInboundEvent.class);
 
-        // ── INFINITE LOOP GUARD ──────────────────────────────────────────────
-        // When am-trade-management saves a trade, it publishes a PortfolioSyncEvent
-        // to am-portfolio. am-portfolio processes it and re-broadcasts the updated
-        // portfolio with source="TRADE". If we process that re-broadcast, we'd
-        // create duplicate trades and loop forever.
-        if ("TRADE".equalsIgnoreCase(event.getSource())) {
-            log.info("Ignoring portfolio update from source='TRADE' (originated from us). EventId: {}", event.getId());
+        String source = event.getSource();
+        if (source != null && IGNORED_SOURCES.contains(source.toUpperCase())) {
+            log.info("Ignoring portfolio update from source='{}'. EventId: {}", source, event.getId());
+            acknowledgment.acknowledge();
+            return;
+        }
+
+        // Shared demo document UUID must never be upserted under arbitrary userIds.
+        if (demoPortfolioId != null && !demoPortfolioId.isBlank()
+                && demoPortfolioId.equals(event.getPortfolioId())) {
+            log.info("Ignoring update for shared demo portfolioId={} userId={}. EventId: {}",
+                    event.getPortfolioId(), event.getUserId(), event.getId());
             acknowledgment.acknowledge();
             return;
         }
