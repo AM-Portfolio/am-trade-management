@@ -25,10 +25,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.CacheEvict;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Kafka consumer that listens to portfolio update events published by am-portfolio.
@@ -234,7 +236,7 @@ public class PortfolioUpdateConsumerService {
             candidates.add(trade);
         }
 
-        Map<String, String> rawSymbolByTradeId = new java.util.HashMap<>();
+        Map<String, String> rawSymbolByTradeId = new HashMap<>();
         for (TradeDetails trade : candidates) {
             rawSymbolByTradeId.put(trade.getTradeId(), trade.getSymbol());
         }
