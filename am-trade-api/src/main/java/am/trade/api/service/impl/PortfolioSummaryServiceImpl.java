@@ -1,6 +1,5 @@
 package am.trade.api.service.impl;
 
-import am.trade.api.service.PortfolioFanoutCatchupService;
 import am.trade.api.service.PortfolioSummaryService;
 import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.PortfolioSummaryDTO;
@@ -8,12 +7,26 @@ import am.trade.common.models.AssetAllocation;
 import am.trade.common.models.TradeDetails;
 import am.trade.services.service.PortfolioService;
 import am.trade.services.service.TradeDetailsService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import jakarta.servlet.http.HttpServletRequest;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,8 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * Implementation of the Portfolio Summary Service
@@ -34,13 +45,17 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
 
     private final PortfolioService portfolioService;
     private final TradeDetailsService tradeDetailsService;
-    private final PortfolioFanoutCatchupService portfolioFanoutCatchupService;
-    
+    private final ObjectMapper objectMapper;
+    private final RestTemplateBuilder restTemplateBuilder;
+
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private StringRedisTemplate redisTemplate;
 
     @Value("${app.demo.portfolio-id:}")
     private String demoPortfolioId;
+
+    @Value("${am.portfolio.service.url:http://am-portfolio-dev:8080}")
+    private String portfolioServiceUrl;
 
     @Override
     public PortfolioModel getPortfolioSummary(String portfolioId) {
@@ -190,15 +205,13 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         List<PortfolioModel> portfolios = portfolioService.findByOwnerId(ownerId);
 
         if (portfolios.isEmpty()) {
-            // Kafka am-portfolio-update may have been missed (offset=latest / deploy gap).
-            // Pull broker portfolios from am-portfolio with the caller's JWT before Demo.
+            // Missed Kafka am-portfolio-update → pull broker portfolios from am-portfolio before Demo.
             try {
-                int caughtUp = portfolioFanoutCatchupService.catchUpFromPortfolioService(ownerId);
-                if (caughtUp > 0) {
+                if (importMissingFromAmPortfolio(ownerId) > 0) {
                     portfolios = portfolioService.findByOwnerId(ownerId);
                 }
             } catch (Exception e) {
-                log.warn("Portfolio fan-out catch-up failed for {}: {}", ownerId, e.getMessage());
+                log.warn("am-portfolio catch-up failed for {}: {}", ownerId, e.getMessage());
             }
         }
 
@@ -219,6 +232,95 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         }
 
         return portfolios;
+    }
+
+    /**
+     * Creates local trade portfolio rows from am-portfolio when Kafka fan-out was missed.
+     * Portfolio shell is enough to hide Demo; holdings sync via later Kafka / trade flows.
+     */
+    private int importMissingFromAmPortfolio(String ownerId) throws Exception {
+        String auth = currentAuthorizationHeader();
+        if (auth == null || auth.isBlank()) {
+            return 0;
+        }
+
+        String base = portfolioServiceUrl.endsWith("/")
+                ? portfolioServiceUrl.substring(0, portfolioServiceUrl.length() - 1)
+                : portfolioServiceUrl;
+        RestTemplate rt = restTemplateBuilder
+                .setConnectTimeout(Duration.ofSeconds(3))
+                .setReadTimeout(Duration.ofSeconds(8))
+                .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.AUTHORIZATION, auth.startsWith("Bearer ") ? auth : "Bearer " + auth);
+        ResponseEntity<String> response = rt.exchange(
+                base + "/v1/portfolios",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                String.class);
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            return 0;
+        }
+
+        JsonNode root = objectMapper.readTree(response.getBody());
+        if (!root.isArray()) {
+            return 0;
+        }
+
+        int created = 0;
+        for (JsonNode node : root) {
+            String kind = text(node, "portfolioKind");
+            if (kind != null && !"BROKER".equalsIgnoreCase(kind)) {
+                continue;
+            }
+            String id = node.hasNonNull("id") ? node.get("id").asText() : null;
+            String owner = text(node, "owner");
+            if (id == null || owner == null || !ownerId.equals(owner)) {
+                continue;
+            }
+            if (portfolioService.findByPortfolioId(id).isPresent()) {
+                continue;
+            }
+            String name = text(node, "name");
+            if (name == null || name.isBlank()) {
+                name = text(node.path("brokerType"), "code");
+                if (name == null && node.has("brokerType") && node.get("brokerType").isTextual()) {
+                    name = node.get("brokerType").asText();
+                }
+                if (name == null || name.isBlank()) {
+                    name = "Imported Portfolio";
+                }
+            }
+            portfolioService.savePortfolio(PortfolioModel.builder()
+                    .portfolioId(id)
+                    .ownerId(owner)
+                    .name(name)
+                    .active(true)
+                    .build());
+            created++;
+            log.info("Imported missing trade portfolio {} ({}) from am-portfolio for {}", id, name, ownerId);
+        }
+        return created;
+    }
+
+    private static String currentAuthorizationHeader() {
+        try {
+            ServletRequestAttributes attrs =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            HttpServletRequest request = attrs != null ? attrs.getRequest() : null;
+            return request != null ? request.getHeader("Authorization") : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String text(JsonNode node, String field) {
+        if (node == null || node.isMissingNode() || !node.has(field) || node.get(field).isNull()) {
+            return null;
+        }
+        String v = node.get(field).asText();
+        return v != null && !v.isBlank() ? v : null;
     }
 
     private PortfolioModel cloneDemoPortfolio(PortfolioModel source, String newOwnerId) {
