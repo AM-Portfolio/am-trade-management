@@ -1,5 +1,6 @@
 package am.trade.api.service.impl;
 
+import am.trade.api.service.PortfolioFanoutCatchupService;
 import am.trade.api.service.PortfolioSummaryService;
 import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.PortfolioSummaryDTO;
@@ -33,6 +34,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
 
     private final PortfolioService portfolioService;
     private final TradeDetailsService tradeDetailsService;
+    private final PortfolioFanoutCatchupService portfolioFanoutCatchupService;
     
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private StringRedisTemplate redisTemplate;
@@ -170,7 +172,12 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
     }
     
     @Override
-    @Cacheable(value = "portfolioSummary", key = "#ownerId")
+    // Never cache Demo / empty — otherwise a missed Kafka fan-out sticks until TTL.
+    @Cacheable(
+            value = "portfolioSummary",
+            key = "#ownerId",
+            unless = "#result == null || #result.isEmpty() "
+                    + "|| (#result.size() == 1 && 'Demo Portfolio'.equals(#result.get(0).getName()))")
     public List<PortfolioModel> getPortfolioSummariesByOwnerId(String ownerId) {
         log.debug("Getting portfolio summaries for ownerId: {}", ownerId);
         
@@ -181,6 +188,19 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         // Return the full PortfolioModel list so the frontend receives all metrics
         // (winRate, netProfitLoss, totalTrades, etc.) — not just portfolioId + name
         List<PortfolioModel> portfolios = portfolioService.findByOwnerId(ownerId);
+
+        if (portfolios.isEmpty()) {
+            // Kafka am-portfolio-update may have been missed (offset=latest / deploy gap).
+            // Pull broker portfolios from am-portfolio with the caller's JWT before Demo.
+            try {
+                int caughtUp = portfolioFanoutCatchupService.catchUpFromPortfolioService(ownerId);
+                if (caughtUp > 0) {
+                    portfolios = portfolioService.findByOwnerId(ownerId);
+                }
+            } catch (Exception e) {
+                log.warn("Portfolio fan-out catch-up failed for {}: {}", ownerId, e.getMessage());
+            }
+        }
 
         if (portfolios.isEmpty()) {
             if (demoPortfolioId != null && !demoPortfolioId.trim().isEmpty()) {
