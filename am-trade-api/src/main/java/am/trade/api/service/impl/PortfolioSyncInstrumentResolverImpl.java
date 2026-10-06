@@ -103,8 +103,13 @@ public class PortfolioSyncInstrumentResolverImpl implements PortfolioSyncInstrum
                 }
                 String ticker = hit.get("symbol");
                 if (ticker != null && !ticker.isBlank() && !validationUtils.isValidIsin(ticker)) {
-                    trade.setSymbol(ticker.trim().toUpperCase());
-                    ensureInstrumentInfo(trade).setSymbol(ticker.trim().toUpperCase());
+                    String cleanTicker = ticker.trim().toUpperCase();
+                    // Ignore no-op alias hits (IDEA→IDEA); keep looking via description NAME hit below.
+                    boolean sameAsBroker = sym != null && cleanTicker.equalsIgnoreCase(sym.trim());
+                    if (!sameAsBroker) {
+                        trade.setSymbol(cleanTicker);
+                        ensureInstrumentInfo(trade).setSymbol(cleanTicker);
+                    }
                 }
                 String description = hit.get("description");
                 if (description != null && !description.isBlank()) {
