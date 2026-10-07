@@ -1,20 +1,22 @@
-# Manual Contabo Argo deploy for all 4 envs — waits Healthy/Synced or FAILS.
-# Job uses GitHub Environment ${{ inputs.environment }} so Required reviewers
-# (Settings → Environments: dev, preprod, prod, dr) must Approve before Contabo runs.
-# preprod also auto-deploys on main merge via Publish; use this to re-roll or pin a tag.
-# prod/dr: after Approve → promote PR → human CODEOWNERS merge → Contabo sync+wait.
-name: Manual Deploy (AM Trade Management)
+name: Manual Deploy
 
 on:
   workflow_dispatch:
     inputs:
+      service_name:
+        description: "Service to deploy"
+        required: true
+        type: choice
+        options:
+          - am-trade-management-service
+          - am-oms
       image_tag:
         description: "GHCR tag (leave empty = use current preprod pin from am-gitops)"
         required: false
         type: string
         default: ""
       environment:
-        description: "Target Environment (Contabo Argo only; GitHub Environment approval)"
+        description: "Target Environment (Contabo Argo only)"
         required: true
         default: "dev"
         type: choice
@@ -30,7 +32,7 @@ permissions:
 
 jobs:
   deploy:
-    name: Contabo Argo → ${{ inputs.environment }}
+    name: Contabo Argo → ${{ inputs.environment }} (${{ inputs.service_name }})
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
@@ -49,7 +51,7 @@ jobs:
           TAG_IN: ${{ inputs.image_tag }}
         run: |
           set -euo pipefail
-          SVC=am-trade-management-service
+          SVC="${{ inputs.service_name }}"
           TAG="$TAG_IN"
           if [[ -z "$TAG" ]]; then
             RAW=$(gh api "repos/AM-Portfolio/am-gitops/contents/preprod/image-tags/${SVC}.yaml" -H "Accept: application/vnd.github.raw")
@@ -68,7 +70,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_PAT || secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
           ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
           ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
-          INPUT_SERVICE_NAME: am-trade-management-service
+          INPUT_SERVICE_NAME: ${{ inputs.service_name }}
           INPUT_ENVIRONMENT: ${{ inputs.environment }}
           INPUT_IMAGE_TAG: ${{ steps.tag.outputs.tag }}
         run: |
@@ -83,7 +85,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_PAT || secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
           ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
           ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
-          INPUT_SERVICE_NAME: am-trade-management-service
+          INPUT_SERVICE_NAME: ${{ inputs.service_name }}
           INPUT_ENVIRONMENT: ${{ inputs.environment }}
           INPUT_IMAGE_TAG: ${{ steps.tag.outputs.tag }}
         run: |

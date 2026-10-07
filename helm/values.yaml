@@ -20,6 +20,7 @@ global:
     serviceAccountName: "am-backend-sa"
 
 image:
+  # CI Contabo publish pushes repo-scoped GHCR: <git-repo>/<image_name>
   repository: am-trade-management/am-trade-management-service
 
 service:

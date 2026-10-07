@@ -7,7 +7,7 @@ dockerfile: Dockerfile
 context: .
 github:
   repo: AM-Portfolio/am-trade-management
-  deploy_workflow: direct-deploy.yml
+  deploy_workflow: deploy.yml
   service: am-trade-management-service
   ref: main
 deploy:

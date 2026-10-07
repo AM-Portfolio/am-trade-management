@@ -1,0 +1,23 @@
+name: AM OMS Publish
+
+on:
+  push:
+    branches: ["main", "develop", "fix/**", "hotfix/**", "feature/**", "feat/**"]
+    paths:
+      - "am-oms/**"
+      - ".github/workflows/am-oms-publish.yml"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish AM OMS
+    permissions:
+      contents: write
+      packages: write
+    uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish-contabo.yml@main
+    with:
+      language: "python"
+      working_directory: "am-oms"
+      image_name: "am-oms"
+      build_context: "."
+    secrets: inherit

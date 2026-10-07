@@ -1,0 +1,37 @@
+name: Fix GHCR package access
+on:
+  workflow_dispatch:
+    inputs:
+      delete_package:
+        description: Delete am-trade-management-service package so next publish recreates it linked
+        type: boolean
+        default: true
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Delete blocked package if requested
+        if: ${{ inputs.delete_package }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eux
+          PKG=am-trade-management-service
+          gh api "orgs/${{ github.repository_owner }}/packages/container/$PKG" --jq "{name,visibility,version_count,repository:.repository.full_name}"
+          gh api --method DELETE "orgs/${{ github.repository_owner }}/packages/container/$PKG"
+          echo DELETED_OK
+      - name: Verify GITHUB_TOKEN can create package name again
+        if: ${{ inputs.delete_package }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eux
+          PKG=am-trade-management-service
+          echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          echo "FROM scratch" > Df
+          docker build -f Df -t "ghcr.io/am-portfolio/$PKG:recreate-probe" .
+          docker push "ghcr.io/am-portfolio/$PKG:recreate-probe"
+          echo RECREATE_PUSH_OK
