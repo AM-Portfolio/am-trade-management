@@ -11,6 +11,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Component;
@@ -18,11 +23,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestClientException;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -32,16 +37,29 @@ public class MarketDataApiClient {
     private static final ObjectMapper MAPPER = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+    /** Refresh service JWT a minute before expiry. */
+    private static final long SERVICE_TOKEN_TTL_MS = TimeUnit.HOURS.toMillis(1);
+    private static final long SERVICE_TOKEN_REFRESH_SKEW_MS = TimeUnit.MINUTES.toMillis(1);
+
     private final MarketDataApiConfig config;
     private final RestTemplate restTemplate;
+    private final String jwtSecret;
 
     @Value("${am.trade.market-data.l1-cache.enabled:true}")
     private boolean isL1CacheEnabled;
 
     private final com.github.benmanes.caffeine.cache.LoadingCache<String, Double> localCache;
 
-    public MarketDataApiClient(MarketDataApiConfig config, org.springframework.boot.web.client.RestTemplateBuilder restTemplateBuilder) {
+    private volatile String cachedServiceToken;
+    private volatile long serviceTokenExpiresAtMs;
+
+    public MarketDataApiClient(
+            MarketDataApiConfig config,
+            RestTemplateBuilder restTemplateBuilder,
+            @Value("${app.jwt.secret:${JWT_SECRET:internal-service-super-secret-key-32chars-minimum-change-in-prod}}")
+            String jwtSecret) {
         this.config = config;
+        this.jwtSecret = jwtSecret != null ? jwtSecret : "";
         this.restTemplate = restTemplateBuilder
                 .rootUri(config.getBaseUrl())
                 .setConnectTimeout(java.time.Duration.ofSeconds(3))
@@ -50,8 +68,8 @@ public class MarketDataApiClient {
                 .defaultHeader("Accept", "application/json")
                 .defaultHeader("Content-Type", "application/json")
                 .additionalInterceptors((request, body, execution) -> {
-                    String token = UserContext.getToken();
-                    if (token != null) {
+                    String token = resolveAuthToken();
+                    if (token != null && !token.isBlank()) {
                         if (token.startsWith("Bearer ")) {
                             request.getHeaders().set("Authorization", token);
                         } else {
@@ -76,6 +94,52 @@ public class MarketDataApiClient {
                         return fetchFromApi(keys);
                     }
                 });
+    }
+
+    /**
+     * Prefer the inbound user JWT; for Kafka / internal threads mint an HS256 service token
+     * that matches am-market-data {@code app.jwt.secret}.
+     */
+    private String resolveAuthToken() {
+        String userToken = UserContext.getToken();
+        if (userToken != null && !userToken.isBlank()) {
+            return userToken;
+        }
+        return getOrMintServiceToken();
+    }
+
+    private String getOrMintServiceToken() {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            return null;
+        }
+        long now = System.currentTimeMillis();
+        String cached = cachedServiceToken;
+        if (cached != null && now < serviceTokenExpiresAtMs - SERVICE_TOKEN_REFRESH_SKEW_MS) {
+            return cached;
+        }
+        synchronized (this) {
+            if (cachedServiceToken != null
+                    && System.currentTimeMillis() < serviceTokenExpiresAtMs - SERVICE_TOKEN_REFRESH_SKEW_MS) {
+                return cachedServiceToken;
+            }
+            try {
+                long exp = now + SERVICE_TOKEN_TTL_MS;
+                JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                        .subject("am-trade-service")
+                        .claim("uid", "am-trade-service")
+                        .issueTime(new Date(now))
+                        .expirationTime(new Date(exp))
+                        .build();
+                SignedJWT jwt = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claims);
+                jwt.sign(new MACSigner(jwtSecret.getBytes(StandardCharsets.UTF_8)));
+                cachedServiceToken = jwt.serialize();
+                serviceTokenExpiresAtMs = exp;
+                return cachedServiceToken;
+            } catch (Exception e) {
+                log.warn("Failed to mint market-data service JWT: {}", e.getMessage());
+                return null;
+            }
+        }
     }
 
     public Map<String, Double> getCurrentPrices(List<String> symbols) {
@@ -196,6 +260,7 @@ public class MarketDataApiClient {
             requestPayload.put("queries", isins);
             requestPayload.put("limit", 1);
             requestPayload.put("searchFields", java.util.Arrays.asList("ISIN"));
+            requestPayload.put("minMatchScore", 0.0);
 
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(url, requestPayload, Map.class);
@@ -275,6 +340,7 @@ public class MarketDataApiClient {
             requestPayload.put("limit", 1);
             requestPayload.put("searchFields",
                     searchFields != null && !searchFields.isEmpty() ? searchFields : java.util.Arrays.asList("SYMBOL", "NAME"));
+            requestPayload.put("minMatchScore", 0.0);
 
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(url, requestPayload, Map.class);

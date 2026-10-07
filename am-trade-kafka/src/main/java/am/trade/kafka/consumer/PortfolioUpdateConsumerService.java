@@ -28,6 +28,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -128,6 +129,27 @@ public class PortfolioUpdateConsumerService {
         }
         String portfolioName = (name != null && !name.isBlank()) ? name
                 : (brokerType != null ? brokerType : "Imported Portfolio");
+
+        // Prevent duplicate cards: second Kafka event with a new UUID but same display name
+        // for the same owner (e.g. "Upstox" ×2) must not create another row.
+        try {
+            List<PortfolioModel> owned = portfolioService.findByOwnerId(userId);
+            if (owned != null) {
+                boolean sameNameExists = owned.stream()
+                        .filter(Objects::nonNull)
+                        .map(PortfolioModel::getName)
+                        .filter(Objects::nonNull)
+                        .anyMatch(n -> n.trim().equalsIgnoreCase(portfolioName.trim()));
+                if (sameNameExists) {
+                    log.info("Skipping upsert for portfolioId={} — owner {} already has a portfolio named '{}'",
+                            portfolioId, userId, portfolioName);
+                    return;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Owner duplicate-name check failed for {}: {}", userId, e.getMessage());
+        }
+
         PortfolioModel portfolio = PortfolioModel.builder()
                 .portfolioId(portfolioId)
                 .ownerId(userId)

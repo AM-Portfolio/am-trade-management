@@ -50,9 +50,11 @@ am:
       url: ${AM_PORTFOLIO_SERVICE_URL:http://am-portfolio:8080}
 
 # Internal service-to-service secret (must match am-portfolio's app.jwt.internal-secret)
+# app.jwt.secret must match am-market-data JWT_SECRET for Kafka/m2m batch-search.
 app:
   jwt:
     internal-secret: ${INTERNAL_SECRET_KEY}
+    secret: ${JWT_SECRET:internal-service-super-secret-key-32chars-minimum-change-in-prod}
   demo:
     # Shared demo portfolio shown to users with 0 trade portfolios. Set via DEMO_PORTFOLIO_ID in Helm.
     portfolio-id: ${DEMO_PORTFOLIO_ID:}

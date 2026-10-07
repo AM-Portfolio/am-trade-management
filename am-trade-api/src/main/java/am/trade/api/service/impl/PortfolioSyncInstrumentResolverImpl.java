@@ -68,11 +68,14 @@ public class PortfolioSyncInstrumentResolverImpl implements PortfolioSyncInstrum
         for (TradeDetails trade : trades) {
             String sym = trade.getSymbol();
             if (sym != null && !sym.isBlank() && !validationUtils.isValidIsin(sym.trim())) {
-                queries.add(sym.trim().toUpperCase());
+                queries.add(stripBrokerSeriesSuffix(sym.trim().toUpperCase()));
             }
             InstrumentInfo info = trade.getInstrumentInfo();
             if (info != null && info.getDescription() != null && !info.getDescription().isBlank()) {
-                queries.add(info.getDescription().trim());
+                String desc = stripBrokerSeriesSuffix(info.getDescription().trim());
+                if (!desc.isBlank()) {
+                    queries.add(desc);
+                }
             }
         }
         queries = queries.stream().distinct().collect(Collectors.toList());
@@ -89,13 +92,14 @@ public class PortfolioSyncInstrumentResolverImpl implements PortfolioSyncInstrum
                 Map<String, String> hit = null;
                 String sym = trade.getSymbol();
                 if (sym != null) {
-                    hit = byQuery.get(sym.trim().toUpperCase());
+                    hit = byQuery.get(stripBrokerSeriesSuffix(sym.trim().toUpperCase()));
                 }
                 if (hit == null && trade.getInstrumentInfo() != null
                         && trade.getInstrumentInfo().getDescription() != null) {
-                    hit = byQuery.get(trade.getInstrumentInfo().getDescription().trim().toUpperCase());
+                    String desc = stripBrokerSeriesSuffix(trade.getInstrumentInfo().getDescription().trim());
+                    hit = byQuery.get(desc.toUpperCase());
                     if (hit == null) {
-                        hit = byQuery.get(trade.getInstrumentInfo().getDescription().trim());
+                        hit = byQuery.get(desc);
                     }
                 }
                 if (hit == null) {
@@ -114,6 +118,14 @@ public class PortfolioSyncInstrumentResolverImpl implements PortfolioSyncInstrum
         } catch (Exception ex) {
             log.warn("SYMBOL/NAME fallback resolve failed: {}", ex.getMessage());
         }
+    }
+
+    /** Strip broker series suffixes ({@code -EQ}, {@code -BE}) before NAME/SYMBOL search. */
+    static String stripBrokerSeriesSuffix(String value) {
+        if (value == null || value.isBlank()) {
+            return value;
+        }
+        return value.replaceAll("(?i)\\s*-\\s*(EQ|BE)\\s*$", "").trim();
     }
 
     private void applyResolved(TradeDetails trade, Map<String, Map<String, String>> resolved) {

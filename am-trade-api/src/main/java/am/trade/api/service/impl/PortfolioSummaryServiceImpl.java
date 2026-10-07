@@ -16,8 +16,10 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -28,6 +30,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
+
+    private static final String DEMO_DISPLAY_NAME = "Demo Portfolio";
 
     private final PortfolioService portfolioService;
     private final TradeDetailsService tradeDetailsService;
@@ -178,33 +182,135 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             throw new IllegalArgumentException("Owner ID cannot be null or empty");
         }
         
-        // Return the full PortfolioModel list so the frontend receives all metrics
-        // (winRate, netProfitLoss, totalTrades, etc.) — not just portfolioId + name
         List<PortfolioModel> portfolios = portfolioService.findByOwnerId(ownerId);
+        if (portfolios == null) {
+            portfolios = List.of();
+        }
+
+        portfolios = normalizeOwnerPortfolios(portfolios, ownerId);
 
         if (portfolios.isEmpty()) {
-            if (demoPortfolioId != null && !demoPortfolioId.trim().isEmpty()) {
-                try {
-                    Optional<PortfolioModel> demoPortfolio = portfolioService.findByPortfolioId(demoPortfolioId);
-                    if (demoPortfolio.isPresent()) {
-                        PortfolioModel clonedDemo = cloneDemoPortfolio(demoPortfolio.get(), ownerId);
-                        portfolios = new ArrayList<>();
-                        portfolios.add(clonedDemo);
-                        log.info("Injected demo portfolio {} for ownerId {}", demoPortfolioId, ownerId);
-                    }
-                } catch (Exception e) {
-                    log.warn("Failed to load demo portfolio {}: {}", demoPortfolioId, e.getMessage());
-                }
+            PortfolioModel injected = tryInjectDemo(ownerId);
+            if (injected != null) {
+                portfolios = List.of(injected);
+                log.info("Injected demo portfolio {} for ownerId {}", demoPortfolioId, ownerId);
             }
         }
 
         return portfolios;
     }
 
+    /**
+     * Dedup + demo naming so Trade UI never shows two identical broker cards
+     * while the sidebar says Demo Portfolio.
+     */
+    List<PortfolioModel> normalizeOwnerPortfolios(List<PortfolioModel> raw, String ownerId) {
+        if (raw == null || raw.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Collapse same display name BEFORE renaming the shared demo UUID, otherwise
+        // "Upstox" + demo-id-"Upstox" become "Upstox" + "Demo Portfolio" and both stay.
+        List<PortfolioModel> byId = dedupeByPortfolioId(raw);
+        List<PortfolioModel> collapsed = collapseSameNameDuplicates(byId);
+        return collapsed.stream()
+                .map(p -> isDemoPortfolioId(p.getPortfolioId()) ? cloneDemoPortfolio(p, ownerId) : p)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private PortfolioModel tryInjectDemo(String ownerId) {
+        if (!isDemoConfigured()) {
+            return null;
+        }
+        try {
+            Optional<PortfolioModel> demoPortfolio = portfolioService.findByPortfolioId(demoPortfolioId.trim());
+            if (demoPortfolio.isPresent()) {
+                return cloneDemoPortfolio(demoPortfolio.get(), ownerId);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to load demo portfolio {}: {}", demoPortfolioId, e.getMessage());
+        }
+        return null;
+    }
+
+    private List<PortfolioModel> dedupeByPortfolioId(List<PortfolioModel> raw) {
+        Map<String, PortfolioModel> unique = new LinkedHashMap<>();
+        for (PortfolioModel p : raw) {
+            if (p == null) {
+                continue;
+            }
+            String id = p.getPortfolioId();
+            if (id == null || id.isBlank()) {
+                // Keep nameless rows under a synthetic key so we do not drop them silently.
+                unique.put("missing-" + unique.size() + "-" + Objects.toString(p.getName(), ""), p);
+                continue;
+            }
+            String key = id.trim().toLowerCase();
+            PortfolioModel existing = unique.get(key);
+            if (existing == null || prefer(p, existing) == p) {
+                unique.put(key, p);
+            }
+        }
+        return new ArrayList<>(unique.values());
+    }
+
+    /**
+     * Two Kafka upserts can create two portfolioIds with the same display name
+     * (e.g. "Upstox" ×2). Keep one — prefer the shared demo UUID, then more trades.
+     */
+    private List<PortfolioModel> collapseSameNameDuplicates(List<PortfolioModel> portfolios) {
+        Map<String, PortfolioModel> byName = new LinkedHashMap<>();
+        for (PortfolioModel p : portfolios) {
+            String nameKey = p.getName() == null || p.getName().isBlank()
+                    ? ("__id__:" + Objects.toString(p.getPortfolioId(), ""))
+                    : p.getName().trim().toLowerCase();
+            PortfolioModel existing = byName.get(nameKey);
+            if (existing == null || prefer(p, existing) == p) {
+                if (existing != null) {
+                    log.info("Collapsing duplicate trade portfolio name='{}' keeping id={} dropping id={}",
+                            p.getName(), p.getPortfolioId(), existing.getPortfolioId());
+                }
+                byName.put(nameKey, p);
+            } else {
+                log.info("Collapsing duplicate trade portfolio name='{}' keeping id={} dropping id={}",
+                        existing.getName(), existing.getPortfolioId(), p.getPortfolioId());
+            }
+        }
+        return new ArrayList<>(byName.values());
+    }
+
+    private PortfolioModel prefer(PortfolioModel a, PortfolioModel b) {
+        if (isDemoPortfolioId(a.getPortfolioId()) && !isDemoPortfolioId(b.getPortfolioId())) {
+            return a;
+        }
+        if (isDemoPortfolioId(b.getPortfolioId()) && !isDemoPortfolioId(a.getPortfolioId())) {
+            return b;
+        }
+        int tradesA = a.getTradeIds() == null ? 0 : a.getTradeIds().size();
+        int tradesB = b.getTradeIds() == null ? 0 : b.getTradeIds().size();
+        if (tradesA != tradesB) {
+            return tradesA > tradesB ? a : b;
+        }
+        if (a.getLastUpdatedDate() != null && b.getLastUpdatedDate() != null) {
+            return a.getLastUpdatedDate().isAfter(b.getLastUpdatedDate()) ? a : b;
+        }
+        return a;
+    }
+
+    private boolean isDemoConfigured() {
+        return demoPortfolioId != null && !demoPortfolioId.isBlank();
+    }
+
+    private boolean isDemoPortfolioId(String portfolioId) {
+        return isDemoConfigured()
+                && portfolioId != null
+                && demoPortfolioId.trim().equalsIgnoreCase(portfolioId.trim());
+    }
+
     private PortfolioModel cloneDemoPortfolio(PortfolioModel source, String newOwnerId) {
         return PortfolioModel.builder()
             .portfolioId(source.getPortfolioId())
-            .name("Demo Portfolio")
+            .name(DEMO_DISPLAY_NAME)
             .description(source.getDescription())
             .ownerId(newOwnerId)
             .active(source.isActive())
