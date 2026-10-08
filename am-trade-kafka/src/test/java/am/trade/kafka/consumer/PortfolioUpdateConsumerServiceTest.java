@@ -142,17 +142,15 @@ class PortfolioUpdateConsumerServiceTest {
     }
 
     @Test
-    void deleteOwnedPortfolio_missingPortfolio_deletesOnlyOwnedOrphanTrades() {
+    void deleteOwnedPortfolio_missingPortfolio_skipsDeletions() {
         String portfolioId = "orphan-id";
         String owner = "owner-A";
         when(portfolioService.findByPortfolioId(portfolioId)).thenReturn(Optional.empty());
-        when(tradeDetailsService.findModelsByUserIdAndPortfolioId(owner, portfolioId)).thenReturn(List.of(
-                TradeDetails.builder().tradeId("t-orphan").portfolioId(portfolioId).userId(owner).build()));
 
         ReflectionTestUtils.invokeMethod(consumer, "deleteOwnedPortfolio", portfolioId, owner);
 
         verify(portfolioService, never()).deleteByPortfolioId(anyString());
-        verify(tradeDetailsService).deleteByTradeId("t-orphan");
+        verify(tradeDetailsService, never()).deleteByTradeId(anyString());
         verify(tradeDetailsService, never()).deleteByPortfolioId(anyString());
     }
 
