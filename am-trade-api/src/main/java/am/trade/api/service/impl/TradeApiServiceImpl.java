@@ -179,13 +179,15 @@ public class TradeApiServiceImpl implements TradeApiService {
      * @param action     "BUY", "SELL", or "UPDATE"
      */
     private void publishPortfolioSyncEvent(TradeDetails savedTrade, String action) {
-        // Resolve ISIN→ticker (+ name) before Kafka so portfolio does not store ISINs as symbols
-        portfolioSyncInstrumentResolver.resolveForSync(savedTrade);
-        try {
-            tradeDetailsService.saveTradeDetails(savedTrade);
-        } catch (Exception ex) {
-            log.warn("Failed to persist resolved symbol before portfolio sync (tradeId={}): {}",
-                    savedTrade.getTradeId(), ex.getMessage());
+        // Resolve + persist only for live trades. DELETE must not re-save after deleteByTradeId.
+        if (!"DELETE".equalsIgnoreCase(action)) {
+            portfolioSyncInstrumentResolver.resolveForSync(savedTrade);
+            try {
+                tradeDetailsService.saveTradeDetails(savedTrade);
+            } catch (Exception ex) {
+                log.warn("Failed to persist resolved symbol before portfolio sync (tradeId={}): {}",
+                        savedTrade.getTradeId(), ex.getMessage());
+            }
         }
 
         // ── Instrument metadata ──────────────────────────────────────────────
@@ -1206,8 +1208,10 @@ public class TradeApiServiceImpl implements TradeApiService {
 
         List<TradeDetails> safeTrades = trades != null ? trades : Collections.emptyList();
 
-        // One batch ISIN→ticker resolve for all equities before building Kafka payload
-        if (!safeTrades.isEmpty()) {
+        // Resolve + persist only for live sync. DELETE / DELETE_PORTFOLIO must not re-insert
+        // rows that were already removed from Mongo (same bug as single-trade DELETE).
+        boolean isDeleteAction = "DELETE".equalsIgnoreCase(action) || "DELETE_PORTFOLIO".equalsIgnoreCase(action);
+        if (!safeTrades.isEmpty() && !isDeleteAction) {
             portfolioSyncInstrumentResolver.resolveForSync(safeTrades);
             try {
                 tradeDetailsService.saveAllTradeDetails(safeTrades);

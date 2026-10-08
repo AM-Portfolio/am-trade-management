@@ -9,8 +9,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -55,20 +58,26 @@ public class PortfolioSyncInstrumentResolverImpl implements PortfolioSyncInstrum
             }
         }
 
+        Set<TradeDetails> isinResolved = new HashSet<>();
         for (TradeDetails trade : trades) {
-            applyResolved(trade, resolved);
+            if (applyResolved(trade, resolved)) {
+                isinResolved.add(trade);
+            }
         }
 
-        // SYMBOL/NAME canonicalize for broker aliases (IDEA→VODAFONEIDEA) and ISIN misses.
-        applySymbolNameFallback(trades);
+        // SYMBOL/NAME canonicalize for broker aliases (IDEA→VODAFONEIDEA) and ISIN misses only.
+        applySymbolNameFallback(trades, isinResolved);
     }
 
-    private void applySymbolNameFallback(List<TradeDetails> trades) {
+    private void applySymbolNameFallback(List<TradeDetails> trades, Set<TradeDetails> skipTrades) {
         List<String> queries = new java.util.ArrayList<>();
         for (TradeDetails trade : trades) {
+            if (skipTrades.contains(trade)) {
+                continue;
+            }
             String sym = trade.getSymbol();
             if (sym != null && !sym.isBlank() && !validationUtils.isValidIsin(sym.trim())) {
-                queries.add(stripBrokerSeriesSuffix(sym.trim().toUpperCase()));
+                queries.add(stripBrokerSeriesSuffix(sym.trim().toUpperCase(Locale.ROOT)));
             }
             InstrumentInfo info = trade.getInstrumentInfo();
             if (info != null && info.getDescription() != null && !info.getDescription().isBlank()) {
@@ -89,26 +98,34 @@ public class PortfolioSyncInstrumentResolverImpl implements PortfolioSyncInstrum
                 return;
             }
             for (TradeDetails trade : trades) {
-                Map<String, String> hit = null;
-                String sym = trade.getSymbol();
-                if (sym != null) {
-                    hit = byQuery.get(stripBrokerSeriesSuffix(sym.trim().toUpperCase()));
+                if (skipTrades.contains(trade)) {
+                    continue;
                 }
-                if (hit == null && trade.getInstrumentInfo() != null
+                String sym = trade.getSymbol();
+                String originalSym = sym != null ? stripBrokerSeriesSuffix(sym.trim().toUpperCase(Locale.ROOT)) : null;
+
+                Map<String, String> symbolHit = originalSym != null ? byQuery.get(originalSym) : null;
+                Map<String, String> nameHit = null;
+                if (trade.getInstrumentInfo() != null
                         && trade.getInstrumentInfo().getDescription() != null) {
                     String desc = stripBrokerSeriesSuffix(trade.getInstrumentInfo().getDescription().trim());
-                    hit = byQuery.get(desc.toUpperCase());
-                    if (hit == null) {
-                        hit = byQuery.get(desc);
+                    nameHit = byQuery.get(desc.toUpperCase(Locale.ROOT));
+                    if (nameHit == null) {
+                        nameHit = byQuery.get(desc);
                     }
                 }
+
+                Map<String, String> hit = pickBestQueryHit(symbolHit, nameHit, originalSym);
                 if (hit == null) {
                     continue;
                 }
                 String ticker = hit.get("symbol");
                 if (ticker != null && !ticker.isBlank() && !validationUtils.isValidIsin(ticker)) {
-                    trade.setSymbol(ticker.trim().toUpperCase());
-                    ensureInstrumentInfo(trade).setSymbol(ticker.trim().toUpperCase());
+                    String cleanTicker = ticker.trim().toUpperCase(Locale.ROOT);
+                    if (originalSym == null || !cleanTicker.equals(originalSym)) {
+                        trade.setSymbol(cleanTicker);
+                        ensureInstrumentInfo(trade).setSymbol(cleanTicker);
+                    }
                 }
                 String description = hit.get("description");
                 if (description != null && !description.isBlank()) {
@@ -120,6 +137,27 @@ public class PortfolioSyncInstrumentResolverImpl implements PortfolioSyncInstrum
         }
     }
 
+    /**
+     * Prefer a SYMBOL hit that actually changes the ticker; otherwise use NAME
+     * (e.g. IDEA→IDEA no-op should not block IDEA→VODAFONEIDEA via company name).
+     */
+    private Map<String, String> pickBestQueryHit(
+            Map<String, String> symbolHit, Map<String, String> nameHit, String originalSym) {
+        if (symbolHit != null) {
+            String ticker = symbolHit.get("symbol");
+            if (ticker != null && !ticker.isBlank() && !validationUtils.isValidIsin(ticker)) {
+                String clean = ticker.trim().toUpperCase(Locale.ROOT);
+                if (originalSym == null || !clean.equals(originalSym)) {
+                    return symbolHit;
+                }
+            }
+        }
+        if (nameHit != null) {
+            return nameHit;
+        }
+        return symbolHit;
+    }
+
     /** Strip broker series suffixes ({@code -EQ}, {@code -BE}) before NAME/SYMBOL search. */
     static String stripBrokerSeriesSuffix(String value) {
         if (value == null || value.isBlank()) {
@@ -128,7 +166,8 @@ public class PortfolioSyncInstrumentResolverImpl implements PortfolioSyncInstrum
         return value.replaceAll("(?i)\\s*-\\s*(EQ|BE)\\s*$", "").trim();
     }
 
-    private void applyResolved(TradeDetails trade, Map<String, Map<String, String>> resolved) {
+    /** @return true when ISIN lookup produced a non-ISIN ticker (do not overwrite with NAME/SYMBOL). */
+    private boolean applyResolved(TradeDetails trade, Map<String, Map<String, String>> resolved) {
         String isinKey = extractIsinKey(trade);
         String currentSymbol = trade.getSymbol();
         boolean symbolIsIsin = currentSymbol != null && validationUtils.isValidIsin(currentSymbol.trim());
@@ -137,11 +176,13 @@ public class PortfolioSyncInstrumentResolverImpl implements PortfolioSyncInstrum
             Map<String, String> info = resolved.get(isinKey);
             String ticker = info.get("symbol");
             String description = info.get("description");
+            boolean tickerResolved = false;
 
             if (ticker != null && !ticker.isBlank() && !validationUtils.isValidIsin(ticker.trim())) {
-                String cleanTicker = ticker.trim().toUpperCase();
+                String cleanTicker = ticker.trim().toUpperCase(Locale.ROOT);
                 trade.setSymbol(cleanTicker);
                 ensureInstrumentInfo(trade).setSymbol(cleanTicker);
+                tickerResolved = true;
             } else if (symbolIsIsin) {
                 log.warn("Portfolio sync: could not resolve ticker for ISIN {} (tradeId={})",
                         isinKey, trade.getTradeId());
@@ -155,13 +196,14 @@ public class PortfolioSyncInstrumentResolverImpl implements PortfolioSyncInstrum
             if (ii.getIsin() == null || ii.getIsin().isBlank()) {
                 ii.setIsin(isinKey);
             }
-            return;
+            return tickerResolved;
         }
 
         if (symbolIsIsin) {
             log.warn("Portfolio sync: no market-data match for ISIN {} (tradeId={}) — emitting as-is",
                     currentSymbol, trade.getTradeId());
         }
+        return false;
     }
 
     private String extractIsinKey(TradeDetails trade) {

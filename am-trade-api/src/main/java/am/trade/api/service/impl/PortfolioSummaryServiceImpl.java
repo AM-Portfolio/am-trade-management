@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -174,7 +175,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             value = "portfolioSummary",
             key = "#ownerId",
             unless = "#result == null || #result.isEmpty() "
-                    + "|| (#result.size() == 1 && 'Demo Portfolio'.equals(#result.get(0).getName()))")
+                    + "|| #result.?[name == 'Demo Portfolio'].size() > 0")
     public List<PortfolioModel> getPortfolioSummariesByOwnerId(String ownerId) {
         log.debug("Getting portfolio summaries for ownerId: {}", ownerId);
         
@@ -245,7 +246,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
                 unique.put("missing-" + unique.size() + "-" + Objects.toString(p.getName(), ""), p);
                 continue;
             }
-            String key = id.trim().toLowerCase();
+            String key = id.trim().toLowerCase(Locale.ROOT);
             PortfolioModel existing = unique.get(key);
             if (existing == null || prefer(p, existing) == p) {
                 unique.put(key, p);
@@ -255,44 +256,55 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
     }
 
     /**
-     * Two Kafka upserts can create two portfolioIds with the same display name
-     * (e.g. "Upstox" ×2). Keep one — prefer the shared demo UUID, then more trades.
+     * Drop shared-demo UUID rows that collide with a real broker name.
+     * Distinct non-demo portfolios with the same display name are kept (display name ≠ identity).
+     * Kafka consumer remaps same-name upserts to avoid creating new UUID duplicates.
      */
     private List<PortfolioModel> collapseSameNameDuplicates(List<PortfolioModel> portfolios) {
-        Map<String, PortfolioModel> byName = new LinkedHashMap<>();
+        java.util.Set<String> realNameKeys = new java.util.HashSet<>();
         for (PortfolioModel p : portfolios) {
-            String nameKey = p.getName() == null || p.getName().isBlank()
-                    ? ("__id__:" + Objects.toString(p.getPortfolioId(), ""))
-                    : p.getName().trim().toLowerCase();
-            PortfolioModel existing = byName.get(nameKey);
-            if (existing == null || prefer(p, existing) == p) {
-                if (existing != null) {
-                    log.info("Collapsing duplicate trade portfolio name='{}' keeping id={} dropping id={}",
-                            p.getName(), p.getPortfolioId(), existing.getPortfolioId());
-                }
-                byName.put(nameKey, p);
-            } else {
-                log.info("Collapsing duplicate trade portfolio name='{}' keeping id={} dropping id={}",
-                        existing.getName(), existing.getPortfolioId(), p.getPortfolioId());
+            if (p == null || isDemoPortfolioId(p.getPortfolioId())) {
+                continue;
+            }
+            if (p.getName() != null && !p.getName().isBlank()) {
+                realNameKeys.add(p.getName().trim().toLowerCase(Locale.ROOT));
             }
         }
-        return new ArrayList<>(byName.values());
+
+        List<PortfolioModel> out = new ArrayList<>();
+        for (PortfolioModel p : portfolios) {
+            if (p == null) {
+                continue;
+            }
+            if (isDemoPortfolioId(p.getPortfolioId())
+                    && p.getName() != null
+                    && !p.getName().isBlank()
+                    && realNameKeys.contains(p.getName().trim().toLowerCase(Locale.ROOT))) {
+                log.info("Dropping demo-id portfolio colliding with real name='{}' id={}",
+                        p.getName(), p.getPortfolioId());
+                continue;
+            }
+            out.add(p);
+        }
+        return out;
     }
 
     private PortfolioModel prefer(PortfolioModel a, PortfolioModel b) {
+        // Prefer real broker rows over the shared demo UUID when names collide.
         if (isDemoPortfolioId(a.getPortfolioId()) && !isDemoPortfolioId(b.getPortfolioId())) {
-            return a;
+            return b;
         }
         if (isDemoPortfolioId(b.getPortfolioId()) && !isDemoPortfolioId(a.getPortfolioId())) {
-            return b;
+            return a;
+        }
+        if (a.getLastUpdatedDate() != null && b.getLastUpdatedDate() != null
+                && !a.getLastUpdatedDate().equals(b.getLastUpdatedDate())) {
+            return a.getLastUpdatedDate().isAfter(b.getLastUpdatedDate()) ? a : b;
         }
         int tradesA = a.getTradeIds() == null ? 0 : a.getTradeIds().size();
         int tradesB = b.getTradeIds() == null ? 0 : b.getTradeIds().size();
         if (tradesA != tradesB) {
             return tradesA > tradesB ? a : b;
-        }
-        if (a.getLastUpdatedDate() != null && b.getLastUpdatedDate() != null) {
-            return a.getLastUpdatedDate().isAfter(b.getLastUpdatedDate()) ? a : b;
         }
         return a;
     }
@@ -321,6 +333,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             .lastUpdatedDate(source.getLastUpdatedDate())
             .metrics(source.getMetrics())
             .tradeIds(source.getTradeIds())
+            .assetAllocations(source.getAssetAllocations())
             .build();
     }
 }

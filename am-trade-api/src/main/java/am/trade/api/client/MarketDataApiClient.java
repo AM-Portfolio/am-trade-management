@@ -56,7 +56,7 @@ public class MarketDataApiClient {
     public MarketDataApiClient(
             MarketDataApiConfig config,
             RestTemplateBuilder restTemplateBuilder,
-            @Value("${app.jwt.secret:${JWT_SECRET:internal-service-super-secret-key-32chars-minimum-change-in-prod}}")
+            @Value("${app.jwt.secret:}")
             String jwtSecret) {
         this.config = config;
         this.jwtSecret = jwtSecret != null ? jwtSecret : "";
@@ -340,7 +340,8 @@ public class MarketDataApiClient {
             requestPayload.put("limit", 1);
             requestPayload.put("searchFields",
                     searchFields != null && !searchFields.isEmpty() ? searchFields : java.util.Arrays.asList("SYMBOL", "NAME"));
-            requestPayload.put("minMatchScore", 0.0);
+            // Require a meaningful match so weak NAME hits do not overwrite symbols.
+            requestPayload.put("minMatchScore", 0.6);
 
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(url, requestPayload, Map.class);

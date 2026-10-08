@@ -120,30 +120,33 @@ public class PortfolioUpdateConsumerService {
      * This ensures the portfolio is visible in the UI dropdown even when it was
      * first created via the document processor (which publishes to am-portfolio-update
      * without going through the trade-management REST API).
+     *
+     * @return portfolioId that subsequent trades must use (may remap to an existing same-name row)
      */
-    private void upsertPortfolio(String portfolioId, String userId, String name, String brokerType) {
+    private String upsertPortfolio(String portfolioId, String userId, String name, String brokerType) {
         Optional<PortfolioModel> existing = portfolioService.findByPortfolioId(portfolioId);
         if (existing.isPresent()) {
             log.debug("Portfolio {} already exists in trade-management DB. Skipping upsert.", portfolioId);
-            return;
+            return portfolioId;
         }
         String portfolioName = (name != null && !name.isBlank()) ? name
                 : (brokerType != null ? brokerType : "Imported Portfolio");
 
         // Prevent duplicate cards: second Kafka event with a new UUID but same display name
-        // for the same owner (e.g. "Upstox" ×2) must not create another row.
+        // for the same owner (e.g. "Upstox" ×2) must not create another row — remap trades.
         try {
             List<PortfolioModel> owned = portfolioService.findByOwnerId(userId);
             if (owned != null) {
-                boolean sameNameExists = owned.stream()
+                Optional<PortfolioModel> sameName = owned.stream()
                         .filter(Objects::nonNull)
-                        .map(PortfolioModel::getName)
-                        .filter(Objects::nonNull)
-                        .anyMatch(n -> n.trim().equalsIgnoreCase(portfolioName.trim()));
-                if (sameNameExists) {
-                    log.info("Skipping upsert for portfolioId={} — owner {} already has a portfolio named '{}'",
-                            portfolioId, userId, portfolioName);
-                    return;
+                        .filter(p -> p.getName() != null
+                                && p.getName().trim().equalsIgnoreCase(portfolioName.trim()))
+                        .findFirst();
+                if (sameName.isPresent()) {
+                    String keepId = sameName.get().getPortfolioId();
+                    log.info("Remapping portfolioId={} → existing id={} for owner {} (same name '{}')",
+                            portfolioId, keepId, userId, portfolioName);
+                    return keepId;
                 }
             }
         } catch (Exception e) {
@@ -162,6 +165,48 @@ public class PortfolioUpdateConsumerService {
         } catch (Exception e) {
             log.error("Failed to upsert portfolio {} in trade-management DB: {}", portfolioId, e.getMessage(), e);
         }
+        return portfolioId;
+    }
+
+    /**
+     * Deletes only when the event user owns the portfolio (or owns orphan trades for that id).
+     */
+    private void deleteOwnedPortfolio(String portfolioId, String userId) {
+        log.info("DELETE requested for portfolioId={} by userId={}", portfolioId, userId);
+        try {
+            Optional<PortfolioModel> existing = portfolioService.findByPortfolioId(portfolioId);
+            if (existing.isPresent()) {
+                String ownerId = existing.get().getOwnerId();
+                if (ownerId != null && !ownerId.equals(userId)) {
+                    log.warn("Ignoring DELETE for portfolioId={} — event userId={} != ownerId={}",
+                            portfolioId, userId, ownerId);
+                    return;
+                }
+                portfolioService.deleteByPortfolioId(portfolioId);
+                tradeDetailsService.deleteByPortfolioId(portfolioId);
+
+                List<TradeSummaryBasic> summaries = tradeSummaryService.findBasicByPortfolioId(portfolioId);
+                for (TradeSummaryBasic summary : summaries) {
+                    log.info("Deleting associated TradeSummary ID={}", summary.getId());
+                    tradeSummaryService.deleteTradeSummary(summary.getId());
+                }
+            } else {
+                // No portfolio row — only remove this user's orphan trades; skip summaries
+                // (may belong to another owner of a shared / already-deleted id).
+                List<TradeDetails> ownedTrades =
+                        tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId);
+                for (TradeDetails trade : ownedTrades) {
+                    if (trade.getTradeId() != null) {
+                        tradeDetailsService.deleteByTradeId(trade.getTradeId());
+                    }
+                }
+            }
+
+            log.info("Successfully deleted owned portfolio/trades for portfolioId={} userId={}",
+                    portfolioId, userId);
+        } catch (Exception e) {
+            log.error("Failed to delete portfolio/trades for portfolioId={}: {}", portfolioId, e.getMessage(), e);
+        }
     }
 
     private void processInboundPortfolioEvent(PortfolioUpdateInboundEvent event) {
@@ -179,28 +224,13 @@ public class PortfolioUpdateConsumerService {
         }
 
         if ("DELETE".equalsIgnoreCase(event.getAction())) {
-            log.info("Deleting portfolio and trades for portfolioId={}", portfolioId);
-            try {
-                portfolioService.deleteByPortfolioId(portfolioId);
-                tradeDetailsService.deleteByPortfolioId(portfolioId);
-                
-                // Fix: Also delete associated Trade Summaries (Dashboard data)
-                List<TradeSummaryBasic> summaries = tradeSummaryService.findBasicByPortfolioId(portfolioId);
-                for (TradeSummaryBasic summary : summaries) {
-                    log.info("Deleting associated TradeSummary ID={}", summary.getId());
-                    tradeSummaryService.deleteTradeSummary(summary.getId());
-                }
-                
-                log.info("Successfully deleted portfolio and its trades for portfolioId={}", portfolioId);
-            } catch (Exception e) {
-                log.error("Failed to delete portfolio/trades for portfolioId={}: {}", portfolioId, e.getMessage(), e);
-            }
+            deleteOwnedPortfolio(portfolioId, userId);
             return;
         }
 
         // Upsert the portfolio record in the trade-management database so it appears
         // in the UI dropdown. Without this, trades get created but the portfolio is invisible.
-        upsertPortfolio(portfolioId, userId, event.getName(), event.getBrokerType());
+        portfolioId = upsertPortfolio(portfolioId, userId, event.getName(), event.getBrokerType());
 
         if (event.getEquities() == null || event.getEquities().isEmpty()) {
             log.info("PortfolioUpdateInboundEvent has no equities. Upserted portfolio only. EventId: {}", event.getId());
