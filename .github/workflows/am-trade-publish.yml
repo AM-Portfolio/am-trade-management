@@ -35,4 +35,6 @@ jobs:
       working_directory: '.'
       image_name: 'am-trade-management-service'
       build_context: '.'
+      # Contabo scripts (argo-pin-then-sync.sh) live on am-pipelines main; develop is missing them.
+      pipelines_ref: 'main'
     secrets: inherit
