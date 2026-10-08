@@ -191,15 +191,8 @@ public class PortfolioUpdateConsumerService {
                     tradeSummaryService.deleteTradeSummary(summary.getId());
                 }
             } else {
-                // No portfolio row — only remove this user's orphan trades; skip summaries
-                // (may belong to another owner of a shared / already-deleted id).
-                List<TradeDetails> ownedTrades =
-                        tradeDetailsService.findModelsByUserIdAndPortfolioId(userId, portfolioId);
-                for (TradeDetails trade : ownedTrades) {
-                    if (trade.getTradeId() != null) {
-                        tradeDetailsService.deleteByTradeId(trade.getTradeId());
-                    }
-                }
+                log.warn("Ignoring DELETE for portfolioId={} — portfolio not found", portfolioId);
+                return;
             }
 
             log.info("Successfully deleted owned portfolio/trades for portfolioId={} userId={}",
