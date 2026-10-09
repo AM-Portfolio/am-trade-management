@@ -175,7 +175,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             value = "portfolioSummary",
             key = "#ownerId",
             unless = "#result == null || #result.isEmpty() "
-                    + "|| #result.?[name == 'Demo Portfolio'].size() > 0")
+                    + "|| #result.?[portfolioId == @environment.getProperty('app.demo.portfolio-id', '')].size() > 0")
     public List<PortfolioModel> getPortfolioSummariesByOwnerId(String ownerId) {
         log.debug("Getting portfolio summaries for ownerId: {}", ownerId);
         

@@ -4,21 +4,21 @@ on:
   push:
     branches: ["main", "develop", "feature/**", "test/**", "fix/**", "hotfix/**"]
     paths:
-      - "am-trade-*/**"
-      - "am-oms/**"
+      - "**/*.java"
+      - "**/pom.xml"
+      - "**/src/main/resources/**"
       - "helm/**"
       - "Dockerfile"
-      - "pom.xml"
       - "settings.xml"
       - ".github/workflows/am-trade-publish.yml"
   pull_request:
     branches: ["main", "develop"]
     paths:
-      - "am-trade-*/**"
-      - "am-oms/**"
+      - "**/*.java"
+      - "**/pom.xml"
+      - "**/src/main/resources/**"
       - "helm/**"
       - "Dockerfile"
-      - "pom.xml"
       - "settings.xml"
       - ".github/workflows/am-trade-publish.yml"
   workflow_dispatch:
