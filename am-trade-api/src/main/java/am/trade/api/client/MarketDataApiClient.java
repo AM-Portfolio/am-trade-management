@@ -11,6 +11,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Component;
@@ -18,11 +23,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestClientException;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -32,16 +37,29 @@ public class MarketDataApiClient {
     private static final ObjectMapper MAPPER = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+    /** Refresh service JWT a minute before expiry. */
+    private static final long SERVICE_TOKEN_TTL_MS = TimeUnit.HOURS.toMillis(1);
+    private static final long SERVICE_TOKEN_REFRESH_SKEW_MS = TimeUnit.MINUTES.toMillis(1);
+
     private final MarketDataApiConfig config;
     private final RestTemplate restTemplate;
+    private final String jwtSecret;
 
     @Value("${am.trade.market-data.l1-cache.enabled:true}")
     private boolean isL1CacheEnabled;
 
     private final com.github.benmanes.caffeine.cache.LoadingCache<String, Double> localCache;
 
-    public MarketDataApiClient(MarketDataApiConfig config, org.springframework.boot.web.client.RestTemplateBuilder restTemplateBuilder) {
+    private volatile String cachedServiceToken;
+    private volatile long serviceTokenExpiresAtMs;
+
+    public MarketDataApiClient(
+            MarketDataApiConfig config,
+            RestTemplateBuilder restTemplateBuilder,
+            @Value("${app.jwt.secret:}")
+            String jwtSecret) {
         this.config = config;
+        this.jwtSecret = jwtSecret != null ? jwtSecret : "";
         this.restTemplate = restTemplateBuilder
                 .rootUri(config.getBaseUrl())
                 .setConnectTimeout(java.time.Duration.ofSeconds(3))
@@ -50,8 +68,8 @@ public class MarketDataApiClient {
                 .defaultHeader("Accept", "application/json")
                 .defaultHeader("Content-Type", "application/json")
                 .additionalInterceptors((request, body, execution) -> {
-                    String token = UserContext.getToken();
-                    if (token != null) {
+                    String token = resolveAuthToken();
+                    if (token != null && !token.isBlank()) {
                         if (token.startsWith("Bearer ")) {
                             request.getHeaders().set("Authorization", token);
                         } else {
@@ -76,6 +94,52 @@ public class MarketDataApiClient {
                         return fetchFromApi(keys);
                     }
                 });
+    }
+
+    /**
+     * Prefer the inbound user JWT; for Kafka / internal threads mint an HS256 service token
+     * that matches am-market-data {@code app.jwt.secret}.
+     */
+    private String resolveAuthToken() {
+        String userToken = UserContext.getToken();
+        if (userToken != null && !userToken.isBlank()) {
+            return userToken;
+        }
+        return getOrMintServiceToken();
+    }
+
+    private String getOrMintServiceToken() {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            return null;
+        }
+        long now = System.currentTimeMillis();
+        String cached = cachedServiceToken;
+        if (cached != null && now < serviceTokenExpiresAtMs - SERVICE_TOKEN_REFRESH_SKEW_MS) {
+            return cached;
+        }
+        synchronized (this) {
+            if (cachedServiceToken != null
+                    && System.currentTimeMillis() < serviceTokenExpiresAtMs - SERVICE_TOKEN_REFRESH_SKEW_MS) {
+                return cachedServiceToken;
+            }
+            try {
+                long exp = now + SERVICE_TOKEN_TTL_MS;
+                JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                        .subject("am-trade-service")
+                        .claim("uid", "am-trade-service")
+                        .issueTime(new Date(now))
+                        .expirationTime(new Date(exp))
+                        .build();
+                SignedJWT jwt = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claims);
+                jwt.sign(new MACSigner(jwtSecret.getBytes(StandardCharsets.UTF_8)));
+                cachedServiceToken = jwt.serialize();
+                serviceTokenExpiresAtMs = exp;
+                return cachedServiceToken;
+            } catch (Exception e) {
+                log.warn("Failed to mint market-data service JWT: {}", e.getMessage());
+                return null;
+            }
+        }
     }
 
     public Map<String, Double> getCurrentPrices(List<String> symbols) {
@@ -196,6 +260,7 @@ public class MarketDataApiClient {
             requestPayload.put("queries", isins);
             requestPayload.put("limit", 1);
             requestPayload.put("searchFields", java.util.Arrays.asList("ISIN"));
+            requestPayload.put("minMatchScore", 0.0);
 
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(url, requestPayload, Map.class);
@@ -259,5 +324,76 @@ public class MarketDataApiClient {
         }
         
         return new HashMap<>();
+    }
+
+    /**
+     * Generic securities batch-search (SYMBOL / NAME) keyed by the original query uppercase.
+     */
+    public Map<String, Map<String, String>> resolveTickersByQueries(List<String> queries, List<String> searchFields) {
+        if (queries == null || queries.isEmpty()) {
+            return new HashMap<>();
+        }
+        String url = "/v1/securities/batch-search";
+        try {
+            Map<String, Object> requestPayload = new HashMap<>();
+            requestPayload.put("queries", queries);
+            requestPayload.put("limit", 1);
+            requestPayload.put("searchFields",
+                    searchFields != null && !searchFields.isEmpty() ? searchFields : java.util.Arrays.asList("SYMBOL", "NAME"));
+            // Require a meaningful match so weak NAME hits do not overwrite symbols.
+            requestPayload.put("minMatchScore", 0.6);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restTemplate.postForObject(url, requestPayload, Map.class);
+            if (response == null) {
+                return new HashMap<>();
+            }
+
+            Map<?, ?> dataMap = response;
+            if (response.containsKey("data") && response.get("data") instanceof Map) {
+                dataMap = (Map<?, ?>) response.get("data");
+            }
+
+            Map<String, Map<String, String>> result = new HashMap<>();
+            Object resultsObj = dataMap.get("results");
+            if (resultsObj instanceof List) {
+                for (Object res : (List<?>) resultsObj) {
+                    if (!(res instanceof Map)) {
+                        continue;
+                    }
+                    Map<?, ?> queryResult = (Map<?, ?>) res;
+                    String query = (String) queryResult.get("query");
+                    Object matchesObj = queryResult.get("matches");
+                    if (!(matchesObj instanceof List) || ((List<?>) matchesObj).isEmpty()) {
+                        continue;
+                    }
+                    Map<?, ?> match = (Map<?, ?>) ((List<?>) matchesObj).get(0);
+                    Map<String, String> instrumentInfo = new HashMap<>();
+                    String ticker = null;
+                    if (match.get("ticker") != null && !((String) match.get("ticker")).trim().isEmpty()) {
+                        ticker = (String) match.get("ticker");
+                    } else if (match.get("nseSymbol") != null && !((String) match.get("nseSymbol")).trim().isEmpty()) {
+                        ticker = (String) match.get("nseSymbol");
+                    } else if (match.get("symbol") != null && !((String) match.get("symbol")).trim().isEmpty()) {
+                        ticker = (String) match.get("symbol");
+                    }
+                    if (ticker != null) {
+                        instrumentInfo.put("symbol", ticker.trim().toUpperCase());
+                    }
+                    if (match.get("companyName") != null && !((String) match.get("companyName")).trim().isEmpty()) {
+                        instrumentInfo.put("description", (String) match.get("companyName"));
+                    } else if (match.get("name") != null && !((String) match.get("name")).trim().isEmpty()) {
+                        instrumentInfo.put("description", (String) match.get("name"));
+                    }
+                    if (query != null && !instrumentInfo.isEmpty()) {
+                        result.put(query.trim().toUpperCase(), instrumentInfo);
+                    }
+                }
+            }
+            return result;
+        } catch (RestClientException e) {
+            log.error("Failed to resolve queries: {}", queries, e);
+            return new HashMap<>();
+        }
     }
 }

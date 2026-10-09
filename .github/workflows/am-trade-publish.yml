@@ -1,20 +1,26 @@
-# Slim Contabo graph: Build once; Auto sync preprod on main only; Contabo Approve matrix.
-name: AM Trade Management Publish
+name: AM Trade Publish
 
 on:
   push:
-    branches: ["main", "develop", "fix/**", "hotfix/**", "feature/**", "feat/**"]
+    branches: ["main", "develop", "feature/**", "test/**", "fix/**", "hotfix/**"]
     paths:
       - "**/*.java"
       - "**/pom.xml"
       - "**/src/main/resources/**"
+      - "helm/**"
       - "Dockerfile"
+      - "settings.xml"
       - ".github/workflows/am-trade-publish.yml"
   pull_request:
     branches: ["main", "develop"]
     paths:
       - "**/*.java"
       - "**/pom.xml"
+      - "**/src/main/resources/**"
+      - "helm/**"
+      - "Dockerfile"
+      - "settings.xml"
+      - ".github/workflows/am-trade-publish.yml"
   workflow_dispatch:
 
 jobs:
@@ -25,8 +31,10 @@ jobs:
       packages: write
     uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish-contabo.yml@main
     with:
-      language: "java"
-      working_directory: "."
-      image_name: "am-trade-management-service"
-      build_context: "."
+      language: 'java'
+      working_directory: '.'
+      image_name: 'am-trade-management-service'
+      build_context: '.'
+      # Contabo scripts (argo-pin-then-sync.sh) live on am-pipelines main; develop is missing them.
+      pipelines_ref: 'main'
     secrets: inherit

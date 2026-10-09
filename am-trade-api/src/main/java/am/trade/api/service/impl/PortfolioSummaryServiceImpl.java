@@ -2,7 +2,6 @@ package am.trade.api.service.impl;
 
 import am.trade.api.service.PortfolioSummaryService;
 import am.trade.common.models.PortfolioModel;
-import am.trade.common.models.PortfolioSummaryDTO;
 import am.trade.common.models.AssetAllocation;
 import am.trade.common.models.TradeDetails;
 import am.trade.services.service.PortfolioService;
@@ -10,18 +9,20 @@ import am.trade.services.service.TradeDetailsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * Implementation of the Portfolio Summary Service
@@ -31,11 +32,10 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 @Slf4j
 public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
 
+    private static final String DEMO_DISPLAY_NAME = "Demo Portfolio";
+
     private final PortfolioService portfolioService;
     private final TradeDetailsService tradeDetailsService;
-    
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private StringRedisTemplate redisTemplate;
 
     @Value("${app.demo.portfolio-id:}")
     private String demoPortfolioId;
@@ -169,8 +169,17 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         return portfolioMap;
     }
     
+    public boolean containsDemoPortfolio(List<PortfolioModel> result) {
+        if (result == null || result.isEmpty()) return false;
+        return result.stream().anyMatch(p -> isDemoPortfolioId(p.getPortfolioId()));
+    }
+
     @Override
-    @Cacheable(value = "portfolioSummary", key = "#ownerId")
+    // Never cache Demo / empty — otherwise a late Kafka upsert stays invisible until TTL.
+    @Cacheable(
+            value = "portfolioSummary",
+            key = "#ownerId",
+            unless = "#result == null || #result.isEmpty() || #root.target.containsDemoPortfolio(#result)")
     public List<PortfolioModel> getPortfolioSummariesByOwnerId(String ownerId) {
         log.debug("Getting portfolio summaries for ownerId: {}", ownerId);
         
@@ -178,33 +187,146 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             throw new IllegalArgumentException("Owner ID cannot be null or empty");
         }
         
-        // Return the full PortfolioModel list so the frontend receives all metrics
-        // (winRate, netProfitLoss, totalTrades, etc.) — not just portfolioId + name
         List<PortfolioModel> portfolios = portfolioService.findByOwnerId(ownerId);
+        if (portfolios == null) {
+            portfolios = List.of();
+        }
+
+        portfolios = normalizeOwnerPortfolios(portfolios, ownerId);
 
         if (portfolios.isEmpty()) {
-            if (demoPortfolioId != null && !demoPortfolioId.trim().isEmpty()) {
-                try {
-                    Optional<PortfolioModel> demoPortfolio = portfolioService.findByPortfolioId(demoPortfolioId);
-                    if (demoPortfolio.isPresent()) {
-                        PortfolioModel clonedDemo = cloneDemoPortfolio(demoPortfolio.get(), ownerId);
-                        portfolios = new ArrayList<>();
-                        portfolios.add(clonedDemo);
-                        log.info("Injected demo portfolio {} for ownerId {}", demoPortfolioId, ownerId);
-                    }
-                } catch (Exception e) {
-                    log.warn("Failed to load demo portfolio {}: {}", demoPortfolioId, e.getMessage());
-                }
+            PortfolioModel injected = tryInjectDemo(ownerId);
+            if (injected != null) {
+                portfolios = List.of(injected);
+                log.info("Injected demo portfolio {} for ownerId {}", demoPortfolioId, ownerId);
             }
         }
 
         return portfolios;
     }
 
+    /**
+     * Dedup + demo naming so Trade UI never shows two identical broker cards
+     * while the sidebar says Demo Portfolio.
+     */
+    List<PortfolioModel> normalizeOwnerPortfolios(List<PortfolioModel> raw, String ownerId) {
+        if (raw == null || raw.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Collapse same display name BEFORE renaming the shared demo UUID, otherwise
+        // "Upstox" + demo-id-"Upstox" become "Upstox" + "Demo Portfolio" and both stay.
+        List<PortfolioModel> byId = dedupeByPortfolioId(raw);
+        List<PortfolioModel> collapsed = collapseSameNameDuplicates(byId);
+        return collapsed.stream()
+                .map(p -> isDemoPortfolioId(p.getPortfolioId()) ? cloneDemoPortfolio(p, ownerId) : p)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private PortfolioModel tryInjectDemo(String ownerId) {
+        if (!isDemoConfigured()) {
+            return null;
+        }
+        try {
+            Optional<PortfolioModel> demoPortfolio = portfolioService.findByPortfolioId(demoPortfolioId.trim());
+            if (demoPortfolio.isPresent()) {
+                return cloneDemoPortfolio(demoPortfolio.get(), ownerId);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to load demo portfolio {}: {}", demoPortfolioId, e.getMessage());
+        }
+        return null;
+    }
+
+    private List<PortfolioModel> dedupeByPortfolioId(List<PortfolioModel> raw) {
+        Map<String, PortfolioModel> unique = new LinkedHashMap<>();
+        for (PortfolioModel p : raw) {
+            if (p == null) {
+                continue;
+            }
+            String id = p.getPortfolioId();
+            if (id == null || id.isBlank()) {
+                // Keep nameless rows under a synthetic key so we do not drop them silently.
+                unique.put("missing-" + unique.size() + "-" + Objects.toString(p.getName(), ""), p);
+                continue;
+            }
+            String key = id.trim().toLowerCase(Locale.ROOT);
+            PortfolioModel existing = unique.get(key);
+            if (existing == null || prefer(p, existing) == p) {
+                unique.put(key, p);
+            }
+        }
+        return new ArrayList<>(unique.values());
+    }
+
+    /**
+     * Drop shared-demo UUID rows that collide with a real broker name.
+     * Distinct non-demo portfolios with the same display name are kept (display name ≠ identity).
+     * Kafka consumer remaps same-name upserts to avoid creating new UUID duplicates.
+     */
+    private List<PortfolioModel> collapseSameNameDuplicates(List<PortfolioModel> portfolios) {
+        java.util.Set<String> realNameKeys = new java.util.HashSet<>();
+        for (PortfolioModel p : portfolios) {
+            if (p == null || isDemoPortfolioId(p.getPortfolioId())) {
+                continue;
+            }
+            if (p.getName() != null && !p.getName().isBlank()) {
+                realNameKeys.add(p.getName().trim().toLowerCase(Locale.ROOT));
+            }
+        }
+
+        List<PortfolioModel> out = new ArrayList<>();
+        for (PortfolioModel p : portfolios) {
+            if (p == null) {
+                continue;
+            }
+            if (isDemoPortfolioId(p.getPortfolioId())
+                    && p.getName() != null
+                    && !p.getName().isBlank()
+                    && realNameKeys.contains(p.getName().trim().toLowerCase(Locale.ROOT))) {
+                log.info("Dropping demo-id portfolio colliding with real name='{}' id={}",
+                        p.getName(), p.getPortfolioId());
+                continue;
+            }
+            out.add(p);
+        }
+        return out;
+    }
+
+    private PortfolioModel prefer(PortfolioModel a, PortfolioModel b) {
+        // Prefer real broker rows over the shared demo UUID when names collide.
+        if (isDemoPortfolioId(a.getPortfolioId()) && !isDemoPortfolioId(b.getPortfolioId())) {
+            return b;
+        }
+        if (isDemoPortfolioId(b.getPortfolioId()) && !isDemoPortfolioId(a.getPortfolioId())) {
+            return a;
+        }
+        if (a.getLastUpdatedDate() != null && b.getLastUpdatedDate() != null
+                && !a.getLastUpdatedDate().equals(b.getLastUpdatedDate())) {
+            return a.getLastUpdatedDate().isAfter(b.getLastUpdatedDate()) ? a : b;
+        }
+        int tradesA = a.getTradeIds() == null ? 0 : a.getTradeIds().size();
+        int tradesB = b.getTradeIds() == null ? 0 : b.getTradeIds().size();
+        if (tradesA != tradesB) {
+            return tradesA > tradesB ? a : b;
+        }
+        return a;
+    }
+
+    private boolean isDemoConfigured() {
+        return demoPortfolioId != null && !demoPortfolioId.isBlank();
+    }
+
+    private boolean isDemoPortfolioId(String portfolioId) {
+        return isDemoConfigured()
+                && portfolioId != null
+                && demoPortfolioId.trim().equalsIgnoreCase(portfolioId.trim());
+    }
+
     private PortfolioModel cloneDemoPortfolio(PortfolioModel source, String newOwnerId) {
         return PortfolioModel.builder()
             .portfolioId(source.getPortfolioId())
-            .name("Demo Portfolio")
+            .name(DEMO_DISPLAY_NAME)
             .description(source.getDescription())
             .ownerId(newOwnerId)
             .active(source.isActive())
@@ -215,6 +337,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             .lastUpdatedDate(source.getLastUpdatedDate())
             .metrics(source.getMetrics())
             .tradeIds(source.getTradeIds())
+            .assetAllocations(source.getAssetAllocations())
             .build();
     }
 }
