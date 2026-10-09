@@ -35,6 +35,8 @@ class TradeManagementServiceImplTest {
     private am.trade.common.logger.AppLogger appLogger;
     @Mock
     private am.trade.api.client.MarketDataApiClient marketDataApiClient;
+    @Mock
+    private am.trade.services.service.PortfolioSyncInstrumentResolver portfolioSyncInstrumentResolver;
 
     private TradeManagementServiceImpl tradeManagementService;
 
@@ -42,7 +44,8 @@ class TradeManagementServiceImplTest {
     void setUp() {
         com.am.security.context.UserContext.setUserId("test-user");
         tradeManagementService = new TradeManagementServiceImpl(tradeDetailsService, portfolioRepository,
-                tradeDetailsMapper, appLogger, marketDataApiClient, new am.trade.common.util.ValidationUtils());
+                tradeDetailsMapper, appLogger, marketDataApiClient, new am.trade.common.util.ValidationUtils(),
+                portfolioSyncInstrumentResolver);
     }
 
     @org.junit.jupiter.api.AfterEach

@@ -10,6 +10,7 @@ import am.trade.models.kafka.EquityPosition;
 import am.trade.models.kafka.PortfolioSyncEvent;
 import am.trade.services.publisher.TradeHoldingEventPublisher;
 import am.trade.services.service.PortfolioPersistenceService;
+import am.trade.services.service.PortfolioSyncInstrumentResolver;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import java.math.BigDecimal;
@@ -32,6 +33,7 @@ public class OmsFillJournalService {
     private final TradeDetailsService tradeDetailsService;
     private final TradeProcessingService tradeProcessingService;
     private final TradeHoldingEventPublisher tradeHoldingEventPublisher;
+    private final PortfolioSyncInstrumentResolver portfolioSyncInstrumentResolver;
 
     @CacheEvict(cacheNames = {"analyticsCache", "portfolioSummary", "tradeSummaryCache"}, allEntries = true)
     public void apply(OmsFillEvent fill) {
@@ -125,6 +127,7 @@ public class OmsFillJournalService {
     }
 
     private void persistAndSync(TradeDetails trade, String action) {
+        portfolioSyncInstrumentResolver.resolveForSync(trade);
         TradeDetails saved = tradeDetailsService.saveTradeDetails(trade);
         tradeProcessingService.applyTradesDelta(List.of(saved), saved.getPortfolioId(), saved.getUserId());
         BigDecimal qty = saved.getEntryInfo() != null && saved.getEntryInfo().getQuantity() != null
@@ -134,6 +137,8 @@ public class OmsFillJournalService {
         BigDecimal sellQty = saved.getExitInfo() != null && saved.getExitInfo().getQuantity() != null
                 ? BigDecimal.valueOf(saved.getExitInfo().getQuantity()) : null;
         BigDecimal sellPx = saved.getExitInfo() != null ? saved.getExitInfo().getPrice() : null;
+        String isin = saved.getInstrumentInfo() != null ? saved.getInstrumentInfo().getIsin() : null;
+        String name = saved.getInstrumentInfo() != null ? saved.getInstrumentInfo().getDescription() : null;
         EquityPosition equity = EquityPosition.builder()
                 .symbol(saved.getSymbol())
                 .assetType("EQUITY")
@@ -145,6 +150,8 @@ public class OmsFillJournalService {
                 .saleValue(sellQty != null && sellPx != null ? sellQty.multiply(sellPx) : null)
                 .tradeStatus(saved.getStatus() != null ? saved.getStatus().name() : "OPEN")
                 .action(action)
+                .isin(isin)
+                .name(name)
                 .build();
         tradeHoldingEventPublisher.publishHoldingUpdate(PortfolioSyncEvent.builder()
                 .id(saved.getPortfolioId())
