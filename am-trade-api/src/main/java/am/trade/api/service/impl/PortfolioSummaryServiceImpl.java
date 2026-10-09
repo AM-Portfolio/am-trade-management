@@ -169,13 +169,17 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         return portfolioMap;
     }
     
+    public boolean containsDemoPortfolio(List<PortfolioModel> result) {
+        if (result == null || result.isEmpty()) return false;
+        return result.stream().anyMatch(p -> isDemoPortfolioId(p.getPortfolioId()));
+    }
+
     @Override
     // Never cache Demo / empty — otherwise a late Kafka upsert stays invisible until TTL.
     @Cacheable(
             value = "portfolioSummary",
             key = "#ownerId",
-            unless = "#result == null || #result.isEmpty() "
-                    + "|| #result.?[portfolioId == @environment.getProperty('app.demo.portfolio-id', '')].size() > 0")
+            unless = "#result == null || #result.isEmpty() || #root.target.containsDemoPortfolio(#result)")
     public List<PortfolioModel> getPortfolioSummariesByOwnerId(String ownerId) {
         log.debug("Getting portfolio summaries for ownerId: {}", ownerId);
         
