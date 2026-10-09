@@ -17,11 +17,11 @@ import org.springframework.stereotype.Service;
 import am.trade.kafka.model.TradeUpdateEvent;
 import am.trade.kafka.service.KafkaIdempotencyService;
 
+import am.trade.services.service.PortfolioSyncInstrumentResolver;
 import am.trade.services.service.TradeDetailsService;
 import am.trade.services.service.TradeProcessingService;
 import am.trade.services.publisher.TradeHoldingEventPublisher;
 import am.trade.common.models.TradeDetails;
-import am.trade.services.publisher.TradeHoldingEventPublisher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -50,6 +50,7 @@ public class TradeConsumerService {
      * Portfolio listens to this topic to recalculate holdings after each trade.
      */
     private final TradeHoldingEventPublisher tradeHoldingEventPublisher;
+    private final PortfolioSyncInstrumentResolver portfolioSyncInstrumentResolver;
     
     /**
      * Idempotency guard — prevents duplicate processing when Kafka redelivers messages.
@@ -62,11 +63,13 @@ public class TradeConsumerService {
                                 TradeProcessingService tradeProcessingService,
                                 TradeDetailsService tradeDetailsService,
                                 TradeHoldingEventPublisher tradeHoldingEventPublisher,
+                                PortfolioSyncInstrumentResolver portfolioSyncInstrumentResolver,
                                 KafkaIdempotencyService kafkaIdempotencyService) {
         this.objectMapper = objectMapper;
         this.tradeProcessingService = tradeProcessingService;
         this.tradeDetailsService = tradeDetailsService;
         this.tradeHoldingEventPublisher = tradeHoldingEventPublisher;
+        this.portfolioSyncInstrumentResolver = portfolioSyncInstrumentResolver;
         this.kafkaIdempotencyService = kafkaIdempotencyService;
     }
 
@@ -158,7 +161,15 @@ public class TradeConsumerService {
                 (existing, replacement) -> replacement
             ));
 
-        List<am.trade.models.kafka.EquityPosition> equities = latestTradePerSymbol.values().stream()
+        List<TradeDetails> snapshotTrades = new java.util.ArrayList<>(latestTradePerSymbol.values());
+        portfolioSyncInstrumentResolver.resolveForSync(snapshotTrades);
+        try {
+            tradeDetailsService.saveAllTradeDetails(snapshotTrades);
+        } catch (Exception ex) {
+            log.warn("Failed to persist resolved symbols before batch holding update: {}", ex.getMessage());
+        }
+
+        List<am.trade.models.kafka.EquityPosition> equities = snapshotTrades.stream()
             .map(trade -> {
                 BigDecimal quantity = trade.getEntryInfo() != null && trade.getEntryInfo().getQuantity() != null
                     ? BigDecimal.valueOf(trade.getEntryInfo().getQuantity())
@@ -173,6 +184,7 @@ public class TradeConsumerService {
                     : "EQUITY";
 
                 String isin = trade.getInstrumentInfo() != null ? trade.getInstrumentInfo().getIsin() : null;
+                String name = trade.getInstrumentInfo() != null ? trade.getInstrumentInfo().getDescription() : null;
 
                 return am.trade.models.kafka.EquityPosition.builder()
                     .symbol(trade.getSymbol())
@@ -181,6 +193,7 @@ public class TradeConsumerService {
                     .avgBuyingPrice(price)
                     .investmentValue(price.multiply(quantity))
                     .isin(isin)
+                    .name(name)
                     // Snapshot sync — portfolio treats missing action as full replace;
                     // set BUY so incremental path also applies if snapshot branch is absent.
                     .action("BUY")

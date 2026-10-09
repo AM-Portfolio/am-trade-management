@@ -12,6 +12,11 @@ vault:
     kafka:
       mappings:
         KAFKA_BOOTSTRAP_SERVERS: "bootstrap_servers"
+        # Spring Boot binds SPRING_KAFKA_* over KAFKA_*. Without this, fleet-common's
+        # SPRING_KAFKA_BOOTSTRAP_SERVERS wins and Contabo dig can miss the env broker
+        # (demo inject on Trade UI). Same pattern as am-portfolio vault-mappings.
+        SPRING_KAFKA_BOOTSTRAP_SERVERS: "bootstrap_servers"
+        PROJ_KAFKA_BOOTSTRAP_SERVERS: "bootstrap_servers"
         KAFKA_SASL_JAAS_CONFIG: "__jaas__"
         KAFKA_SASL_USERNAME: "username"
         KAFKA_SASL_PASSWORD: "password"
@@ -31,6 +36,8 @@ vault:
         OAUTH2_CLIENT_ID: "AM_TRADE_CLIENT_ID"
         OAUTH2_CLIENT_SECRET: "AM_TRADE_CLIENT_SECRET"
         DEMO_PORTFOLIO_ID: "DEMO_PORTFOLIO_ID"
+        AM_TRADE_KAFKA_PORTFOLIO_UPDATE_CONSUMER_GROUP_ID: "AM_TRADE_KAFKA_PORTFOLIO_UPDATE_CONSUMER_GROUP_ID"
+        SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: "SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET"
 
     otel:
       mappings:

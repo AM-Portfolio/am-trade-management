@@ -50,6 +50,7 @@ public class TradeManagementServiceImpl implements TradeManagementService {
     private final AppLogger log;
     private final MarketDataApiClient marketDataApiClient;
     private final ValidationUtils validationUtils;
+    private final am.trade.services.service.PortfolioSyncInstrumentResolver portfolioSyncInstrumentResolver;
 
     @Override
     public Map<String, List<TradeDetails>> getTradeDetailsByDay(LocalDate date, String portfolioId) {
@@ -283,61 +284,36 @@ public class TradeManagementServiceImpl implements TradeManagementService {
             return;
         }
 
-        // Resolve ISINs to Symbols first.
-        // instrumentInfo.isin is the authoritative ISIN field; fall back to getSymbol() only
-        // when isin is absent (legacy trades where symbol field held the raw ISIN).
-        List<String> isinsToResolve = trades.stream()
-                .map(trade -> {
-                    am.trade.common.models.InstrumentInfo info = trade.getInstrumentInfo();
-                    if (info != null && info.getIsin() != null && !info.getIsin().isBlank()) {
-                        return info.getIsin().trim().toUpperCase();
-                    }
-                    String sym = trade.getSymbol();
-                    return sym != null ? sym.trim().toUpperCase() : null;
+        Map<String, String> symbolBefore = new java.util.HashMap<>();
+        for (TradeDetails trade : trades) {
+            if (trade != null && trade.getTradeId() != null) {
+                symbolBefore.put(trade.getTradeId(), trade.getSymbol());
+            }
+        }
+
+        // ISIN + SYMBOL/NAME canonicalize for every open/closed trade on the read path.
+        try {
+            if (portfolioSyncInstrumentResolver != null) {
+                portfolioSyncInstrumentResolver.resolveForSync(trades);
+            }
+        } catch (Exception e) {
+            log.warn("Symbol resolve during enrich failed: {}", e.getMessage());
+        }
+
+        List<TradeDetails> toPersist = trades.stream()
+                .filter(t -> t != null && t.getTradeId() != null)
+                .filter(t -> {
+                    String before = symbolBefore.get(t.getTradeId());
+                    String after = t.getSymbol();
+                    return before == null ? after != null : !before.equalsIgnoreCase(after);
                 })
-                .filter(s -> s != null && validationUtils.isValidIsin(s))
-                .distinct()
                 .collect(Collectors.toList());
-
-        if (!isinsToResolve.isEmpty()) {
-            Map<String, Map<String, String>> resolvedSymbols = marketDataApiClient.resolveTickersByIsins(isinsToResolve);
-            if (resolvedSymbols != null && !resolvedSymbols.isEmpty()) {
-                trades.forEach(trade -> {
-                    // Derive the ISIN key for this trade using the same priority as above
-                    am.trade.common.models.InstrumentInfo info = trade.getInstrumentInfo();
-                    final String isinKey;
-                    if (info != null && info.getIsin() != null && !info.getIsin().isBlank()) {
-                        isinKey = info.getIsin().trim().toUpperCase();
-                    } else {
-                        String sym = trade.getSymbol();
-                        isinKey = (sym != null && validationUtils.isValidIsin(sym.trim()))
-                                ? sym.trim().toUpperCase() : null;
-                    }
-
-                    if (isinKey != null && resolvedSymbols.containsKey(isinKey)) {
-                        Map<String, String> resolved = resolvedSymbols.get(isinKey);
-                        String resolvedSymbol = resolved.get("symbol");
-                        String resolvedDesc = resolved.get("description");
-
-                        if (resolvedSymbol != null && !resolvedSymbol.isEmpty()) {
-                            trade.setSymbol(resolvedSymbol);
-                            if (trade.getInstrumentInfo() != null) {
-                                trade.getInstrumentInfo().setSymbol(resolvedSymbol);
-                                // Persist ISIN in the dedicated field if not already set
-                                if (trade.getInstrumentInfo().getIsin() == null) {
-                                    trade.getInstrumentInfo().setIsin(isinKey);
-                                }
-                            }
-                        }
-                        
-                        if (resolvedDesc != null && !resolvedDesc.isEmpty() && trade.getInstrumentInfo() != null) {
-                            trade.getInstrumentInfo().setDescription(resolvedDesc);
-                            if (trade.getInstrumentInfo().getIsin() == null) {
-                                trade.getInstrumentInfo().setIsin(isinKey);
-                            }
-                        }
-                    }
-                });
+        if (!toPersist.isEmpty()) {
+            try {
+                tradeDetailsService.saveAllTradeDetails(toPersist);
+                log.info("Persisted {} ISIN/SYMBOL-resolved tickers after enrich", toPersist.size());
+            } catch (Exception e) {
+                log.warn("Failed to persist resolved tickers: {}", e.getMessage());
             }
         }
 
@@ -352,13 +328,18 @@ public class TradeManagementServiceImpl implements TradeManagementService {
         List<String> symbols = openTrades.stream()
                 .map(trade -> trade.getSymbol() != null ? trade.getSymbol().trim() : null)
                 .filter(s -> s != null && !s.isEmpty())
+                .filter(s -> !validationUtils.isValidIsin(s))
                 .distinct()
                 .collect(Collectors.toList());
 
+        if (symbols.isEmpty()) {
+            return;
+        }
+
         try {
             Map<String, Double> livePrices = marketDataApiClient.getCurrentPrices(symbols);
-            log.info("Live prices received from API: {}", livePrices);
-            
+            log.info("[enrichWithLivePrices] Live prices received from API: {}", livePrices);
+
             if (livePrices != null && !livePrices.isEmpty()) {
                 openTrades.forEach(trade -> {
                     String cleanSymbol = trade.getSymbol() != null ? trade.getSymbol().trim() : null;
@@ -367,42 +348,42 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                     }
                     Double price = cleanSymbol != null ? livePrices.get(cleanSymbol) : null;
                     if (price == null && trade.getSymbol() != null) {
-                        // Fallback in case MarketDataApiClient didn't strip it
                         price = livePrices.get(trade.getSymbol().trim());
                     }
-                    if (price != null) {
-                        trade.setCurrentPrice(java.math.BigDecimal.valueOf(price));
-                        
-                        // Default to LONG if tradePositionType is null
-                        if (trade.getTradePositionType() == null) {
-                            trade.setTradePositionType(am.trade.models.enums.TradePositionType.LONG);
+                    // Market-data often returns 0.0 for unknown tickers — treat as miss.
+                    if (price == null || price <= 0) {
+                        return;
+                    }
+                    trade.setCurrentPrice(java.math.BigDecimal.valueOf(price));
+
+                    if (trade.getTradePositionType() == null) {
+                        trade.setTradePositionType(am.trade.models.enums.TradePositionType.LONG);
+                    }
+
+                    java.math.BigDecimal entryPrice = trade.getEntryInfo() != null ? trade.getEntryInfo().getPrice() : null;
+                    if (entryPrice != null && trade.getEntryInfo().getQuantity() != null) {
+                        java.math.BigDecimal currentPrc = trade.getCurrentPrice();
+                        java.math.BigDecimal profitLossPerUnit = java.math.BigDecimal.ZERO;
+
+                        if (am.trade.models.enums.TradePositionType.LONG.equals(trade.getTradePositionType())) {
+                            profitLossPerUnit = currentPrc.subtract(entryPrice);
+                        } else if (am.trade.models.enums.TradePositionType.SHORT.equals(trade.getTradePositionType())) {
+                            profitLossPerUnit = entryPrice.subtract(currentPrc);
                         }
-                        
-                        // Recalculate profit/loss with live price
-                        java.math.BigDecimal entryPrice = trade.getEntryInfo() != null ? trade.getEntryInfo().getPrice() : null;
-                        if (entryPrice != null && trade.getEntryInfo().getQuantity() != null) {
-                            java.math.BigDecimal currentPrc = trade.getCurrentPrice();
-                            java.math.BigDecimal profitLossPerUnit = java.math.BigDecimal.ZERO;
-                            
-                            if (am.trade.models.enums.TradePositionType.LONG.equals(trade.getTradePositionType())) {
-                                profitLossPerUnit = currentPrc.subtract(entryPrice);
-                            } else if (am.trade.models.enums.TradePositionType.SHORT.equals(trade.getTradePositionType())) {
-                                profitLossPerUnit = entryPrice.subtract(currentPrc);
-                            }
-                            
-                            java.math.BigDecimal profitLoss = profitLossPerUnit.multiply(new java.math.BigDecimal(trade.getEntryInfo().getQuantity()));
-                            
-                            if (trade.getMetrics() == null) {
-                                trade.setMetrics(new am.trade.common.models.TradeMetrics());
-                            }
-                            trade.getMetrics().setProfitLoss(profitLoss);
-                            
-                            if (entryPrice.compareTo(java.math.BigDecimal.ZERO) > 0) {
-                                java.math.BigDecimal percentage = profitLossPerUnit
-                                        .divide(entryPrice, 4, java.math.RoundingMode.HALF_UP)
-                                        .multiply(new java.math.BigDecimal("100"));
-                                trade.getMetrics().setProfitLossPercentage(percentage);
-                            }
+
+                        java.math.BigDecimal profitLoss = profitLossPerUnit.multiply(
+                                new java.math.BigDecimal(trade.getEntryInfo().getQuantity()));
+
+                        if (trade.getMetrics() == null) {
+                            trade.setMetrics(new am.trade.common.models.TradeMetrics());
+                        }
+                        trade.getMetrics().setProfitLoss(profitLoss);
+
+                        if (entryPrice.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                            java.math.BigDecimal percentage = profitLossPerUnit
+                                    .divide(entryPrice, 4, java.math.RoundingMode.HALF_UP)
+                                    .multiply(new java.math.BigDecimal("100"));
+                            trade.getMetrics().setProfitLossPercentage(percentage);
                         }
                     }
                 });

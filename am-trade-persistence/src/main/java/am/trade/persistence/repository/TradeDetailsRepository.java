@@ -23,6 +23,8 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
     
     Optional<TradeDetailsEntity> findByTradeId(String tradeId);
 
+    void deleteByPortfolioId(String portfolioId);
+
     Optional<TradeDetailsEntity> findBySourceOrderId(String sourceOrderId);
 
     List<TradeDetailsEntity> findByPortfolioIdAndSymbol(String portfolioId, String symbol);

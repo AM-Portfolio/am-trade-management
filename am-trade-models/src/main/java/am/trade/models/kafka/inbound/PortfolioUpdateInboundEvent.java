@@ -21,6 +21,7 @@ public class PortfolioUpdateInboundEvent {
     private String userId;
     private String portfolioId;
     private String name;
+    private String action;
 
     private List<InboundEquityModel> equities;
 
