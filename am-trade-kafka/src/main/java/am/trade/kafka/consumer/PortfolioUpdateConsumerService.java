@@ -121,11 +121,19 @@ public class PortfolioUpdateConsumerService {
      * first created via the document processor (which publishes to am-portfolio-update
      * without going through the trade-management REST API).
      *
-     * @return portfolioId that subsequent trades must use (may remap to an existing same-name row)
+     * @return portfolioId that subsequent trades must use (may remap to an existing same-name row),
+     *         or {@code null} when the event user does not own an already-existing portfolio
      */
     private String upsertPortfolio(String portfolioId, String userId, String name, String brokerType) {
         Optional<PortfolioModel> existing = portfolioService.findByPortfolioId(portfolioId);
         if (existing.isPresent()) {
+            String ownerId = existing.get().getOwnerId();
+            // Mirror deleteOwnedPortfolio: reject cross-owner UPDATE before any trade mutation.
+            if (ownerId != null && !ownerId.equals(userId)) {
+                log.warn("Ignoring UPDATE for portfolioId={} — event userId={} != ownerId={}",
+                        portfolioId, userId, ownerId);
+                return null;
+            }
             log.debug("Portfolio {} already exists in trade-management DB. Skipping upsert.", portfolioId);
             return portfolioId;
         }
@@ -224,6 +232,9 @@ public class PortfolioUpdateConsumerService {
         // Upsert the portfolio record in the trade-management database so it appears
         // in the UI dropdown. Without this, trades get created but the portfolio is invisible.
         portfolioId = upsertPortfolio(portfolioId, userId, event.getName(), event.getBrokerType());
+        if (portfolioId == null) {
+            return;
+        }
 
         if (event.getEquities() == null || event.getEquities().isEmpty()) {
             log.info("PortfolioUpdateInboundEvent has no equities. Upserted portfolio only. EventId: {}", event.getId());

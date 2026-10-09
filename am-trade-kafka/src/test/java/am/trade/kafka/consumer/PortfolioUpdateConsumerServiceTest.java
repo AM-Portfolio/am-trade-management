@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -112,6 +113,48 @@ class PortfolioUpdateConsumerServiceTest {
         verify(tradeDetailsService).saveAllTradeDetails(captor.capture());
         assertEquals(existingId, captor.getValue().get(0).getPortfolioId());
         verify(tradeProcessingService).processTradeDetailsWithObjects(anyList(), eq(existingId), eq(owner));
+    }
+
+    @Test
+    void upsertPortfolio_crossOwner_returnsNull() {
+        String portfolioId = "p-owned-by-other";
+        when(portfolioService.findByPortfolioId(portfolioId)).thenReturn(Optional.of(
+                PortfolioModel.builder().portfolioId(portfolioId).ownerId("owner-A").build()));
+
+        String kept = ReflectionTestUtils.invokeMethod(
+                consumer, "upsertPortfolio", portfolioId, "owner-B", "Upstox", "UPSTOX");
+
+        assertNull(kept);
+        verify(portfolioService, never()).savePortfolio(any());
+    }
+
+    @Test
+    void processInbound_update_crossOwner_skipped() {
+        String portfolioId = "p-owned-by-other";
+        when(portfolioService.findByPortfolioId(portfolioId)).thenReturn(Optional.of(
+                PortfolioModel.builder().portfolioId(portfolioId).ownerId("owner-A").name("Upstox").build()));
+
+        PortfolioUpdateInboundEvent event = PortfolioUpdateInboundEvent.builder()
+                .id(UUID.randomUUID())
+                .portfolioId(portfolioId)
+                .userId("owner-B")
+                .name("Upstox")
+                .brokerType("UPSTOX")
+                .action("UPDATE")
+                .source("DOCUMENT")
+                .equities(List.of(InboundEquityModel.builder()
+                        .symbol("RELIANCE")
+                        .quantity(10.0)
+                        .avgBuyingPrice(100.0)
+                        .build()))
+                .build();
+
+        ReflectionTestUtils.invokeMethod(consumer, "processInboundPortfolioEvent", event);
+
+        verify(tradeDetailsService, never()).saveAllTradeDetails(anyList());
+        verify(tradeDetailsService, never()).findModelsByPortfolioId(anyString());
+        verify(tradeProcessingService, never()).processTradeDetailsWithObjects(anyList(), anyString(), anyString());
+        verify(portfolioService, never()).savePortfolio(any());
     }
 
     @Test

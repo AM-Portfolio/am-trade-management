@@ -12,6 +12,11 @@ vault:
     kafka:
       mappings:
         KAFKA_BOOTSTRAP_SERVERS: "bootstrap_servers"
+        # Spring Boot binds SPRING_KAFKA_* over KAFKA_*. Without this, fleet-common's
+        # SPRING_KAFKA_BOOTSTRAP_SERVERS wins and Contabo dig can miss the env broker
+        # (demo inject on Trade UI). Same pattern as am-portfolio vault-mappings.
+        SPRING_KAFKA_BOOTSTRAP_SERVERS: "bootstrap_servers"
+        PROJ_KAFKA_BOOTSTRAP_SERVERS: "bootstrap_servers"
         KAFKA_SASL_JAAS_CONFIG: "__jaas__"
         KAFKA_SASL_USERNAME: "username"
         KAFKA_SASL_PASSWORD: "password"
