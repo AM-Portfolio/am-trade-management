@@ -26,6 +26,7 @@ public interface TradeJournalRepositoryCustom {
             String playbookId,
             List<String> tagIds,
             String tradeId,
+            String portfolioId,
             LocalDateTime startDate,
             LocalDateTime endDate,
             String q,

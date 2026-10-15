@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import am.trade.common.models.CalendarLatestActivity;
 import am.trade.models.shared.TradeDetails;
 
 @FeignClient(name = "am-trade-management-service", url = "${am.trade.management.url:http://am-trade-management-service:8080}", path = "/api/v1/trades")
@@ -43,6 +44,10 @@ public interface TradeCalendarClient {
     Map<String, List<TradeDetails>> getTradeDetailsByDateRange(
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "portfolioId", required = false) String portfolioId);
+
+    @GetMapping("/calendar/latest-activity")
+    CalendarLatestActivity getLatestCalendarActivity(
             @RequestParam(value = "portfolioId", required = false) String portfolioId);
 
     @GetMapping("/portfolio-details/{portfolioId}")

@@ -181,6 +181,20 @@ public class MongoIndexConfig {
         try {
             journalOps.ensureIndex(new Index()
                     .on("userId", Sort.Direction.ASC)
+                    .on("portfolioId", Sort.Direction.ASC)
+                    .on("entryDate", Sort.Direction.DESC)
+                    .named("idx_journal_user_portfolio_entry_date")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_user_portfolio_entry_date");
+        } catch (Exception e) {
+            failed++;
+            log.error("[ERROR] idx_journal_user_portfolio_entry_date FAILED", e);
+        }
+
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("userId", Sort.Direction.ASC)
                     .on("journalStatus", Sort.Direction.ASC)
                     .named("idx_journal_user_status")
                     .background());

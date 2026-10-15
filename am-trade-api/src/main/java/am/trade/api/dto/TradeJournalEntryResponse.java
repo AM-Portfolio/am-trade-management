@@ -33,6 +33,9 @@ public class TradeJournalEntryResponse {
     @Schema(description = "User ID who created the journal entry")
     private String userId;
 
+    @Schema(description = "Portfolio ID when scoped to a Trade portfolio (optional)")
+    private String portfolioId;
+
     @Schema(description = "Associated trade ID (optional)")
     private String tradeId;
 

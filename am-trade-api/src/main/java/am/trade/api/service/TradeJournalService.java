@@ -35,6 +35,7 @@ public interface TradeJournalService {
             String playbookId,
             List<String> tagIds,
             String tradeId,
+            String portfolioId,
             LocalDate startDate,
             LocalDate endDate,
             String q,

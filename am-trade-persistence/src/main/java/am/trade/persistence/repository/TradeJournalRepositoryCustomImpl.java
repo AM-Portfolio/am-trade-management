@@ -37,6 +37,7 @@ public class TradeJournalRepositoryCustomImpl implements TradeJournalRepositoryC
             String playbookId,
             List<String> tagIds,
             String tradeId,
+            String portfolioId,
             LocalDateTime startDate,
             LocalDateTime endDate,
             String q,
@@ -73,6 +74,9 @@ public class TradeJournalRepositoryCustomImpl implements TradeJournalRepositoryC
         }
         if (StringUtils.hasText(tradeId)) {
             criteriaList.add(Criteria.where("tradeId").is(tradeId));
+        }
+        if (StringUtils.hasText(portfolioId)) {
+            criteriaList.add(Criteria.where("portfolioId").is(portfolioId));
         }
         if (startDate != null && endDate != null) {
             criteriaList.add(Criteria.where("entryDate").gte(startDate).lte(endDate));

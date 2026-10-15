@@ -28,6 +28,8 @@ public class TradeJournalEntry {
     @Id
     private String id;
     private String userId;
+    /** Optional portfolio scope — Trade UI is portfolio-centric. */
+    private String portfolioId;
     private String tradeId;
     private String title;
     private String content;

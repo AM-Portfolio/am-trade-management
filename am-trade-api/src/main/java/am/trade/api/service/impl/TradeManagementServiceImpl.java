@@ -1,5 +1,6 @@
 package am.trade.api.service.impl;
 
+import am.trade.common.models.CalendarLatestActivity;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.TradeSummary;
 import am.trade.models.enums.TradeStatus;
@@ -11,7 +12,9 @@ import am.trade.common.util.ValidationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,6 +25,8 @@ import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import am.trade.common.logger.AppLogger;
@@ -29,7 +34,6 @@ import am.trade.persistence.repository.PortfolioRepository;
 import am.trade.persistence.entity.PortfolioEntity;
 import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.mapper.TradeDetailsMapper;
-import java.util.Optional;
 import java.util.ArrayList;
 
 /**
@@ -98,6 +102,44 @@ public class TradeManagementServiceImpl implements TradeManagementService {
         LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay().minusNanos(1);
 
         return getTradeDetailsByDateTimeRange(startDateTime, endDateTime, portfolioId);
+    }
+
+    @Override
+    public Optional<CalendarLatestActivity> getLatestCalendarActivity(String portfolioId) {
+        String userId = com.am.security.context.UserContext.getUserIdOrThrow();
+        log.info("Resolving latest calendar activity for user {} portfolio {}", userId, portfolioId);
+
+        Optional<TradeDetails> latest;
+        if (portfolioId != null && !portfolioId.isEmpty()) {
+            latest = tradeDetailsService.findLatestByUserIdAndPortfolioId(userId, portfolioId);
+            if (latest.isEmpty()) {
+                healOrphanedImportedTrades(portfolioId, userId);
+                latest = tradeDetailsService.findLatestByUserIdAndPortfolioId(userId, portfolioId);
+            }
+        } else {
+            Set<String> paperIds = portfolioRepository.findByOwnerId(userId).stream()
+                    .filter(p -> "PAPER".equalsIgnoreCase(p.getKind()))
+                    .map(PortfolioEntity::getPortfolioId)
+                    .collect(Collectors.toSet());
+            latest = tradeDetailsService.findLatestByUserId(userId)
+                    .filter(t -> t.getPortfolioId() == null || !paperIds.contains(t.getPortfolioId()));
+            // Absolute newest may be PAPER — scan a small newest-first page for the first live trade
+            if (latest.isEmpty()) {
+                Pageable newestFirst = PageRequest.of(0, 50,
+                        Sort.by(Sort.Direction.DESC, "entryInfo.timestamp"));
+                latest = tradeDetailsService.findPageByUserId(userId, newestFirst).getContent().stream()
+                        .filter(t -> t.getPortfolioId() == null || !paperIds.contains(t.getPortfolioId()))
+                        .filter(t -> t.getTradeDate() != null)
+                        .findFirst();
+            }
+        }
+
+        return latest.map(TradeDetails::getTradeDate).filter(java.util.Objects::nonNull).map(date -> CalendarLatestActivity
+                .builder()
+                .lastTradeDate(date)
+                .year(date.getYear())
+                .month(date.getMonthValue())
+                .build());
     }
 
     private Map<String, List<TradeDetails>> getTradeDetailsByDateTimeRange(LocalDateTime startDateTime,

@@ -119,6 +119,23 @@ public interface TradeDetailsRepository extends MongoRepository<TradeDetailsEnti
 
     @Query("{'userId': ?0, 'portfolioId': ?1, 'entryInfo.timestamp': {$gte: ?2, $lte: ?3}}")
     List<TradeDetailsEntity> findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(String userId, String portfolioId, LocalDateTime startDate, LocalDateTime endDate);
+
+    /**
+     * Newest trade for a user+portfolio by entry timestamp (uses idx_userId_portfolioId_entryTs).
+     */
+    Optional<TradeDetailsEntity> findFirstByUserIdAndPortfolioIdOrderByEntryInfoTimestampDesc(
+            String userId, String portfolioId);
+
+    /**
+     * Newest trade for a user by entry timestamp (uses idx_userId_entryTs).
+     */
+    Optional<TradeDetailsEntity> findFirstByUserIdOrderByEntryInfoTimestampDesc(String userId);
+
+    /**
+     * Paginated trades for a user (pass Sort.by DESC on entryInfo.timestamp for newest-first).
+     */
+    @Query("{'userId': ?0}")
+    Page<TradeDetailsEntity> findPageByUserId(String userId, Pageable pageable);
     
     @Query("{'userId': ?0, 'symbol': ?1}")
     List<TradeDetailsEntity> findByUserIdAndSymbol(String userId, String symbol);

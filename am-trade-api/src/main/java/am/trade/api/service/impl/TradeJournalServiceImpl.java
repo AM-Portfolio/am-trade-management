@@ -34,10 +34,21 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
     private static final Set<String> FOLLOWED_TRUE = Set.of("YES", "TRUE", "Y", "1");
 
+    /**
+     * Cache key MUST include the caller userId. Keying only by entryId allowed
+     * cross-user IDOR on cache hit (ownership check skipped).
+     */
+    private static final String JOURNAL_CACHE = "trade-journals";
+    private static final String JOURNAL_CACHE_KEY =
+            "T(com.am.security.context.UserContext).getUserIdOrThrow() + '::' + #entryId";
+    private static final String JOURNAL_CACHE_KEY_RESULT =
+            "T(com.am.security.context.UserContext).getUserIdOrThrow() + '::' + #result.id";
+
     private final TradeJournalRepository tradeJournalRepository;
     private final TradeDetailsRepository tradeDetailsRepository;
 
     @Override
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY_RESULT)
     public TradeJournalEntryResponse createJournalEntry(TradeJournalEntryRequest request) {
         log.debug("Creating journal entry for user: {}", UserContext.getUserIdOrThrow());
 
@@ -60,9 +71,10 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @Cacheable(value = "trade-journals", key = "#entryId")
+    @Cacheable(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse getJournalEntry(String entryId) {
         log.debug("Getting journal entry with ID: {}", entryId);
+        // Always authorize — cache key is user-scoped so a hit cannot serve another user's entry.
         TradeJournalEntry entry = findOwnedEntry(entryId);
         return convertToResponse(entry);
     }
@@ -85,6 +97,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
             String playbookId,
             List<String> tagIds,
             String tradeId,
+            String portfolioId,
             LocalDate startDate,
             LocalDate endDate,
             String q,
@@ -95,7 +108,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
         return tradeJournalRepository.searchEntries(
                         userId, journalStatus, entryType, symbol, setup, folderId, playbookId,
-                        tagIds, tradeId, start, end, q, pageable)
+                        tagIds, tradeId, portfolioId, start, end, q, pageable)
                 .map(this::convertToResponse);
     }
 
@@ -121,7 +134,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse updateJournalEntry(String entryId, TradeJournalEntryRequest request) {
         log.debug("Updating journal entry with ID: {}", entryId);
         validateRequest(request);
@@ -156,6 +169,9 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         }
         if (request.getPlaybookId() != null) {
             existingEntry.setPlaybookId(request.getPlaybookId());
+        }
+        if (request.getPortfolioId() != null) {
+            existingEntry.setPortfolioId(request.getPortfolioId());
         }
         if (StringUtils.hasText(request.getTradeId())) {
             existingEntry.setTradeId(request.getTradeId());
@@ -220,7 +236,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CacheEvict(value = "trade-journals", key = "#entryId")
+    @CacheEvict(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public void deleteJournalEntry(String entryId) {
         log.debug("Deleting journal entry with ID: {}", entryId);
         findOwnedEntry(entryId);
@@ -229,7 +245,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse updatePrePlan(String entryId, PreTradePlan preTradePlan) {
         log.debug("Updating pre-trade plan for journal entry ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
@@ -244,7 +260,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse updateExecution(String entryId, TradeExecution tradeExecution) {
         log.debug("Updating trade execution for journal entry ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
@@ -263,7 +279,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse updatePostReview(
             String entryId, PostTradeReview postTradeReview, Boolean markCompleted) {
         log.debug("Updating post-trade review for journal entry ID: {}", entryId);
@@ -280,7 +296,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse linkTrade(String entryId, String tradeId) {
         log.debug("Linking trade ID: {} to journal entry ID: {}", tradeId, entryId);
         if (!StringUtils.hasText(tradeId)) {
@@ -519,7 +535,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse addAttachment(String entryId, JournalAttachmentRequest request) {
         log.debug("Adding attachment to journal entry ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
@@ -546,7 +562,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse removeAttachment(String entryId, String fileUrl) {
         log.debug("Removing attachment from journal entry ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
@@ -564,6 +580,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CacheEvict(value = JOURNAL_CACHE, allEntries = true)
     public int bulkArchive(String userId, List<String> entryIds) {
         List<TradeJournalEntry> entries = tradeJournalRepository.findByUserIdAndIdIn(userId, entryIds);
         LocalDateTime now = LocalDateTime.now();
@@ -576,6 +593,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CacheEvict(value = JOURNAL_CACHE, allEntries = true)
     public int bulkDelete(String userId, List<String> entryIds) {
         List<TradeJournalEntry> entries = tradeJournalRepository.findByUserIdAndIdIn(userId, entryIds);
         tradeJournalRepository.deleteAll(entries);
@@ -583,6 +601,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CacheEvict(value = JOURNAL_CACHE, allEntries = true)
     public int bulkAddTags(String userId, List<String> entryIds, List<String> tagIds) {
         if (tagIds == null || tagIds.isEmpty()) {
             return 0;
@@ -916,6 +935,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     TradeJournalEntry convertToEntity(TradeJournalEntryRequest request) {
         return TradeJournalEntry.builder()
                 .userId(UserContext.getUserIdOrThrow())
+                .portfolioId(request.getPortfolioId())
                 .tradeId(request.getTradeId())
                 .title(request.getTitle())
                 .content(request.getContent())
@@ -949,6 +969,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         return TradeJournalEntryResponse.builder()
                 .id(entry.getId())
                 .userId(entry.getUserId())
+                .portfolioId(entry.getPortfolioId())
                 .tradeId(entry.getTradeId())
                 .title(entry.getTitle())
                 .content(entry.getContent())

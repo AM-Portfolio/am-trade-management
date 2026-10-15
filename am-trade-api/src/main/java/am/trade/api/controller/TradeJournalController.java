@@ -78,6 +78,7 @@ public class TradeJournalController {
             @RequestParam(required = false) String playbookId,
             @RequestParam(required = false) List<String> tagIds,
             @RequestParam(required = false) String tradeId,
+            @RequestParam(required = false) String portfolioId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) String q,
@@ -88,11 +89,11 @@ public class TradeJournalController {
 
         boolean hasFilters = journalStatus != null || entryType != null || symbol != null || setup != null
                 || folderId != null || playbookId != null || (tagIds != null && !tagIds.isEmpty())
-                || tradeId != null || startDate != null || endDate != null || q != null;
+                || tradeId != null || portfolioId != null || startDate != null || endDate != null || q != null;
 
         Page<TradeJournalEntryResponse> entries = hasFilters
                 ? tradeJournalService.searchJournalEntries(userId, journalStatus, entryType, symbol, setup,
-                        folderId, playbookId, tagIds, tradeId, startDate, endDate, q, pageable)
+                        folderId, playbookId, tagIds, tradeId, portfolioId, startDate, endDate, q, pageable)
                 : tradeJournalService.getJournalEntriesByUser(userId, pageable);
 
         return ResponseEntity.ok(entries);
