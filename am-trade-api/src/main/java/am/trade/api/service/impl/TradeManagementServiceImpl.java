@@ -123,9 +123,9 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                     .collect(Collectors.toSet());
             latest = tradeDetailsService.findLatestByUserId(userId)
                     .filter(t -> t.getPortfolioId() == null || !paperIds.contains(t.getPortfolioId()));
-            // Absolute newest may be PAPER — scan a small newest-first page for the first live trade
+            // Absolute newest may be PAPER — scan newest-first until first non-PAPER trade
             if (latest.isEmpty()) {
-                Pageable newestFirst = PageRequest.of(0, 50,
+                Pageable newestFirst = PageRequest.of(0, 200,
                         Sort.by(Sort.Direction.DESC, "entryInfo.timestamp"));
                 latest = tradeDetailsService.findPageByUserId(userId, newestFirst).getContent().stream()
                         .filter(t -> t.getPortfolioId() == null || !paperIds.contains(t.getPortfolioId()))

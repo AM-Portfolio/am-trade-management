@@ -13,13 +13,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
+import am.trade.common.models.CalendarLatestActivity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -102,9 +109,9 @@ class TradeManagementServiceImplTest {
         TradeDetails broker = createTrade("t1", "broker", LocalDateTime.of(2020, 7, 15, 12, 0));
         TradeDetails paper = createTrade("t2", "paper", LocalDateTime.of(2020, 7, 15, 12, 0));
         when(tradeDetailsService.findModelsByUserIdAndEntryInfoTimestampBetween(
-                org.mockito.ArgumentMatchers.eq("test-user"),
-                org.mockito.ArgumentMatchers.any(LocalDateTime.class),
-                org.mockito.ArgumentMatchers.any(LocalDateTime.class)))
+                eq("test-user"),
+                any(LocalDateTime.class),
+                any(LocalDateTime.class)))
                 .thenReturn(Arrays.asList(broker, paper));
         when(portfolioRepository.findByOwnerId("test-user")).thenReturn(List.of(
                 am.trade.persistence.entity.PortfolioEntity.builder().portfolioId("paper").kind("PAPER").build(),
@@ -115,6 +122,53 @@ class TradeManagementServiceImplTest {
         assertTrue(result.containsKey("broker"));
         assertFalse(result.containsKey("paper"));
         assertEquals(1, result.get("broker").size());
+    }
+
+    @Test
+    void getLatestCalendarActivity_withPortfolio_returnsYearMonthFromNewestTrade() {
+        TradeDetails latest = createTrade("t1", "pf-1", LocalDateTime.of(2024, 3, 18, 10, 0));
+        when(tradeDetailsService.findLatestByUserIdAndPortfolioId("test-user", "pf-1"))
+                .thenReturn(Optional.of(latest));
+
+        Optional<CalendarLatestActivity> activity =
+                tradeManagementService.getLatestCalendarActivity("pf-1");
+
+        assertTrue(activity.isPresent());
+        assertEquals(LocalDate.of(2024, 3, 18), activity.get().getLastTradeDate());
+        assertEquals(2024, activity.get().getYear());
+        assertEquals(3, activity.get().getMonth());
+    }
+
+    @Test
+    void getLatestCalendarActivity_userWide_skipsPaperNewestAndPicksLive() {
+        TradeDetails paperNewest = createTrade("paper-1", "paper", LocalDateTime.of(2025, 1, 10, 9, 0));
+        TradeDetails liveOlder = createTrade("live-1", "broker", LocalDateTime.of(2024, 11, 5, 14, 0));
+        when(portfolioRepository.findByOwnerId("test-user")).thenReturn(List.of(
+                am.trade.persistence.entity.PortfolioEntity.builder().portfolioId("paper").kind("PAPER").build(),
+                am.trade.persistence.entity.PortfolioEntity.builder().portfolioId("broker").kind("BROKER").build()));
+        when(tradeDetailsService.findLatestByUserId("test-user")).thenReturn(Optional.of(paperNewest));
+        when(tradeDetailsService.findPageByUserId(eq("test-user"), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(paperNewest, liveOlder)));
+
+        Optional<CalendarLatestActivity> activity =
+                tradeManagementService.getLatestCalendarActivity(null);
+
+        assertTrue(activity.isPresent());
+        assertEquals(LocalDate.of(2024, 11, 5), activity.get().getLastTradeDate());
+        assertEquals(2024, activity.get().getYear());
+        assertEquals(11, activity.get().getMonth());
+    }
+
+    @Test
+    void getLatestCalendarActivity_empty_returnsEmptyOptional() {
+        when(tradeDetailsService.findLatestByUserIdAndPortfolioId("test-user", "pf-empty"))
+                .thenReturn(Optional.empty());
+        when(portfolioRepository.findByPortfolioId("pf-empty")).thenReturn(Optional.empty());
+
+        Optional<CalendarLatestActivity> activity =
+                tradeManagementService.getLatestCalendarActivity("pf-empty");
+
+        assertTrue(activity.isEmpty());
     }
 
     private TradeDetails createTrade(String id, String portfolioId, LocalDateTime entryTime) {

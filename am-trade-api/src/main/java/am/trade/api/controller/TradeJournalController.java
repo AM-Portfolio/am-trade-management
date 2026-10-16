@@ -87,14 +87,11 @@ public class TradeJournalController {
         String userId = UserContext.getUserIdOrThrow();
         log.info("Fetching journal entries for user: {} with filters", userId);
 
-        boolean hasFilters = journalStatus != null || entryType != null || symbol != null || setup != null
-                || folderId != null || playbookId != null || (tagIds != null && !tagIds.isEmpty())
-                || tradeId != null || portfolioId != null || startDate != null || endDate != null || q != null;
-
-        Page<TradeJournalEntryResponse> entries = hasFilters
-                ? tradeJournalService.searchJournalEntries(userId, journalStatus, entryType, symbol, setup,
-                        folderId, playbookId, tagIds, tradeId, portfolioId, startDate, endDate, q, pageable)
-                : tradeJournalService.getJournalEntriesByUser(userId, pageable);
+        // Always search so portfolioId (and other filters) cannot be skipped by a dual path.
+        // Null portfolioId = all portfolios for the user.
+        Page<TradeJournalEntryResponse> entries = tradeJournalService.searchJournalEntries(
+                userId, journalStatus, entryType, symbol, setup, folderId, playbookId, tagIds, tradeId,
+                portfolioId, startDate, endDate, q, pageable);
 
         return ResponseEntity.ok(entries);
     }

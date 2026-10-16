@@ -3,6 +3,7 @@ package am.trade.sdk.client;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.data.domain.Page;
@@ -46,8 +47,12 @@ public interface TradeCalendarClient {
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(value = "portfolioId", required = false) String portfolioId);
 
+    /**
+     * Latest trade date for calendar default-open. Server returns 204 when empty;
+     * OpenFeign maps that to {@link Optional#empty()}.
+     */
     @GetMapping("/calendar/latest-activity")
-    CalendarLatestActivity getLatestCalendarActivity(
+    Optional<CalendarLatestActivity> getLatestCalendarActivity(
             @RequestParam(value = "portfolioId", required = false) String portfolioId);
 
     @GetMapping("/portfolio-details/{portfolioId}")
