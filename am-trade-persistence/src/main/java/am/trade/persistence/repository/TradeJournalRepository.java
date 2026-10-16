@@ -43,6 +43,12 @@ public interface TradeJournalRepository extends MongoRepository<TradeJournalEntr
             String userId, LocalDateTime startDate, LocalDateTime endDate);
 
     /**
+     * Find all journal entries for a user and portfolio in a date range (no pagination)
+     */
+    List<TradeJournalEntry> findByUserIdAndPortfolioIdAndEntryDateBetween(
+            String userId, String portfolioId, LocalDateTime startDate, LocalDateTime endDate);
+
+    /**
      * Find by user and journal status
      */
     List<TradeJournalEntry> findByUserIdAndJournalStatus(String userId, String journalStatus);

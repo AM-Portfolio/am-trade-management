@@ -33,6 +33,8 @@ public class TradeJournalEntry {
     private String tradeId;
     private String title;
     private String content;
+    /** Plain-text index of {@link #content} (Quill delta or raw text) for search. */
+    private String contentPlain;
     private String entryType;
     private String journalStatus;
     private String symbol;

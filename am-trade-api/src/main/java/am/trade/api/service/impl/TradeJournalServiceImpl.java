@@ -3,8 +3,10 @@ package am.trade.api.service.impl;
 import am.trade.api.dto.*;
 import am.trade.api.service.TradeJournalService;
 import am.trade.common.models.*;
+import am.trade.common.util.JournalContentPlainText;
 import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.repository.TradeDetailsRepository;
+import am.trade.persistence.repository.JournalAnalyticsAggregation;
 import am.trade.persistence.repository.TradeJournalRepository;
 import com.am.security.context.UserContext;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +59,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
         TradeJournalEntry entry = convertToEntity(request);
         entry.setId(UUID.randomUUID().toString());
+        syncContentPlain(entry);
 
         applyAutoCalculations(entry);
 
@@ -148,6 +151,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         }
         if (request.getContent() != null) {
             existingEntry.setContent(request.getContent());
+            syncContentPlain(existingEntry);
         }
         if (request.getEntryType() != null) {
             existingEntry.setEntryType(request.getEntryType());
@@ -359,8 +363,37 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    public JournalSummaryResponse getSummary(String userId, LocalDate start, LocalDate end) {
-        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end);
+    public JournalSummaryResponse getSummary(String userId, LocalDate start, LocalDate end, String portfolioId) {
+        try {
+            LocalDateTime rangeStart = start.atStartOfDay();
+            LocalDateTime rangeEnd = end.atTime(LocalTime.MAX);
+            return tradeJournalRepository
+                    .aggregateSummary(userId, rangeStart, rangeEnd, portfolioId)
+                    .map(this::mapSummaryAggregation)
+                    .orElseGet(() -> getSummaryInMemory(userId, start, end, portfolioId));
+        } catch (Exception ex) {
+            log.warn("Journal summary aggregation failed, using in-memory fallback: {}", ex.getMessage());
+            return getSummaryInMemory(userId, start, end, portfolioId);
+        }
+    }
+
+    private JournalSummaryResponse mapSummaryAggregation(JournalAnalyticsAggregation.Summary agg) {
+        int pnlCount = agg.getPnlCount();
+        int rrCount = agg.getRrCount();
+        return JournalSummaryResponse.builder()
+                .totalTrades(agg.getTotalTrades())
+                .totalPnl(pnlCount > 0 ? round2(agg.getTotalPnl()) : 0.0)
+                .winRate(pnlCount > 0 ? round2((agg.getWins() * 100.0) / pnlCount) : null)
+                .avgRR(rrCount > 0 ? round2(agg.getRrSum() / rrCount) : null)
+                .plannedCount(agg.getPlannedCount())
+                .openCount(agg.getOpenCount())
+                .completedCount(agg.getCompletedCount())
+                .archivedCount(agg.getArchivedCount())
+                .build();
+    }
+
+    private JournalSummaryResponse getSummaryInMemory(String userId, LocalDate start, LocalDate end, String portfolioId) {
+        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end, portfolioId);
 
         long planned = 0, open = 0, completed = 0, archived = 0;
         double totalPnl = 0;
@@ -413,8 +446,44 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    public List<MistakeAnalysisResponse> getMistakesSummary(String userId, LocalDate start, LocalDate end) {
-        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end);
+    public List<MistakeAnalysisResponse> getMistakesSummary(String userId, LocalDate start, LocalDate end, String portfolioId) {
+        try {
+            LocalDateTime rangeStart = start.atStartOfDay();
+            LocalDateTime rangeEnd = end.atTime(LocalTime.MAX);
+            JournalAnalyticsAggregation.MistakesResult agg =
+                    tradeJournalRepository.aggregateMistakes(userId, rangeStart, rangeEnd, portfolioId);
+            return mapMistakesAggregation(agg);
+        } catch (Exception ex) {
+            log.warn("Journal mistakes aggregation failed, using in-memory fallback: {}", ex.getMessage());
+            return getMistakesSummaryInMemory(userId, start, end, portfolioId);
+        }
+    }
+
+    private List<MistakeAnalysisResponse> mapMistakesAggregation(
+            JournalAnalyticsAggregation.MistakesResult agg) {
+        final long totalLosses = agg.getTotalLosses();
+        List<MistakeAnalysisResponse> results = new ArrayList<>();
+        for (JournalAnalyticsAggregation.MistakeGroup group : agg.getGroups()) {
+            long count = group.getOccurrenceCount();
+            double impact = group.getTotalPnlImpact();
+            long lossOccurrences = group.getLossOccurrences();
+            results.add(MistakeAnalysisResponse.builder()
+                    .mistakeCategory(group.getMistakeCategory())
+                    .occurrenceCount(count)
+                    .totalPnlImpact(round2(impact))
+                    .avgPnlPerOccurrence(count > 0 ? round2(impact / count) : 0.0)
+                    .percentageOfLosses(totalLosses > 0
+                            ? round2((lossOccurrences * 100.0) / totalLosses)
+                            : 0.0)
+                    .build());
+        }
+        results.sort(Comparator.comparingLong(MistakeAnalysisResponse::getOccurrenceCount).reversed());
+        return results;
+    }
+
+    private List<MistakeAnalysisResponse> getMistakesSummaryInMemory(
+            String userId, LocalDate start, LocalDate end, String portfolioId) {
+        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end, portfolioId);
 
         Map<String, List<TradeJournalEntry>> byMistake = new LinkedHashMap<>();
         long lossCount = 0;
@@ -466,15 +535,13 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    public List<LessonLearnedResponse> getLessons(String userId, LocalDate start, LocalDate end, int limit) {
+    public List<LessonLearnedResponse> getLessons(String userId, LocalDate start, LocalDate end, int limit, String portfolioId) {
         int effectiveLimit = limit > 0 ? limit : 10;
-        return loadEntriesInRange(userId, start, end).stream()
-                .filter(e -> e.getPostTradeReview() != null
-                        && StringUtils.hasText(e.getPostTradeReview().getLessonLearned()))
-                .sorted(Comparator.comparing(
-                        (TradeJournalEntry e) -> e.getEntryDate() != null ? e.getEntryDate() : LocalDateTime.MIN)
-                        .reversed())
-                .limit(effectiveLimit)
+        LocalDateTime rangeStart = start.atStartOfDay();
+        LocalDateTime rangeEnd = end.atTime(LocalTime.MAX);
+        return tradeJournalRepository
+                .findLessonsInRange(userId, rangeStart, rangeEnd, portfolioId, effectiveLimit)
+                .stream()
                 .map(e -> LessonLearnedResponse.builder()
                         .entryId(e.getId())
                         .symbol(e.getSymbol())
@@ -487,8 +554,41 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    public JournalAdherenceResponse getAdherence(String userId, LocalDate start, LocalDate end) {
-        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end);
+    public JournalAdherenceResponse getAdherence(String userId, LocalDate start, LocalDate end, String portfolioId) {
+        try {
+            LocalDateTime rangeStart = start.atStartOfDay();
+            LocalDateTime rangeEnd = end.atTime(LocalTime.MAX);
+            return tradeJournalRepository
+                    .aggregateAdherence(userId, rangeStart, rangeEnd, portfolioId)
+                    .map(this::mapAdherenceAggregation)
+                    .orElseGet(() -> getAdherenceInMemory(userId, start, end, portfolioId));
+        } catch (Exception ex) {
+            log.warn("Journal adherence aggregation failed, using in-memory fallback: {}", ex.getMessage());
+            return getAdherenceInMemory(userId, start, end, portfolioId);
+        }
+    }
+
+    private JournalAdherenceResponse mapAdherenceAggregation(JournalAnalyticsAggregation.Adherence agg) {
+        int adherenceCount = agg.getAdherenceCount();
+        int checklistCount = agg.getChecklistCount();
+        int execCount = agg.getExecCount();
+        long sampleSize = Math.max(adherenceCount, Math.max(checklistCount, execCount));
+        return JournalAdherenceResponse.builder()
+                .avgPlanAdherenceScore(adherenceCount > 0 && agg.getAvgPlanAdherenceScore() != null
+                        ? round2(agg.getAvgPlanAdherenceScore())
+                        : null)
+                .avgChecklistCompletionPct(checklistCount > 0 && agg.getAvgChecklistCompletionPct() != null
+                        ? round2(agg.getAvgChecklistCompletionPct())
+                        : null)
+                .avgExecutionScore(execCount > 0 && agg.getAvgExecutionScore() != null
+                        ? round2(agg.getAvgExecutionScore())
+                        : null)
+                .sampleSize(sampleSize)
+                .build();
+    }
+
+    private JournalAdherenceResponse getAdherenceInMemory(String userId, LocalDate start, LocalDate end, String portfolioId) {
+        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end, portfolioId);
 
         double adherenceSum = 0;
         int adherenceCount = 0;
@@ -523,14 +623,14 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    public JournalReportCardResponse getReportCard(String userId, LocalDate start, LocalDate end) {
+    public JournalReportCardResponse getReportCard(String userId, LocalDate start, LocalDate end, String portfolioId) {
         return JournalReportCardResponse.builder()
                 .from(start)
                 .to(end)
-                .summary(getSummary(userId, start, end))
-                .mistakes(getMistakesSummary(userId, start, end))
-                .adherence(getAdherence(userId, start, end))
-                .topLessons(getLessons(userId, start, end, 5))
+                .summary(getSummary(userId, start, end, portfolioId))
+                .mistakes(getMistakesSummary(userId, start, end, portfolioId))
+                .adherence(getAdherence(userId, start, end, portfolioId))
+                .topLessons(getLessons(userId, start, end, 5, portfolioId))
                 .build();
     }
 
@@ -622,8 +722,8 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    public String exportCsv(String userId, LocalDate start, LocalDate end) {
-        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end);
+    public String exportCsv(String userId, LocalDate start, LocalDate end, String portfolioId) {
+        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end, portfolioId);
         StringBuilder csv = new StringBuilder();
         csv.append("id,symbol,title,entryType,journalStatus,entryDate,tradeDirection,pnl,rMultiple,mistakeCategory,planAdherenceScore,checklistCompletionPct\n");
 
@@ -656,11 +756,11 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
         String status = StringUtils.hasText(request.getJournalStatus())
                 ? request.getJournalStatus()
-                : JournalStatus.COMPLETED.name();
+                : JournalStatus.DRAFT.name();
 
         List<TradeJournalEntryResponse> created = new ArrayList<>();
         for (String tradeId : request.getTradeIds()) {
-            created.add(createStubFromTrade(tradeId, status));
+            created.add(createStubFromTrade(tradeId, status, request.getPortfolioId()));
         }
         return created;
     }
@@ -710,7 +810,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
                     throw new IllegalArgumentException("tradeId is required");
                 }
                 if (createStubs) {
-                    createStubFromTrade(tradeId, JournalStatus.COMPLETED.name());
+                    createStubFromTrade(tradeId, JournalStatus.COMPLETED.name(), null);
                     created++;
                 }
             } catch (Exception e) {
@@ -729,13 +829,21 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
     // --- Helpers ---
 
-    private TradeJournalEntryResponse createStubFromTrade(String tradeId, String status) {
+    private TradeJournalEntryResponse createStubFromTrade(String tradeId, String status, String portfolioId) {
         String userId = UserContext.getUserIdOrThrow();
         LocalDateTime now = LocalDateTime.now();
+
+        List<TradeJournalEntry> existingEntries =
+                tradeJournalRepository.findByUserIdAndTradeIdOrderByEntryDateDesc(userId, tradeId);
+        if (!existingEntries.isEmpty()) {
+            return convertToResponse(existingEntries.get(0));
+        }
 
         TradeDetailsEntity trade = tradeDetailsRepository.findByTradeId(tradeId)
                 .orElseThrow(() -> new IllegalArgumentException("Trade not found with ID: " + tradeId));
         assertTradeOwnedByCurrentUser(trade);
+
+        String resolvedPortfolioId = StringUtils.hasText(portfolioId) ? portfolioId : trade.getPortfolioId();
 
         TradeExecution execution = new TradeExecution();
         if (trade.getEntryInfo() != null) {
@@ -762,6 +870,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         TradeJournalEntry entry = TradeJournalEntry.builder()
                 .id(UUID.randomUUID().toString())
                 .userId(userId)
+                .portfolioId(resolvedPortfolioId)
                 .tradeId(tradeId)
                 .title("Trade journal: " + (trade.getSymbol() != null ? trade.getSymbol() : tradeId))
                 .entryType(JournalEntryType.TRADE_JOURNAL.name())
@@ -1154,12 +1263,22 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         }
     }
 
-    private List<TradeJournalEntry> loadEntriesInRange(String userId, LocalDate start, LocalDate end) {
+    private List<TradeJournalEntry> loadEntriesInRange(
+            String userId, LocalDate start, LocalDate end, String portfolioId) {
         if (start == null || end == null) {
             throw new IllegalArgumentException("start and end dates are required");
         }
-        return tradeJournalRepository.findByUserIdAndEntryDateBetween(
-                userId, start.atStartOfDay(), end.atTime(LocalTime.MAX));
+        LocalDateTime rangeStart = start.atStartOfDay();
+        LocalDateTime rangeEnd = end.atTime(LocalTime.MAX);
+        if (StringUtils.hasText(portfolioId)) {
+            return tradeJournalRepository.findByUserIdAndPortfolioIdAndEntryDateBetween(
+                    userId, portfolioId, rangeStart, rangeEnd);
+        }
+        return tradeJournalRepository.findByUserIdAndEntryDateBetween(userId, rangeStart, rangeEnd);
+    }
+
+    private void syncContentPlain(TradeJournalEntry entry) {
+        entry.setContentPlain(JournalContentPlainText.extract(entry.getContent()));
     }
 
     private boolean isTradeLike(TradeJournalEntry e) {

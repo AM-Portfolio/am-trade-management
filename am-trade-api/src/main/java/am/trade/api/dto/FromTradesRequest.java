@@ -20,6 +20,9 @@ public class FromTradesRequest {
     @NotEmpty(message = "tradeIds are required")
     private List<String> tradeIds;
 
+    /** Optional portfolio scope; when omitted, each trade's portfolio is used. */
+    private String portfolioId;
+
     @Builder.Default
-    private String journalStatus = "COMPLETED";
+    private String journalStatus = "DRAFT";
 }

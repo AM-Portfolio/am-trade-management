@@ -149,10 +149,11 @@ public class TradeJournalController {
     @GetMapping("/summary")
     public ResponseEntity<Object> getSummary(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String portfolioId) {
         String userId = UserContext.getUserIdOrThrow();
         try {
-            return ResponseEntity.ok(tradeJournalService.getSummary(userId, startDate, endDate));
+            return ResponseEntity.ok(tradeJournalService.getSummary(userId, startDate, endDate, portfolioId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/api/v1/journal/summary"));
         }
@@ -162,10 +163,11 @@ public class TradeJournalController {
     @GetMapping("/mistakes/summary")
     public ResponseEntity<Object> getMistakesSummary(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String portfolioId) {
         String userId = UserContext.getUserIdOrThrow();
         try {
-            return ResponseEntity.ok(tradeJournalService.getMistakesSummary(userId, startDate, endDate));
+            return ResponseEntity.ok(tradeJournalService.getMistakesSummary(userId, startDate, endDate, portfolioId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(ErrorResponse.badRequest(e.getMessage(), "/api/v1/journal/mistakes/summary"));
@@ -177,10 +179,11 @@ public class TradeJournalController {
     public ResponseEntity<Object> getLessons(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(defaultValue = "10") int limit) {
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String portfolioId) {
         String userId = UserContext.getUserIdOrThrow();
         try {
-            return ResponseEntity.ok(tradeJournalService.getLessons(userId, startDate, endDate, limit));
+            return ResponseEntity.ok(tradeJournalService.getLessons(userId, startDate, endDate, limit, portfolioId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ErrorResponse.badRequest(e.getMessage(), "/api/v1/journal/lessons"));
         }
@@ -190,10 +193,11 @@ public class TradeJournalController {
     @GetMapping("/adherence")
     public ResponseEntity<Object> getAdherence(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String portfolioId) {
         String userId = UserContext.getUserIdOrThrow();
         try {
-            return ResponseEntity.ok(tradeJournalService.getAdherence(userId, startDate, endDate));
+            return ResponseEntity.ok(tradeJournalService.getAdherence(userId, startDate, endDate, portfolioId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(ErrorResponse.badRequest(e.getMessage(), "/api/v1/journal/adherence"));
@@ -204,10 +208,11 @@ public class TradeJournalController {
     @GetMapping("/report-card")
     public ResponseEntity<Object> getReportCard(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String portfolioId) {
         String userId = UserContext.getUserIdOrThrow();
         try {
-            return ResponseEntity.ok(tradeJournalService.getReportCard(userId, startDate, endDate));
+            return ResponseEntity.ok(tradeJournalService.getReportCard(userId, startDate, endDate, portfolioId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(ErrorResponse.badRequest(e.getMessage(), "/api/v1/journal/report-card"));
@@ -218,10 +223,11 @@ public class TradeJournalController {
     @GetMapping("/export")
     public ResponseEntity<Object> exportCsv(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String portfolioId) {
         String userId = UserContext.getUserIdOrThrow();
         try {
-            String csv = tradeJournalService.exportCsv(userId, startDate, endDate);
+            String csv = tradeJournalService.exportCsv(userId, startDate, endDate, portfolioId);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"journal-export.csv\"")
                     .contentType(MediaType.parseMediaType("text/csv"))
