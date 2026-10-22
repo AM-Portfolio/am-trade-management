@@ -1,6 +1,7 @@
 package am.trade.api.client;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
@@ -29,6 +30,7 @@ public class AmPortfolioDeleteClient {
     private final String baseUrl;
     private final String internalSecret;
 
+    @Autowired
     public AmPortfolioDeleteClient(
             RestTemplateBuilder restTemplateBuilder,
             @Value("${am.portfolio.service.url:http://am-portfolio:8080}") String baseUrl,
