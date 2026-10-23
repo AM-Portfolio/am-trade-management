@@ -6,12 +6,15 @@ import am.trade.common.models.AssetAllocation;
 import am.trade.common.models.TradeDetails;
 import am.trade.services.service.PortfolioService;
 import am.trade.services.service.TradeDetailsService;
+import com.am.security.context.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -55,7 +58,8 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             log.warn("Portfolio not found with ID: {}", portfolioId);
             throw new IllegalArgumentException("Portfolio not found with ID: " + portfolioId);
         }
-        
+
+        assertCallerOwnsOrDemo(portfolio.get());
         return portfolio.get();
     }
 
@@ -74,7 +78,8 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             log.warn("Portfolio not found with ID: {}", portfolioId);
             throw new IllegalArgumentException("Portfolio not found with ID: " + portfolioId);
         }
-        
+
+        assertCallerOwnsOrDemo(portfolio.get());
         return portfolio.get().getAssetAllocations();
     }
 
@@ -102,6 +107,8 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             throw new IllegalArgumentException("Portfolio not found with ID: " + portfolioId);
         }
 
+        assertCallerOwnsOrDemo(portfolio.get());
+
         List<String> portfolioTradeIds = portfolio.get().getTradeIds();
 
         List<TradeDetails> trades = tradeDetailsService.findModelsByTradeIds(portfolioTradeIds);
@@ -110,10 +117,13 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         // This is a simplified version - actual implementation would depend on specific performance calculation logic
         Map<LocalDate, Double> performance = new HashMap<>();
         
-        // Get trades in the date range
+        // Get trades in the date range (skip null tradeDate to avoid NPE)
         List<TradeDetails> relevantTrades = trades.stream()
             .filter(trade -> {
                 LocalDate tradeDate = trade.getTradeDate();
+                if (tradeDate == null) {
+                    return false;
+                }
                 return !tradeDate.isBefore(startDate) && !tradeDate.isAfter(endDate);
             })
             .collect(Collectors.toList());
@@ -130,6 +140,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             // Add current day's profit/loss to cumulative performance
             List<TradeDetails> dailyTrades = tradesByDate.getOrDefault(currentDate, new ArrayList<>());
             Double dailyProfitLoss = dailyTrades.stream()
+                .filter(trade -> trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null)
                 .mapToDouble(trade -> trade.getMetrics().getProfitLoss().doubleValue())
                 .sum();
             
@@ -311,6 +322,25 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             return tradesA > tradesB ? a : b;
         }
         return a;
+    }
+
+    /**
+     * Caller must own the portfolio, or it must be the shared demo book.
+     */
+    void assertCallerOwnsOrDemo(PortfolioModel portfolio) {
+        if (portfolio == null) {
+            throw new IllegalArgumentException("Portfolio not found");
+        }
+        if (isDemoPortfolioId(portfolio.getPortfolioId())) {
+            return;
+        }
+        String caller = UserContext.getUserIdOrThrow();
+        if (!Objects.equals(caller, portfolio.getOwnerId())) {
+            log.warn("User {} denied access to portfolio {} owned by {}",
+                    caller, portfolio.getPortfolioId(), portfolio.getOwnerId());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You are not authorized to view this portfolio");
+        }
     }
 
     private boolean isDemoConfigured() {

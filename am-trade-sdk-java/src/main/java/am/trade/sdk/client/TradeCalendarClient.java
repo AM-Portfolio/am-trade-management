@@ -3,6 +3,7 @@ package am.trade.sdk.client;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import am.trade.common.models.CalendarLatestActivity;
 import am.trade.models.shared.TradeDetails;
 
 @FeignClient(name = "am-trade-management-service", url = "${am.trade.management.url:http://am-trade-management-service:8080}", path = "/api/v1/trades")
@@ -43,6 +45,14 @@ public interface TradeCalendarClient {
     Map<String, List<TradeDetails>> getTradeDetailsByDateRange(
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "portfolioId", required = false) String portfolioId);
+
+    /**
+     * Latest trade date for calendar default-open. Server returns 204 when empty;
+     * OpenFeign maps that to {@link Optional#empty()}.
+     */
+    @GetMapping("/calendar/latest-activity")
+    Optional<CalendarLatestActivity> getLatestCalendarActivity(
             @RequestParam(value = "portfolioId", required = false) String portfolioId);
 
     @GetMapping("/portfolio-details/{portfolioId}")

@@ -1,5 +1,6 @@
 package am.trade.api.controller;
 
+import am.trade.common.models.CalendarLatestActivity;
 import am.trade.common.models.TradeDetails;
 import am.trade.api.service.TradeManagementService;
 
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * REST controller for trade management operations
@@ -165,6 +167,27 @@ public class TradeManagementController {
         Map<String, List<TradeDetails>> tradeDetails = tradeManagementService.getTradeDetailsByDateRange(startDate,
                 endDate, portfolioId);
         return ResponseEntity.ok(tradeDetails);
+    }
+
+    /**
+     * Get the most recent trade year/month for opening the calendar UI.
+     *
+     * @param portfolioId Optional portfolio ID to scope the lookup
+     * @return Latest activity metadata, or 204 when the user has no trades
+     */
+    @Operation(summary = "Get latest trade activity for calendar default open")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Latest activity retrieved successfully"),
+            @ApiResponse(responseCode = "204", description = "No trades found for the user/portfolio"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/calendar/latest-activity")
+    public ResponseEntity<CalendarLatestActivity> getLatestCalendarActivity(
+            @Parameter(description = "Optional portfolio ID to filter trades") @RequestParam(required = false) String portfolioId) {
+
+        log.info("Fetching latest calendar activity for portfolio: {}", portfolioId);
+        Optional<CalendarLatestActivity> activity = tradeManagementService.getLatestCalendarActivity(portfolioId);
+        return activity.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     /**

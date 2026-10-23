@@ -3,9 +3,12 @@ package am.trade.api.service.impl;
 import am.trade.api.dto.*;
 import am.trade.api.service.TradeJournalService;
 import am.trade.common.models.*;
+import am.trade.common.util.JournalContentPlainText;
 import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.repository.TradeDetailsRepository;
+import am.trade.persistence.repository.JournalAnalyticsAggregation;
 import am.trade.persistence.repository.TradeJournalRepository;
+import am.trade.services.service.PortfolioPersistenceService;
 import com.am.security.context.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,18 +37,33 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
     private static final Set<String> FOLLOWED_TRUE = Set.of("YES", "TRUE", "Y", "1");
 
+    /**
+     * Cache key MUST include the caller userId. Keying only by entryId allowed
+     * cross-user IDOR on cache hit (ownership check skipped).
+     */
+    private static final String JOURNAL_CACHE = "trade-journals";
+    private static final String JOURNAL_CACHE_KEY =
+            "T(com.am.security.context.UserContext).getUserIdOrThrow() + '::' + #entryId";
+    private static final String JOURNAL_CACHE_KEY_RESULT =
+            "T(com.am.security.context.UserContext).getUserIdOrThrow() + '::' + #result.id";
+
     private final TradeJournalRepository tradeJournalRepository;
     private final TradeDetailsRepository tradeDetailsRepository;
+    private final PortfolioPersistenceService portfolioPersistenceService;
 
     @Override
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY_RESULT)
     public TradeJournalEntryResponse createJournalEntry(TradeJournalEntryRequest request) {
         log.debug("Creating journal entry for user: {}", UserContext.getUserIdOrThrow());
 
         validateRequest(request);
         assertTradeIdOwnedIfPresent(request.getTradeId());
+        assertPortfolioOwnedIfPresent(request.getPortfolioId());
+        assertPortfolioMatchesTradeIfBothPresent(request.getPortfolioId(), request.getTradeId());
 
         TradeJournalEntry entry = convertToEntity(request);
         entry.setId(UUID.randomUUID().toString());
+        syncContentPlain(entry);
 
         applyAutoCalculations(entry);
 
@@ -60,9 +78,10 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @Cacheable(value = "trade-journals", key = "#entryId")
+    @Cacheable(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse getJournalEntry(String entryId) {
         log.debug("Getting journal entry with ID: {}", entryId);
+        // Always authorize — cache key is user-scoped so a hit cannot serve another user's entry.
         TradeJournalEntry entry = findOwnedEntry(entryId);
         return convertToResponse(entry);
     }
@@ -85,6 +104,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
             String playbookId,
             List<String> tagIds,
             String tradeId,
+            String portfolioId,
             LocalDate startDate,
             LocalDate endDate,
             String q,
@@ -95,7 +115,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
         return tradeJournalRepository.searchEntries(
                         userId, journalStatus, entryType, symbol, setup, folderId, playbookId,
-                        tagIds, tradeId, start, end, q, pageable)
+                        tagIds, tradeId, portfolioId, start, end, q, pageable)
                 .map(this::convertToResponse);
     }
 
@@ -111,9 +131,22 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     @Override
     public Page<TradeJournalEntryResponse> getJournalEntriesByDateRange(
             String userId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        return getJournalEntriesByDateRange(userId, startDate, endDate, null, pageable);
+    }
+
+    @Override
+    public Page<TradeJournalEntryResponse> getJournalEntriesByDateRange(
+            String userId, LocalDate startDate, LocalDate endDate, String portfolioId, Pageable pageable) {
 
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+        if (StringUtils.hasText(portfolioId)) {
+            return tradeJournalRepository
+                    .findByUserIdAndPortfolioIdAndEntryDateBetweenOrderByEntryDateDesc(
+                            userId, portfolioId, startDateTime, endDateTime, pageable)
+                    .map(this::convertToResponse);
+        }
 
         return tradeJournalRepository
                 .findByUserIdAndEntryDateBetweenOrderByEntryDateDesc(userId, startDateTime, endDateTime, pageable)
@@ -121,11 +154,13 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse updateJournalEntry(String entryId, TradeJournalEntryRequest request) {
         log.debug("Updating journal entry with ID: {}", entryId);
         validateRequest(request);
         assertTradeIdOwnedIfPresent(request.getTradeId());
+        assertPortfolioOwnedIfPresent(request.getPortfolioId());
+        assertPortfolioMatchesTradeIfBothPresent(request.getPortfolioId(), request.getTradeId());
 
         TradeJournalEntry existingEntry = findOwnedEntry(entryId);
 
@@ -135,6 +170,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         }
         if (request.getContent() != null) {
             existingEntry.setContent(request.getContent());
+            syncContentPlain(existingEntry);
         }
         if (request.getEntryType() != null) {
             existingEntry.setEntryType(request.getEntryType());
@@ -156,6 +192,9 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         }
         if (request.getPlaybookId() != null) {
             existingEntry.setPlaybookId(request.getPlaybookId());
+        }
+        if (request.getPortfolioId() != null) {
+            existingEntry.setPortfolioId(request.getPortfolioId());
         }
         if (StringUtils.hasText(request.getTradeId())) {
             existingEntry.setTradeId(request.getTradeId());
@@ -220,7 +259,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CacheEvict(value = "trade-journals", key = "#entryId")
+    @CacheEvict(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public void deleteJournalEntry(String entryId) {
         log.debug("Deleting journal entry with ID: {}", entryId);
         findOwnedEntry(entryId);
@@ -229,7 +268,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse updatePrePlan(String entryId, PreTradePlan preTradePlan) {
         log.debug("Updating pre-trade plan for journal entry ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
@@ -244,7 +283,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse updateExecution(String entryId, TradeExecution tradeExecution) {
         log.debug("Updating trade execution for journal entry ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
@@ -263,7 +302,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse updatePostReview(
             String entryId, PostTradeReview postTradeReview, Boolean markCompleted) {
         log.debug("Updating post-trade review for journal entry ID: {}", entryId);
@@ -280,7 +319,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse linkTrade(String entryId, String tradeId) {
         log.debug("Linking trade ID: {} to journal entry ID: {}", tradeId, entryId);
         if (!StringUtils.hasText(tradeId)) {
@@ -343,8 +382,37 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    public JournalSummaryResponse getSummary(String userId, LocalDate start, LocalDate end) {
-        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end);
+    public JournalSummaryResponse getSummary(String userId, LocalDate start, LocalDate end, String portfolioId) {
+        try {
+            LocalDateTime rangeStart = start.atStartOfDay();
+            LocalDateTime rangeEnd = end.atTime(LocalTime.MAX);
+            return tradeJournalRepository
+                    .aggregateSummary(userId, rangeStart, rangeEnd, portfolioId)
+                    .map(this::mapSummaryAggregation)
+                    .orElseGet(() -> getSummaryInMemory(userId, start, end, portfolioId));
+        } catch (Exception ex) {
+            log.warn("Journal summary aggregation failed, using in-memory fallback: {}", ex.getMessage());
+            return getSummaryInMemory(userId, start, end, portfolioId);
+        }
+    }
+
+    private JournalSummaryResponse mapSummaryAggregation(JournalAnalyticsAggregation.Summary agg) {
+        int pnlCount = agg.getPnlCount();
+        int rrCount = agg.getRrCount();
+        return JournalSummaryResponse.builder()
+                .totalTrades(agg.getTotalTrades())
+                .totalPnl(pnlCount > 0 ? round2(agg.getTotalPnl()) : 0.0)
+                .winRate(pnlCount > 0 ? round2((agg.getWins() * 100.0) / pnlCount) : null)
+                .avgRR(rrCount > 0 ? round2(agg.getRrSum() / rrCount) : null)
+                .plannedCount(agg.getPlannedCount())
+                .openCount(agg.getOpenCount())
+                .completedCount(agg.getCompletedCount())
+                .archivedCount(agg.getArchivedCount())
+                .build();
+    }
+
+    private JournalSummaryResponse getSummaryInMemory(String userId, LocalDate start, LocalDate end, String portfolioId) {
+        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end, portfolioId);
 
         long planned = 0, open = 0, completed = 0, archived = 0;
         double totalPnl = 0;
@@ -397,8 +465,44 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    public List<MistakeAnalysisResponse> getMistakesSummary(String userId, LocalDate start, LocalDate end) {
-        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end);
+    public List<MistakeAnalysisResponse> getMistakesSummary(String userId, LocalDate start, LocalDate end, String portfolioId) {
+        try {
+            LocalDateTime rangeStart = start.atStartOfDay();
+            LocalDateTime rangeEnd = end.atTime(LocalTime.MAX);
+            JournalAnalyticsAggregation.MistakesResult agg =
+                    tradeJournalRepository.aggregateMistakes(userId, rangeStart, rangeEnd, portfolioId);
+            return mapMistakesAggregation(agg);
+        } catch (Exception ex) {
+            log.warn("Journal mistakes aggregation failed, using in-memory fallback: {}", ex.getMessage());
+            return getMistakesSummaryInMemory(userId, start, end, portfolioId);
+        }
+    }
+
+    private List<MistakeAnalysisResponse> mapMistakesAggregation(
+            JournalAnalyticsAggregation.MistakesResult agg) {
+        final long totalLosses = agg.getTotalLosses();
+        List<MistakeAnalysisResponse> results = new ArrayList<>();
+        for (JournalAnalyticsAggregation.MistakeGroup group : agg.getGroups()) {
+            long count = group.getOccurrenceCount();
+            double impact = group.getTotalPnlImpact();
+            long lossOccurrences = group.getLossOccurrences();
+            results.add(MistakeAnalysisResponse.builder()
+                    .mistakeCategory(group.getMistakeCategory())
+                    .occurrenceCount(count)
+                    .totalPnlImpact(round2(impact))
+                    .avgPnlPerOccurrence(count > 0 ? round2(impact / count) : 0.0)
+                    .percentageOfLosses(totalLosses > 0
+                            ? round2((lossOccurrences * 100.0) / totalLosses)
+                            : 0.0)
+                    .build());
+        }
+        results.sort(Comparator.comparingLong(MistakeAnalysisResponse::getOccurrenceCount).reversed());
+        return results;
+    }
+
+    private List<MistakeAnalysisResponse> getMistakesSummaryInMemory(
+            String userId, LocalDate start, LocalDate end, String portfolioId) {
+        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end, portfolioId);
 
         Map<String, List<TradeJournalEntry>> byMistake = new LinkedHashMap<>();
         long lossCount = 0;
@@ -450,15 +554,13 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    public List<LessonLearnedResponse> getLessons(String userId, LocalDate start, LocalDate end, int limit) {
+    public List<LessonLearnedResponse> getLessons(String userId, LocalDate start, LocalDate end, int limit, String portfolioId) {
         int effectiveLimit = limit > 0 ? limit : 10;
-        return loadEntriesInRange(userId, start, end).stream()
-                .filter(e -> e.getPostTradeReview() != null
-                        && StringUtils.hasText(e.getPostTradeReview().getLessonLearned()))
-                .sorted(Comparator.comparing(
-                        (TradeJournalEntry e) -> e.getEntryDate() != null ? e.getEntryDate() : LocalDateTime.MIN)
-                        .reversed())
-                .limit(effectiveLimit)
+        LocalDateTime rangeStart = start.atStartOfDay();
+        LocalDateTime rangeEnd = end.atTime(LocalTime.MAX);
+        return tradeJournalRepository
+                .findLessonsInRange(userId, rangeStart, rangeEnd, portfolioId, effectiveLimit)
+                .stream()
                 .map(e -> LessonLearnedResponse.builder()
                         .entryId(e.getId())
                         .symbol(e.getSymbol())
@@ -471,8 +573,41 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    public JournalAdherenceResponse getAdherence(String userId, LocalDate start, LocalDate end) {
-        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end);
+    public JournalAdherenceResponse getAdherence(String userId, LocalDate start, LocalDate end, String portfolioId) {
+        try {
+            LocalDateTime rangeStart = start.atStartOfDay();
+            LocalDateTime rangeEnd = end.atTime(LocalTime.MAX);
+            return tradeJournalRepository
+                    .aggregateAdherence(userId, rangeStart, rangeEnd, portfolioId)
+                    .map(this::mapAdherenceAggregation)
+                    .orElseGet(() -> getAdherenceInMemory(userId, start, end, portfolioId));
+        } catch (Exception ex) {
+            log.warn("Journal adherence aggregation failed, using in-memory fallback: {}", ex.getMessage());
+            return getAdherenceInMemory(userId, start, end, portfolioId);
+        }
+    }
+
+    private JournalAdherenceResponse mapAdherenceAggregation(JournalAnalyticsAggregation.Adherence agg) {
+        int adherenceCount = agg.getAdherenceCount();
+        int checklistCount = agg.getChecklistCount();
+        int execCount = agg.getExecCount();
+        long sampleSize = Math.max(adherenceCount, Math.max(checklistCount, execCount));
+        return JournalAdherenceResponse.builder()
+                .avgPlanAdherenceScore(adherenceCount > 0 && agg.getAvgPlanAdherenceScore() != null
+                        ? round2(agg.getAvgPlanAdherenceScore())
+                        : null)
+                .avgChecklistCompletionPct(checklistCount > 0 && agg.getAvgChecklistCompletionPct() != null
+                        ? round2(agg.getAvgChecklistCompletionPct())
+                        : null)
+                .avgExecutionScore(execCount > 0 && agg.getAvgExecutionScore() != null
+                        ? round2(agg.getAvgExecutionScore())
+                        : null)
+                .sampleSize(sampleSize)
+                .build();
+    }
+
+    private JournalAdherenceResponse getAdherenceInMemory(String userId, LocalDate start, LocalDate end, String portfolioId) {
+        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end, portfolioId);
 
         double adherenceSum = 0;
         int adherenceCount = 0;
@@ -507,19 +642,19 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    public JournalReportCardResponse getReportCard(String userId, LocalDate start, LocalDate end) {
+    public JournalReportCardResponse getReportCard(String userId, LocalDate start, LocalDate end, String portfolioId) {
         return JournalReportCardResponse.builder()
                 .from(start)
                 .to(end)
-                .summary(getSummary(userId, start, end))
-                .mistakes(getMistakesSummary(userId, start, end))
-                .adherence(getAdherence(userId, start, end))
-                .topLessons(getLessons(userId, start, end, 5))
+                .summary(getSummary(userId, start, end, portfolioId))
+                .mistakes(getMistakesSummary(userId, start, end, portfolioId))
+                .adherence(getAdherence(userId, start, end, portfolioId))
+                .topLessons(getLessons(userId, start, end, 5, portfolioId))
                 .build();
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse addAttachment(String entryId, JournalAttachmentRequest request) {
         log.debug("Adding attachment to journal entry ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
@@ -546,7 +681,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    @CachePut(value = "trade-journals", key = "#entryId")
+    @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY)
     public TradeJournalEntryResponse removeAttachment(String entryId, String fileUrl) {
         log.debug("Removing attachment from journal entry ID: {}", entryId);
         TradeJournalEntry entry = findOwnedEntry(entryId);
@@ -564,6 +699,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CacheEvict(value = JOURNAL_CACHE, allEntries = true)
     public int bulkArchive(String userId, List<String> entryIds) {
         List<TradeJournalEntry> entries = tradeJournalRepository.findByUserIdAndIdIn(userId, entryIds);
         LocalDateTime now = LocalDateTime.now();
@@ -576,6 +712,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CacheEvict(value = JOURNAL_CACHE, allEntries = true)
     public int bulkDelete(String userId, List<String> entryIds) {
         List<TradeJournalEntry> entries = tradeJournalRepository.findByUserIdAndIdIn(userId, entryIds);
         tradeJournalRepository.deleteAll(entries);
@@ -583,6 +720,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @CacheEvict(value = JOURNAL_CACHE, allEntries = true)
     public int bulkAddTags(String userId, List<String> entryIds, List<String> tagIds) {
         if (tagIds == null || tagIds.isEmpty()) {
             return 0;
@@ -603,8 +741,8 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
-    public String exportCsv(String userId, LocalDate start, LocalDate end) {
-        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end);
+    public String exportCsv(String userId, LocalDate start, LocalDate end, String portfolioId) {
+        List<TradeJournalEntry> entries = loadEntriesInRange(userId, start, end, portfolioId);
         StringBuilder csv = new StringBuilder();
         csv.append("id,symbol,title,entryType,journalStatus,entryDate,tradeDirection,pnl,rMultiple,mistakeCategory,planAdherenceScore,checklistCompletionPct\n");
 
@@ -637,11 +775,11 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
         String status = StringUtils.hasText(request.getJournalStatus())
                 ? request.getJournalStatus()
-                : JournalStatus.COMPLETED.name();
+                : JournalStatus.DRAFT.name();
 
         List<TradeJournalEntryResponse> created = new ArrayList<>();
         for (String tradeId : request.getTradeIds()) {
-            created.add(createStubFromTrade(tradeId, status));
+            created.add(createStubFromTrade(tradeId, status, request.getPortfolioId()));
         }
         return created;
     }
@@ -691,7 +829,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
                     throw new IllegalArgumentException("tradeId is required");
                 }
                 if (createStubs) {
-                    createStubFromTrade(tradeId, JournalStatus.COMPLETED.name());
+                    createStubFromTrade(tradeId, JournalStatus.DRAFT.name(), null);
                     created++;
                 }
             } catch (Exception e) {
@@ -710,7 +848,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
     // --- Helpers ---
 
-    private TradeJournalEntryResponse createStubFromTrade(String tradeId, String status) {
+    private TradeJournalEntryResponse createStubFromTrade(String tradeId, String status, String portfolioId) {
         String userId = UserContext.getUserIdOrThrow();
         LocalDateTime now = LocalDateTime.now();
 
@@ -718,9 +856,71 @@ public class TradeJournalServiceImpl implements TradeJournalService {
                 .orElseThrow(() -> new IllegalArgumentException("Trade not found with ID: " + tradeId));
         assertTradeOwnedByCurrentUser(trade);
 
-        TradeExecution execution = new TradeExecution();
+        if (StringUtils.hasText(portfolioId) && StringUtils.hasText(trade.getPortfolioId())
+                && !portfolioId.equals(trade.getPortfolioId())) {
+            throw new IllegalArgumentException("portfolioId must match the trade's portfolio");
+        }
+        String resolvedPortfolioId = StringUtils.hasText(portfolioId) ? portfolioId : trade.getPortfolioId();
+        assertPortfolioOwnedIfPresent(resolvedPortfolioId);
+
+        List<TradeJournalEntry> existingEntries =
+                tradeJournalRepository.findByUserIdAndTradeIdOrderByEntryDateDesc(userId, tradeId);
+        if (!existingEntries.isEmpty()) {
+            // Keep newest; drop duplicates from racey creates
+            for (int i = 1; i < existingEntries.size(); i++) {
+                tradeJournalRepository.delete(existingEntries.get(i));
+            }
+            TradeJournalEntry existing = existingEntries.get(0);
+            // DRAFT stubs: refresh trade-sourced fields only (never wipe notes/tags/outcome)
+            if (existing.getJournalStatus() == null
+                    || JournalStatus.DRAFT.name().equalsIgnoreCase(existing.getJournalStatus())) {
+                applyTradeSourcedFields(existing, trade, false);
+                existing.setUpdatedAt(now);
+                applyAutoCalculations(existing);
+                return convertToResponse(tradeJournalRepository.save(existing));
+            }
+            return convertToResponse(existing);
+        }
+
+        TradeJournalEntry entry = TradeJournalEntry.builder()
+                .id(UUID.randomUUID().toString())
+                .userId(userId)
+                .portfolioId(resolvedPortfolioId)
+                .tradeId(tradeId)
+                .title("Trade journal: " + (trade.getSymbol() != null ? trade.getSymbol() : tradeId))
+                .entryType(JournalEntryType.TRADE_JOURNAL.name())
+                .journalStatus(status)
+                .entryDate(trade.getEntryInfo() != null && trade.getEntryInfo().getTimestamp() != null
+                        ? trade.getEntryInfo().getTimestamp()
+                        : now)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+        applyTradeSourcedFields(entry, trade, true);
+        applyAutoCalculations(entry);
+        return convertToResponse(tradeJournalRepository.save(entry));
+    }
+
+    /**
+     * Copies buy/sell/PnL/symbol/direction from the trade. Never clears content, tags, or
+     * user-set review narrative fields. When {@code replaceReviewShell} is false, only fills
+     * null execution/review numeric/time fields and always updates symbol/direction/PnL/prices.
+     */
+    private void applyTradeSourcedFields(
+            TradeJournalEntry entry, TradeDetailsEntity trade, boolean replaceReviewShell) {
+        entry.setSymbol(trade.getSymbol());
+        if (trade.getTradePositionType() != null) {
+            entry.setTradeDirection(trade.getTradePositionType().name());
+        }
+
+        TradeExecution execution = entry.getTradeExecution() != null
+                ? entry.getTradeExecution()
+                : new TradeExecution();
         if (trade.getEntryInfo() != null) {
-            execution.setEntryDateTime(trade.getEntryInfo().getTimestamp());
+            if (trade.getEntryInfo().getTimestamp() != null
+                    && (replaceReviewShell || execution.getEntryDateTime() == null)) {
+                execution.setEntryDateTime(trade.getEntryInfo().getTimestamp());
+            }
             if (trade.getEntryInfo().getPrice() != null) {
                 execution.setActualEntryPrice(trade.getEntryInfo().getPrice().doubleValue());
             }
@@ -728,10 +928,16 @@ public class TradeJournalServiceImpl implements TradeJournalService {
                 execution.setQuantity(trade.getEntryInfo().getQuantity().doubleValue());
             }
         }
+        entry.setTradeExecution(execution);
 
-        PostTradeReview review = new PostTradeReview();
+        PostTradeReview review = entry.getPostTradeReview() != null
+                ? entry.getPostTradeReview()
+                : new PostTradeReview();
         if (trade.getExitInfo() != null) {
-            review.setExitDateTime(trade.getExitInfo().getTimestamp());
+            if (trade.getExitInfo().getTimestamp() != null
+                    && (replaceReviewShell || review.getExitDateTime() == null)) {
+                review.setExitDateTime(trade.getExitInfo().getTimestamp());
+            }
             if (trade.getExitInfo().getPrice() != null) {
                 review.setActualExitPrice(trade.getExitInfo().getPrice().doubleValue());
             }
@@ -739,27 +945,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
             review.setActualPnl(trade.getMetrics().getProfitLoss().doubleValue());
         }
-
-        TradeJournalEntry entry = TradeJournalEntry.builder()
-                .id(UUID.randomUUID().toString())
-                .userId(userId)
-                .tradeId(tradeId)
-                .title("Trade journal: " + (trade.getSymbol() != null ? trade.getSymbol() : tradeId))
-                .entryType(JournalEntryType.TRADE_JOURNAL.name())
-                .journalStatus(status)
-                .symbol(trade.getSymbol())
-                .tradeDirection(trade.getTradePositionType() != null ? trade.getTradePositionType().name() : null)
-                .tradeExecution(execution)
-                .postTradeReview(review)
-                .entryDate(trade.getEntryInfo() != null && trade.getEntryInfo().getTimestamp() != null
-                        ? trade.getEntryInfo().getTimestamp()
-                        : now)
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
-
-        applyAutoCalculations(entry);
-        return convertToResponse(tradeJournalRepository.save(entry));
+        entry.setPostTradeReview(review);
     }
 
     private PreTradePlan mergePreTradePlan(PreTradePlan existing, PreTradePlan incoming) {
@@ -916,6 +1102,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     TradeJournalEntry convertToEntity(TradeJournalEntryRequest request) {
         return TradeJournalEntry.builder()
                 .userId(UserContext.getUserIdOrThrow())
+                .portfolioId(request.getPortfolioId())
                 .tradeId(request.getTradeId())
                 .title(request.getTitle())
                 .content(request.getContent())
@@ -949,6 +1136,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         return TradeJournalEntryResponse.builder()
                 .id(entry.getId())
                 .userId(entry.getUserId())
+                .portfolioId(entry.getPortfolioId())
                 .tradeId(entry.getTradeId())
                 .title(entry.getTitle())
                 .content(entry.getContent())
@@ -1133,12 +1321,47 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         }
     }
 
-    private List<TradeJournalEntry> loadEntriesInRange(String userId, LocalDate start, LocalDate end) {
+    private void assertPortfolioOwnedIfPresent(String portfolioId) {
+        if (!StringUtils.hasText(portfolioId)) {
+            return;
+        }
+        String userId = UserContext.getUserIdOrThrow();
+        Optional<PortfolioModel> portfolio = portfolioPersistenceService.findByPortfolioId(portfolioId);
+        if (portfolio.isEmpty()) {
+            throw new IllegalArgumentException("Portfolio not found with ID: " + portfolioId);
+        }
+        if (!userId.equals(portfolio.get().getOwnerId())) {
+            throw new IllegalArgumentException("You are not authorized to use this portfolio");
+        }
+    }
+
+    private void assertPortfolioMatchesTradeIfBothPresent(String portfolioId, String tradeId) {
+        if (!StringUtils.hasText(portfolioId) || !StringUtils.hasText(tradeId)) {
+            return;
+        }
+        TradeDetailsEntity trade = tradeDetailsRepository.findByTradeId(tradeId)
+                .orElseThrow(() -> new IllegalArgumentException("Trade not found with ID: " + tradeId));
+        if (StringUtils.hasText(trade.getPortfolioId()) && !portfolioId.equals(trade.getPortfolioId())) {
+            throw new IllegalArgumentException("portfolioId must match the trade's portfolio");
+        }
+    }
+
+    private List<TradeJournalEntry> loadEntriesInRange(
+            String userId, LocalDate start, LocalDate end, String portfolioId) {
         if (start == null || end == null) {
             throw new IllegalArgumentException("start and end dates are required");
         }
-        return tradeJournalRepository.findByUserIdAndEntryDateBetween(
-                userId, start.atStartOfDay(), end.atTime(LocalTime.MAX));
+        LocalDateTime rangeStart = start.atStartOfDay();
+        LocalDateTime rangeEnd = end.atTime(LocalTime.MAX);
+        if (StringUtils.hasText(portfolioId)) {
+            return tradeJournalRepository.findByUserIdAndPortfolioIdAndEntryDateBetween(
+                    userId, portfolioId, rangeStart, rangeEnd);
+        }
+        return tradeJournalRepository.findByUserIdAndEntryDateBetween(userId, rangeStart, rangeEnd);
+    }
+
+    private void syncContentPlain(TradeJournalEntry entry) {
+        entry.setContentPlain(JournalContentPlainText.extract(entry.getContent()));
     }
 
     private boolean isTradeLike(TradeJournalEntry e) {

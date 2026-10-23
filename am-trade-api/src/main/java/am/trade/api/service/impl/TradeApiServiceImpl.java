@@ -409,8 +409,8 @@ public class TradeApiServiceImpl implements TradeApiService {
         // Get current user ID
         String userId = UserContext.getUserIdOrThrow();
 
-        // Verify ownership
-        if (!existingTrade.getUserId().equals(userId)) {
+        // Verify ownership (null-safe for legacy imports missing userId)
+        if (!userId.equals(existingTrade.getUserId())) {
             log.error("User {} attempted to delete trade {} owned by {}", 
                     userId, tradeId, existingTrade.getUserId());
             throw new IllegalArgumentException("You are not authorized to delete this trade");

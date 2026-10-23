@@ -340,6 +340,32 @@ public class TradeDetailsServiceImpl implements TradeDetailsService {
     }
 
     @Override
+    public Optional<TradeDetails> findLatestByUserIdAndPortfolioId(String userId, String portfolioId) {
+        log.debug("Finding latest trade by user ID: {} and portfolio ID: {}", userId, portfolioId);
+        return tradeDetailsRepository
+                .findFirstByUserIdAndPortfolioIdOrderByEntryInfoTimestampDesc(userId, portfolioId)
+                .map(tradeDetailsMapper::toTradeDetails);
+    }
+
+    @Override
+    public Optional<TradeDetails> findLatestByUserId(String userId) {
+        log.debug("Finding latest trade by user ID: {}", userId);
+        return tradeDetailsRepository
+                .findFirstByUserIdOrderByEntryInfoTimestampDesc(userId)
+                .map(tradeDetailsMapper::toTradeDetails);
+    }
+
+    @Override
+    public Page<TradeDetails> findPageByUserId(String userId, Pageable pageable) {
+        log.debug("Finding paged trades by user ID: {}", userId);
+        Page<TradeDetailsEntity> entityPage = tradeDetailsRepository.findPageByUserId(userId, pageable);
+        List<TradeDetails> models = entityPage.getContent().stream()
+                .map(tradeDetailsMapper::toTradeDetails)
+                .collect(Collectors.toList());
+        return new PageImpl<>(models, pageable, entityPage.getTotalElements());
+    }
+
+    @Override
     public List<TradeDetails> findByPortfolioIdIn(List<String> portfolioIds) {
         log.debug("Finding trade details by portfolio IDs: {}", portfolioIds);
         return tradeDetailsRepository.findByPortfolioIdIn(portfolioIds).stream()

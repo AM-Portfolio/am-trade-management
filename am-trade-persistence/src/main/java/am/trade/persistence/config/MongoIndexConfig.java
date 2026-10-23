@@ -181,6 +181,20 @@ public class MongoIndexConfig {
         try {
             journalOps.ensureIndex(new Index()
                     .on("userId", Sort.Direction.ASC)
+                    .on("portfolioId", Sort.Direction.ASC)
+                    .on("entryDate", Sort.Direction.DESC)
+                    .named("idx_journal_user_portfolio_entry_date")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_user_portfolio_entry_date");
+        } catch (Exception e) {
+            failed++;
+            log.error("[ERROR] idx_journal_user_portfolio_entry_date FAILED", e);
+        }
+
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("userId", Sort.Direction.ASC)
                     .on("journalStatus", Sort.Direction.ASC)
                     .named("idx_journal_user_status")
                     .background());
@@ -214,6 +228,24 @@ public class MongoIndexConfig {
         } catch (Exception e) {
             failed++;
             log.error("[ERROR] idx_journal_trade_id FAILED", e);
+        }
+
+        // Unique (userId, tradeId) — sparse so daily/general notes without tradeId are allowed.
+        // Fails if duplicates already exist; createStubFromTrade dedupes on write.
+        try {
+            journalOps.ensureIndex(new Index()
+                    .on("userId", Sort.Direction.ASC)
+                    .on("tradeId", Sort.Direction.ASC)
+                    .unique()
+                    .sparse()
+                    .named("idx_journal_user_trade_id_unique")
+                    .background());
+            created++;
+            log.info("[OK] idx_journal_user_trade_id_unique");
+        } catch (Exception e) {
+            failed++;
+            log.warn("[WARN] idx_journal_user_trade_id_unique FAILED — dedupe journal stubs then restart. {}",
+                    e.getMessage());
         }
 
         try {

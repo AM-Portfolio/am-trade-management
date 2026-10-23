@@ -102,6 +102,21 @@ public interface TradeDetailsService {
     List<TradeDetails> findByUserIdAndPortfolioIdAndEntryInfoTimestampBetween(String userId, String portfolioId, LocalDateTime startDate, LocalDateTime endDate);
 
     /**
+     * Find the single newest trade for a user and portfolio by {@code entryInfo.timestamp}.
+     */
+    Optional<TradeDetails> findLatestByUserIdAndPortfolioId(String userId, String portfolioId);
+
+    /**
+     * Find the single newest trade for a user by {@code entryInfo.timestamp}.
+     */
+    Optional<TradeDetails> findLatestByUserId(String userId);
+
+    /**
+     * Newest-first page of trades for a user (caller supplies sort via {@code pageable}).
+     */
+    Page<TradeDetails> findPageByUserId(String userId, Pageable pageable);
+
+    /**
      * Find trade details by user ID and entry timestamp between given dates
      * @param userId User ID to search for
      * @param startDate Start date for entry timestamp range

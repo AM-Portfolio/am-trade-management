@@ -51,11 +51,28 @@ class TradeJournalControllerTest {
     }
 
     @Test
-    void getJournalEntriesByUser_withUserContext_usesJournalUserPath() throws Exception {
-        when(tradeJournalService.getJournalEntriesByUser(eq("test-user-from-token"), any(Pageable.class)))
+    void getJournalEntriesByUser_withUserContext_usesSearchPath() throws Exception {
+        when(tradeJournalService.searchJournalEntries(
+                eq("test-user-from-token"),
+                any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
+                any(Pageable.class)))
                 .thenReturn(new PageImpl<>(Collections.emptyList()));
 
         mockMvc.perform(get("/v1/journal/user"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getJournalEntriesByUser_withPortfolioId_passesPortfolioToSearch() throws Exception {
+        when(tradeJournalService.searchJournalEntries(
+                eq("test-user-from-token"),
+                any(), any(), any(), any(), any(), any(), any(), any(),
+                eq("pf-1"),
+                any(), any(), any(),
+                any(Pageable.class)))
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        mockMvc.perform(get("/v1/journal/user").param("portfolioId", "pf-1"))
                 .andExpect(status().isOk());
     }
 }

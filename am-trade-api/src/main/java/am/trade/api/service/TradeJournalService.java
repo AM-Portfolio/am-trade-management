@@ -35,6 +35,7 @@ public interface TradeJournalService {
             String playbookId,
             List<String> tagIds,
             String tradeId,
+            String portfolioId,
             LocalDate startDate,
             LocalDate endDate,
             String q,
@@ -44,6 +45,9 @@ public interface TradeJournalService {
 
     Page<TradeJournalEntryResponse> getJournalEntriesByDateRange(
             String userId, LocalDate startDate, LocalDate endDate, Pageable pageable);
+
+    Page<TradeJournalEntryResponse> getJournalEntriesByDateRange(
+            String userId, LocalDate startDate, LocalDate endDate, String portfolioId, Pageable pageable);
 
     TradeJournalEntryResponse updateJournalEntry(String entryId, TradeJournalEntryRequest request);
 
@@ -57,15 +61,15 @@ public interface TradeJournalService {
 
     TradeJournalEntryResponse linkTrade(String entryId, String tradeId);
 
-    JournalSummaryResponse getSummary(String userId, LocalDate start, LocalDate end);
+    JournalSummaryResponse getSummary(String userId, LocalDate start, LocalDate end, String portfolioId);
 
-    List<MistakeAnalysisResponse> getMistakesSummary(String userId, LocalDate start, LocalDate end);
+    List<MistakeAnalysisResponse> getMistakesSummary(String userId, LocalDate start, LocalDate end, String portfolioId);
 
-    List<LessonLearnedResponse> getLessons(String userId, LocalDate start, LocalDate end, int limit);
+    List<LessonLearnedResponse> getLessons(String userId, LocalDate start, LocalDate end, int limit, String portfolioId);
 
-    JournalAdherenceResponse getAdherence(String userId, LocalDate start, LocalDate end);
+    JournalAdherenceResponse getAdherence(String userId, LocalDate start, LocalDate end, String portfolioId);
 
-    JournalReportCardResponse getReportCard(String userId, LocalDate start, LocalDate end);
+    JournalReportCardResponse getReportCard(String userId, LocalDate start, LocalDate end, String portfolioId);
 
     TradeJournalEntryResponse addAttachment(String entryId, JournalAttachmentRequest request);
 
@@ -79,7 +83,7 @@ public interface TradeJournalService {
 
     int bulkAddTags(String userId, List<String> entryIds, List<String> tagIds);
 
-    String exportCsv(String userId, LocalDate start, LocalDate end);
+    String exportCsv(String userId, LocalDate start, LocalDate end, String portfolioId);
 
     List<TradeJournalEntryResponse> createFromTrades(FromTradesRequest request);
 

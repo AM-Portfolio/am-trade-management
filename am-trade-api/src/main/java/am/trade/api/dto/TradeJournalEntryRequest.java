@@ -29,6 +29,9 @@ public class TradeJournalEntryRequest {
 
     private String tradeId; // Optional, can be null for general journal entries
 
+    /** Optional portfolio id when journaling inside a Trade portfolio context. */
+    private String portfolioId;
+
     @NotBlank(message = "Title is required")
     private String title;
 

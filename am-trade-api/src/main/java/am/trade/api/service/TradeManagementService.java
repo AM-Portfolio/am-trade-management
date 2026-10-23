@@ -1,5 +1,6 @@
 package am.trade.api.service;
 
+import am.trade.common.models.CalendarLatestActivity;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.TradeSummary;
 import am.trade.models.enums.TradeStatus;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Service interface for trade management operations including calendar-based analytics
@@ -64,6 +66,14 @@ public interface TradeManagementService {
      * @return Map of portfolio IDs to their trade details for the specified date range
      */
     Map<String, List<TradeDetails>> getTradeDetailsByDateRange(LocalDate startDate, LocalDate endDate, String portfolioId);
+
+    /**
+     * Resolve the most recent trade entry date for calendar default open (year/month).
+     *
+     * @param portfolioId Optional portfolio ID (null = all non-PAPER portfolios for the user)
+     * @return Latest activity metadata, or empty when the user has no trades
+     */
+    Optional<CalendarLatestActivity> getLatestCalendarActivity(String portfolioId);
     
     /**
      * Get paginated trade details for a specific portfolio
