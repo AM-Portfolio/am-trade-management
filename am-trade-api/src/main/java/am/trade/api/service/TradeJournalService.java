@@ -46,6 +46,9 @@ public interface TradeJournalService {
     Page<TradeJournalEntryResponse> getJournalEntriesByDateRange(
             String userId, LocalDate startDate, LocalDate endDate, Pageable pageable);
 
+    Page<TradeJournalEntryResponse> getJournalEntriesByDateRange(
+            String userId, LocalDate startDate, LocalDate endDate, String portfolioId, Pageable pageable);
+
     TradeJournalEntryResponse updateJournalEntry(String entryId, TradeJournalEntryRequest request);
 
     void deleteJournalEntry(String entryId);

@@ -8,6 +8,7 @@ import am.trade.persistence.entity.TradeDetailsEntity;
 import am.trade.persistence.repository.TradeDetailsRepository;
 import am.trade.persistence.repository.JournalAnalyticsAggregation;
 import am.trade.persistence.repository.TradeJournalRepository;
+import am.trade.services.service.PortfolioPersistenceService;
 import com.am.security.context.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
     private final TradeJournalRepository tradeJournalRepository;
     private final TradeDetailsRepository tradeDetailsRepository;
+    private final PortfolioPersistenceService portfolioPersistenceService;
 
     @Override
     @CachePut(value = JOURNAL_CACHE, key = JOURNAL_CACHE_KEY_RESULT)
@@ -56,6 +58,8 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
         validateRequest(request);
         assertTradeIdOwnedIfPresent(request.getTradeId());
+        assertPortfolioOwnedIfPresent(request.getPortfolioId());
+        assertPortfolioMatchesTradeIfBothPresent(request.getPortfolioId(), request.getTradeId());
 
         TradeJournalEntry entry = convertToEntity(request);
         entry.setId(UUID.randomUUID().toString());
@@ -127,9 +131,22 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     @Override
     public Page<TradeJournalEntryResponse> getJournalEntriesByDateRange(
             String userId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        return getJournalEntriesByDateRange(userId, startDate, endDate, null, pageable);
+    }
+
+    @Override
+    public Page<TradeJournalEntryResponse> getJournalEntriesByDateRange(
+            String userId, LocalDate startDate, LocalDate endDate, String portfolioId, Pageable pageable) {
 
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+        if (StringUtils.hasText(portfolioId)) {
+            return tradeJournalRepository
+                    .findByUserIdAndPortfolioIdAndEntryDateBetweenOrderByEntryDateDesc(
+                            userId, portfolioId, startDateTime, endDateTime, pageable)
+                    .map(this::convertToResponse);
+        }
 
         return tradeJournalRepository
                 .findByUserIdAndEntryDateBetweenOrderByEntryDateDesc(userId, startDateTime, endDateTime, pageable)
@@ -142,6 +159,8 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         log.debug("Updating journal entry with ID: {}", entryId);
         validateRequest(request);
         assertTradeIdOwnedIfPresent(request.getTradeId());
+        assertPortfolioOwnedIfPresent(request.getPortfolioId());
+        assertPortfolioMatchesTradeIfBothPresent(request.getPortfolioId(), request.getTradeId());
 
         TradeJournalEntry existingEntry = findOwnedEntry(entryId);
 
@@ -810,7 +829,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
                     throw new IllegalArgumentException("tradeId is required");
                 }
                 if (createStubs) {
-                    createStubFromTrade(tradeId, JournalStatus.COMPLETED.name(), null);
+                    createStubFromTrade(tradeId, JournalStatus.DRAFT.name(), null);
                     created++;
                 }
             } catch (Exception e) {
@@ -833,38 +852,34 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         String userId = UserContext.getUserIdOrThrow();
         LocalDateTime now = LocalDateTime.now();
 
-        List<TradeJournalEntry> existingEntries =
-                tradeJournalRepository.findByUserIdAndTradeIdOrderByEntryDateDesc(userId, tradeId);
-        if (!existingEntries.isEmpty()) {
-            return convertToResponse(existingEntries.get(0));
-        }
-
         TradeDetailsEntity trade = tradeDetailsRepository.findByTradeId(tradeId)
                 .orElseThrow(() -> new IllegalArgumentException("Trade not found with ID: " + tradeId));
         assertTradeOwnedByCurrentUser(trade);
 
+        if (StringUtils.hasText(portfolioId) && StringUtils.hasText(trade.getPortfolioId())
+                && !portfolioId.equals(trade.getPortfolioId())) {
+            throw new IllegalArgumentException("portfolioId must match the trade's portfolio");
+        }
         String resolvedPortfolioId = StringUtils.hasText(portfolioId) ? portfolioId : trade.getPortfolioId();
+        assertPortfolioOwnedIfPresent(resolvedPortfolioId);
 
-        TradeExecution execution = new TradeExecution();
-        if (trade.getEntryInfo() != null) {
-            execution.setEntryDateTime(trade.getEntryInfo().getTimestamp());
-            if (trade.getEntryInfo().getPrice() != null) {
-                execution.setActualEntryPrice(trade.getEntryInfo().getPrice().doubleValue());
+        List<TradeJournalEntry> existingEntries =
+                tradeJournalRepository.findByUserIdAndTradeIdOrderByEntryDateDesc(userId, tradeId);
+        if (!existingEntries.isEmpty()) {
+            // Keep newest; drop duplicates from racey creates
+            for (int i = 1; i < existingEntries.size(); i++) {
+                tradeJournalRepository.delete(existingEntries.get(i));
             }
-            if (trade.getEntryInfo().getQuantity() != null) {
-                execution.setQuantity(trade.getEntryInfo().getQuantity().doubleValue());
+            TradeJournalEntry existing = existingEntries.get(0);
+            // DRAFT stubs: refresh trade-sourced fields only (never wipe notes/tags/outcome)
+            if (existing.getJournalStatus() == null
+                    || JournalStatus.DRAFT.name().equalsIgnoreCase(existing.getJournalStatus())) {
+                applyTradeSourcedFields(existing, trade, false);
+                existing.setUpdatedAt(now);
+                applyAutoCalculations(existing);
+                return convertToResponse(tradeJournalRepository.save(existing));
             }
-        }
-
-        PostTradeReview review = new PostTradeReview();
-        if (trade.getExitInfo() != null) {
-            review.setExitDateTime(trade.getExitInfo().getTimestamp());
-            if (trade.getExitInfo().getPrice() != null) {
-                review.setActualExitPrice(trade.getExitInfo().getPrice().doubleValue());
-            }
-        }
-        if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
-            review.setActualPnl(trade.getMetrics().getProfitLoss().doubleValue());
+            return convertToResponse(existing);
         }
 
         TradeJournalEntry entry = TradeJournalEntry.builder()
@@ -875,19 +890,62 @@ public class TradeJournalServiceImpl implements TradeJournalService {
                 .title("Trade journal: " + (trade.getSymbol() != null ? trade.getSymbol() : tradeId))
                 .entryType(JournalEntryType.TRADE_JOURNAL.name())
                 .journalStatus(status)
-                .symbol(trade.getSymbol())
-                .tradeDirection(trade.getTradePositionType() != null ? trade.getTradePositionType().name() : null)
-                .tradeExecution(execution)
-                .postTradeReview(review)
                 .entryDate(trade.getEntryInfo() != null && trade.getEntryInfo().getTimestamp() != null
                         ? trade.getEntryInfo().getTimestamp()
                         : now)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
-
+        applyTradeSourcedFields(entry, trade, true);
         applyAutoCalculations(entry);
         return convertToResponse(tradeJournalRepository.save(entry));
+    }
+
+    /**
+     * Copies buy/sell/PnL/symbol/direction from the trade. Never clears content, tags, or
+     * user-set review narrative fields. When {@code replaceReviewShell} is false, only fills
+     * null execution/review numeric/time fields and always updates symbol/direction/PnL/prices.
+     */
+    private void applyTradeSourcedFields(
+            TradeJournalEntry entry, TradeDetailsEntity trade, boolean replaceReviewShell) {
+        entry.setSymbol(trade.getSymbol());
+        if (trade.getTradePositionType() != null) {
+            entry.setTradeDirection(trade.getTradePositionType().name());
+        }
+
+        TradeExecution execution = entry.getTradeExecution() != null
+                ? entry.getTradeExecution()
+                : new TradeExecution();
+        if (trade.getEntryInfo() != null) {
+            if (trade.getEntryInfo().getTimestamp() != null
+                    && (replaceReviewShell || execution.getEntryDateTime() == null)) {
+                execution.setEntryDateTime(trade.getEntryInfo().getTimestamp());
+            }
+            if (trade.getEntryInfo().getPrice() != null) {
+                execution.setActualEntryPrice(trade.getEntryInfo().getPrice().doubleValue());
+            }
+            if (trade.getEntryInfo().getQuantity() != null) {
+                execution.setQuantity(trade.getEntryInfo().getQuantity().doubleValue());
+            }
+        }
+        entry.setTradeExecution(execution);
+
+        PostTradeReview review = entry.getPostTradeReview() != null
+                ? entry.getPostTradeReview()
+                : new PostTradeReview();
+        if (trade.getExitInfo() != null) {
+            if (trade.getExitInfo().getTimestamp() != null
+                    && (replaceReviewShell || review.getExitDateTime() == null)) {
+                review.setExitDateTime(trade.getExitInfo().getTimestamp());
+            }
+            if (trade.getExitInfo().getPrice() != null) {
+                review.setActualExitPrice(trade.getExitInfo().getPrice().doubleValue());
+            }
+        }
+        if (trade.getMetrics() != null && trade.getMetrics().getProfitLoss() != null) {
+            review.setActualPnl(trade.getMetrics().getProfitLoss().doubleValue());
+        }
+        entry.setPostTradeReview(review);
     }
 
     private PreTradePlan mergePreTradePlan(PreTradePlan existing, PreTradePlan incoming) {
@@ -1260,6 +1318,31 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         String userId = UserContext.getUserIdOrThrow();
         if (trade.getUserId() == null || !userId.equals(trade.getUserId())) {
             throw new IllegalArgumentException("Cannot use a trade belonging to another user");
+        }
+    }
+
+    private void assertPortfolioOwnedIfPresent(String portfolioId) {
+        if (!StringUtils.hasText(portfolioId)) {
+            return;
+        }
+        String userId = UserContext.getUserIdOrThrow();
+        Optional<PortfolioModel> portfolio = portfolioPersistenceService.findByPortfolioId(portfolioId);
+        if (portfolio.isEmpty()) {
+            throw new IllegalArgumentException("Portfolio not found with ID: " + portfolioId);
+        }
+        if (!userId.equals(portfolio.get().getOwnerId())) {
+            throw new IllegalArgumentException("You are not authorized to use this portfolio");
+        }
+    }
+
+    private void assertPortfolioMatchesTradeIfBothPresent(String portfolioId, String tradeId) {
+        if (!StringUtils.hasText(portfolioId) || !StringUtils.hasText(tradeId)) {
+            return;
+        }
+        TradeDetailsEntity trade = tradeDetailsRepository.findByTradeId(tradeId)
+                .orElseThrow(() -> new IllegalArgumentException("Trade not found with ID: " + tradeId));
+        if (StringUtils.hasText(trade.getPortfolioId()) && !portfolioId.equals(trade.getPortfolioId())) {
+            throw new IllegalArgumentException("portfolioId must match the trade's portfolio");
         }
     }
 

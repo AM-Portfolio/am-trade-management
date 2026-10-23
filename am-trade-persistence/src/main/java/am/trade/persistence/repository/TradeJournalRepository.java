@@ -37,6 +37,12 @@ public interface TradeJournalRepository extends MongoRepository<TradeJournalEntr
             String userId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 
     /**
+     * Find journal entries by user, portfolio, and date range (paginated)
+     */
+    Page<TradeJournalEntry> findByUserIdAndPortfolioIdAndEntryDateBetweenOrderByEntryDateDesc(
+            String userId, String portfolioId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+
+    /**
      * Find all journal entries for a user in a date range (no pagination)
      */
     List<TradeJournalEntry> findByUserIdAndEntryDateBetween(

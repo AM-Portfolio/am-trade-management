@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.am.security.context.UserContext;
+import am.trade.api.client.AmPortfolioDeleteClient;
 import am.trade.api.dto.PortfolioCreateRequest;
 import am.trade.api.dto.PortfolioUpdateRequest;
 import am.trade.api.service.PortfolioApiService;
@@ -29,6 +30,7 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
     private final PortfolioPersistenceService portfolioPersistenceService;
     private final TradeApiService tradeApiService;
     private final TradeDetailsService tradeDetailsService;
+    private final AmPortfolioDeleteClient amPortfolioDeleteClient;
 
     @Override
     @Transactional
@@ -80,7 +82,15 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
         java.util.Optional<PortfolioModel> existingPortfolioOpt = portfolioPersistenceService.findByPortfolioId(portfolioId);
 
         if (existingPortfolioOpt.isEmpty()) {
-            log.warn("Portfolio {} not found in local trade DB. Creating a stub and forwarding update.", portfolioId);
+            // Lazy materialize only when am-portfolio confirms this user owns the book.
+            if (!amPortfolioDeleteClient.verifyOwnedPortfolio(portfolioId, userId)) {
+                log.warn("Refusing local stub for portfolio {} — user {} is not verified owner on am-portfolio",
+                        portfolioId, userId);
+                throw new IllegalArgumentException(
+                        "Portfolio not found or you are not authorized to update this portfolio");
+            }
+            log.warn("Portfolio {} not found in local trade DB. Creating a stub for verified owner {}.",
+                    portfolioId, userId);
             PortfolioModel stubPortfolio = PortfolioModel.builder()
                     .portfolioId(portfolioId)
                     .name(request.getName())
@@ -134,9 +144,18 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
         java.util.Optional<PortfolioModel> existingPortfolioOpt = portfolioPersistenceService.findByPortfolioId(portfolioId);
 
         if (existingPortfolioOpt.isEmpty()) {
-            log.warn("Portfolio {} not found in local trade DB. Forwarding delete event to am-portfolio anyway.", portfolioId);
-            // Send ONE Kafka message for the empty portfolio to ensure am-portfolio deletes it
-            tradeApiService.publishBulkPortfolioSyncEvent(portfolioId, portfolioId, userId, new ArrayList<>(), "DELETE_PORTFOLIO");
+            log.warn("Portfolio {} not found in local trade DB. Sync-deleting on am-portfolio (not Kafka-only).",
+                    portfolioId);
+            // Any broker book that exists only in am-portfolio (Doc Intel / portfolio-native):
+            // synchronous HTTP delete so UI cannot get 204 while Mongo still retains a ghost row.
+            amPortfolioDeleteClient.deleteBrokerPortfolio(portfolioId, userId);
+            try {
+                tradeApiService.publishBulkPortfolioSyncEvent(
+                        portfolioId, portfolioId, userId, new ArrayList<>(), "DELETE_PORTFOLIO");
+            } catch (Exception e) {
+                log.warn("Backup DELETE_PORTFOLIO Kafka dispatch failed after sync delete portfolioId={}: {}",
+                        portfolioId, e.getMessage());
+            }
             return;
         }
 

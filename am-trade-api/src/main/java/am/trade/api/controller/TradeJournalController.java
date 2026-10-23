@@ -118,9 +118,11 @@ public class TradeJournalController {
     public ResponseEntity<Object> getJournalEntriesByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String portfolioId,
             Pageable pageable) {
         String userId = UserContext.getUserIdOrThrow();
-        log.info("Fetching journal entries for user: {} between {} and {}", userId, startDate, endDate);
+        log.info("Fetching journal entries for user: {} between {} and {} portfolioId={}",
+                userId, startDate, endDate, portfolioId);
 
         if (endDate.isBefore(startDate)) {
             ErrorResponse errorResponse = ErrorResponse.badRequest(
@@ -131,7 +133,7 @@ public class TradeJournalController {
 
         try {
             Page<TradeJournalEntryResponse> entries = tradeJournalService.getJournalEntriesByDateRange(userId,
-                    startDate, endDate, pageable);
+                    startDate, endDate, portfolioId, pageable);
             return ResponseEntity.ok(entries);
         } catch (IllegalArgumentException e) {
             log.error("Error fetching journal entries: {}", e.getMessage());

@@ -342,21 +342,18 @@ public class TradeManagementServiceImpl implements TradeManagementService {
             log.warn("Symbol resolve during enrich failed: {}", e.getMessage());
         }
 
-        List<TradeDetails> toPersist = trades.stream()
+        // Resolve symbols in-memory for display only — do not persist on GET
+        // (avoids write amplification and races with explicit trade updates).
+        long resolvedCount = trades.stream()
                 .filter(t -> t != null && t.getTradeId() != null)
                 .filter(t -> {
                     String before = symbolBefore.get(t.getTradeId());
                     String after = t.getSymbol();
                     return before == null ? after != null : !before.equalsIgnoreCase(after);
                 })
-                .collect(Collectors.toList());
-        if (!toPersist.isEmpty()) {
-            try {
-                tradeDetailsService.saveAllTradeDetails(toPersist);
-                log.info("Persisted {} ISIN/SYMBOL-resolved tickers after enrich", toPersist.size());
-            } catch (Exception e) {
-                log.warn("Failed to persist resolved tickers: {}", e.getMessage());
-            }
+                .count();
+        if (resolvedCount > 0) {
+            log.debug("Resolved {} tickers in-memory during enrich (not persisted)", resolvedCount);
         }
 
         List<TradeDetails> openTrades = trades.stream()
