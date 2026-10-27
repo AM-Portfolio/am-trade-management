@@ -6,6 +6,7 @@ import am.trade.api.service.TradeJournalService;
 import am.trade.common.models.JournalTemplate;
 import am.trade.common.models.TemplateField;
 import am.trade.models.enums.JournalTemplateCategory;
+import am.trade.models.enums.TemplateFieldType;
 import am.trade.persistence.repository.JournalTemplateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -238,6 +239,12 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
         List<String> missing = new ArrayList<>();
         for (TemplateField field : template.getFields()) {
             if (!Boolean.TRUE.equals(field.getRequired())) {
+                continue;
+            }
+            // Playbook checklists are guidance — never block Create Entry on unchecked boxes
+            // (seeded templates historically had required=true on every CHECKBOX).
+            if (field.getFieldType() == TemplateFieldType.CHECKBOX
+                    || field.getFieldType() == TemplateFieldType.CHECKBOX_LIST) {
                 continue;
             }
             Object value = fieldValues != null ? fieldValues.get(field.getFieldId()) : null;
