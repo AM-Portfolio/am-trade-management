@@ -36,7 +36,10 @@ public class JournalTemplateRequest {
     private Boolean isSystemTemplate;
     private Boolean isRecommended;
 
-    @NotBlank(message = "Creator user ID is required")
+    /**
+     * Optional — server sets this from the authenticated user when blank.
+     * Kept for backward compatibility with older clients that still send it.
+     */
     private String createdBy;
 
     private List<String> tags;
