@@ -37,8 +37,8 @@ public class JournalTemplateRequest {
     private Boolean isRecommended;
 
     /**
-     * Optional — server sets this from the authenticated user when blank.
-     * Kept for backward compatibility with older clients that still send it.
+     * Ignored on write — ownership always comes from the authenticated principal.
+     * Kept on the wire so older clients that still send it do not break deserialization.
      */
     private String createdBy;
 
