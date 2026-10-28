@@ -8,10 +8,10 @@ import am.trade.common.models.TemplateField;
 import am.trade.models.enums.JournalTemplateCategory;
 import am.trade.models.enums.TemplateFieldType;
 import am.trade.persistence.repository.JournalTemplateRepository;
+import com.am.security.context.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,6 +31,8 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
     public JournalTemplateResponse createTemplate(JournalTemplateRequest request) {
         log.debug("Creating journal template: {}", request.getName());
 
+        String userId = resolveCreatorUserId();
+
         JournalTemplate template = JournalTemplate.builder()
                 .id(UUID.randomUUID().toString())
                 .name(request.getName())
@@ -40,7 +42,7 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
                 .isSystemTemplate(false)
                 .isRecommended(request.getIsRecommended() != null ? request.getIsRecommended() : false)
                 .usageCount(0)
-                .createdBy(request.getCreatedBy())
+                .createdBy(userId)
                 .favoriteUserIds(new ArrayList<>())
                 .tags(request.getTags())
                 .thumbnailUrl(request.getThumbnailUrl())
@@ -51,7 +53,7 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
         JournalTemplate savedTemplate = templateRepository.save(template);
         log.info("Template created with ID: {}", savedTemplate.getId());
 
-        return convertToResponse(savedTemplate, request.getCreatedBy());
+        return convertToResponse(savedTemplate, userId);
     }
 
     @Override
@@ -67,10 +69,11 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
         log.debug("Updating template with ID: {}", templateId);
 
         JournalTemplate template = findTemplateById(templateId);
+        String userId = resolveCreatorUserId();
 
         // System templates can only be updated by admins (basic check)
         if (Boolean.TRUE.equals(template.getIsSystemTemplate()) &&
-                !template.getCreatedBy().equals(request.getCreatedBy())) {
+                !Objects.equals(template.getCreatedBy(), userId)) {
             throw new IllegalArgumentException("Cannot update system template");
         }
 
@@ -94,7 +97,12 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
         JournalTemplate updatedTemplate = templateRepository.save(template);
         log.info("Template updated with ID: {}", updatedTemplate.getId());
 
-        return convertToResponse(updatedTemplate, request.getCreatedBy());
+        return convertToResponse(updatedTemplate, userId);
+    }
+
+    /** Creator always comes from the authenticated principal — never trust the body. */
+    private String resolveCreatorUserId() {
+        return UserContext.getUserIdOrThrow();
     }
 
     @Override

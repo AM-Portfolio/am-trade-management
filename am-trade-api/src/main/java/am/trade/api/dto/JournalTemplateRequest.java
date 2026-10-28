@@ -36,7 +36,10 @@ public class JournalTemplateRequest {
     private Boolean isSystemTemplate;
     private Boolean isRecommended;
 
-    @NotBlank(message = "Creator user ID is required")
+    /**
+     * Ignored on write — ownership always comes from the authenticated principal.
+     * Kept on the wire so older clients that still send it do not break deserialization.
+     */
     private String createdBy;
 
     private List<String> tags;
