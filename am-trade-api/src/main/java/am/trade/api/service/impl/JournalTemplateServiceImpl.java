@@ -33,7 +33,7 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
     public JournalTemplateResponse createTemplate(JournalTemplateRequest request) {
         log.debug("Creating journal template: {}", request.getName());
 
-        String userId = resolveCreatorUserId(request.getCreatedBy());
+        String userId = resolveCreatorUserId();
 
         JournalTemplate template = JournalTemplate.builder()
                 .id(UUID.randomUUID().toString())
@@ -71,7 +71,7 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
         log.debug("Updating template with ID: {}", templateId);
 
         JournalTemplate template = findTemplateById(templateId);
-        String userId = resolveCreatorUserId(request.getCreatedBy());
+        String userId = resolveCreatorUserId();
 
         // System templates can only be updated by admins (basic check)
         if (Boolean.TRUE.equals(template.getIsSystemTemplate()) &&
@@ -102,16 +102,9 @@ public class JournalTemplateServiceImpl implements JournalTemplateService {
         return convertToResponse(updatedTemplate, userId);
     }
 
-    /** Prefer auth context; fall back to request body for older clients. */
-    private String resolveCreatorUserId(String requestCreatedBy) {
-        try {
-            return UserContext.getUserIdOrThrow();
-        } catch (RuntimeException ex) {
-            if (StringUtils.hasText(requestCreatedBy)) {
-                return requestCreatedBy.trim();
-            }
-            throw new IllegalArgumentException("Authenticated user is required to create/update a template");
-        }
+    /** Creator always comes from the authenticated principal — never trust the body. */
+    private String resolveCreatorUserId() {
+        return UserContext.getUserIdOrThrow();
     }
 
     @Override
