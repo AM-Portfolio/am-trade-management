@@ -55,6 +55,39 @@ public class StandardTemplateSeeder implements ApplicationRunner {
         seedIfMissing("Weekly Review", JournalTemplateCategory.WEEKLY_REVIEW,
                 "Guided weekly review of process, P&L themes, and next-week focus.",
                 weeklyReviewFields());
+        // Existing dig/preprod templates were seeded with required=true on every checkbox.
+        relaxCheckboxRequiredOnSystemTemplates();
+    }
+
+    /**
+     * Idempotent repair: checklist boxes are guidance, not Create Entry gates.
+     */
+    private void relaxCheckboxRequiredOnSystemTemplates() {
+        List<JournalTemplate> system = templateRepository.findByIsSystemTemplate(true);
+        int updated = 0;
+        for (JournalTemplate template : system) {
+            if (template.getFields() == null || template.getFields().isEmpty()) {
+                continue;
+            }
+            boolean changed = false;
+            for (TemplateField field : template.getFields()) {
+                if (field.getFieldType() == TemplateFieldType.CHECKBOX
+                        || field.getFieldType() == TemplateFieldType.CHECKBOX_LIST) {
+                    if (Boolean.TRUE.equals(field.getRequired())) {
+                        field.setRequired(false);
+                        changed = true;
+                    }
+                }
+            }
+            if (changed) {
+                template.setUpdatedAt(LocalDateTime.now());
+                templateRepository.save(template);
+                updated++;
+            }
+        }
+        if (updated > 0) {
+            log.info("Relaxed required=false on CHECKBOX fields for {} system journal templates", updated);
+        }
     }
 
     private void seedIfMissing(String name, JournalTemplateCategory category, String description,
@@ -94,7 +127,8 @@ public class StandardTemplateSeeder implements ApplicationRunner {
                     .fieldId(id)
                     .fieldLabel(label)
                     .fieldType(TemplateFieldType.CHECKBOX)
-                    .required(true)
+                    // Guidance checklist — do not block Create Entry if some are unchecked.
+                    .required(false)
                     .order(order++)
                     .helpText("Confirm before entry")
                     .build());

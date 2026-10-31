@@ -125,12 +125,28 @@ public class JournalTemplateController {
     })
     @GetMapping
     public ResponseEntity<List<JournalTemplateResponse>> getAllTemplates(
-            @RequestParam(required = false) JournalTemplateCategory category,
+            @RequestParam(required = false) String category,
             @RequestParam(required = false) String search) {
         String userId = UserContext.getUserIdOrThrow();
-        log.info("Fetching all templates for user: {}, category: {}, search: {}", userId, category, search);
-        List<JournalTemplateResponse> templates = templateService.getAllTemplates(userId, category, search);
+        JournalTemplateCategory parsedCategory = parseCategoryOrNull(category);
+        log.info("Fetching all templates for user: {}, category: {}, search: {}", userId, parsedCategory, search);
+        List<JournalTemplateResponse> templates = templateService.getAllTemplates(userId, parsedCategory, search);
         return ResponseEntity.ok(templates);
+    }
+
+    /**
+     * Avoid 400 on unknown/blank category query values — treat as "all".
+     */
+    private static JournalTemplateCategory parseCategoryOrNull(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return JournalTemplateCategory.valueOf(raw.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            log.warn("Ignoring unknown journal template category query: {}", raw);
+            return null;
+        }
     }
 
     @Operation(summary = "Get favorite templates for a user")
