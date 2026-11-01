@@ -659,13 +659,9 @@ public class TradeJournalServiceImpl implements TradeJournalService {
             return List.of();
         }
 
-        if (tradeJournalRepository.countByUserId(userId) > 0) {
-            // No-op only — do not write the seed marker here. Marking on a non-empty
-            // journal would lock out a second demo if the first create succeeded and
-            // the second failed (Mongo @Transactional is not multi-doc atomic here).
-            log.debug("Skipping demo seed; user {} already has journal entries", userId);
-            return List.of();
-        }
+        // Seed once per user via marker only. Do not skip merely because other
+        // (real) journal entries exist — dig/preprod testers often already have data
+        // and would never see the educational demos otherwise.
 
         LocalDateTime today = LocalDate.now().atTime(9, 30);
         List<TradeJournalEntryResponse> created = new ArrayList<>();
