@@ -88,14 +88,20 @@ class TradeJournalServiceImplSeedDemoTest {
     }
 
     @Test
-    void seedDemoEntriesIfEmpty_whenUserHasEntries_isNoOpWithoutMarker() {
+    void seedDemoEntriesIfEmpty_whenUserHasEntriesButNoMarker_stillCreatesDemos() {
         when(journalDemoSeedStateRepository.existsById("demo-user")).thenReturn(false);
-        when(tradeJournalRepository.countByUserId("demo-user")).thenReturn(3L);
+        when(tradeJournalRepository.save(any(TradeJournalEntry.class))).thenAnswer(inv -> {
+            TradeJournalEntry e = inv.getArgument(0);
+            if (e.getId() == null) {
+                e.setId("id-" + e.getEntryType());
+            }
+            return e;
+        });
 
         List<TradeJournalEntryResponse> created = service.seedDemoEntriesIfEmpty();
 
-        assertTrue(created.isEmpty());
-        verify(tradeJournalRepository, never()).save(any());
-        verify(journalDemoSeedStateRepository, never()).save(any());
+        assertEquals(2, created.size());
+        verify(tradeJournalRepository, times(2)).save(any(TradeJournalEntry.class));
+        verify(journalDemoSeedStateRepository).save(any(JournalDemoSeedState.class));
     }
 }
