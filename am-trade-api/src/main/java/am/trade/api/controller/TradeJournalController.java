@@ -40,6 +40,19 @@ public class TradeJournalController {
 
     private final TradeJournalService tradeJournalService;
 
+    @Operation(summary = "Seed demo Log Day + Trade Journal for empty journals (idempotent)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Created demos or empty list when already seeded / not empty"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/seed-demo")
+    public ResponseEntity<List<TradeJournalEntryResponse>> seedDemoEntries() {
+        log.info("Seeding demo journal entries for user: {}", UserContext.getUserIdOrThrow());
+        List<TradeJournalEntryResponse> created = tradeJournalService.seedDemoEntriesIfEmpty();
+        return ResponseEntity.ok(created);
+    }
+
     @Operation(summary = "Create a new journal entry")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Journal entry created successfully", content = @Content(schema = @Schema(implementation = TradeJournalEntryResponse.class))),

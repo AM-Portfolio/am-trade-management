@@ -1,9 +1,11 @@
 package am.trade.api.service.impl;
 
+import am.trade.api.config.DemoJournalEntryFactory;
 import am.trade.api.dto.*;
 import am.trade.api.service.TradeJournalService;
 import am.trade.common.models.*;
 import am.trade.persistence.entity.TradeDetailsEntity;
+import am.trade.persistence.repository.JournalDemoSeedStateRepository;
 import am.trade.persistence.repository.TradeDetailsRepository;
 import am.trade.persistence.repository.TradeJournalRepository;
 import com.am.security.context.UserContext;
@@ -36,6 +38,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
     private final TradeJournalRepository tradeJournalRepository;
     private final TradeDetailsRepository tradeDetailsRepository;
+    private final JournalDemoSeedStateRepository journalDemoSeedStateRepository;
 
     @Override
     public TradeJournalEntryResponse createJournalEntry(TradeJournalEntryRequest request) {
@@ -643,6 +646,40 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         for (String tradeId : request.getTradeIds()) {
             created.add(createStubFromTrade(tradeId, status));
         }
+        return created;
+    }
+
+    @Override
+    @Transactional
+    public List<TradeJournalEntryResponse> seedDemoEntriesIfEmpty() {
+        String userId = UserContext.getUserIdOrThrow();
+
+        if (journalDemoSeedStateRepository.existsById(userId)) {
+            log.debug("Demo journal already seeded for user {}", userId);
+            return List.of();
+        }
+
+        if (tradeJournalRepository.countByUserId(userId) > 0) {
+            // No-op only — do not write the seed marker here. Marking on a non-empty
+            // journal would lock out a second demo if the first create succeeded and
+            // the second failed (Mongo @Transactional is not multi-doc atomic here).
+            log.debug("Skipping demo seed; user {} already has journal entries", userId);
+            return List.of();
+        }
+
+        LocalDateTime today = LocalDate.now().atTime(9, 30);
+        List<TradeJournalEntryResponse> created = new ArrayList<>();
+        created.add(createJournalEntry(DemoJournalEntryFactory.logDay(today)));
+        created.add(createJournalEntry(DemoJournalEntryFactory.tradeJournal(today.minusDays(1))));
+
+        // Marker only after both creates succeed → delete-all stays empty on later calls.
+        journalDemoSeedStateRepository.save(JournalDemoSeedState.builder()
+                .userId(userId)
+                .seededAt(LocalDateTime.now())
+                .entriesCreated(created.size())
+                .build());
+
+        log.info("Seeded {} demo journal entries for user {}", created.size(), userId);
         return created;
     }
 
