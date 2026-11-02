@@ -49,6 +49,8 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
         TradeJournalEntry entry = convertToEntity(request);
         entry.setId(UUID.randomUUID().toString());
+        // Autosave / partial create clients often omit status — persist as DRAFT.
+        entry.setJournalStatus(normalizeJournalStatus(entry.getJournalStatus()));
 
         applyAutoCalculations(entry);
 
@@ -143,7 +145,9 @@ public class TradeJournalServiceImpl implements TradeJournalService {
             existingEntry.setEntryType(request.getEntryType());
         }
         if (request.getJournalStatus() != null) {
-            existingEntry.setJournalStatus(request.getJournalStatus());
+            existingEntry.setJournalStatus(normalizeJournalStatus(request.getJournalStatus()));
+        } else if (!StringUtils.hasText(existingEntry.getJournalStatus())) {
+            existingEntry.setJournalStatus(JournalStatus.DRAFT.name());
         }
         if (request.getSymbol() != null) {
             existingEntry.setSymbol(request.getSymbol());
@@ -1157,6 +1161,23 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         if (request.getEntryDate() == null) {
             throw new IllegalArgumentException("Entry date is required");
         }
+    }
+
+    /**
+     * Blank / unknown status → {@link JournalStatus#DRAFT} so autosaved Log Day and
+     * Trade Journal rows always list with a stable draft marker for the UI.
+     */
+    static String normalizeJournalStatus(String status) {
+        if (!StringUtils.hasText(status)) {
+            return JournalStatus.DRAFT.name();
+        }
+        String trimmed = status.trim();
+        for (JournalStatus known : JournalStatus.values()) {
+            if (known.name().equalsIgnoreCase(trimmed)) {
+                return known.name();
+            }
+        }
+        return JournalStatus.DRAFT.name();
     }
 
     private void assertTradeOwnedByCurrentUser(TradeDetailsEntity trade) {
