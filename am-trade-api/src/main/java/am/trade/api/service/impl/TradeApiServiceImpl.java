@@ -117,22 +117,24 @@ public class TradeApiServiceImpl implements TradeApiService {
             tradeDetails.setSymbol(tradeDetails.getSymbol().trim().toUpperCase());
         }
 
+        // Default position type before validation so required checks pass
+        if (tradeDetails.getTradePositionType() == null) {
+            log.info("Trade position type not specified for symbol {}, defaulting to LONG", tradeDetails.getSymbol());
+            tradeDetails.setTradePositionType(TradePositionType.LONG);
+        }
+
         log.info("Service: Adding new trade for portfolio: {} and symbol: {} by user: {}",
                 tradeDetails.getPortfolioId(), tradeDetails.getSymbol(), tradeDetails.getUserId());
 
-        // Validate required fields and other trade data
+        // Authoritative write-path validation (throws → 400)
         tradeValidator.validateTrade(tradeDetails);
+
+        // Never trust client-forged P&L — processing recomputes for closed trades
+        tradeDetails.setMetrics(null);
 
         // Generate a new trade ID if not provided
         if (tradeDetails.getTradeId() == null || tradeDetails.getTradeId().isEmpty()) {
             tradeDetails.setTradeId(UUID.randomUUID().toString());
-        }
-
-        // Ensure trade position type is set to LONG by default if missing to allow
-        // calculations
-        if (tradeDetails.getTradePositionType() == null) {
-            log.info("Trade position type not specified for symbol {}, defaulting to LONG", tradeDetails.getSymbol());
-            tradeDetails.setTradePositionType(TradePositionType.LONG);
         }
 
         // Save trade details and process for portfolio aggregation
@@ -366,6 +368,25 @@ public class TradeApiServiceImpl implements TradeApiService {
         // Preserve non-editable fields from the original trade
         preserveNonEditableFields(originalTrade, tradeDetails);
 
+        if (tradeDetails.getSymbol() != null) {
+            tradeDetails.setSymbol(tradeDetails.getSymbol().trim().toUpperCase());
+        }
+        if (tradeDetails.getTradePositionType() == null) {
+            tradeDetails.setTradePositionType(
+                    originalTrade.getTradePositionType() != null
+                            ? originalTrade.getTradePositionType()
+                            : TradePositionType.LONG);
+        }
+        if (tradeDetails.getStatus() == null) {
+            tradeDetails.setStatus(originalTrade.getStatus());
+        }
+
+        // Same hard rules as create
+        tradeValidator.validateTrade(tradeDetails);
+
+        // Never trust client-forged P&L
+        tradeDetails.setMetrics(null);
+
         // Handle attachments merging
         handleAttachmentsMerging(tradeId, tradeDetails, originalTrade);
 
@@ -598,8 +619,18 @@ public class TradeApiServiceImpl implements TradeApiService {
      * @param trades List of trades to validate
      */
     private void validateTradesBatch(List<TradeDetails> trades) {
+        String userId = UserContext.getUserIdOrThrow();
         for (TradeDetails trade : trades) {
+            trade.setUserId(userId);
+            if (trade.getSymbol() != null) {
+                trade.setSymbol(trade.getSymbol().trim().toUpperCase());
+            }
+            if (trade.getTradePositionType() == null) {
+                trade.setTradePositionType(TradePositionType.LONG);
+            }
             tradeValidator.validateTrade(trade);
+            // Never trust client-forged P&L in batch either
+            trade.setMetrics(null);
         }
         log.info("All trades in batch passed validation");
     }
