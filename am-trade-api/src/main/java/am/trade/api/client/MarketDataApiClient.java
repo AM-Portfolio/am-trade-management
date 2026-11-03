@@ -437,7 +437,8 @@ public class MarketDataApiClient {
     }
 
     /**
-     * Generic securities batch-search (SYMBOL / NAME) keyed by the original query uppercase.
+     * Generic securities batch-search (SYMBOL / COMPANY_NAME) keyed by the original query uppercase.
+     * Market-data enum is COMPANY_NAME (not NAME) — wrong values 400 the whole batch.
      */
     public Map<String, Map<String, String>> resolveTickersByQueries(List<String> queries, List<String> searchFields) {
         if (queries == null || queries.isEmpty()) {
@@ -448,8 +449,14 @@ public class MarketDataApiClient {
             Map<String, Object> requestPayload = new HashMap<>();
             requestPayload.put("queries", queries);
             requestPayload.put("limit", 1);
-            requestPayload.put("searchFields",
-                    searchFields != null && !searchFields.isEmpty() ? searchFields : java.util.Arrays.asList("SYMBOL", "NAME"));
+            List<String> fields = searchFields != null && !searchFields.isEmpty()
+                    ? searchFields
+                    : java.util.Arrays.asList("SYMBOL", "COMPANY_NAME");
+            // Normalize legacy "NAME" used by older callers.
+            fields = fields.stream()
+                    .map(f -> "NAME".equalsIgnoreCase(f) ? "COMPANY_NAME" : f)
+                    .collect(java.util.stream.Collectors.toList());
+            requestPayload.put("searchFields", fields);
             // Require a meaningful match so weak NAME hits do not overwrite symbols.
             requestPayload.put("minMatchScore", 0.6);
 
