@@ -175,5 +175,14 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
 
         portfolioPersistenceService.deleteByPortfolioId(portfolioId);
         log.info("Successfully deleted portfolio: {}", portfolioId);
+
+        // Dual-DB: also sync-delete am-portfolio so broker books cannot remain as ghosts
+        // when Kafka fan-out is slow/missed. 404 is treated as success by the client.
+        try {
+            amPortfolioDeleteClient.deleteBrokerPortfolio(portfolioId, userId);
+        } catch (Exception e) {
+            log.warn("am-portfolio sync-delete after local trade delete failed portfolioId={}: {}",
+                    portfolioId, e.getMessage());
+        }
     }
 }

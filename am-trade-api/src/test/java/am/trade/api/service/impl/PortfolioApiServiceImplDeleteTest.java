@@ -90,12 +90,33 @@ class PortfolioApiServiceImplDeleteTest {
                 .build();
         when(portfolioPersistenceService.findByPortfolioId(portfolioId)).thenReturn(Optional.of(existing));
         when(tradeDetailsService.findModelsByPortfolioId(portfolioId)).thenReturn(new ArrayList<>());
+        when(amPortfolioDeleteClient.deleteBrokerPortfolio(portfolioId, "owner-1")).thenReturn(true);
 
         service.deletePortfolio(portfolioId, true);
 
-        verify(amPortfolioDeleteClient, never()).deleteBrokerPortfolio(anyString(), anyString());
         verify(tradeApiService).publishBulkPortfolioSyncEvent(
                 eq(portfolioId), eq("Upstox"), eq("owner-1"), anyList(), eq("DELETE_PORTFOLIO"));
         verify(portfolioPersistenceService).deleteByPortfolioId(portfolioId);
+        verify(amPortfolioDeleteClient).deleteBrokerPortfolio(portfolioId, "owner-1");
+    }
+
+    @Test
+    void deletePortfolio_presentInTrade_localDeleteSucceedsEvenIfAmPortfolioSyncFails() {
+        String portfolioId = "upstox-id";
+        PortfolioModel existing = PortfolioModel.builder()
+                .portfolioId(portfolioId)
+                .name("Upstox")
+                .ownerId("owner-1")
+                .build();
+        when(portfolioPersistenceService.findByPortfolioId(portfolioId)).thenReturn(Optional.of(existing));
+        when(tradeDetailsService.findModelsByPortfolioId(portfolioId)).thenReturn(new ArrayList<>());
+        when(amPortfolioDeleteClient.deleteBrokerPortfolio(portfolioId, "owner-1"))
+                .thenThrow(new IllegalStateException("am-portfolio unreachable"));
+
+        service.deletePortfolio(portfolioId, true);
+
+        verify(portfolioPersistenceService).deleteByPortfolioId(portfolioId);
+        verify(tradeApiService).publishBulkPortfolioSyncEvent(
+                eq(portfolioId), eq("Upstox"), eq("owner-1"), anyList(), eq("DELETE_PORTFOLIO"));
     }
 }
