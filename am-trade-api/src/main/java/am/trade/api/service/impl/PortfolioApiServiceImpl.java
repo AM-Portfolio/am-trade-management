@@ -17,10 +17,12 @@ import am.trade.api.service.TradeApiService;
 import am.trade.common.models.PortfolioMetrics;
 import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.TradeDetails;
+import am.trade.exceptions.TradeException;
 import am.trade.services.service.PortfolioPersistenceService;
 import am.trade.services.service.TradeDetailsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -138,9 +140,19 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
         if (existingPortfolioOpt.isEmpty()) {
             log.warn("Portfolio {} not found in local trade DB. Sync-deleting on am-portfolio (not Kafka-only).",
                     portfolioId);
-            // Any broker book that exists only in am-portfolio (Doc Intel / portfolio-native):
-            // synchronous HTTP delete so UI cannot get 204 while Mongo still retains a ghost row.
-            amPortfolioDeleteClient.deleteBrokerPortfolio(portfolioId, userId);
+            // Portfolio-only book: am-portfolio is the only source of truth. Failure must not
+            // return 204 (ghost remains). Map transport/config errors to a clean 503 body —
+            // do not swallow like the local-present path below (local delete already succeeded).
+            try {
+                amPortfolioDeleteClient.deleteBrokerPortfolio(portfolioId, userId);
+            } catch (IllegalStateException e) {
+                log.error("am-portfolio sync-delete failed for portfolio-only book portfolioId={}: {}",
+                        portfolioId, e.getMessage());
+                throw new TradeException(
+                        "Unable to delete portfolio on am-portfolio: " + e.getMessage(),
+                        e,
+                        HttpStatus.SERVICE_UNAVAILABLE);
+            }
             try {
                 tradeApiService.publishBulkPortfolioSyncEvent(
                         portfolioId, portfolioId, userId, new ArrayList<>(), "DELETE_PORTFOLIO");

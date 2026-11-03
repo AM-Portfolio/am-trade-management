@@ -3,6 +3,7 @@ package am.trade.api.service.impl;
 import am.trade.api.client.AmPortfolioDeleteClient;
 import am.trade.api.service.TradeApiService;
 import am.trade.common.models.PortfolioModel;
+import am.trade.exceptions.TradeException;
 import am.trade.services.service.PortfolioPersistenceService;
 import am.trade.services.service.TradeDetailsService;
 import com.am.security.context.UserContext;
@@ -12,10 +13,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -68,16 +71,18 @@ class PortfolioApiServiceImplDeleteTest {
     }
 
     @Test
-    void deletePortfolio_missingInTrade_syncFailurePropagates() {
+    void deletePortfolio_missingInTrade_syncFailureMapsToServiceUnavailable() {
         String portfolioId = "any-broker-portfolio-uuid";
         when(portfolioPersistenceService.findByPortfolioId(portfolioId)).thenReturn(Optional.empty());
         when(amPortfolioDeleteClient.deleteBrokerPortfolio(portfolioId, "owner-1"))
                 .thenThrow(new IllegalStateException("am-portfolio unreachable"));
 
-        assertThrows(IllegalStateException.class, () -> service.deletePortfolio(portfolioId, true));
+        TradeException ex = assertThrows(TradeException.class, () -> service.deletePortfolio(portfolioId, true));
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatus());
 
         verify(tradeApiService, never()).publishBulkPortfolioSyncEvent(
                 anyString(), anyString(), anyString(), anyList(), anyString());
+        verify(portfolioPersistenceService, never()).deleteByPortfolioId(anyString());
     }
 
     @Test
