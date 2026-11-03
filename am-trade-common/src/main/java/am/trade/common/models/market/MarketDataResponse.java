@@ -1,5 +1,6 @@
 package am.trade.common.models.market;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 public class MarketDataResponse {
     private Double lastPrice;
     /** Prior session close — used for 1D P&L when cost basis is unknown. */
+    @JsonAlias({"previous_close", "prevClose", "prev_close", "closePrice"})
     private Double previousClose;
     /** Some dig OHLC payloads nest prior/session close here. */
     private Ohlc ohlc;

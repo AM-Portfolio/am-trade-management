@@ -1,9 +1,13 @@
 package am.trade.api.service.impl;
 
+import am.trade.common.models.PortfolioMetrics;
+import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.TradeDetails;
 import am.trade.common.models.TradeSummary;
 import am.trade.models.enums.TradeStatus;
+import am.trade.services.service.PortfolioService;
 import am.trade.services.service.TradeDetailsService;
+import am.trade.services.service.impl.TradeProcessingServiceImpl;
 import am.trade.api.service.TradeManagementService;
 import am.trade.api.client.MarketDataApiClient;
 import am.trade.common.util.ValidationUtils;
@@ -19,7 +23,9 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,6 +52,7 @@ public class TradeManagementServiceImpl implements TradeManagementService {
 
     private final TradeDetailsService tradeDetailsService;
     private final PortfolioRepository portfolioRepository;
+    private final PortfolioService portfolioService;
     private final TradeDetailsMapper tradeDetailsMapper;
     private final AppLogger log;
     private final MarketDataApiClient marketDataApiClient;
@@ -347,6 +354,7 @@ public class TradeManagementServiceImpl implements TradeManagementService {
             }
 
             List<TradeDetails> healZeroCost = new ArrayList<>();
+            Map<String, Double> previousCloseCache = new HashMap<>();
             openTrades.forEach(trade -> {
                 String cleanSymbol = trade.getSymbol() != null ? trade.getSymbol().trim() : null;
                 if (cleanSymbol != null && cleanSymbol.contains(":")) {
@@ -422,8 +430,11 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                 BigDecimal importMark = trade.getImportMarkPrice();
                 boolean hasImportMark = importMark != null && importMark.compareTo(BigDecimal.ZERO) > 0;
 
-                // 1D P&L — same formula as Portfolio (LTP − previousClose) × qty
-                Double previousClose = quote.resolvePreviousClose();
+                // 1D P&L — same formula as Portfolio (LTP − previousClose) × qty.
+                // Live OHLC often omits/collapses previousClose; hist close is Trade's
+                // equivalent of Portfolio's Mongo previousClose fallback.
+                Double previousClose = resolvePreviousCloseForDayPnl(
+                        quote, cleanSymbol, currentPrc, previousCloseCache);
                 if (previousClose != null && previousClose > 0) {
                     BigDecimal prev = BigDecimal.valueOf(previousClose);
                     BigDecimal dayPerUnit = currentPrc.subtract(prev);
@@ -472,8 +483,98 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                     log.warn("Failed to persist zero-cost entry heal: {}", e.getMessage());
                 }
             }
+
+            // Persist portfolio card totalValue from live/import marks (LTP itself stays in-memory).
+            refreshPortfolioTotalValues(openTrades);
         } catch (Exception e) {
             log.error("Error enriching trades with live prices", e);
+        }
+    }
+
+    /**
+     * Prefer quote previousClose; if missing/collapsed, hist close on/before yesterday (IST).
+     * Rejects a prior that equals LTP (same collapsed-after-hours guard as Portfolio).
+     */
+    private Double resolvePreviousCloseForDayPnl(
+            am.trade.common.models.market.MarketDataResponse quote,
+            String cleanSymbol,
+            BigDecimal lastPrice,
+            Map<String, Double> cache) {
+        Double previousClose = quote != null ? quote.resolvePreviousClose() : null;
+        if (isUsablePrior(previousClose, lastPrice)) {
+            return previousClose;
+        }
+        if (cleanSymbol == null || cleanSymbol.isBlank()) {
+            return null;
+        }
+        if (cache.containsKey(cleanSymbol)) {
+            return cache.get(cleanSymbol);
+        }
+        LocalDate asOf = LocalDate.now(ZoneId.of("Asia/Kolkata")).minusDays(1);
+        Double hist = null;
+        try {
+            hist = marketDataApiClient.getCloseOnOrBefore(cleanSymbol, asOf);
+        } catch (Exception e) {
+            log.warn("Hist previousClose fallback failed for {}: {}", cleanSymbol, e.getMessage());
+        }
+        Double resolved = isUsablePrior(hist, lastPrice) ? hist : null;
+        cache.put(cleanSymbol, resolved);
+        return resolved;
+    }
+
+    private static boolean isUsablePrior(Double prior, BigDecimal lastPrice) {
+        if (prior == null || prior <= 0) {
+            return false;
+        }
+        if (lastPrice == null) {
+            return true;
+        }
+        return Math.abs(prior - lastPrice.doubleValue()) > 1e-6;
+    }
+
+    /**
+     * After live enrich, rewrite {@code metrics.totalValue} so Trade portfolio cards
+     * show market value for unknown-cost demat books instead of ₹0.
+     */
+    private void refreshPortfolioTotalValues(List<TradeDetails> openTrades) {
+        if (openTrades == null || openTrades.isEmpty()) {
+            return;
+        }
+        Map<String, BigDecimal> totals = new HashMap<>();
+        for (TradeDetails trade : openTrades) {
+            if (trade == null || trade.getPortfolioId() == null || trade.getPortfolioId().isBlank()) {
+                continue;
+            }
+            BigDecimal piece = TradeProcessingServiceImpl.resolvePositionMarketOrCostValue(trade);
+            totals.merge(trade.getPortfolioId(), piece, BigDecimal::add);
+        }
+        for (Map.Entry<String, BigDecimal> entry : totals.entrySet()) {
+            if (entry.getValue().compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+            try {
+                Optional<PortfolioModel> opt = portfolioService.findByPortfolioId(entry.getKey());
+                if (opt.isEmpty()) {
+                    continue;
+                }
+                PortfolioModel portfolio = opt.get();
+                PortfolioMetrics metrics = portfolio.getMetrics();
+                if (metrics == null) {
+                    metrics = PortfolioMetrics.builder().build();
+                    portfolio.setMetrics(metrics);
+                }
+                BigDecimal existing = metrics.getTotalValue();
+                if (existing != null
+                        && existing.compareTo(BigDecimal.ZERO) > 0
+                        && existing.subtract(entry.getValue()).abs().compareTo(BigDecimal.ONE) <= 0) {
+                    continue;
+                }
+                metrics.setTotalValue(entry.getValue());
+                portfolioService.savePortfolio(portfolio);
+                log.info("Refreshed portfolio {} totalValue to {}", entry.getKey(), entry.getValue());
+            } catch (Exception e) {
+                log.warn("Failed to refresh totalValue for portfolio {}: {}", entry.getKey(), e.getMessage());
+            }
         }
     }
 

@@ -968,7 +968,7 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
      * Cost basis when known; otherwise live mark × qty or import-mark × qty so
      * email demat books do not contribute ₹0 to portfolio card totalValue.
      */
-    static BigDecimal resolvePositionMarketOrCostValue(TradeDetails trade) {
+    public static BigDecimal resolvePositionMarketOrCostValue(TradeDetails trade) {
         if (trade == null || trade.getEntryInfo() == null) {
             return BigDecimal.ZERO;
         }
