@@ -83,7 +83,7 @@ class PortfolioSyncInstrumentResolverImplTest {
         byQuery.put("VODAFONE IDEA LIMITED", nameHit);
 
         when(marketDataApiClient.resolveTickersByQueries(
-                anyList(), eq(List.of("SYMBOL", "NAME")))).thenReturn(byQuery);
+                anyList(), eq(List.of("SYMBOL", "COMPANY_NAME")))).thenReturn(byQuery);
 
         resolver.resolveForSync(trade);
 

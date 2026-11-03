@@ -93,7 +93,7 @@ public class PortfolioSyncInstrumentResolverImpl implements PortfolioSyncInstrum
         }
         try {
             Map<String, Map<String, String>> byQuery = marketDataApiClient.resolveTickersByQueries(
-                    queries, java.util.Arrays.asList("SYMBOL", "NAME"));
+                    queries, java.util.Arrays.asList("SYMBOL", "COMPANY_NAME"));
             if (byQuery == null || byQuery.isEmpty()) {
                 return;
             }

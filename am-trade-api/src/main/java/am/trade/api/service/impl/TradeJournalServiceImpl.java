@@ -1,9 +1,11 @@
 package am.trade.api.service.impl;
 
+import am.trade.api.config.DemoJournalEntryFactory;
 import am.trade.api.dto.*;
 import am.trade.api.service.TradeJournalService;
 import am.trade.common.models.*;
 import am.trade.persistence.entity.TradeDetailsEntity;
+import am.trade.persistence.repository.JournalDemoSeedStateRepository;
 import am.trade.persistence.repository.TradeDetailsRepository;
 import am.trade.persistence.repository.TradeJournalRepository;
 import com.am.security.context.UserContext;
@@ -36,6 +38,7 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
     private final TradeJournalRepository tradeJournalRepository;
     private final TradeDetailsRepository tradeDetailsRepository;
+    private final JournalDemoSeedStateRepository journalDemoSeedStateRepository;
 
     @Override
     public TradeJournalEntryResponse createJournalEntry(TradeJournalEntryRequest request) {
@@ -46,6 +49,8 @@ public class TradeJournalServiceImpl implements TradeJournalService {
 
         TradeJournalEntry entry = convertToEntity(request);
         entry.setId(UUID.randomUUID().toString());
+        // Autosave / partial create clients often omit status — persist as DRAFT.
+        entry.setJournalStatus(normalizeJournalStatus(entry.getJournalStatus()));
 
         applyAutoCalculations(entry);
 
@@ -140,7 +145,9 @@ public class TradeJournalServiceImpl implements TradeJournalService {
             existingEntry.setEntryType(request.getEntryType());
         }
         if (request.getJournalStatus() != null) {
-            existingEntry.setJournalStatus(request.getJournalStatus());
+            existingEntry.setJournalStatus(normalizeJournalStatus(request.getJournalStatus()));
+        } else if (!StringUtils.hasText(existingEntry.getJournalStatus())) {
+            existingEntry.setJournalStatus(JournalStatus.DRAFT.name());
         }
         if (request.getSymbol() != null) {
             existingEntry.setSymbol(request.getSymbol());
@@ -647,6 +654,36 @@ public class TradeJournalServiceImpl implements TradeJournalService {
     }
 
     @Override
+    @Transactional
+    public List<TradeJournalEntryResponse> seedDemoEntriesIfEmpty() {
+        String userId = UserContext.getUserIdOrThrow();
+
+        if (journalDemoSeedStateRepository.existsById(userId)) {
+            log.debug("Demo journal already seeded for user {}", userId);
+            return List.of();
+        }
+
+        // Seed once per user via marker only. Do not skip merely because other
+        // (real) journal entries exist — dig/preprod testers often already have data
+        // and would never see the educational demos otherwise.
+
+        LocalDateTime today = LocalDate.now().atTime(9, 30);
+        List<TradeJournalEntryResponse> created = new ArrayList<>();
+        created.add(createJournalEntry(DemoJournalEntryFactory.logDay(today)));
+        created.add(createJournalEntry(DemoJournalEntryFactory.tradeJournal(today.minusDays(1))));
+
+        // Marker only after both creates succeed → delete-all stays empty on later calls.
+        journalDemoSeedStateRepository.save(JournalDemoSeedState.builder()
+                .userId(userId)
+                .seededAt(LocalDateTime.now())
+                .entriesCreated(created.size())
+                .build());
+
+        log.info("Seeded {} demo journal entries for user {}", created.size(), userId);
+        return created;
+    }
+
+    @Override
     public JournalImportResponse importCsv(String csvContent, Boolean createJournalStubs) {
         if (!StringUtils.hasText(csvContent)) {
             throw new IllegalArgumentException("csv content is required");
@@ -1124,6 +1161,23 @@ public class TradeJournalServiceImpl implements TradeJournalService {
         if (request.getEntryDate() == null) {
             throw new IllegalArgumentException("Entry date is required");
         }
+    }
+
+    /**
+     * Blank / unknown status → {@link JournalStatus#DRAFT} so autosaved Log Day and
+     * Trade Journal rows always list with a stable draft marker for the UI.
+     */
+    static String normalizeJournalStatus(String status) {
+        if (!StringUtils.hasText(status)) {
+            return JournalStatus.DRAFT.name();
+        }
+        String trimmed = status.trim();
+        for (JournalStatus known : JournalStatus.values()) {
+            if (known.name().equalsIgnoreCase(trimmed)) {
+                return known.name();
+            }
+        }
+        return JournalStatus.DRAFT.name();
     }
 
     private void assertTradeOwnedByCurrentUser(TradeDetailsEntity trade) {

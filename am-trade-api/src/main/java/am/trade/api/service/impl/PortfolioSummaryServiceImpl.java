@@ -1,11 +1,13 @@
 package am.trade.api.service.impl;
 
 import am.trade.api.service.PortfolioSummaryService;
+import am.trade.common.models.PortfolioMetrics;
 import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.AssetAllocation;
 import am.trade.common.models.TradeDetails;
 import am.trade.services.service.PortfolioService;
 import am.trade.services.service.TradeDetailsService;
+import am.trade.services.service.impl.TradeProcessingServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -202,7 +205,57 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             }
         }
 
+        // Unknown-cost demat books often persist metrics.totalValue=0; refresh from
+        // trade live/import marks so portfolio cards match holdings market value.
+        for (PortfolioModel portfolio : portfolios) {
+            refreshTotalValueFromTrades(portfolio);
+        }
+
         return portfolios;
+    }
+
+    /**
+     * Recompute {@code metrics.totalValue} from open trade cost / live / import marks.
+     * Persists when the ledger was zero (or missing) but marks yield a positive sum.
+     */
+    void refreshTotalValueFromTrades(PortfolioModel portfolio) {
+        if (portfolio == null || portfolio.getTradeIds() == null || portfolio.getTradeIds().isEmpty()) {
+            return;
+        }
+        try {
+            List<TradeDetails> trades = tradeDetailsService.findModelsByTradeIds(portfolio.getTradeIds());
+            if (trades == null || trades.isEmpty()) {
+                return;
+            }
+            BigDecimal liveTotal = BigDecimal.ZERO;
+            for (TradeDetails trade : trades) {
+                liveTotal = liveTotal.add(TradeProcessingServiceImpl.resolvePositionMarketOrCostValue(trade));
+            }
+            if (liveTotal.compareTo(BigDecimal.ZERO) <= 0) {
+                return;
+            }
+            PortfolioMetrics metrics = portfolio.getMetrics();
+            BigDecimal existing = metrics != null ? metrics.getTotalValue() : null;
+            boolean needsUpdate = existing == null || existing.compareTo(BigDecimal.ZERO) <= 0
+                    || existing.subtract(liveTotal).abs().compareTo(BigDecimal.ONE) > 0;
+            if (!needsUpdate) {
+                return;
+            }
+            if (metrics == null) {
+                metrics = PortfolioMetrics.builder().build();
+                portfolio.setMetrics(metrics);
+            }
+            metrics.setTotalValue(liveTotal);
+            try {
+                portfolioService.savePortfolio(portfolio);
+            } catch (Exception persistEx) {
+                log.warn("Could not persist refreshed totalValue for {}: {}",
+                        portfolio.getPortfolioId(), persistEx.getMessage());
+            }
+        } catch (Exception e) {
+            log.warn("refreshTotalValueFromTrades failed for {}: {}",
+                    portfolio.getPortfolioId(), e.getMessage());
+        }
     }
 
     /**

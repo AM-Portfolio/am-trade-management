@@ -79,6 +79,9 @@ public class TradeDetailsEntity {
     // Entry and exit information
     private EntryExitInfo entryInfo;
     private EntryExitInfo exitInfo;
+
+    /** Import/statement LTP when cost basis is unknown (email demat PDFs). */
+    private java.math.BigDecimal importMarkPrice;
     
     // Trade metrics
     private TradeMetrics metrics;

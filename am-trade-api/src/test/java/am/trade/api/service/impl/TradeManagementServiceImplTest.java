@@ -30,6 +30,8 @@ class TradeManagementServiceImplTest {
     @Mock
     private am.trade.persistence.repository.PortfolioRepository portfolioRepository;
     @Mock
+    private am.trade.services.service.PortfolioService portfolioService;
+    @Mock
     private am.trade.persistence.mapper.TradeDetailsMapper tradeDetailsMapper;
     @Mock
     private am.trade.common.logger.AppLogger appLogger;
@@ -37,6 +39,8 @@ class TradeManagementServiceImplTest {
     private am.trade.api.client.MarketDataApiClient marketDataApiClient;
     @Mock
     private am.trade.services.service.PortfolioSyncInstrumentResolver portfolioSyncInstrumentResolver;
+    @Mock
+    private org.springframework.cache.CacheManager cacheManager;
 
     private TradeManagementServiceImpl tradeManagementService;
 
@@ -44,8 +48,8 @@ class TradeManagementServiceImplTest {
     void setUp() {
         com.am.security.context.UserContext.setUserId("test-user");
         tradeManagementService = new TradeManagementServiceImpl(tradeDetailsService, portfolioRepository,
-                tradeDetailsMapper, appLogger, marketDataApiClient, new am.trade.common.util.ValidationUtils(),
-                portfolioSyncInstrumentResolver);
+                portfolioService, tradeDetailsMapper, appLogger, marketDataApiClient,
+                new am.trade.common.util.ValidationUtils(), portfolioSyncInstrumentResolver, cacheManager);
     }
 
     @org.junit.jupiter.api.AfterEach

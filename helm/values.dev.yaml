@@ -71,6 +71,9 @@ ingress:
 
 env:
   SPRING_PROFILES_ACTIVE: "dev"
+  # Dig K8s release names are *-dev (see am-gitops/dev/apps).
+  AM_MARKET_DATA_API_URL: "http://am-market-data-dev:8080"
+  AM_PORTFOLIO_SERVICE_URL: "http://am-portfolio-dev:8080"
   # Enable Kafka so portfolio/trade sync events are published
   AM_TRADE_KAFKA_ENABLED: "true"
   KAFKA_BOOTSTRAP_SERVERS: "kafka.infra-dev.svc.cluster.local:9092"

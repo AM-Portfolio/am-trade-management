@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.am.security.context.UserContext;
+import am.trade.api.client.AmPortfolioDeleteClient;
 import am.trade.api.dto.PortfolioCreateRequest;
 import am.trade.api.dto.PortfolioUpdateRequest;
 import am.trade.api.service.PortfolioApiService;
@@ -16,10 +17,12 @@ import am.trade.api.service.TradeApiService;
 import am.trade.common.models.PortfolioMetrics;
 import am.trade.common.models.PortfolioModel;
 import am.trade.common.models.TradeDetails;
+import am.trade.exceptions.TradeException;
 import am.trade.services.service.PortfolioPersistenceService;
 import am.trade.services.service.TradeDetailsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,7 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
     private final PortfolioPersistenceService portfolioPersistenceService;
     private final TradeApiService tradeApiService;
     private final TradeDetailsService tradeDetailsService;
+    private final AmPortfolioDeleteClient amPortfolioDeleteClient;
 
     @Override
     @Transactional
@@ -134,9 +138,28 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
         java.util.Optional<PortfolioModel> existingPortfolioOpt = portfolioPersistenceService.findByPortfolioId(portfolioId);
 
         if (existingPortfolioOpt.isEmpty()) {
-            log.warn("Portfolio {} not found in local trade DB. Forwarding delete event to am-portfolio anyway.", portfolioId);
-            // Send ONE Kafka message for the empty portfolio to ensure am-portfolio deletes it
-            tradeApiService.publishBulkPortfolioSyncEvent(portfolioId, portfolioId, userId, new ArrayList<>(), "DELETE_PORTFOLIO");
+            log.warn("Portfolio {} not found in local trade DB. Sync-deleting on am-portfolio (not Kafka-only).",
+                    portfolioId);
+            // Portfolio-only book: am-portfolio is the only source of truth. Failure must not
+            // return 204 (ghost remains). Map transport/config errors to a clean 503 body —
+            // do not swallow like the local-present path below (local delete already succeeded).
+            try {
+                amPortfolioDeleteClient.deleteBrokerPortfolio(portfolioId, userId);
+            } catch (IllegalStateException e) {
+                log.error("am-portfolio sync-delete failed for portfolio-only book portfolioId={}: {}",
+                        portfolioId, e.getMessage());
+                throw new TradeException(
+                        "Unable to delete portfolio on am-portfolio: " + e.getMessage(),
+                        e,
+                        HttpStatus.SERVICE_UNAVAILABLE);
+            }
+            try {
+                tradeApiService.publishBulkPortfolioSyncEvent(
+                        portfolioId, portfolioId, userId, new ArrayList<>(), "DELETE_PORTFOLIO");
+            } catch (Exception e) {
+                log.warn("Backup DELETE_PORTFOLIO Kafka dispatch failed after sync delete portfolioId={}: {}",
+                        portfolioId, e.getMessage());
+            }
             return;
         }
 
@@ -164,5 +187,14 @@ public class PortfolioApiServiceImpl implements PortfolioApiService {
 
         portfolioPersistenceService.deleteByPortfolioId(portfolioId);
         log.info("Successfully deleted portfolio: {}", portfolioId);
+
+        // Dual-DB: also sync-delete am-portfolio so broker books cannot remain as ghosts
+        // when Kafka fan-out is slow/missed. 404 is treated as success by the client.
+        try {
+            amPortfolioDeleteClient.deleteBrokerPortfolio(portfolioId, userId);
+        } catch (Exception e) {
+            log.warn("am-portfolio sync-delete after local trade delete failed portfolioId={}: {}",
+                    portfolioId, e.getMessage());
+        }
     }
 }
