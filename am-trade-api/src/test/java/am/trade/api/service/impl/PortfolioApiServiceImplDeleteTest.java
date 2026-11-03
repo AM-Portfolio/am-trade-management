@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -79,10 +80,26 @@ class PortfolioApiServiceImplDeleteTest {
 
         TradeException ex = assertThrows(TradeException.class, () -> service.deletePortfolio(portfolioId, true));
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatus());
+        assertTrue(ex.getMessage().contains("Unable to delete portfolio on am-portfolio"));
 
         verify(tradeApiService, never()).publishBulkPortfolioSyncEvent(
                 anyString(), anyString(), anyString(), anyList(), anyString());
         verify(portfolioPersistenceService, never()).deleteByPortfolioId(anyString());
+    }
+
+    @Test
+    void deletePortfolio_missingInTrade_missingInternalSecretMapsToServiceUnavailable() {
+        String portfolioId = "doc-intel-only";
+        when(portfolioPersistenceService.findByPortfolioId(portfolioId)).thenReturn(Optional.empty());
+        when(amPortfolioDeleteClient.deleteBrokerPortfolio(portfolioId, "owner-1"))
+                .thenThrow(new IllegalStateException(
+                        "app.jwt.internal-secret is unset - cannot sync-delete portfolio-only book on am-portfolio"));
+
+        TradeException ex = assertThrows(TradeException.class, () -> service.deletePortfolio(portfolioId, false));
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatus());
+        verify(amPortfolioDeleteClient).deleteBrokerPortfolio(portfolioId, "owner-1");
+        verify(tradeApiService, never()).publishBulkPortfolioSyncEvent(
+                anyString(), anyString(), anyString(), anyList(), anyString());
     }
 
     @Test
