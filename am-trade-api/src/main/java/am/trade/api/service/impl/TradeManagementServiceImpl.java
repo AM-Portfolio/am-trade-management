@@ -13,6 +13,7 @@ import am.trade.api.client.MarketDataApiClient;
 import am.trade.common.util.ValidationUtils;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -58,6 +59,7 @@ public class TradeManagementServiceImpl implements TradeManagementService {
     private final MarketDataApiClient marketDataApiClient;
     private final ValidationUtils validationUtils;
     private final am.trade.services.service.PortfolioSyncInstrumentResolver portfolioSyncInstrumentResolver;
+    private final CacheManager cacheManager;
 
     @Override
     public Map<String, List<TradeDetails>> getTradeDetailsByDay(LocalDate date, String portfolioId) {
@@ -571,10 +573,22 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                 }
                 metrics.setTotalValue(entry.getValue());
                 portfolioService.savePortfolio(portfolio);
+                evictPortfolioSummaryCache();
                 log.info("Refreshed portfolio {} totalValue to {}", entry.getKey(), entry.getValue());
             } catch (Exception e) {
                 log.warn("Failed to refresh totalValue for portfolio {}: {}", entry.getKey(), e.getMessage());
             }
+        }
+    }
+
+    private void evictPortfolioSummaryCache() {
+        try {
+            var cache = cacheManager.getCache("portfolioSummary");
+            if (cache != null) {
+                cache.clear();
+            }
+        } catch (Exception e) {
+            log.warn("Could not evict portfolioSummary cache: {}", e.getMessage());
         }
     }
 
