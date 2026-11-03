@@ -1,4 +1,4 @@
-﻿package am.trade.api.client;
+package am.trade.api.client;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
