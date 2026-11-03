@@ -276,16 +276,21 @@ public class PortfolioUpdateConsumerService {
 
             EntryExitInfo entryInfo = new EntryExitInfo();
             entryInfo.setQuantity(equity.getQuantity().intValue());
-            entryInfo.setPrice(equity.getAvgBuyingPrice() != null
-                    ? BigDecimal.valueOf(equity.getAvgBuyingPrice())
-                    : BigDecimal.ZERO);
-            entryInfo.setTotalValue(equity.getInvestmentValue() != null
-                    ? BigDecimal.valueOf(equity.getInvestmentValue())
-                    : entryInfo.getPrice().multiply(BigDecimal.valueOf(entryInfo.getQuantity())));
+            // Do not coerce missing avg to 0 — zero cost poisons Trade card invested/P&L
+            // (email demat PDFs often send qty + current mark without cost basis).
+            if (equity.getAvgBuyingPrice() != null && equity.getAvgBuyingPrice() > 0) {
+                entryInfo.setPrice(BigDecimal.valueOf(equity.getAvgBuyingPrice()));
+            }
+            if (equity.getInvestmentValue() != null && equity.getInvestmentValue() > 0) {
+                entryInfo.setTotalValue(BigDecimal.valueOf(equity.getInvestmentValue()));
+            } else if (entryInfo.getPrice() != null && entryInfo.getQuantity() != null) {
+                entryInfo.setTotalValue(
+                        entryInfo.getPrice().multiply(BigDecimal.valueOf(entryInfo.getQuantity())));
+            }
             entryInfo.setTimestamp(java.time.LocalDateTime.now());
             trade.setEntryInfo(entryInfo);
 
-            if (equity.getCurrentPrice() != null) {
+            if (equity.getCurrentPrice() != null && equity.getCurrentPrice() > 0) {
                 trade.setCurrentPrice(BigDecimal.valueOf(equity.getCurrentPrice()));
             }
 
