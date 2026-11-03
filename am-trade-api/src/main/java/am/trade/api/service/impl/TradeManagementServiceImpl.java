@@ -406,6 +406,23 @@ public class TradeManagementServiceImpl implements TradeManagementService {
                     }
                     healed = true;
                 }
+                // Reject absurd demat avg vs live LTP (splits / stale statement avg).
+                // Example: BSE entry ₹36.81 with LTP ₹3665 → Overall % ~9800% is not real return.
+                if (rawEntry != null && rawEntry.compareTo(BigDecimal.ZERO) > 0
+                        && currentPrc != null && currentPrc.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal ratio = currentPrc.divide(rawEntry, DECIMAL_SCALE, ROUNDING_MODE);
+                    if (ratio.compareTo(BigDecimal.TEN) > 0
+                            || ratio.compareTo(new BigDecimal("0.1")) < 0) {
+                        log.warn(
+                                "Clearing absurd entry {} vs LTP {} for {} (ratio={}) — use import mark instead",
+                                rawEntry, currentPrc, cleanSymbol, ratio);
+                        trade.getEntryInfo().setPrice(null);
+                        if (trade.getEntryInfo().getTotalValue() != null) {
+                            trade.getEntryInfo().setTotalValue(null);
+                        }
+                        healed = true;
+                    }
+                }
                 // Durable import-mark backfill from hist close on entry/asOf date (not live LTP).
                 if ((trade.getImportMarkPrice() == null
                         || trade.getImportMarkPrice().compareTo(BigDecimal.ZERO) <= 0)
