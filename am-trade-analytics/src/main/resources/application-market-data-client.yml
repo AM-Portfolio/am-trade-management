@@ -2,7 +2,8 @@
 # that creates a circular placeholder with application-preprod/prod.yml and CrashLoops Trade.
 market-data:
   api:
-    # Base URL for the market data API (env or profile default)
+    # Prefer AM_MARKET_DATA_API_URL from Helm/gitops. Neutral in-cluster fallback only —
+    # env-specific hosts (HTTPS gateway, *-dev DNS) live in am-gitops overlays.
     base-url: ${AM_MARKET_DATA_API_URL:http://am-market-data:8080}
     # Path for historical data endpoint
     historical-data-path: /v1/market-data/historical-data

@@ -59,4 +59,5 @@ management:
 
 market-data:
   api:
-    baseUrl: ${AM_MARKET_DATA_API_URL:https://am.asrax.in/market}
+    # Env from gitops/Vault only — do not bake public HTTPS hosts into the jar.
+    baseUrl: ${AM_MARKET_DATA_API_URL:http://am-market-data:8080}

@@ -37,7 +37,7 @@ env:
   SPRING_PROFILES_ACTIVE: "prod"
   # DEMO_PORTFOLIO_ID inherited from values.yaml (single source of truth)
   MONGODB_DATABASE: "trade"
-  AM_MARKET_DATA_API_URL: "http://am-market-data:8080"
+  # AM_MARKET_DATA_API_URL comes from am-gitops overlays (HTTPS gateway), not chart hardcodes.
   AM_PORTFOLIO_SERVICE_URL: "http://am-portfolio:8080"
   # Enable Kafka so portfolio/trade sync events are published
   AM_TRADE_KAFKA_ENABLED: "true"

@@ -40,6 +40,8 @@ server:
 
 market-data:
   api:
+    # Prefer AM_MARKET_DATA_API_URL from Helm/gitops. Fallback is neutral in-cluster DNS
+    # (not env-suffixed *-dev/*-preprod — those belong in am-gitops overlays).
     baseUrl: ${AM_MARKET_DATA_API_URL:http://am-market-data:8080}
     ohlcEndpoint: /v1/market-data/ohlc
     historical-data-path: ${MARKET_DATA_HISTORICAL_PATH:/v1/market-data/historical-data}

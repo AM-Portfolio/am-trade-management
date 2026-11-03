@@ -29,7 +29,7 @@ global:
 env:
   SPRING_PROFILES_ACTIVE: "preprod"
   # Preprod release names are *-preprod (see am-gitops/preprod/apps).
-  AM_MARKET_DATA_API_URL: "http://am-market-data-preprod:8080"
+  # AM_MARKET_DATA_API_URL comes from am-gitops overlays (HTTPS gateway), not chart hardcodes.
   AM_PORTFOLIO_SERVICE_URL: "http://am-portfolio-preprod:8080"
   # Enable Kafka so portfolio/trade sync events are published
   AM_TRADE_KAFKA_ENABLED: "true"
