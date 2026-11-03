@@ -18,6 +18,14 @@ public class TradeMetrics {
     // Profit/Loss metrics
     private BigDecimal profitLoss;
     private BigDecimal profitLossPercentage;
+    /** 1D P&L vs previous close (Portfolio-equivalent day move). */
+    private BigDecimal todayProfitLoss;
+    private BigDecimal todayProfitLossPercentage;
+    /**
+     * COST = vs avg entry; IMPORT_MARK = vs statement/import LTP when cost unknown;
+     * DAY_ONLY = only 1D filled (no overall baseline).
+     */
+    private String unrealizedBasis;
     private BigDecimal returnOnEquity;
     
     // Risk metrics

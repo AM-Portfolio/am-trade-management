@@ -21,6 +21,8 @@ public class InboundEquityModel {
     private Double currentPrice;
     private Double currentValue;
     private Double investmentValue;
+    /** Statement/import LTP when avg cost unknown. */
+    private Double importMarkPrice;
     private Double profitLoss;
     private Double profitLossPercentage;
     

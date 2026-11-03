@@ -287,11 +287,24 @@ public class PortfolioUpdateConsumerService {
                 entryInfo.setTotalValue(
                         entryInfo.getPrice().multiply(BigDecimal.valueOf(entryInfo.getQuantity())));
             }
-            entryInfo.setTimestamp(java.time.LocalDateTime.now());
+            // Prefer event timestamp (statement/as-of) over processing time for "since import" window.
+            if (event.getTimestamp() != null) {
+                entryInfo.setTimestamp(event.getTimestamp());
+            } else {
+                entryInfo.setTimestamp(java.time.LocalDateTime.now());
+            }
             trade.setEntryInfo(entryInfo);
 
             if (equity.getCurrentPrice() != null && equity.getCurrentPrice() > 0) {
                 trade.setCurrentPrice(BigDecimal.valueOf(equity.getCurrentPrice()));
+            }
+            // Prefer durable importMark from portfolio; else statement currentPrice when cost unknown.
+            Double markSrc = equity.getImportMarkPrice() != null && equity.getImportMarkPrice() > 0
+                    ? equity.getImportMarkPrice()
+                    : (entryInfo.getPrice() == null && equity.getCurrentPrice() != null && equity.getCurrentPrice() > 0
+                            ? equity.getCurrentPrice() : null);
+            if (markSrc != null) {
+                trade.setImportMarkPrice(BigDecimal.valueOf(markSrc));
             }
 
             candidates.add(trade);
@@ -364,6 +377,29 @@ public class PortfolioUpdateConsumerService {
                     if (name != null) {
                         existing.getInstrumentInfo().setDescription(name);
                     }
+                }
+                // Heal legacy zero-cost imports + backfill import mark / real cost from newer events.
+                if (existing.getEntryInfo() != null) {
+                    BigDecimal existingEntry = existing.getEntryInfo().getPrice();
+                    if (existingEntry != null && existingEntry.compareTo(BigDecimal.ZERO) <= 0) {
+                        existing.getEntryInfo().setPrice(null);
+                        changed = true;
+                    }
+                    if (trade.getEntryInfo() != null
+                            && trade.getEntryInfo().getPrice() != null
+                            && trade.getEntryInfo().getPrice().compareTo(BigDecimal.ZERO) > 0
+                            && (existing.getEntryInfo().getPrice() == null
+                                || existing.getEntryInfo().getPrice().compareTo(BigDecimal.ZERO) <= 0)) {
+                        existing.getEntryInfo().setPrice(trade.getEntryInfo().getPrice());
+                        existing.getEntryInfo().setTotalValue(trade.getEntryInfo().getTotalValue());
+                        changed = true;
+                    }
+                }
+                if (trade.getImportMarkPrice() != null
+                        && (existing.getImportMarkPrice() == null
+                            || existing.getImportMarkPrice().compareTo(BigDecimal.ZERO) <= 0)) {
+                    existing.setImportMarkPrice(trade.getImportMarkPrice());
+                    changed = true;
                 }
                 if (changed) {
                     symbolCorrections.add(existing);

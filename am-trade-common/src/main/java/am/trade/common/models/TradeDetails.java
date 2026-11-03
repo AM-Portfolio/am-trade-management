@@ -46,6 +46,12 @@ public class TradeDetails {
     
     // Live price for open trades
     private BigDecimal currentPrice;
+
+    /**
+     * Statement/import-day mark (LTP) when avg cost is unavailable (e.g. Dhan demat email).
+     * Used for overall P&L since import — never displayed as Entry Price.
+     */
+    private BigDecimal importMarkPrice;
     
     // Trade metrics
     private TradeMetrics metrics;

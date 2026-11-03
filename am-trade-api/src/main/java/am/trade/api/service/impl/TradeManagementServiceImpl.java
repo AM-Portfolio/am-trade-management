@@ -337,56 +337,140 @@ public class TradeManagementServiceImpl implements TradeManagementService {
         }
 
         try {
-            Map<String, Double> livePrices = marketDataApiClient.getCurrentPrices(symbols);
-            log.info("[enrichWithLivePrices] Live prices received from API: {}", livePrices);
+            Map<String, am.trade.common.models.market.MarketDataResponse> quotes =
+                    marketDataApiClient.getQuotes(symbols);
+            log.info("[enrichWithLivePrices] Live quotes received from API for {} symbols",
+                    quotes != null ? quotes.size() : 0);
 
-            if (livePrices != null && !livePrices.isEmpty()) {
-                openTrades.forEach(trade -> {
-                    String cleanSymbol = trade.getSymbol() != null ? trade.getSymbol().trim() : null;
-                    if (cleanSymbol != null && cleanSymbol.contains(":")) {
-                        cleanSymbol = cleanSymbol.substring(cleanSymbol.lastIndexOf(":") + 1);
-                    }
-                    Double price = cleanSymbol != null ? livePrices.get(cleanSymbol) : null;
-                    if (price == null && trade.getSymbol() != null) {
-                        price = livePrices.get(trade.getSymbol().trim());
-                    }
-                    // Market-data often returns 0.0 for unknown tickers — treat as miss.
-                    if (price == null || price <= 0) {
-                        return;
-                    }
-                    trade.setCurrentPrice(java.math.BigDecimal.valueOf(price));
+            if (quotes == null || quotes.isEmpty()) {
+                return;
+            }
 
-                    if (trade.getTradePositionType() == null) {
-                        trade.setTradePositionType(am.trade.models.enums.TradePositionType.LONG);
+            List<TradeDetails> healZeroCost = new ArrayList<>();
+            openTrades.forEach(trade -> {
+                String cleanSymbol = trade.getSymbol() != null ? trade.getSymbol().trim() : null;
+                if (cleanSymbol != null && cleanSymbol.contains(":")) {
+                    cleanSymbol = cleanSymbol.substring(cleanSymbol.lastIndexOf(":") + 1);
+                }
+                am.trade.common.models.market.MarketDataResponse quote =
+                        cleanSymbol != null ? quotes.get(cleanSymbol) : null;
+                if (quote == null && trade.getSymbol() != null) {
+                    quote = quotes.get(trade.getSymbol().trim());
+                }
+                Double price = quote != null ? quote.getLastPrice() : null;
+                // Market-data often returns 0.0 for unknown tickers — treat as miss.
+                if (price == null || price <= 0) {
+                    return;
+                }
+                trade.setCurrentPrice(BigDecimal.valueOf(price));
+
+                if (trade.getTradePositionType() == null) {
+                    trade.setTradePositionType(am.trade.models.enums.TradePositionType.LONG);
+                }
+
+                if (trade.getMetrics() == null) {
+                    trade.setMetrics(new am.trade.common.models.TradeMetrics());
+                }
+                // Clear stale metrics so unknown-cost rows cannot keep inflated P&L.
+                trade.getMetrics().setProfitLoss(null);
+                trade.getMetrics().setProfitLossPercentage(null);
+                trade.getMetrics().setTodayProfitLoss(null);
+                trade.getMetrics().setTodayProfitLossPercentage(null);
+                trade.getMetrics().setUnrealizedBasis(null);
+
+                Integer qty = trade.getEntryInfo() != null ? trade.getEntryInfo().getQuantity() : null;
+                if (qty == null || qty <= 0) {
+                    return;
+                }
+                BigDecimal quantity = BigDecimal.valueOf(qty);
+                BigDecimal currentPrc = trade.getCurrentPrice();
+
+                // Heal legacy email imports that persisted entry price as 0 — never use live LTP as mark.
+                BigDecimal rawEntry = trade.getEntryInfo() != null ? trade.getEntryInfo().getPrice() : null;
+                boolean healed = false;
+                if (rawEntry != null && rawEntry.compareTo(BigDecimal.ZERO) <= 0) {
+                    trade.getEntryInfo().setPrice(null);
+                    if (trade.getEntryInfo().getTotalValue() != null
+                            && trade.getEntryInfo().getTotalValue().compareTo(BigDecimal.ZERO) <= 0) {
+                        trade.getEntryInfo().setTotalValue(null);
                     }
-
-                    java.math.BigDecimal entryPrice = trade.getEntryInfo() != null ? trade.getEntryInfo().getPrice() : null;
-                    if (entryPrice != null && trade.getEntryInfo().getQuantity() != null) {
-                        java.math.BigDecimal currentPrc = trade.getCurrentPrice();
-                        java.math.BigDecimal profitLossPerUnit = java.math.BigDecimal.ZERO;
-
-                        if (am.trade.models.enums.TradePositionType.LONG.equals(trade.getTradePositionType())) {
-                            profitLossPerUnit = currentPrc.subtract(entryPrice);
-                        } else if (am.trade.models.enums.TradePositionType.SHORT.equals(trade.getTradePositionType())) {
-                            profitLossPerUnit = entryPrice.subtract(currentPrc);
+                    healed = true;
+                }
+                // Durable import-mark backfill from hist close on entry/asOf date (not live LTP).
+                if ((trade.getImportMarkPrice() == null
+                        || trade.getImportMarkPrice().compareTo(BigDecimal.ZERO) <= 0)
+                        && (trade.getEntryInfo() == null
+                            || trade.getEntryInfo().getPrice() == null
+                            || trade.getEntryInfo().getPrice().compareTo(BigDecimal.ZERO) <= 0)) {
+                    LocalDate asOf = trade.getEntryInfo() != null && trade.getEntryInfo().getTimestamp() != null
+                            ? trade.getEntryInfo().getTimestamp().toLocalDate()
+                            : null;
+                    if (asOf != null && cleanSymbol != null) {
+                        Double histClose = marketDataApiClient.getCloseOnOrBefore(cleanSymbol, asOf);
+                        if (histClose != null && histClose > 0) {
+                            trade.setImportMarkPrice(BigDecimal.valueOf(histClose));
+                            healed = true;
                         }
-
-                        java.math.BigDecimal profitLoss = profitLossPerUnit.multiply(
-                                new java.math.BigDecimal(trade.getEntryInfo().getQuantity()));
-
-                        if (trade.getMetrics() == null) {
-                            trade.setMetrics(new am.trade.common.models.TradeMetrics());
-                        }
-                        trade.getMetrics().setProfitLoss(profitLoss);
-
-                        if (entryPrice.compareTo(java.math.BigDecimal.ZERO) > 0) {
-                            java.math.BigDecimal percentage = profitLossPerUnit
-                                    .divide(entryPrice, 4, java.math.RoundingMode.HALF_UP)
-                                    .multiply(new java.math.BigDecimal("100"));
-                            trade.getMetrics().setProfitLossPercentage(percentage);
-                        }
                     }
-                });
+                }
+                if (healed) {
+                    healZeroCost.add(trade);
+                }
+
+                BigDecimal entryPrice = trade.getEntryInfo() != null ? trade.getEntryInfo().getPrice() : null;
+                boolean hasCost = entryPrice != null && entryPrice.compareTo(BigDecimal.ZERO) > 0;
+                BigDecimal importMark = trade.getImportMarkPrice();
+                boolean hasImportMark = importMark != null && importMark.compareTo(BigDecimal.ZERO) > 0;
+
+                // 1D P&L — same formula as Portfolio (LTP − previousClose) × qty
+                Double previousClose = quote.resolvePreviousClose();
+                if (previousClose != null && previousClose > 0) {
+                    BigDecimal prev = BigDecimal.valueOf(previousClose);
+                    BigDecimal dayPerUnit = currentPrc.subtract(prev);
+                    if (am.trade.models.enums.TradePositionType.SHORT.equals(trade.getTradePositionType())) {
+                        dayPerUnit = prev.subtract(currentPrc);
+                    }
+                    BigDecimal dayPnl = dayPerUnit.multiply(quantity);
+                    trade.getMetrics().setTodayProfitLoss(dayPnl);
+                    BigDecimal dayPct = dayPerUnit
+                            .divide(prev, DECIMAL_SCALE, ROUNDING_MODE)
+                            .multiply(BigDecimal.valueOf(100));
+                    trade.getMetrics().setTodayProfitLossPercentage(dayPct);
+                }
+
+                // Overall unrealized: cost OR import mark only — never copy 1D into overall.
+                BigDecimal baseline = null;
+                String basis = null;
+                if (hasCost) {
+                    baseline = entryPrice;
+                    basis = "COST";
+                } else if (hasImportMark) {
+                    baseline = importMark;
+                    basis = "IMPORT_MARK";
+                }
+
+                if (baseline != null) {
+                    BigDecimal pnlPerUnit;
+                    if (am.trade.models.enums.TradePositionType.SHORT.equals(trade.getTradePositionType())) {
+                        pnlPerUnit = baseline.subtract(currentPrc);
+                    } else {
+                        pnlPerUnit = currentPrc.subtract(baseline);
+                    }
+                    trade.getMetrics().setProfitLoss(pnlPerUnit.multiply(quantity));
+                    trade.getMetrics().setProfitLossPercentage(
+                            pnlPerUnit.divide(baseline, DECIMAL_SCALE, ROUNDING_MODE)
+                                    .multiply(BigDecimal.valueOf(100)));
+                    trade.getMetrics().setUnrealizedBasis(basis);
+                }
+            });
+
+            if (!healZeroCost.isEmpty()) {
+                try {
+                    tradeDetailsService.saveAllTradeDetails(healZeroCost);
+                    log.info("Healed {} zero-cost imported holdings to null entry price", healZeroCost.size());
+                } catch (Exception e) {
+                    log.warn("Failed to persist zero-cost entry heal: {}", e.getMessage());
+                }
             }
         } catch (Exception e) {
             log.error("Error enriching trades with live prices", e);

@@ -11,4 +11,6 @@ import lombok.Data;
 public class MarketDataApiConfig {
     private String baseUrl;
     private String ohlcEndpoint;
+    /** Historical bars for import-day mark backfill when cost is unknown. */
+    private String historicalDataPath = "/v1/market-data/historical-data";
 }

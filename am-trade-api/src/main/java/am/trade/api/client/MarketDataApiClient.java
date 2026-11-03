@@ -143,6 +143,20 @@ public class MarketDataApiClient {
     }
 
     public Map<String, Double> getCurrentPrices(List<String> symbols) {
+        Map<String, Double> filteredResult = new HashMap<>();
+        getQuotes(symbols).forEach((symbol, quote) -> {
+            if (quote != null && quote.getLastPrice() != null && quote.getLastPrice() > 0) {
+                filteredResult.put(symbol, quote.getLastPrice());
+            }
+        });
+        return filteredResult;
+    }
+
+    /**
+     * Live quotes with lastPrice + previousClose for 1D P&L enrichment.
+     * Bypasses the lastPrice-only L1 cache so previousClose is not dropped.
+     */
+    public Map<String, MarketDataResponse> getQuotes(List<String> symbols) {
         if (symbols == null || symbols.isEmpty()) {
             return new HashMap<>();
         }
@@ -150,48 +164,36 @@ public class MarketDataApiClient {
         List<String> cleanSymbols = symbols.stream()
                 .filter(s -> s != null && !s.trim().isEmpty())
                 .map(symbol -> {
-                    // Remove provider prefix if present (e.g., "NSE:RELIANCE" -> "RELIANCE")
                     if (symbol.contains(":")) {
                         return symbol.substring(symbol.lastIndexOf(":") + 1);
                     }
-                    return symbol;
+                    return symbol.trim();
                 })
+                .distinct()
                 .collect(java.util.stream.Collectors.toList());
 
         if (cleanSymbols.isEmpty()) {
             return new HashMap<>();
         }
-
-        Map<String, Double> filteredResult = new HashMap<>();
-        if (isL1CacheEnabled) {
-            Map<String, Double> result = localCache.getAll(cleanSymbols);
-            if (result != null) {
-                // Filter out negative cache values (-1.0)
-                result.forEach((k, v) -> {
-                    if (v != null && v >= 0.0) {
-                        filteredResult.put(k, v);
-                    }
-                });
-            }
-        } else {
-            Map<String, Double> result = fetchFromApi(cleanSymbols);
-            if (result != null) {
-                result.forEach((k, v) -> {
-                    if (v != null && v >= 0.0) {
-                        filteredResult.put(k, v);
-                    }
-                });
-            }
-        }
-        return filteredResult;
+        return fetchQuotesFromApi(cleanSymbols);
     }
 
     private Map<String, Double> fetchFromApi(Iterable<? extends String> missingSymbols) {
         Map<String, Double> currentPrices = new HashMap<>();
+        fetchQuotesFromApi(missingSymbols).forEach((symbol, quote) -> {
+            if (quote != null && quote.getLastPrice() != null) {
+                currentPrices.put(symbol, quote.getLastPrice());
+            }
+        });
+        return currentPrices;
+    }
+
+    private Map<String, MarketDataResponse> fetchQuotesFromApi(Iterable<? extends String> missingSymbols) {
+        Map<String, MarketDataResponse> quotes = new HashMap<>();
         String symbolsParam = String.join(",", missingSymbols);
         
         if (symbolsParam.isEmpty()) {
-            return currentPrices;
+            return quotes;
         }
 
         OhlcDataRequest request = OhlcDataRequest.builder()
@@ -222,12 +224,17 @@ public class MarketDataApiClient {
                 if (responses != null) {
                     responses.forEach((key, response) -> {
                         String symbolKey = key.contains(":") ? key.substring(key.lastIndexOf(":") + 1) : key;
-                        Double price = response.getLastPrice();
-                        if (price != null) {
-                            currentPrices.put(symbolKey, price);
-                        } else {
+                        if (response == null) {
+                            return;
+                        }
+                        Double resolvedPrev = response.resolvePreviousClose();
+                        if (resolvedPrev != null) {
+                            response.setPreviousClose(resolvedPrev);
+                        }
+                        if (response.getLastPrice() == null) {
                             log.warn("Received null price for symbol {}", symbolKey);
                         }
+                        quotes.put(symbolKey, response);
                     });
                 }
             }
@@ -236,15 +243,118 @@ public class MarketDataApiClient {
             throw new am.trade.exceptions.MarketDataUnavailableException("Transport failure while fetching market data", e);
         }
 
-        // Only return prices we actually received. Do NOT negative-cache missing symbols as -1.0.
-        // Reason: negative caching caused a 5-minute blackout — Caffeine would serve -1.0 for any
-        // symbol whose price was temporarily unavailable (market closed, transient API error, etc.),
-        // blocking retries for the entire cache TTL. By omitting missing symbols from the returned map,
-        // Caffeine's LoadingCache will naturally retry them on the very next request.
-        if (currentPrices.isEmpty()) {
-            log.warn("No live prices returned from market data API for symbols: {}", symbolsParam);
+        if (quotes.isEmpty()) {
+            log.warn("No live quotes returned from market data API for symbols: {}", symbolsParam);
         }
-        return currentPrices;
+        return quotes;
+    }
+
+    /**
+     * Close on/near {@code asOf} for import-mark backfill. Never use live LTP.
+     * Returns null when hist is unavailable — caller must leave overall P&L unset.
+     */
+    public Double getCloseOnOrBefore(String symbol, java.time.LocalDate asOf) {
+        if (symbol == null || symbol.isBlank() || asOf == null) {
+            return null;
+        }
+        String clean = symbol.contains(":") ? symbol.substring(symbol.lastIndexOf(':') + 1) : symbol.trim();
+        String path = config.getHistoricalDataPath() != null
+                ? config.getHistoricalDataPath()
+                : "/v1/market-data/historical-data";
+        try {
+            java.util.Map<String, Object> body = new HashMap<>();
+            body.put("symbols", clean);
+            body.put("from", asOf.minusDays(7).toString());
+            body.put("to", asOf.toString());
+            body.put("interval", "day");
+            body.put("instrumentType", "EQ");
+            JsonNode responseNode = restTemplate.postForObject(path, body, JsonNode.class);
+            if (responseNode == null) {
+                return null;
+            }
+            JsonNode data = responseNode.has("data") ? responseNode.get("data") : responseNode;
+            JsonNode series = data.get(clean);
+            if (series == null) {
+                // try prefixed keys
+                var fields = data.fields();
+                while (fields.hasNext()) {
+                    var e = fields.next();
+                    if (e.getKey().endsWith(":" + clean) || e.getKey().equalsIgnoreCase(clean)) {
+                        series = e.getValue();
+                        break;
+                    }
+                }
+            }
+            if (series == null) {
+                return null;
+            }
+            JsonNode candles = series.isArray() ? series
+                    : (series.has("candles") ? series.get("candles")
+                    : (series.has("data") ? series.get("data") : null));
+            if (candles == null || !candles.isArray() || candles.isEmpty()) {
+                return null;
+            }
+            // Walk newest→oldest; pick last close on or before asOf.
+            Double best = null;
+            for (int i = candles.size() - 1; i >= 0; i--) {
+                JsonNode bar = candles.get(i);
+                Double close = readClose(bar);
+                if (close == null || close <= 0) {
+                    continue;
+                }
+                java.time.LocalDate barDate = readBarDate(bar);
+                if (barDate == null || !barDate.isAfter(asOf)) {
+                    best = close;
+                    break;
+                }
+            }
+            return best;
+        } catch (Exception e) {
+            log.debug("Historical close unavailable for {} on {}: {}", clean, asOf, e.getMessage());
+            return null;
+        }
+    }
+
+    private static Double readClose(JsonNode bar) {
+        if (bar == null) {
+            return null;
+        }
+        if (bar.has("close") && bar.get("close").isNumber()) {
+            return bar.get("close").asDouble();
+        }
+        if (bar.has("c") && bar.get("c").isNumber()) {
+            return bar.get("c").asDouble();
+        }
+        if (bar.isArray() && bar.size() >= 5 && bar.get(4).isNumber()) {
+            return bar.get(4).asDouble();
+        }
+        return null;
+    }
+
+    private static java.time.LocalDate readBarDate(JsonNode bar) {
+        if (bar == null) {
+            return null;
+        }
+        try {
+            if (bar.has("date")) {
+                return java.time.LocalDate.parse(bar.get("date").asText().substring(0, 10));
+            }
+            if (bar.has("timestamp")) {
+                String ts = bar.get("timestamp").asText();
+                if (ts.length() >= 10) {
+                    return java.time.LocalDate.parse(ts.substring(0, 10));
+                }
+            }
+            if (bar.isArray() && bar.size() > 0 && bar.get(0).isTextual()) {
+                String ts = bar.get(0).asText();
+                if (ts.length() >= 10) {
+                    return java.time.LocalDate.parse(ts.substring(0, 10));
+                }
+            }
+        } catch (Exception ignored) {
+            return null;
+        }
+        return null;
     }
 
     public Map<String, Map<String, String>> resolveTickersByIsins(List<String> isins) {
