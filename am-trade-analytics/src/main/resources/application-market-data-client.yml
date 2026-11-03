@@ -1,9 +1,9 @@
-AM_MARKET_DATA_API_URL: ${AM_MARKET_DATA_API_URL:http://localhost:8092}
-
+# Do NOT define AM_MARKET_DATA_API_URL as a Spring property that expands itself —
+# that creates a circular placeholder with application-preprod/prod.yml and CrashLoops Trade.
 market-data:
   api:
-    # Base URL for the market data API
-    base-url: ${AM_MARKET_DATA_API_URL}
+    # Base URL for the market data API (env or profile default)
+    base-url: ${AM_MARKET_DATA_API_URL:http://am-market-data:8080}
     # Path for historical data endpoint
     historical-data-path: /v1/market-data/historical-data
     # Connection timeout in milliseconds
