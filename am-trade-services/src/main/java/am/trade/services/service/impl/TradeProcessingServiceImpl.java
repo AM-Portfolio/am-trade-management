@@ -463,10 +463,8 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
                     break;
             }
             
-            // Add to total value
-            if (trade.getEntryInfo() != null && trade.getEntryInfo().getTotalValue() != null) {
-                totalValue = totalValue.add(trade.getEntryInfo().getTotalValue());
-            }
+            // Position value: prefer cost basis; when unknown (email demat) use live or import mark.
+            totalValue = totalValue.add(resolvePositionMarketOrCostValue(trade));
         }
         
         // Calculate win rate and loss rate
@@ -964,5 +962,38 @@ public class TradeProcessingServiceImpl implements TradeProcessingService {
         } else {
             return TradeStatus.BREAK_EVEN;
         }
+    }
+
+    /**
+     * Cost basis when known; otherwise live mark × qty or import-mark × qty so
+     * email demat books do not contribute ₹0 to portfolio card totalValue.
+     */
+    public static BigDecimal resolvePositionMarketOrCostValue(TradeDetails trade) {
+        if (trade == null || trade.getEntryInfo() == null) {
+            return BigDecimal.ZERO;
+        }
+        Integer qty = trade.getEntryInfo().getQuantity();
+        BigDecimal cost = trade.getEntryInfo().getTotalValue();
+        BigDecimal entryPx = trade.getEntryInfo().getPrice();
+        boolean hasCost = (cost != null && cost.compareTo(BigDecimal.ZERO) > 0)
+                || (entryPx != null && entryPx.compareTo(BigDecimal.ZERO) > 0);
+        if (hasCost) {
+            if (cost != null && cost.compareTo(BigDecimal.ZERO) > 0) {
+                return cost;
+            }
+            if (entryPx != null && qty != null) {
+                return entryPx.multiply(BigDecimal.valueOf(qty));
+            }
+        }
+        if (qty == null || qty <= 0) {
+            return BigDecimal.ZERO;
+        }
+        if (trade.getCurrentPrice() != null && trade.getCurrentPrice().compareTo(BigDecimal.ZERO) > 0) {
+            return trade.getCurrentPrice().multiply(BigDecimal.valueOf(qty));
+        }
+        if (trade.getImportMarkPrice() != null && trade.getImportMarkPrice().compareTo(BigDecimal.ZERO) > 0) {
+            return trade.getImportMarkPrice().multiply(BigDecimal.valueOf(qty));
+        }
+        return BigDecimal.ZERO;
     }
 }

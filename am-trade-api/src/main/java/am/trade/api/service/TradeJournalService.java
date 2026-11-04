@@ -87,4 +87,10 @@ public interface TradeJournalService {
      * Import journal stubs from CSV. Header must include tradeId; symbol is optional.
      */
     JournalImportResponse importCsv(String csvContent, Boolean createJournalStubs);
+
+    /**
+     * One-shot educational demos (Log Day + Trade Journal) for users with an empty journal.
+     * Idempotent: no-ops if the user already has entries or was seeded before.
+     */
+    List<TradeJournalEntryResponse> seedDemoEntriesIfEmpty();
 }
