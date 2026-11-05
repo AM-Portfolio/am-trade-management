@@ -1,0 +1,11 @@
+vault:
+  secretPaths:
+    mongodb:
+      mappings:
+        AM_STRATEGY_LAB_MONGO_URI: "url"
+        AM_STRATEGY_LAB_MONGO_DATABASE: "AM_STRATEGY_LAB_MONGO_DATABASE"
+        AM_STRATEGY_LAB_DB_USER: "AM_STRATEGY_LAB_DB_USER"
+        AM_STRATEGY_LAB_DB_PASSWORD: "AM_STRATEGY_LAB_DB_PASSWORD"
+    market-data:
+      mappings:
+        AM_MARKET_BASE_URL: "url"

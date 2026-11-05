@@ -24,14 +24,13 @@ vault:
   enabled: true
   secretPaths:
     mongodb:
-      path: apps/data/dev/runtime/am-strategy-lab/mongodb
+      path: apps/data/dev/infra/mongodb
     market-data:
-      path: apps/data/dev/runtime/clients/am-strategy-lab/am-market-data
+      path: apps/data/dev/services/am-market-data
 
 env:
   APP_ENV: dev
   AM_MARKET_BASE_URL: https://am-dev.asrax.in/market
-  # Allow backtests to complete even if market auth fails
   AM_STRATEGY_LAB_USE_FIXTURE_BARS: "false"
-  # Temporary until Vault mongo secret is provisioned — memory mode for first boot
+  # First boot without dedicated Lab mongo DB — flip off after Vault DB is provisioned
   AM_STRATEGY_LAB_MEMORY_DB: "true"
