@@ -20,13 +20,10 @@ ingress:
         - path: /v1/backtests
           pathType: Prefix
 
+# Memory-DB dig MVP: skip Vault CSI until dedicated Lab secrets exist.
 vault:
-  enabled: true
-  secretPaths:
-    mongodb:
-      path: apps/data/dev/infra/mongodb
-    market-data:
-      path: apps/data/dev/services/am-market-data
+  enabled: false
+  secretPaths: {}
 
 env:
   APP_ENV: dev
