@@ -1,0 +1,37 @@
+environment: dev
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      am-apps-dev-dev-global-cors@kubernetescrd,
+      am-apps-dev-dev-strip-prefix@kubernetescrd,
+      am-apps-dev-dev-openapi-alias@kubernetescrd
+  hosts:
+    - host: am-dev.asrax.in
+      paths:
+        - path: /strategy-lab
+          pathType: Prefix
+        - path: /v1/strategies
+          pathType: Prefix
+        - path: /v1/backtests
+          pathType: Prefix
+
+vault:
+  enabled: true
+  secretPaths:
+    mongodb:
+      path: apps/data/dev/runtime/am-strategy-lab/mongodb
+    market-data:
+      path: apps/data/dev/runtime/clients/am-strategy-lab/am-market-data
+
+env:
+  APP_ENV: dev
+  AM_MARKET_BASE_URL: https://am-dev.asrax.in/market
+  # Allow backtests to complete even if market auth fails
+  AM_STRATEGY_LAB_USE_FIXTURE_BARS: "false"
+  # Temporary until Vault mongo secret is provisioned — memory mode for first boot
+  AM_STRATEGY_LAB_MEMORY_DB: "true"
