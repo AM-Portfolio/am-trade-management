@@ -57,7 +57,7 @@
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"symbol\": \"RELIANCE\",\n  \"from\": \"2024-01-01\",\n  \"to\": \"2024-01-20\",\n  \"timeframe\": \"1d\",\n  \"useFixture\": true\n}"
+          "raw": "{\n  \"symbol\": \"RELIANCE\",\n  \"from\": \"2024-01-01\",\n  \"to\": \"2024-01-20\",\n  \"timeframe\": \"1d\"\n}"
         },
         "url": "{{baseUrl}}/v1/strategies/ZONE_SCALE/backtests"
       }

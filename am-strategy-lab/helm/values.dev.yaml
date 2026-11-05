@@ -27,6 +27,5 @@ vault:
 env:
   APP_ENV: dev
   AM_MARKET_BASE_URL: https://am-dev.asrax.in/market
-  AM_STRATEGY_LAB_USE_FIXTURE_BARS: "false"
   # First boot without dedicated Lab mongo DB — flip off after Vault DB is provisioned
   AM_STRATEGY_LAB_MEMORY_DB: "true"

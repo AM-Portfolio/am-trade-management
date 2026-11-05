@@ -20,7 +20,6 @@ class Settings(BaseSettings):
         default="/v1/market-data/historical-data", alias="AM_MARKET_HISTORICAL_PATH"
     )
     market_http_timeout: float = Field(default=30.0, alias="AM_STRATEGY_LAB_MARKET_TIMEOUT")
-    use_fixture_bars: bool = Field(default=False, alias="AM_STRATEGY_LAB_USE_FIXTURE_BARS")
     memory_db: bool = Field(default=False, alias="AM_STRATEGY_LAB_MEMORY_DB")
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
 

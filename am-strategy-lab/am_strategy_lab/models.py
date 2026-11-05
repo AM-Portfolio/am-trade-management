@@ -64,7 +64,6 @@ class BacktestCreate(BaseModel):
     fromDate: str = Field(alias="from", description="yyyy-MM-dd")
     toDate: str = Field(alias="to", description="yyyy-MM-dd")
     timeframe: str = "1d"
-    useFixture: bool | None = None
 
     model_config = {"populate_by_name": True}
 
@@ -101,6 +100,8 @@ class BacktestReport(BaseModel):
     calendar: dict[str, list[CalendarBucket]]
     trades: list[TradeFill]
     byTimeframe: list[dict[str, Any]] = Field(default_factory=list)
+    barsSource: str | None = None  # market
+    barsNote: str | None = None
 
 
 class BacktestJob(BaseModel):

@@ -43,7 +43,6 @@ env:
   LOG_LEVEL: INFO
   TZ: Asia/Kolkata
   AM_MARKET_HISTORICAL_PATH: /v1/market-data/historical-data
-  AM_STRATEGY_LAB_USE_FIXTURE_BARS: "false"
   AM_STRATEGY_LAB_MEMORY_DB: "false"
 
 probes:

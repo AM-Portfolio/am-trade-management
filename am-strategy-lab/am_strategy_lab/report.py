@@ -5,7 +5,12 @@ from collections import defaultdict
 from am_strategy_lab.models import BacktestReport, CalendarBucket, ReportSummary, TradeFill
 
 
-def build_report(fills: list[TradeFill]) -> BacktestReport:
+def build_report(
+    fills: list[TradeFill],
+    *,
+    bars_source: str | None = None,
+    bars_note: str | None = None,
+) -> BacktestReport:
     exits = [f for f in fills if f.kind.startswith("EXIT") and f.pnl is not None]
     entries = [f for f in fills if f.kind == "ENTRY"]
     # If only entries (LIMIT fills without exit), treat as open — PnL 0 for calendar
@@ -72,4 +77,6 @@ def build_report(fills: list[TradeFill]) -> BacktestReport:
         calendar={"daily": daily, "weekly": _agg(weekly), "monthly": _agg(monthly)},
         trades=fills,
         byTimeframe=[],
+        barsSource=bars_source,
+        barsNote=bars_note,
     )

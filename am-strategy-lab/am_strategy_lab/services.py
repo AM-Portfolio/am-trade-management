@@ -14,6 +14,7 @@ from am_strategy_lab.models import (
     StrategyCreate,
     StrategyDoc,
 )
+from am_strategy_lab.price_align import align_definition_to_bars
 from am_strategy_lab.report import build_report
 
 
@@ -75,10 +76,9 @@ class StrategyLabService:
             "createdAt": now,
             "updatedAt": now,
             "report": None,
-            "useFixture": body.useFixture,
         }
         await self.db.backtests.insert_one(job)
-        return BacktestJob(**{k: v for k, v in job.items() if k != "useFixture"})
+        return BacktestJob(**job)
 
     async def run_backtest_job(self, job_id: str) -> None:
         row = await self.db.backtests.find_one({"jobId": job_id})
@@ -92,22 +92,35 @@ class StrategyLabService:
             strat = await self.get_strategy(row["strategyId"])
             if not strat:
                 raise KeyError("strategy missing")
-            use_fixture = bool(row.get("useFixture"))
-            bars = await fetch_historical(
+            bars_result = await fetch_historical(
                 row["symbol"],
                 row["fromDate"],
                 row["toDate"],
                 row.get("timeframe") or "1d",
-                use_fixture=use_fixture,
             )
-            fills = run_fill_engine(strat.definition, bars, row["symbol"])
-            report = build_report(fills)
+            definition = strat.definition
+            note = bars_result.note
+            aligned = align_definition_to_bars(definition, bars_result.bars)
+            if aligned is not definition:
+                definition = aligned
+                note = (
+                    (note + " " if note else "")
+                    + "Catalog prices were outside the bar range; "
+                    "levels were aligned to market mid for this run."
+                ).strip()
+            fills = run_fill_engine(definition, bars_result.bars, row["symbol"])
+            report = build_report(
+                fills,
+                bars_source="market",
+                bars_note=note,
+            )
             await self.db.backtests.update_one(
                 {"jobId": job_id},
                 {
                     "$set": {
                         "status": JobStatus.DONE.value,
                         "report": report.model_dump(mode="json"),
+                        "barsSource": "market",
                         "updatedAt": _now(),
                         "error": None,
                     }
@@ -126,7 +139,7 @@ class StrategyLabService:
             )
 
     async def get_backtest(self, job_id: str) -> BacktestJob | None:
-        row = await self.db.backtests.find_one({"jobId": job_id}, {"_id": 0, "useFixture": 0})
+        row = await self.db.backtests.find_one({"jobId": job_id}, {"_id": 0})
         if not row:
             return None
         return BacktestJob(**row)
