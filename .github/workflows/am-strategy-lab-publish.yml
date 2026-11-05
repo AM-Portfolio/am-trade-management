@@ -1,0 +1,23 @@
+name: AM Strategy Lab Publish
+
+on:
+  push:
+    branches: ["main", "develop", "fix/**", "hotfix/**", "feature/**", "feat/**"]
+    paths:
+      - "am-strategy-lab/**"
+      - ".github/workflows/am-strategy-lab-publish.yml"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish AM Strategy Lab
+    permissions:
+      contents: write
+      packages: write
+    uses: AM-Portfolio/am-pipelines/.github/workflows/central-build-publish-contabo.yml@main
+    with:
+      language: "python"
+      working_directory: "am-strategy-lab"
+      image_name: "am-strategy-lab"
+      build_context: "."
+    secrets: inherit
