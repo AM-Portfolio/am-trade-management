@@ -1,0 +1,9 @@
+id: am-strategy-lab
+label: am-strategy-lab
+runtime: python
+openapi:
+  path: /openapi.json
+targets:
+  dev: https://am-dev.asrax.in/strategy-lab
+  preprod: https://am-preprod.asrax.in/strategy-lab
+  prod: https://am.asrax.in/strategy-lab
