@@ -1,0 +1,65 @@
+global:
+  image:
+    registry: ghcr.io/am-portfolio
+    pullPolicy: Always
+    imagePullSecrets:
+      - name: regcred
+  vault:
+    enabled: true
+    role: "am-backend-role"
+    authPath: "auth/kubernetes"
+    serviceAccountName: "am-backend-sa"
+
+image:
+  repository: am-trade-management/am-strategy-lab
+
+replicaCount: 1
+language: python
+port: 8080
+service:
+  port: 8080
+entrypoint: "exec uvicorn am_strategy_lab.main:app --host 0.0.0.0 --port 8080"
+
+security:
+  automountServiceAccountToken: true
+config: {}
+
+vault:
+  secretPaths:
+    mongodb:
+      mappings:
+        AM_STRATEGY_LAB_MONGO_URI: "url"
+        AM_STRATEGY_LAB_MONGO_DATABASE: "AM_STRATEGY_LAB_MONGO_DATABASE"
+        AM_STRATEGY_LAB_DB_USER: "AM_STRATEGY_LAB_DB_USER"
+        AM_STRATEGY_LAB_DB_PASSWORD: "AM_STRATEGY_LAB_DB_PASSWORD"
+    market-data:
+      mappings:
+        AM_MARKET_BASE_URL: "url"
+
+env:
+  APP_ENV: production
+  APP_NAME: am-strategy-lab
+  APP_PORT: "8080"
+  LOG_LEVEL: INFO
+  TZ: Asia/Kolkata
+  AM_MARKET_HISTORICAL_PATH: /v1/market-data/historical-data
+  AM_STRATEGY_LAB_MEMORY_DB: "false"
+
+probes:
+  port: 8080
+  startup:
+    path: /health/live
+    failureThreshold: 30
+    periodSeconds: 10
+  liveness:
+    path: /health/live
+  readiness:
+    path: /health/ready
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi

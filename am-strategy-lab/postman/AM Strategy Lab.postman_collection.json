@@ -1,0 +1,82 @@
+{
+  "info": {
+    "name": "AM Strategy Lab",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Strategy Lab MVP — health, strategies, backtests, report"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://am-dev.asrax.in/strategy-lab" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "Upsert ZONE_SCALE strategy",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"strategyId\": \"ZONE_SCALE\",\n  \"label\": \"N-layer zone\",\n  \"definition\": {\n    \"strategyId\": \"ZONE_SCALE\",\n    \"side\": \"BUY\",\n    \"totalQty\": 100,\n    \"zone\": { \"high\": 100, \"low\": 90 },\n    \"layers\": [\n      { \"sizePct\": 25, \"orderType\": \"LIMIT\" },\n      { \"sizePct\": 25, \"orderType\": \"LIMIT\" },\n      { \"sizePct\": 50, \"orderType\": \"LIMIT\" }\n    ]\n  }\n}"
+        },
+        "url": "{{baseUrl}}/v1/strategies"
+      }
+    },
+    {
+      "name": "Start backtest",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set('jobId', j.jobId);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"symbol\": \"RELIANCE\",\n  \"from\": \"2024-01-01\",\n  \"to\": \"2024-01-20\",\n  \"timeframe\": \"1d\"\n}"
+        },
+        "url": "{{baseUrl}}/v1/strategies/ZONE_SCALE/backtests"
+      }
+    },
+    {
+      "name": "Get backtest job",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/v1/backtests/{{jobId}}"
+      }
+    },
+    {
+      "name": "Get backtest report",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/v1/backtests/{{jobId}}/report"
+      }
+    }
+  ]
+}
